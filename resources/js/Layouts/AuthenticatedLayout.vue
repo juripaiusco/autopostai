@@ -41,10 +41,10 @@ const showingNavigationDropdown = ref(false);
                                     Dashboard
                                 </NavLink>
 
-                                <NavLink class="w-[100px] text-center"
+                                <!-- <NavLink class="w-[100px] text-center"
                                 >
                                     Posts
-                                </NavLink>
+                                </NavLink> -->
 
                                 <NavLink class="w-[100px] text-center"
                                          :href="route('settings.index')"
