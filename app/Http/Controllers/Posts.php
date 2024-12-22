@@ -12,8 +12,47 @@ class Posts extends Controller
      */
     public function index()
     {
+        $request_search_array = [
+            'title'
+        ];
+
+        $request_validate_array = $request_search_array;
+
+        // Query data
+        $data = \App\Models\Posts::query();
+        $data = $data->with('title');
+
+        $data = $data->where('user_id', auth()->user()->id);
+
+        // Request validate
+        request()->validate([
+            'orderby' => ['in:' . implode(',', $request_validate_array)],
+            'ordertype' => ['in:asc,desc']
+        ]);
+
+        // Filtro RICERCA
+        if (request('s')) {
+            $data->where(function ($q) use ($request_search_array) {
+
+                foreach ($request_search_array as $field) {
+                    $q->orWhere('customers.' . $field, 'like', '%' . request('s') . '%');
+                }
+
+            });
+        }
+
+        // Filtro ORDINAMENTO
+        if (request('orderby') && request('ordertype')) {
+            $data->orderby(request('orderby'), strtoupper(request('ordertype')));
+        } else {
+            $data->orderby('profit', 'DESC');
+        }
+
+        $data = $data->paginate(env('VIEWS_PAGINATE'))->withQueryString();
+
         return Inertia::render('Posts/List', [
-            'data' => []
+            'data' => $data,
+            'filters' => request()->all(['s', 'orderby', 'ordertype'])
         ]);
     }
 
