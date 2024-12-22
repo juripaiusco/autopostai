@@ -39,9 +39,9 @@ const form = useForm(dataForm);
                 ))">
 
                 <nav>
-                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                    <div class="nav nav-underline nav-fill" id="nav-tab" role="tablist">
 
-                        <button class="w-[180px] nav-link active"
+                        <button class="nav-link active"
                                 id="nav-ai-tab"
                                 data-bs-toggle="tab"
                                 data-bs-target="#nav-ai"
@@ -50,7 +50,7 @@ const form = useForm(dataForm);
                                 aria-controls="nav-ai"
                                 aria-selected="true">AI</button>
 
-                        <button class="w-[180px] nav-link"
+                        <button class="nav-link"
                                 id="nav-google-tab"
                                 data-bs-toggle="tab"
                                 data-bs-target="#nav-google"
@@ -59,7 +59,7 @@ const form = useForm(dataForm);
                                 aria-controls="nav-google"
                                 aria-selected="false">Google</button>
 
-                        <button class="w-[180px] nav-link"
+                        <button class="nav-link"
                                 id="nav-openai-tab"
                                 data-bs-toggle="tab"
                                 data-bs-target="#nav-openai"
@@ -68,7 +68,7 @@ const form = useForm(dataForm);
                                 aria-controls="nav-openai"
                                 aria-selected="false">OpenAI</button>
 
-                        <button class="w-[180px] nav-link"
+                        <button class="nav-link"
                                 id="nav-meta-tab"
                                 data-bs-toggle="tab"
                                 data-bs-target="#nav-meta"
@@ -77,7 +77,7 @@ const form = useForm(dataForm);
                                 aria-controls="nav-meta"
                                 aria-selected="false">Meta</button>
 
-                        <button class="w-[180px] nav-link"
+                        <button class="nav-link"
                                 id="nav-wordpress-tab"
                                 data-bs-toggle="tab"
                                 data-bs-target="#nav-wordpress"
@@ -85,6 +85,7 @@ const form = useForm(dataForm);
                                 role="tab"
                                 aria-controls="nav-wordpress"
                                 aria-selected="false">WordPress</button>
+
                     </div>
 
                 </nav>
@@ -143,9 +144,22 @@ const form = useForm(dataForm);
 
                 </div>
 
+                <div class="text-right mt-0 sm:mt-8">
+
+                    <button type="submit"
+                            class="btn btn-success ml-2 w-[120px]">Salva</button>
+
+                </div>
+
             </form>
 
         </ApplicationContainer>
 
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+    .tab-content .tab-pane {
+        padding-top: 30px !important;
+    }
+</style>
