@@ -39,32 +39,36 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
+                <div class="form-floating">
+                    <TextInput
+                        id="email"
+                        type="email"
+                        class="mt-1 block w-full form-control"
+                        v-model="form.email"
+                        required
+                        autofocus
+                        autocomplete="username"
+                        placeholder="name@example.com"
+                    />
+                    <InputLabel for="email" value="Email" class="!text-base !text-gray-600" />
+                </div>
 
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
             <div class="mt-4">
-                <InputLabel for="password" value="Password" />
-
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                />
+                <div class="form-floating">
+                    <TextInput
+                        id="password"
+                        type="password"
+                        class="mt-1 block w-full form-control"
+                        v-model="form.password"
+                        required
+                        autocomplete="current-password"
+                        placeholder="password"
+                    />
+                    <InputLabel for="password" value="Password" class="!text-base !text-gray-600" />
+                </div>
 
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
@@ -88,7 +92,7 @@ const submit = () => {
                 </Link>
 
                 <PrimaryButton
-                    class="ms-4"
+                    class="ms-4 btn btn-primary"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
