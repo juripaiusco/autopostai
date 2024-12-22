@@ -16,12 +16,12 @@ return new class extends Migration
 
             $table->bigInteger('user_id')->unique()->index();
 
-            $table->longText('ai_personality');
-            $table->longText('ai_prompt_prefix');
+            $table->longText('ai_personality')->nullable();
+            $table->longText('ai_prompt_prefix')->nullable();
 
-            $table->string('openai_api_key');
+            $table->string('openai_api_key')->nullable();
 
-            $table->string('meta_page_id');
+            $table->string('meta_page_id')->nullable();
 
             $table->timestamps();
         });
