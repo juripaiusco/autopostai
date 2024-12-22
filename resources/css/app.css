@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+sky: #38bdf8
+blue: #0369a1
+*/
+
+.logo {
+    background-image: url('../img/autopostai.png');
+    background-size: cover;
+}
+.breadcrumb {
+    margin-bottom: 0 !important;
+}
+.breadcrumb-item.active {
+    color: unset !important;
+}
+
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+    color: #0369a1 !important;
+}
+.nav-link {
+    color: gray !important;
+}
+
+.table-hover .no-hover:hover > * {
+    --bs-table-bg-state: none;
+}
+
+label.form-label {
+    font-size: 0.9em;
+    padding: 0 10px 0 10px;
+    display: block;
+    color: gray;
+    margin-bottom: 5px;
+}
+.form-check.form-switch .form-check-input:checked {
+    background-position: 8px center !important;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+#nprogress .bar {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    .breadcrumb-item + .breadcrumb-item::before {
+        color: white !important;
+    }
+}
