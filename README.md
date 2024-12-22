@@ -1,5 +1,7 @@
 # AutoPostAI
 
+🇮🇹 Italiano
+
 *Sistema di gestione automatizzata dei post basato sull'intelligenza artificiale*
 
 Automazione dei post tramite AI. Puoi impostare i tuoi post e l'AI li pubblicherà su Facebook, Instagram, WordPress
@@ -46,7 +48,7 @@ Se vuoi contribuire, puoi farlo. Grazie!
 
 - - - - - - -
 
-# AutoPostAI
+🇬🇧 English
 
 *Automated post management system based on artificial intelligence*
 
