@@ -19,6 +19,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/posts', [Posts::class, 'index'])->name('post.index');
     Route::get('/posts/create', [Posts::class, 'create'])->name('post.create');
+    Route::post('/posts/store', [Posts::class, 'store'])->name('post.store');
+    Route::get('/posts/edit/{id}', [Posts::class, 'edit'])->name('post.edit');
+    Route::post('/posts/update/{id}', [Posts::class, 'update'])->name('post.update');
+    Route::get('/posts/destroy/{id}', [Posts::class, 'destroy'])->name('post.destroy');
 
     Route::get('/settings', [Settings::class, 'index'])->name('settings.index');
     Route::post('/settings/update/{id}', [Settings::class, 'update'])->name('settings.update');

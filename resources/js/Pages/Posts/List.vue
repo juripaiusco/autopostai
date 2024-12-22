@@ -90,7 +90,7 @@ let modalData = ref(props.data);
                         :data="modalData"
                         @close="modalShow = false">
 
-                <template #title>Elimina cliente</template>
+                <template #title>Elimina post</template>
                 <template #body>
                     Vuoi eliminare
                     <span class="font-semibold">

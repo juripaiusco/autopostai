@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 class Posts extends Controller
@@ -19,8 +21,7 @@ class Posts extends Controller
         $request_validate_array = $request_search_array;
 
         // Query data
-        $data = \App\Models\Posts::query();
-        $data = $data->with('title');
+        $data = \App\Models\Post::query();
 
         $data = $data->where('user_id', auth()->user()->id);
 
@@ -44,9 +45,12 @@ class Posts extends Controller
         // Filtro ORDINAMENTO
         if (request('orderby') && request('ordertype')) {
             $data->orderby(request('orderby'), strtoupper(request('ordertype')));
-        } else {
-            $data->orderby('profit', 'DESC');
         }
+
+        $data = $data->select([
+            'posts.id',
+            'posts.title',
+        ]);
 
         $data = $data->paginate(env('VIEWS_PAGINATE'))->withQueryString();
 
@@ -61,7 +65,27 @@ class Posts extends Controller
      */
     public function create()
     {
-        //
+        // Creo un oggetto di dati vuoto
+        $columns = Schema::getColumnListing('posts');
+
+        $data = array();
+        foreach ($columns as $field) {
+            $data[$field] = '';
+        }
+
+        unset($data['id']);
+        unset($data['deleted_at']);
+        unset($data['created_at']);
+        unset($data['updated_at']);
+
+        $data['saveRedirect'] = Redirect::back()->getTargetUrl();
+
+        $data = json_decode(json_encode($data), true);
+
+        return Inertia::render('Posts/Form', [
+            'data' => $data,
+            'filters' => request()->all(['s', 'orderby', 'ordertype'])
+        ]);
     }
 
     /**
@@ -69,7 +93,20 @@ class Posts extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'title'      => ['required'],
+        ]);
+
+        $saveRedirect = $request['saveRedirect'];
+        unset($request['saveRedirect']);
+        unset($request['customer_service']);
+
+        $customer = new \App\Models\Post();
+        $customer->fill($request->all());
+        $customer->user_id = auth()->user()->id;
+        $customer->save();
+
+        return Redirect::to($saveRedirect);
     }
 
     /**
@@ -85,7 +122,12 @@ class Posts extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $data = \App\Models\Post::find($id);
+
+        return Inertia::render('Posts/Form', [
+            'data' => $data,
+            'filters' => request()->all(['s', 'orderby', 'ordertype'])
+        ]);
     }
 
     /**
@@ -93,7 +135,19 @@ class Posts extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'title'      => ['required'],
+        ]);
+
+        $saveRedirect = $request['saveRedirect'];
+        unset($request['saveRedirect']);
+        unset($request['customer_service']);
+
+        $customer = \App\Models\Post::find($id);
+        $customer->fill($request->all());
+        $customer->save();
+
+        return Redirect::to($saveRedirect);
     }
 
     /**

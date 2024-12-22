@@ -17,11 +17,11 @@ return new class extends Migration
             $table->bigInteger('user_id')->index();
 
             $table->string('title');
-            $table->longText('prompt');
+            $table->longText('prompt')->default('')->nullable();
             $table->string('img')->default('')->nullable();
 
-            $table->string('meta_facebook', 1)->nullable(0);
-            $table->string('meta_instagram', 1)->nullable(0);
+            $table->string('meta_facebook', 1)->default(0)->nullable();
+            $table->string('meta_instagram', 1)->default(0)->nullable();
 
             $table->timestamps();
         });
