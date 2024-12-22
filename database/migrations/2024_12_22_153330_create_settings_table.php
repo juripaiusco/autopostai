@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
 
+            $table->bigInteger('user_id')->unique()->index();
+
             $table->longText('ai_personality');
             $table->longText('ai_prompt_prefix');
 
