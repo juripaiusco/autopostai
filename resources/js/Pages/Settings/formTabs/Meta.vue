@@ -11,7 +11,6 @@ const props = defineProps({
     <label class="form-label">ID della pagina</label>
     <input type="text"
            class="form-control"
-           placeholder="es. 12345678910"
            v-model="form.meta_page_id" />
     <div class="text-red-500 text-center"
          v-if="form.errors.meta_page_id">{{ __(form.errors.meta_page_id) }}</div>

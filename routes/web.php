@@ -17,6 +17,7 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
 
     Route::get('/settings', [Settings::class, 'index'])->name('settings.index');
+    Route::post('/settings/update/{id}', [Settings::class, 'update'])->name('settings.update');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -34,7 +34,7 @@ const form = useForm(dataForm);
         <ApplicationContainer>
 
             <form @submit.prevent="form.post(route(
-                form.id ? 'service.update' : 'service.store',
+                form.id ? 'settings.update' : 'settings.store',
                 form.id ? form.id : ''
                 ))">
 
