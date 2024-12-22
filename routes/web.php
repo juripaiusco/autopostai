@@ -17,7 +17,7 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/posts', [Posts::class, 'index'])->name('posts.index');
+    Route::get('/posts', [Posts::class, 'index'])->name('post.index');
 
     Route::get('/settings', [Settings::class, 'index'])->name('settings.index');
     Route::post('/settings/update/{id}', [Settings::class, 'update'])->name('settings.update');

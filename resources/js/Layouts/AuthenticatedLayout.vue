@@ -42,7 +42,7 @@ const showingNavigationDropdown = ref(false);
                                 </NavLink>
 
                                 <NavLink class="w-[100px] text-center"
-                                         :href="route('posts.index')"
+                                         :href="route('post.index')"
                                          :active="route().current().search('posts') === 0 ? true : false">
                                     Posts
                                 </NavLink>
