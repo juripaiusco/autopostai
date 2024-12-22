@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Posts;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Settings;
 use Illuminate\Foundation\Application;
@@ -15,6 +16,8 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+
+    Route::get('/posts', [Posts::class, 'index'])->name('posts.index');
 
     Route::get('/settings', [Settings::class, 'index'])->name('settings.index');
     Route::post('/settings/update/{id}', [Settings::class, 'update'])->name('settings.update');

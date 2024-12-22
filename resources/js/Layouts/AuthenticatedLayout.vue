@@ -41,10 +41,11 @@ const showingNavigationDropdown = ref(false);
                                     Dashboard
                                 </NavLink>
 
-                                <!-- <NavLink class="w-[100px] text-center"
-                                >
+                                <NavLink class="w-[100px] text-center"
+                                         :href="route('posts.index')"
+                                         :active="route().current().search('posts') === 0 ? true : false">
                                     Posts
-                                </NavLink> -->
+                                </NavLink>
 
                                 <NavLink class="w-[100px] text-center"
                                          :href="route('settings.index')"
