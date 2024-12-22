@@ -22,7 +22,7 @@ const form = useForm(dataForm);
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Impostazioni" />
 
     <AuthenticatedLayout>
         <template #header>
