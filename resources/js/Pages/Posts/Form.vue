@@ -1,6 +1,6 @@
 <script setup>
 
-import {Head} from "@inertiajs/vue3";
+import {Head, Link} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import ApplicationHeader from "@/Components/ApplicationHeader.vue";
 import ApplicationContainer from "@/Components/ApplicationContainer.vue";
@@ -64,10 +64,10 @@ let modalData = ref(props.data);
 
                 <div class="text-right mt-10">
 
-                    <!-- <Link class="btn btn-secondary w-[120px]"
+                    <Link class="btn btn-secondary w-[120px]"
                           :href="data.saveRedirect">
                         Annulla
-                    </Link> -->
+                    </Link>
 
                     <button type="submit"
                             class="btn btn-success ml-2 w-[120px]">Salva</button>
