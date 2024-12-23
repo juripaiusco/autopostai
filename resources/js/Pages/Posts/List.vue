@@ -70,7 +70,7 @@ let modalData = ref(props.data);
                         }, {
                             class: 'text-center w-[20%]',
                             label: 'Media channel',
-                            field: 'published_at',
+                            field: 'media_channel',
                             fnc: function (d) {
 
                                 let socialArray = new Array();
@@ -96,6 +96,19 @@ let modalData = ref(props.data);
                                 html += __date(d.published_at, 'day')
                                 html += ' '
                                 html += __date(d.published_at, 'hour')
+
+                                return html
+
+                            }
+                        }, {
+                            class: 'text-center w-[20%]',
+                            label: 'online',
+                            field: 'published',
+                            fnc: function (d) {
+
+                                let html = '<small class=\'text-xs\'>'
+                                html += d.published ? '<span class=\'text-green-600\'>Sì</span>' : '<span class=\'text-red-600\'>No</span>';
+                                html += '</small>'
 
                                 return html
 

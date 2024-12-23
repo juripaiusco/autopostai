@@ -21,6 +21,10 @@ const form = useForm(dataForm);
 let modalShow = ref(false);
 let modalData = ref(props.data);
 
+function changeImg() {
+    console.log('changeImg');
+}
+
 </script>
 
 <template>
@@ -48,7 +52,12 @@ let modalData = ref(props.data);
                 ))">
 
                 <div class="row">
-                    <div class="col"></div>
+                    <div class="col">
+
+                        <img :src="form.img"
+                             class="rounded" >
+
+                    </div>
                     <div class="col">
 
                         <div class="row">
@@ -85,9 +94,16 @@ let modalData = ref(props.data);
                         <br>
 
                         <div class="input-group">
-                            <input type="file" class="form-control" id="img_upload">
-                            <label class="input-group-text" for="img_upload">Upload Immagine</label>
+                            <input type="file"
+                                   class="form-control"
+                                   @input="form.img = $event.target.files[0]"
+                                   @change="changeImg()"
+                                   id="img">
+                            <label class="input-group-text" for="img">Upload Immagine</label>
                         </div>
+                        <progress v-if="form.progress" :value="form.progress.percentage" max="100">
+                            {{ form.progress.percentage }}%
+                        </progress>
 
                         <br>
 

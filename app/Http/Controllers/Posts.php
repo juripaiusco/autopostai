@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class Posts extends Controller
@@ -17,6 +18,7 @@ class Posts extends Controller
         $request_search_array = [
             'title',
             'published_at',
+            'published',
         ];
 
         $request_validate_array = $request_search_array;
@@ -108,6 +110,20 @@ class Posts extends Controller
 
         $post = new \App\Models\Post();
         $post->fill($request->all());
+
+        if ($request->file('img')) {
+            $post->img = $request->file('img')->getClientOriginalName();
+
+            if ($request->file('img')->isValid()) {
+
+                Storage::disk('public')
+                    ->put(
+                        $post->id . '/' . $request->file('img')->getClientOriginalName(),
+                        $request->file('img')->get()
+                    );
+            }
+        }
+
         $post->user_id = auth()->user()->id;
         $post->save();
 
@@ -128,6 +144,7 @@ class Posts extends Controller
     public function edit(Request $request, string $id)
     {
         $data = \App\Models\Post::find($id);
+        $data->img = Storage::disk('public')->url($id . '/' . $data->img);
 
         $data->saveRedirect = Redirect::back()->getTargetUrl();
 
@@ -153,6 +170,20 @@ class Posts extends Controller
 
         $post = \App\Models\Post::find($id);
         $post->fill($request->all());
+
+        if ($request->file('img')) {
+            $post->img = $request->file('img')->getClientOriginalName();
+
+            if ($request->file('img')->isValid()) {
+
+                Storage::disk('public')
+                    ->put(
+                        $post->id . '/' . $request->file('img')->getClientOriginalName(),
+                        $request->file('img')->get()
+                    );
+            }
+        }
+
         $post->save();
 
         return Redirect::to($saveRedirect);
@@ -163,6 +194,9 @@ class Posts extends Controller
      */
     public function destroy(string $id)
     {
+        $post = \App\Models\Post::find($id);
+        Storage::disk('public')->deleteDirectory($post->id);
+
         \App\Models\Post::destroy($id);
 
         return \redirect()->back();
