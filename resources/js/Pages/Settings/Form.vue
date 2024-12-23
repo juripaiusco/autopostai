@@ -8,6 +8,7 @@ import AI from "@/Pages/Settings/formTabs/AI.vue";
 import Google from "@/Pages/Settings/formTabs/Google.vue";
 import OpenAI from "@/Pages/Settings/formTabs/OpenAI.vue";
 import WordPress from "@/Pages/Settings/formTabs/WordPress.vue";
+import Newsletter from "@/Pages/Settings/formTabs/Newsletter.vue";
 
 const props = defineProps({
     data: Object,
@@ -86,6 +87,15 @@ const form = useForm(dataForm);
                                 aria-controls="nav-wordpress"
                                 aria-selected="false">WordPress</button>
 
+                        <button class="nav-link"
+                                id="nav-newsletter-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#nav-newsletter"
+                                type="button"
+                                role="tab"
+                                aria-controls="nav-newsletter"
+                                aria-selected="false">Newsletter</button>
+
                     </div>
 
                 </nav>
@@ -139,6 +149,16 @@ const form = useForm(dataForm);
                          tabindex="0">
 
                         <WordPress :form=form />
+
+                    </div>
+
+                    <div class="tab-pane fade show pt-4"
+                         id="nav-newsletter"
+                         role="tabpanel"
+                         aria-labelledby="nav-newsletter-tab"
+                         tabindex="0">
+
+                        <Newsletter :form=form />
 
                     </div>
 

@@ -8,7 +8,7 @@ const props = defineProps({
 
 <template>
 
-    Google
+    Google - in sviluppo...
 
 </template>
 

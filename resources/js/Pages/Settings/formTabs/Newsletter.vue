@@ -8,7 +8,7 @@ const props = defineProps({
 
 <template>
 
-    WordPress - in sviluppo...
+    Newsletter - in sviluppo...
 
 </template>
 
