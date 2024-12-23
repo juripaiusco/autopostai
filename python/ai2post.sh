@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker build -t ai2post .
+#docker build -t ai2post .
 
 docker run \
   --rm \
