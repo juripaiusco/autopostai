@@ -128,7 +128,7 @@ let modalData = ref(props.data);
                 <template #body>
                     Vuoi eliminare
                     <span class="font-semibold">
-                        {{ modalData.name }}
+                        {{ modalData.title }}
                     </span>
                     ?
                 </template>
