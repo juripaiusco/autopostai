@@ -15,7 +15,8 @@ class Posts extends Controller
     public function index()
     {
         $request_search_array = [
-            'title'
+            'title',
+            'published_at',
         ];
 
         $request_validate_array = $request_search_array;
@@ -50,6 +51,11 @@ class Posts extends Controller
         $data = $data->select([
             'posts.id',
             'posts.title',
+            'posts.published_at',
+            'posts.meta_facebook',
+            'posts.meta_instagram',
+            'posts.wordpress',
+            'posts.newsletter',
         ]);
 
         $data = $data->paginate(env('VIEWS_PAGINATE'))->withQueryString();

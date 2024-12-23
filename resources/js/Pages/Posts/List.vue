@@ -10,6 +10,7 @@ import Table from "@/Components/Table/Table.vue";
 import TableSearch from "@/Components/Table/TableSearch.vue";
 import TablePagination from "@/Components/Table/TablePagination.vue";
 import {ref} from "vue";
+import {__date} from "@/ComponentsExt/Date.js";
 
 const props = defineProps({
     data: Object,
@@ -56,6 +57,8 @@ let modalData = ref(props.data);
 
             </div>
 
+            <i class="fa-brands fa-facebook"></i>
+
             <Table class="table-striped"
                    :data="{
                         filters: filters,
@@ -66,6 +69,39 @@ let modalData = ref(props.data);
                             class: 'text-left',
                             label: 'Titolo',
                             field: 'title'
+                        }, {
+                            class: 'text-center w-[20%]',
+                            label: 'Media channel',
+                            field: 'published_at',
+                            fnc: function (d) {
+
+                                let socialArray = new Array();
+                                d.meta_facebook == 1 ? socialArray.push('<i class=\'fa-brands fa-facebook\'></i>')  : '';
+                                d.meta_instagram == 1 ? socialArray.push('<i class=\'fa-brands fa-instagram\'></i>')  : '';
+                                d.wordpress == 1 ? socialArray.push('WordPress')  : '';
+                                d.newsletter == 1 ? socialArray.push('Newsletter')  : '';
+
+                                let html = '<small class=\'text-xs\'>'
+                                html += socialArray.join(' / ');
+                                html += '</small>'
+
+                                return html
+
+                            }
+                        }, {
+                            class: 'text-center w-[20%]',
+                            label: 'Data pubblicazione',
+                            field: 'published_at',
+                            fnc: function (d) {
+
+                                let html = ''
+                                html += __date(d.published_at, 'day')
+                                html += ' '
+                                html += __date(d.published_at, 'hour')
+
+                                return html
+
+                            }
                         }, {
                             class: 'w-[1%]',
                             classBtn: 'ml-[8px] btn-dark',

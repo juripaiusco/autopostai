@@ -22,6 +22,11 @@ return new class extends Migration
 
             $table->string('meta_facebook', 1)->default(0)->nullable();
             $table->string('meta_instagram', 1)->default(0)->nullable();
+            $table->string('wordpress', 1)->default(0)->nullable();
+            $table->string('newsletter', 1)->default(0)->nullable();
+
+            $table->timestamp('published_at')->nullable();
+            $table->string('published', 1)->default(0)->nullable();
 
             $table->timestamps();
         });
