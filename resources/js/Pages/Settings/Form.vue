@@ -144,7 +144,7 @@ const form = useForm(dataForm);
 
                 </div>
 
-                <div class="text-right mt-0 sm:mt-8">
+                <div class="text-right mt-10">
 
                     <button type="submit"
                             class="btn btn-success ml-2 w-[120px]">Salva</button>
