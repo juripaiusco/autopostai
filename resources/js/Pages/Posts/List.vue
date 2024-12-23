@@ -57,8 +57,6 @@ let modalData = ref(props.data);
 
             </div>
 
-            <i class="fa-brands fa-facebook"></i>
-
             <Table class="table-striped"
                    :data="{
                         filters: filters,
@@ -76,8 +74,8 @@ let modalData = ref(props.data);
                             fnc: function (d) {
 
                                 let socialArray = new Array();
-                                d.meta_facebook == 1 ? socialArray.push('<i class=\'fa-brands fa-facebook\'></i>')  : '';
-                                d.meta_instagram == 1 ? socialArray.push('<i class=\'fa-brands fa-instagram\'></i>')  : '';
+                                d.meta_facebook == 1 ? socialArray.push('Facebook')  : '';
+                                d.meta_instagram == 1 ? socialArray.push('Instagram')  : '';
                                 d.wordpress == 1 ? socialArray.push('WordPress')  : '';
                                 d.newsletter == 1 ? socialArray.push('Newsletter')  : '';
 
