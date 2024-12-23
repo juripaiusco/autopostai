@@ -107,12 +107,13 @@ class Posts extends Controller
 
         $saveRedirect = $request['saveRedirect'];
         unset($request['saveRedirect']);
+        unset($request['img']);
 
         $post = new \App\Models\Post();
         $post->fill($request->all());
         $post->user_id = auth()->user()->id;
         $post->save();
-        $this->save_img($post, $request);
+        $this->save_img('posts', $post, $request);
 
         return Redirect::to($saveRedirect);
     }
@@ -131,7 +132,7 @@ class Posts extends Controller
     public function edit(Request $request, string $id)
     {
         $data = \App\Models\Post::find($id);
-        $data->img = Storage::disk('public')->url($id . '/' . $data->img);
+        $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
 
         $data->saveRedirect = Redirect::back()->getTargetUrl();
 
@@ -154,16 +155,17 @@ class Posts extends Controller
         unset($request['saveRedirect']);
         unset($request['created_at']);
         unset($request['updated_at']);
+        unset($request['img']);
 
         $post = \App\Models\Post::find($id);
         $post->fill($request->all());
         $post->save();
-        $this->save_img($post, $request);
+        $this->save_img('posts', $post, $request);
 
         return Redirect::to($saveRedirect);
     }
 
-    private function save_img($data, $request)
+    private function save_img($path, $data, $request)
     {
         if ($request->file('img')) {
 
@@ -171,9 +173,10 @@ class Posts extends Controller
 
             if ($request->file('img')->isValid()) {
 
+                Storage::disk('public')->deleteDirectory($path . '/' . $data->id);
                 Storage::disk('public')
                     ->put(
-                        $data->id . '/' . $data->img,
+                        $path . '/' . $data->id . '/' . $data->img,
                         $request->file('img')->get()
                     );
             }
@@ -189,7 +192,7 @@ class Posts extends Controller
     public function destroy(string $id)
     {
         $post = \App\Models\Post::find($id);
-        Storage::disk('public')->deleteDirectory($post->id);
+        Storage::disk('public')->deleteDirectory('posts/' . $post->id);
 
         \App\Models\Post::destroy($id);
 
