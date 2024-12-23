@@ -99,12 +99,11 @@ class Posts extends Controller
 
         $saveRedirect = $request['saveRedirect'];
         unset($request['saveRedirect']);
-        unset($request['customer_service']);
 
-        $customer = new \App\Models\Post();
-        $customer->fill($request->all());
-        $customer->user_id = auth()->user()->id;
-        $customer->save();
+        $post = new \App\Models\Post();
+        $post->fill($request->all());
+        $post->user_id = auth()->user()->id;
+        $post->save();
 
         return Redirect::to($saveRedirect);
     }
@@ -120,9 +119,11 @@ class Posts extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Request $request, string $id)
     {
         $data = \App\Models\Post::find($id);
+
+        $data->saveRedirect = Redirect::back()->getTargetUrl();
 
         return Inertia::render('Posts/Form', [
             'data' => $data,
@@ -141,11 +142,12 @@ class Posts extends Controller
 
         $saveRedirect = $request['saveRedirect'];
         unset($request['saveRedirect']);
-        unset($request['customer_service']);
+        unset($request['created_at']);
+        unset($request['updated_at']);
 
-        $customer = \App\Models\Post::find($id);
-        $customer->fill($request->all());
-        $customer->save();
+        $post = \App\Models\Post::find($id);
+        $post->fill($request->all());
+        $post->save();
 
         return Redirect::to($saveRedirect);
     }
@@ -155,6 +157,8 @@ class Posts extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        \App\Models\Post::destroy($id);
+
+        return \redirect()->back();
     }
 }
