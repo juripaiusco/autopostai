@@ -23,7 +23,7 @@ class Mysql:
 
             if self.CONNECTION.is_connected():
                 print("Connection to DB is open.")
-                self.CURSOR = self.CONNECTION.cursor()
+                self.CURSOR = self.CONNECTION.cursor(dictionary=True)
 
         except Error as e:
             print(f"Error connection: {e}")
@@ -41,11 +41,7 @@ class Mysql:
 
         try:
             self.CURSOR.execute(query)
-            rows = self.CURSOR.fetchall()
-
-            # Itera sui risultati
-            for row in rows:
-                print(row)
+            return self.CURSOR.fetchall()
 
         except Error as e:
             print(f"Error query: {e}")
