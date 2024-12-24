@@ -51,13 +51,14 @@ def main():
             prompt = prompt + "#Guidelines\n\n"
             prompt = prompt + f"{row['prompt']}"
 
+        img_path = f"./storage/app/public/posts/{row['id']}/{row['img']}"
         img_url = f"{os.getenv('APP_URL')}/storage/posts/{row['id']}/{row['img']}"
 
-        # gpt = GPT()
-        # contenuto = gpt.generate(prompt, img_path)
+        gpt = GPT(api_key=row['openai_api_key'])
+        contenuto = gpt.generate(prompt, img_path)
 
-        # meta = Meta()
-        # meta.fb_generate_post(contenuto, img_path)
+        meta = Meta(row['meta_page_id'])
+        meta.fb_generate_post(contenuto, img_path)
 
         # meta = Meta()
         # meta.ig_generate_post(contenuto, "https://.../bracciale.jpg")
