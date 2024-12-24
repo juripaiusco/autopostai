@@ -1,5 +1,6 @@
 from lib.gpt import GPT
 from lib.meta import Meta
+from lib.mysql import Mysql
 
 
 def main():
@@ -29,4 +30,8 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
+  # main()
+    mysql = Mysql()
+    mysql.connect()
+    mysql.query("SELECT * FROM autopostai_posts WHERE published IS NULL")
+    mysql.close()
