@@ -2,11 +2,15 @@ import os
 import requests
 
 class Meta:
-  def __init__(self):
+  def __init__(
+      self,
+      page_id = os.getenv("META_PAGE_ID"),
+      user_access_token = os.getenv("META_USER_ACCESS_TOKEN")
+  ):
 
     self.META_API_BASE_URL = os.getenv("META_API_BASE_URL")
-    self.META_PAGE_ID = os.getenv("META_PAGE_ID")
-    self.META_USER_ACCESS_TOKEN = os.getenv("META_USER_ACCESS_TOKEN")
+    self.META_PAGE_ID = page_id
+    self.META_USER_ACCESS_TOKEN = user_access_token
 
 
   # Recupero l'accesso token della pagina
