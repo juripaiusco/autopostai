@@ -14,13 +14,13 @@ def main():
     rows = mysql.query("""
             SELECT  autopostai_posts.id AS id,
                     autopostai_posts.user_id AS user_id,
-                    autopostai_posts.ai_prompt_post AS prompt,
+                    autopostai_posts.ai_prompt_post AS ai_prompt_post,
                     autopostai_posts.img AS img,
                     autopostai_posts.img_ai_check_on AS img_ai_check_on,
-                    autopostai_posts.meta_facebook_on AS meta_facebook,
-                    autopostai_posts.meta_instagram_on AS meta_instagram,
-                    autopostai_posts.wordpress_on AS wordpress,
-                    autopostai_posts.newsletter_on AS newsletter,
+                    autopostai_posts.meta_facebook_on AS meta_facebook_on,
+                    autopostai_posts.meta_instagram_on AS meta_instagram_on,
+                    autopostai_posts.wordpress_on AS wordpress_on,
+                    autopostai_posts.newsletter_on AS newsletter_on,
                     autopostai_posts.published_at AS published_at,
                     autopostai_posts.published AS published,
                     autopostai_settings.ai_personality AS ai_personality,
@@ -70,7 +70,7 @@ def main():
             contenuto = gpt.generate(prompt)
 
         # - - -  - - -  - - -  - - -  - - -  - - -
-        
+
         # Verifico se l'immagine è stata caricata e la invio ai canali scelti
         if row['img']:
 
