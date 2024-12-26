@@ -74,10 +74,10 @@ let modalData = ref(props.data);
                             fnc: function (d) {
 
                                 let socialArray = new Array();
-                                d.meta_facebook == 1 ? socialArray.push('Facebook')  : '';
-                                d.meta_instagram == 1 ? socialArray.push('Instagram')  : '';
-                                d.wordpress == 1 ? socialArray.push('WordPress')  : '';
-                                d.newsletter == 1 ? socialArray.push('Newsletter')  : '';
+                                d.meta_facebook_on == 1 ? socialArray.push('Facebook')  : '';
+                                d.meta_instagram_on == 1 ? socialArray.push('Instagram')  : '';
+                                d.wordpress_on == 1 ? socialArray.push('WordPress')  : '';
+                                d.newsletter_on == 1 ? socialArray.push('Newsletter')  : '';
 
                                 let html = '<small class=\'text-xs\'>'
                                 html += socialArray.join(' / ');

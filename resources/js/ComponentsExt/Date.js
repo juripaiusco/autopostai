@@ -38,6 +38,9 @@ export function __date(dateString, format = '') {
             case 'n':
                 return parseInt(m);
                 break;
+            case 'datestring':
+                return y + '-' + m + '-' + d + ' ' + h + ':' + i + ':' + s;
+                break;
             default:
                 return d + '/' + m + '/' + y + ' ' + h + ':' + i + ':' + s;
         }

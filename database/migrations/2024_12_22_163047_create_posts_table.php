@@ -17,13 +17,18 @@ return new class extends Migration
             $table->bigInteger('user_id')->index();
 
             $table->string('title');
-            $table->longText('prompt')->default('')->nullable();
+            $table->longText('ai_prompt_post')->default('')->nullable();
             $table->string('img')->default('')->nullable();
+            $table->string('img_ai_check_on', 1)->default(0)->nullable();
 
-            $table->string('meta_facebook', 1)->default(0)->nullable();
-            $table->string('meta_instagram', 1)->default(0)->nullable();
-            $table->string('wordpress', 1)->default(0)->nullable();
-            $table->string('newsletter', 1)->default(0)->nullable();
+            $table->string('meta_facebook_on', 1)->default(0)->nullable();
+            $table->string('meta_facebook_id')->default(0)->nullable();
+            $table->string('meta_instagram_on', 1)->default(0)->nullable();
+            $table->string('meta_instagram_id')->default(0)->nullable();
+            $table->string('wordpress_on', 1)->default(0)->nullable();
+            $table->string('wordpress_id')->default(0)->nullable();
+            $table->string('newsletter_on', 1)->default(0)->nullable();
+            $table->string('newsletter_id')->default(0)->nullable();
 
             $table->timestamp('published_at')->nullable();
             $table->string('published', 1)->default(0)->nullable();

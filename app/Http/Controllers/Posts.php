@@ -54,10 +54,10 @@ class Posts extends Controller
             'posts.id',
             'posts.title',
             'posts.published_at',
-            'posts.meta_facebook',
-            'posts.meta_instagram',
-            'posts.wordpress',
-            'posts.newsletter',
+            'posts.meta_facebook_on',
+            'posts.meta_instagram_on',
+            'posts.wordpress_on',
+            'posts.newsletter_on',
         ]);
 
         $data = $data->paginate(env('VIEWS_PAGINATE'))->withQueryString();
