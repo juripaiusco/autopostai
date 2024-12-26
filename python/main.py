@@ -60,9 +60,6 @@ def main():
         # Classe OpenAI
         gpt = GPT(api_key=row['openai_api_key'])
 
-        # Classe Meta
-        meta = Meta(page_id=row['meta_page_id'])
-
         # Verifico se l'immagine è da inviare all'AI e se l'immagine esiste
         if row['img_ai_check_on'] and row['img']:
             contenuto = gpt.generate(prompt, img_path)
@@ -71,10 +68,13 @@ def main():
 
         # - - -  - - -  - - -  - - -  - - -  - - -
 
+        # Classe Meta
+        meta = Meta(page_id=row['meta_page_id'])
+
         # Verifico se l'immagine è stata caricata e la invio ai canali scelti
         if row['img']:
 
-            if row['meta_facebook_on']:
+            if row['meta_facebook_on'] == '1':
                 fb_post_id = meta.fb_generate_post(contenuto, img_path)
                 print("\nFacebok post id: ", fb_post_id)
                 mysql.query(
@@ -83,7 +83,7 @@ def main():
                 )
                 print("\n- - - - - -\n")
 
-            if row['meta_instagram_on']:
+            if row['meta_instagram_on'] == '1':
                 ig_post_id = meta.ig_generate_post(contenuto, img_url)
                 print("\nInstagram post id: ", ig_post_id)
                 mysql.query(
@@ -94,7 +94,7 @@ def main():
 
         else:
 
-            if row['meta_facebook_on']:
+            if row['meta_facebook_on'] == '1':
                 fb_post_id = meta.fb_generate_post(contenuto)
                 mysql.query(
                     query="UPDATE autopostai_posts SET meta_facebook_id = %s WHERE id = %s",
