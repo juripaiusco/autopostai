@@ -53,6 +53,7 @@ class Posts extends Controller
         $data = $data->select([
             'posts.id',
             'posts.title',
+            'posts.published',
             'posts.published_at',
             'posts.meta_facebook_on',
             'posts.meta_instagram_on',

@@ -101,16 +101,23 @@ let modalData = ref(props.data);
 
                             }
                         }, {
-                            class: 'text-center w-[20%]',
-                            label: 'online',
+                            class: 'text-center w-[5%]',
+                            label: '',
                             field: 'published',
                             fnc: function (d) {
 
-                                let html = '<small class=\'text-xs\'>'
-                                html += d.published == 1 ? '<span class=\'text-green-600\'>Sì</span>' : '<span class=\'text-red-600\'>No</span>';
-                                html += '</small>'
+                                let html = ''
 
-                                return html
+                                if (d.published == 1) {
+                                    html += '<div class=\'!text-right text-green-500\'>'
+                                } else {
+                                    html += '<div class=\'text-center text-gray-300\'>'
+                                }
+
+                                html += '<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.5\' stroke=\'currentColor\' class=\'size-6\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\'/></svg>'
+                                html += '</div>'
+
+            return html
 
                             }
                         }, {
