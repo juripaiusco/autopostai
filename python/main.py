@@ -61,7 +61,7 @@ def main():
         gpt = GPT(api_key=row['openai_api_key'])
 
         # Verifico se l'immagine è da inviare all'AI e se l'immagine esiste
-        if row['img_ai_check_on'] and row['img']:
+        if row['img_ai_check_on'] == '1' and row['img']:
             contenuto = gpt.generate(prompt, img_path)
         else:
             contenuto = gpt.generate(prompt)
