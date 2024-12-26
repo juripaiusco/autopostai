@@ -37,10 +37,10 @@ class Mysql:
             print("Connection to DB is closed.")
 
 
-    def query(self, query):
+    def query(self, query, parameters=None):
 
         try:
-            self.CURSOR.execute(query)
+            self.CURSOR.execute(query, parameters)
             return self.CURSOR.fetchall()
 
         except Error as e:
