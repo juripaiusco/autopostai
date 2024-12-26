@@ -57,8 +57,9 @@ class Meta:
       response = requests.post(url, files=files, data=payload)
 
     if response.status_code == 200:
-      print("Post pubblicato con successo!")
+      print("Post Facebook pubblicato con successo!")
       print("Risposta API:", response.json())
+      return response.json().get("post_id")
     else:
       print("Errore nella pubblicazione del post.")
       print("Codice di stato:", response.status_code)
@@ -89,7 +90,7 @@ class Meta:
       return []
 
 
-  # Creazione del post
+  # Instagram Creazione del post
   def ig_generate_post(self, msg, img_url=""):
 
     url = f"{self.META_API_BASE_URL}/{self.ig_get_instagram_account_id()}/media"
@@ -101,11 +102,13 @@ class Meta:
 
     response = requests.post(url, data=payload)
     if response.status_code == 200:
-      print("Caricamento riuscito:", response.json())
-      post_id = response.json().get("id")
-      self.ig_pubblicate_post(post_id)
+        print("Post Instagram caricato con successo!")
+        print("Risposta API:", response.json())
+        post_id = response.json().get("id")
+        self.ig_pubblicate_post(post_id)
+        return post_id
     else:
-      print("Errore nel caricamento dell'immagine:", response.json())
+        print("Errore nel caricamento dell'immagine:", response.json())
 
   # Pubblicazione del post
   def ig_pubblicate_post(self, id):
@@ -118,6 +121,7 @@ class Meta:
 
     response = requests.post(url, data=payload)
     if response.status_code == 200:
-      print("Pubblicazione riuscita:", response.json())
+        print("Post Instagram pubblicato con successo!")
+        print("Risposta API:", response.json())
     else:
-      print("Errore nella pubblicazione:", response.json())
+        print("Errore nella pubblicazione:", response.json())
