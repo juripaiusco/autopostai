@@ -55,6 +55,8 @@ def main():
         img_path = f"./storage/app/public/posts/{row['id']}/{row['img']}"
         img_url = f"{os.getenv('APP_URL')}/storage/posts/{row['id']}/{row['img']}"
 
+        # - - -  - - -  - - -  - - -  - - -  - - -
+
         # Classe OpenAI
         gpt = GPT(api_key=row['openai_api_key'])
 
@@ -67,6 +69,8 @@ def main():
         else:
             contenuto = gpt.generate(prompt)
 
+        # - - -  - - -  - - -  - - -  - - -  - - -
+        
         # Verifico se l'immagine è stata caricata e la invio ai canali scelti
         if row['img']:
 
