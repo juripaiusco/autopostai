@@ -40,7 +40,12 @@ class Mysql:
     def query(self, query, parameters=None):
 
         try:
-            self.CURSOR.execute(query, parameters)
+            if parameters is None:
+                self.CURSOR.execute(query)
+            else:
+                self.CURSOR.execute(query, parameters)
+                self.CONNECTION.commit()
+
             return self.CURSOR.fetchall()
 
         except Error as e:
