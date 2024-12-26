@@ -34,6 +34,7 @@ def main():
             WHERE autopostai_posts.published IS NULL
         """)
     mysql.close()
+    print("\n- - - - - -\n")
 
     # Leggo tutti i post
     for row in rows:
@@ -75,15 +76,20 @@ def main():
         if row['img']:
 
             if row['meta_facebook_on']:
-                meta.fb_generate_post(contenuto, img_path)
+                post_id = meta.fb_generate_post(contenuto, img_path)
+                print("\nFacebok post id: ", post_id)
+                print("\n- - - - - -\n")
 
             if row['meta_instagram_on']:
-                meta.ig_generate_post(contenuto, img_url)
+                post_id = meta.ig_generate_post(contenuto, img_url)
+                print("\nInstagram post id: ", post_id)
+                print("\n- - - - - -\n")
 
         else:
 
             if row['meta_facebook_on']:
                 meta.fb_generate_post(contenuto)
+                print("\n- - - - - -\n")
 
 
 if __name__ == "__main__":
