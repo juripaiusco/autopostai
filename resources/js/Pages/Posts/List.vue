@@ -107,7 +107,7 @@ let modalData = ref(props.data);
                             fnc: function (d) {
 
                                 let html = '<small class=\'text-xs\'>'
-                                html += d.published ? '<span class=\'text-green-600\'>Sì</span>' : '<span class=\'text-red-600\'>No</span>';
+                                html += d.published == 1 ? '<span class=\'text-green-600\'>Sì</span>' : '<span class=\'text-red-600\'>No</span>';
                                 html += '</small>'
 
                                 return html
