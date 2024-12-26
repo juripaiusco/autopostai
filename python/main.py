@@ -33,7 +33,6 @@ def main():
 
             WHERE autopostai_posts.published IS NULL
         """)
-    mysql.close()
     print("\n- - - - - -\n")
 
     # Leggo tutti i post
@@ -76,20 +75,39 @@ def main():
         if row['img']:
 
             if row['meta_facebook_on']:
-                post_id = meta.fb_generate_post(contenuto, img_path)
-                print("\nFacebok post id: ", post_id)
+                fb_post_id = meta.fb_generate_post(contenuto, img_path)
+                print("\nFacebok post id: ", fb_post_id)
+                mysql.query(
+                    query="UPDATE autopostai_posts SET meta_facebook_id = %s WHERE id = %s",
+                    parameters=(fb_post_id, row['id'])
+                )
                 print("\n- - - - - -\n")
 
             if row['meta_instagram_on']:
-                post_id = meta.ig_generate_post(contenuto, img_url)
-                print("\nInstagram post id: ", post_id)
+                ig_post_id = meta.ig_generate_post(contenuto, img_url)
+                print("\nInstagram post id: ", ig_post_id)
+                mysql.query(
+                    query="UPDATE autopostai_posts SET meta_instagram_id = %s WHERE id = %s",
+                    parameters=(ig_post_id, row['id'])
+                )
                 print("\n- - - - - -\n")
 
         else:
 
             if row['meta_facebook_on']:
-                meta.fb_generate_post(contenuto)
+                fb_post_id = meta.fb_generate_post(contenuto)
+                mysql.query(
+                    query="UPDATE autopostai_posts SET meta_facebook_id = %s WHERE id = %s",
+                    parameters=(fb_post_id, row['id'])
+                )
                 print("\n- - - - - -\n")
+
+        mysql.query(
+            query="UPDATE autopostai_posts SET published = %s WHERE id = %s",
+            parameters=(1, row['id'])
+        )
+
+    mysql.close()
 
 
 if __name__ == "__main__":
