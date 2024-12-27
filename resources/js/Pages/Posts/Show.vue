@@ -56,7 +56,7 @@ if (props.data.newsletter_on === '1')
             <div class="row">
                 <div class="col-lg">
 
-                    <h2 class="text-xl font-bold">Istruzioni inviate all'AI</h2>
+                    <h2 class="text-xl font-bold text-center">Istruzioni inviate all'AI</h2>
 
                     <br>
 
@@ -94,12 +94,20 @@ if (props.data.newsletter_on === '1')
                 </div>
                 <div class="col-lg">
 
-                    <h2 class="text-xl font-bold">Contenuto generato dall'AI</h2>
+                    <h2 class="text-xl font-bold text-center">Contenuto generato dall'AI</h2>
+
+                    <br>
+
+                    <div class="card">
+                        <div class="card-body">
+                            {{ data.ai_content }}
+                        </div>
+                    </div>
 
                 </div>
                 <div class="col-lg">
 
-                    <h2 class="text-xl font-bold">Commenti</h2>
+                    <h2 class="text-xl font-bold text-center">Commenti</h2>
 
                 </div>
             </div>
