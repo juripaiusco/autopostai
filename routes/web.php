@@ -18,6 +18,7 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
 
     Route::get('/posts', [Posts::class, 'index'])->name('post.index');
+    Route::get('/posts/show/{id}', [Posts::class, 'show'])->name('post.show');
     Route::get('/posts/create', [Posts::class, 'create'])->name('post.create');
     Route::post('/posts/store', [Posts::class, 'store'])->name('post.store');
     Route::get('/posts/edit/{id}', [Posts::class, 'edit'])->name('post.edit');
