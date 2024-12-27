@@ -18,6 +18,7 @@ return new class extends Migration
 
             $table->string('title');
             $table->longText('ai_prompt_post')->default('')->nullable();
+            $table->longText('ai_content')->default('')->nullable();
             $table->string('img')->default('')->nullable();
             $table->string('img_ai_check_on', 1)->default(0)->nullable();
 
