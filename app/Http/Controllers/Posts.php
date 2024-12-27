@@ -124,7 +124,7 @@ class Posts extends Controller
      */
     public function show(string $id)
     {
-        //
+        return "show" . $id;
     }
 
     /**
@@ -133,6 +133,7 @@ class Posts extends Controller
     public function edit(Request $request, string $id)
     {
         $data = \App\Models\Post::find($id);
+
         $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
 
         $data->saveRedirect = Redirect::back()->getTargetUrl();
