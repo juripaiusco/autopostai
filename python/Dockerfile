@@ -6,7 +6,8 @@ RUN pip install \
     mysql-connector-python \
     openai \
     load_dotenv \
-    requests
+    requests \
+    pytz
 
 # Imposta la directory di lavoro
 WORKDIR /app
