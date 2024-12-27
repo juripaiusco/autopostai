@@ -26,7 +26,28 @@ defineProps({
         <tr v-for="d in data.data" :key="d.id" :id="(data.tblName ? data.tblName : 'row') + '-' + d.id">
             <template v-for="struct in data.structure">
 
-                <td class="align-middle"
+                <td v-if="
+                        (!struct.btnShow && !struct.btnEdit && !struct.btnDel)
+
+                        ||
+
+                        ((typeof struct.btnShow !== 'function' && struct.btnShow === true)
+                        ||
+                        (typeof struct.btnShow === 'function' && struct.btnShow(d) === true))
+
+                        ||
+
+                        ((typeof struct.btnEdit !== 'function' && struct.btnEdit === true)
+                        ||
+                        (typeof struct.btnEdit === 'function' && struct.btnEdit(d) === true))
+
+                        ||
+
+                        ((typeof struct.btnDel !== 'function' && struct.btnDel === true)
+                        ||
+                        (typeof struct.btnDel === 'function' && struct.btnDel(d) === true))
+                    "
+                    class="align-middle"
                     :class="struct.class, struct.classData, {
                         'text-center': (struct.btnShow === true || struct.btnEdit === true || struct.btnDel === true)
                     }">
@@ -54,7 +75,7 @@ defineProps({
 
                         </Link>
 
-                        <!-- IF il pulsante Custom prenseta un emit -->
+                        <!-- IF il pulsante Custom presenta un emit -->
                         <button v-if="struct.emit !== undefined"
                                 type="button"
                                 class="btn btn-sm"
@@ -76,9 +97,14 @@ defineProps({
                     </template>
 
                     <!-- Button Show -->
-                    <template v-if="struct.btnShow === true">
+                    <template v-if="
+                        (typeof struct.btnShow !== 'function' && struct.btnShow === true)
+                        ||
+                        (typeof struct.btnShow === 'function' && struct.btnShow(d) === true)
+                    ">
 
-                        <Link class="btn btn-info btn-sm"
+                        <Link class="btn btn-info"
+                              :class="struct.classBtn"
                               :href="route(struct.route, d.id)">
 
                             <svg class="w-4 h-4"
@@ -91,7 +117,11 @@ defineProps({
                     </template>
 
                     <!-- Button Edit -->
-                    <template v-if="struct.btnEdit === true">
+                    <template v-if="
+                        (typeof struct.btnEdit !== 'function' && struct.btnEdit === true)
+                        ||
+                        (typeof struct.btnEdit === 'function' && struct.btnEdit(d) === true)
+                    ">
 
                         <Link class="btn btn-warning"
                               :class="struct.classBtn"
@@ -107,7 +137,11 @@ defineProps({
                     </template>
 
                     <!-- Button Delete -->
-                    <template v-if="struct.btnDel === true">
+                    <template v-if="
+                        (typeof struct.btnDel !== 'function' && struct.btnDel === true)
+                        ||
+                        (typeof struct.btnDel === 'function' && struct.btnDel(d) === true)
+                    ">
 
                         <button class="btn btn-danger"
                                 type="button"

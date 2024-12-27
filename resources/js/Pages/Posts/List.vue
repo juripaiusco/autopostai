@@ -11,6 +11,7 @@ import TableSearch from "@/Components/Table/TableSearch.vue";
 import TablePagination from "@/Components/Table/TablePagination.vue";
 import {ref} from "vue";
 import {__date} from "@/ComponentsExt/Date.js";
+import {Inertia} from "@inertiajs/inertia";
 
 const props = defineProps({
     data: Object,
@@ -74,9 +75,9 @@ let modalData = ref(props.data);
                             fnc: function (d) {
 
                                 let socialArray = new Array();
-                                d.meta_facebook_on == 1 ? socialArray.push('Facebook')  : '';
-                                d.meta_instagram_on == 1 ? socialArray.push('Instagram')  : '';
-                                d.wordpress_on == 1 ? socialArray.push('WordPress')  : '';
+                                d.meta_facebook_on == 1 ? socialArray.push('FB')  : '';
+                                d.meta_instagram_on == 1 ? socialArray.push('IG')  : '';
+                                d.wordpress_on == 1 ? socialArray.push('WP')  : '';
                                 d.newsletter_on == 1 ? socialArray.push('Newsletter')  : '';
 
                                 let html = '<small class=\'text-xs\'>'
@@ -117,21 +118,68 @@ let modalData = ref(props.data);
                                 html += '<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.5\' stroke=\'currentColor\' class=\'size-6\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\'/></svg>'
                                 html += '</div>'
 
-            return html
+                                return html
 
                             }
                         }, {
                             class: 'w-[1%]',
-                            classBtn: 'ml-[8px] btn-dark',
-                            btnEdit: true,
-                            route: 'post.edit'
+                            classBtn: 'btn-dark',
+                            btnCustom: true,
+                            route: 'post.edit',
+                            emit: 'btnCustom_ShowOrEdit',
+                            fnc: function (d) {
+
+                                let html = ''
+
+                                if (d.published === '1') {
+
+                                    html += '<div class=\'btn btn-info\'>';
+                                    html += '<svg class=\'w-4 h-4 xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.5\' stroke=\'currentColor\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z\'/></svg>'
+                                    html += '</div>';
+
+                                } else {
+
+                                    html += '<div class=\'btn btn-dark\'>';
+                                    html += '<svg class=\'w-4 h-4 xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.5\' stroke=\'currentColor\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10\'/></svg>'
+                                    html += '</div>';
+                                }
+
+                                return html
+                            }
+                        }/*, {
+                            class: 'w-[1%]',
+                            classBtn: '',
+                            btnShow: function (d) {
+                                return d.published === '1'
+                            },
+                            route: 'post.show'
                         }, {
                             class: 'w-[1%]',
-                            classBtn: 'mr-[8px] btn-dark',
+                            classBtn: 'btn-dark',
+                            btnEdit: function (d) {
+                                return d.published !== '1'
+                            },
+                            route: 'post.edit'
+                        }*/, {
+                            class: 'w-[1%]',
+                            classBtn: 'btn-dark',
                             btnDel: true,
                             route: 'post.destroy'
                         }],
                     }"
+                   @btnCustom_ShowOrEdit="(d) => {
+
+                       let url;
+
+                       if (d.published === '1') {
+                           url = route('post.show', d.id);
+                       } else {
+                           url = route('post.edit', d.id);
+                       }
+
+                       Inertia.visit(url)
+
+                   }"
                    @openModal="(data, route) => {
                        modalData = data;
                        modalData.confirmURL = route;
