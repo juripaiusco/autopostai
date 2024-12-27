@@ -8,7 +8,7 @@ const props = defineProps({
 
 <template>
 
-    <label class="form-label">ID della pagina</label>
+    <label class="form-label">ID della pagina Facebook</label>
     <input type="text"
            class="form-control"
            v-model="form.meta_page_id" />

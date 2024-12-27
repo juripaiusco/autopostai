@@ -51,14 +51,14 @@ const form = useForm(dataForm);
                                 aria-controls="nav-ai"
                                 aria-selected="true">AI</button>
 
-                        <button class="nav-link"
+                        <!-- <button class="nav-link"
                                 id="nav-google-tab"
                                 data-bs-toggle="tab"
                                 data-bs-target="#nav-google"
                                 type="button"
                                 role="tab"
                                 aria-controls="nav-google"
-                                aria-selected="false">Google</button>
+                                aria-selected="false">Google</button> -->
 
                         <button class="nav-link"
                                 id="nav-openai-tab"
@@ -78,7 +78,7 @@ const form = useForm(dataForm);
                                 aria-controls="nav-meta"
                                 aria-selected="false">Meta</button>
 
-                        <button class="nav-link"
+                        <!-- <button class="nav-link"
                                 id="nav-wordpress-tab"
                                 data-bs-toggle="tab"
                                 data-bs-target="#nav-wordpress"
@@ -94,7 +94,7 @@ const form = useForm(dataForm);
                                 type="button"
                                 role="tab"
                                 aria-controls="nav-newsletter"
-                                aria-selected="false">Newsletter</button>
+                                aria-selected="false">Newsletter</button> -->
 
                     </div>
 

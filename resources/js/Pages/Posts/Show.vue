@@ -105,11 +105,15 @@ if (props.data.newsletter_on === '1')
                     </div>
 
                 </div>
-                <div class="col-lg">
+                <!-- <div class="col-lg text-center">
 
                     <h2 class="text-xl font-bold text-center">Commenti</h2>
 
-                </div>
+                    <br>
+
+                    In lavorazione...
+
+                </div> -->
             </div>
 
             <div class="text-right mt-10">
