@@ -51,19 +51,12 @@ def main():
         """)
     print("\n- - - - - -\n")
 
-    if rows:
-        print(rows)
-        print("\n")
-        print(rows[0]['published_at'])
-
-    print(current_time)
-    quit()
     # Leggo tutti i post
     for row in rows:
 
         #########################################################
         #                                                       #
-        #           Creazione del Prompt dei Media              #
+        #         Creazione del Prompt e dei Media              #
         #                                                       #
         #########################################################
 
@@ -88,7 +81,7 @@ def main():
 
         #########################################################
         #                                                       #
-        #               Collegamento con OpenAI                 #
+        #               Collegamento ad OpenAI                  #
         #                                                       #
         #########################################################
 
@@ -105,7 +98,7 @@ def main():
 
         #########################################################
         #                                                       #
-        #               Collegamento con Meta                   #
+        #                 Collegamento a Meta                   #
         #                                                       #
         #########################################################
 
