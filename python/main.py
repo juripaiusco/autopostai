@@ -95,6 +95,12 @@ def main():
         else:
             contenuto = gpt.generate(prompt)
 
+        # Salvo il contenuto generato dall'AI
+        mysql.query(
+            query="UPDATE autopostai_posts SET ai_content = %s WHERE id = %s",
+            parameters=(contenuto, row['id'])
+        )
+
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
         #########################################################
@@ -141,7 +147,7 @@ def main():
 
         #########################################################
         #                                                       #
-        #          Imposto il post come pubblicato              #
+        #  Imposto il post come pubblicato e salvo i parametri  #
         #                                                       #
         #########################################################
 
