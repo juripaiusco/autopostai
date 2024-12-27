@@ -26,7 +26,7 @@ def main():
     # Ottieni la data attuale
     current_time = datetime.now(local_timezone).strftime('%Y-%m-%d %H:%M:%S')
 
-    rows = mysql.query("""
+    query = f"""
             SELECT  autopostai_posts.id AS id,
                     autopostai_posts.user_id AS user_id,
                     autopostai_posts.ai_prompt_post AS ai_prompt_post,
@@ -47,8 +47,9 @@ def main():
                     INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_posts.user_id
 
             WHERE autopostai_posts.published IS NULL
-                AND published_at <= current_time
-        """)
+                AND autopostai_posts.published_at <= "{current_time}"
+        """
+    rows = mysql.query(query)
     print("\n- - - - - -\n")
 
     # Leggo tutti i post
