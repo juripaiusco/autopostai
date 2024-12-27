@@ -177,7 +177,18 @@ let modalData = ref(props.data);
                            url = route('post.edit', d.id);
                        }
 
-                       Inertia.visit(url)
+                       Inertia.visit(url, {
+                           method: 'get',
+                           only: ['posts'],
+                           headers: {
+                               'X-Inertia': true,
+                           },
+                           replace: true,
+                           preserveState: false,
+                           data: {
+                               inertiaVisit: true
+                           }
+                       })
 
                    }"
                    @openModal="(data, route) => {

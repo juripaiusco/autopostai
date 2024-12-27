@@ -63,6 +63,8 @@ class Posts extends Controller
 
         $data = $data->paginate(env('VIEWS_PAGINATE'))->withQueryString();
 
+        session()->forget('saveRedirectPosts');
+
         return Inertia::render('Posts/List', [
             'data' => $data,
             'filters' => request()->all(['s', 'orderby', 'ordertype'])
@@ -122,12 +124,16 @@ class Posts extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         $data = \App\Models\Post::find($id);
         $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
 
-        $data->saveRedirect = Redirect::back()->getTargetUrl();
+        if ($request->input('inertiaVisit') == true && !$request->session()->get('saveRedirectPosts')) {
+            $request->session()->put('saveRedirectPosts', Redirect::back()->getTargetUrl());
+        }
+
+        $data->saveRedirect = $request->session()->get('saveRedirectPosts');
 
         return Inertia::render('Posts/Show', [
             'data' => $data,
@@ -143,7 +149,11 @@ class Posts extends Controller
         $data = \App\Models\Post::find($id);
         $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
 
-        $data->saveRedirect = Redirect::back()->getTargetUrl();
+        if ($request->input('inertiaVisit') == true && !$request->session()->get('saveRedirectPosts')) {
+            $request->session()->put('saveRedirectPosts', Redirect::back()->getTargetUrl());
+        }
+
+        $data->saveRedirect = $request->session()->get('saveRedirectPosts');
 
         return Inertia::render('Posts/Form', [
             'data' => $data,
