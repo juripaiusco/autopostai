@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 from lib.gpt import GPT
 from lib.meta import Meta
 from lib.mysql import Mysql
+from datetime import datetime
+import pytz
 
 load_dotenv(dotenv_path=".laravel-env")
 
@@ -11,6 +13,19 @@ def main():
     # Recupero i dati dal database per generare i Post
     mysql = Mysql()
     mysql.connect()
+
+    #########################################################
+    #                                                       #
+    #                     Query MySQL                       #
+    #                                                       #
+    #########################################################
+
+    # Fuso orario locale (ad esempio, Europa/Roma)
+    local_timezone = pytz.timezone('Europe/Rome')
+
+    # Ottieni la data attuale
+    current_time = datetime.now(local_timezone).strftime('%Y-%m-%d %H:%M:%S')
+
     rows = mysql.query("""
             SELECT  autopostai_posts.id AS id,
                     autopostai_posts.user_id AS user_id,
@@ -29,14 +44,28 @@ def main():
                     autopostai_settings.meta_page_id AS meta_page_id
 
                 FROM autopostai_posts
-                INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_posts.user_id
+                    INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_posts.user_id
 
             WHERE autopostai_posts.published IS NULL
+                AND published_at <= current_time
         """)
     print("\n- - - - - -\n")
 
+    if rows:
+        print(rows)
+        print("\n")
+        print(rows[0]['published_at'])
+
+    print(current_time)
+    quit()
     # Leggo tutti i post
     for row in rows:
+
+        #########################################################
+        #                                                       #
+        #           Creazione del Prompt dei Media              #
+        #                                                       #
+        #########################################################
 
         # Creo il prompt
         prompt = ""
@@ -55,7 +84,13 @@ def main():
         img_path = f"./storage/app/public/posts/{row['id']}/{row['img']}"
         img_url = f"{os.getenv('APP_URL')}/storage/posts/{row['id']}/{row['img']}"
 
-        # - - -  - - -  - - -  - - -  - - -  - - -
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        #########################################################
+        #                                                       #
+        #               Collegamento con OpenAI                 #
+        #                                                       #
+        #########################################################
 
         # Classe OpenAI
         gpt = GPT(api_key=row['openai_api_key'])
@@ -66,7 +101,13 @@ def main():
         else:
             contenuto = gpt.generate(prompt)
 
-        # - - -  - - -  - - -  - - -  - - -  - - -
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        #########################################################
+        #                                                       #
+        #               Collegamento con Meta                   #
+        #                                                       #
+        #########################################################
 
         # Classe Meta
         meta = Meta(page_id=row['meta_page_id'])
@@ -101,6 +142,14 @@ def main():
                     parameters=(fb_post_id, row['id'])
                 )
                 print("\n- - - - - -\n")
+
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        #########################################################
+        #                                                       #
+        #          Imposto il post come pubblicato              #
+        #                                                       #
+        #########################################################
 
         mysql.query(
             query="UPDATE autopostai_posts SET published = %s WHERE id = %s",
