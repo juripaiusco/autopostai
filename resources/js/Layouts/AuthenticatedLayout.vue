@@ -41,13 +41,21 @@ const showingNavigationDropdown = ref(false);
                                     Dashboard
                                 </NavLink>
 
+                                <NavLink v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on"
+                                         class="w-[100px] text-center"
+                                         :href="route('user.index')"
+                                         :active="route().current().search('user') === 0 ? true : false">
+                                    Account
+                                </NavLink>
+
                                 <NavLink class="w-[100px] text-center"
                                          :href="route('post.index')"
                                          :active="route().current().search('post') === 0 ? true : false">
                                     Posts
                                 </NavLink>
 
-                                <NavLink class="w-[100px] text-center"
+                                <NavLink v-if="$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
+                                         class="w-[100px] text-center"
                                          :href="route('settings.index')"
                                          :active="route().current().search('settings') === 0 ? true : false">
                                     Impostazioni

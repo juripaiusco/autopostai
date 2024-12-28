@@ -21,10 +21,31 @@ class Settings extends Controller
         ]);
     }
 
+    public function store(Request $request, string $user_id)
+    {
+        $request['user_id'] = $user_id;
+
+        // In questo caso utilizzo $settings->fill($request->all()) perché
+        // nella crezione del nuovo utente l'array che viene restituito è
+        // un array piatto
+        $settings = new \App\Models\Settings();
+        $settings->fill($request->all());
+        $settings->save();
+    }
+
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $user_id)
+    {
+        // In questo caso utilizzo $settings->fill($request->input('settings')) perché
+        // nell'aggiornamento dell'utente l'array che viene restituito è un array nidificato
+        $settings = \App\Models\Settings::where('user_id', $user_id)->first();
+        $settings->fill($request->input('settings'));
+        $settings->save();
+    }
+
+    public function update_by_user(Request $request, string $id)
     {
         $settings = \App\Models\Settings::find($id);
         $settings->fill($request->all());

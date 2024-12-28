@@ -8,12 +8,12 @@ const props = defineProps({
 
 <template>
 
-    <label class="form-label">ID della pagina Facebook</label>
+    <label class="form-label">API Key</label>
     <input type="text"
            class="form-control"
-           v-model="form.meta_page_id" />
+           v-model="form.openai_api_key" />
     <div class="text-red-500 text-center"
-         v-if="form.errors.meta_page_id">{{ __(form.errors.meta_page_id) }}</div>
+         v-if="form && form.errors && form.errors.openai_api_key">{{ __(form.errors.openai_api_key) }}</div>
 
 </template>
 

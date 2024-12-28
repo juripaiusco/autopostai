@@ -31,7 +31,7 @@ const submit = () => {
                 <TextInput
                     id="name"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full form-control"
                     v-model="form.name"
                     required
                     autofocus
@@ -47,7 +47,7 @@ const submit = () => {
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full form-control"
                     v-model="form.email"
                     required
                     autocomplete="username"
@@ -62,7 +62,7 @@ const submit = () => {
                 <TextInput
                     id="password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full form-control"
                     v-model="form.password"
                     required
                     autocomplete="new-password"
@@ -80,7 +80,7 @@ const submit = () => {
                 <TextInput
                     id="password_confirmation"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full form-control"
                     v-model="form.password_confirmation"
                     required
                     autocomplete="new-password"
@@ -101,7 +101,7 @@ const submit = () => {
                 </Link>
 
                 <PrimaryButton
-                    class="ms-4"
+                    class="ms-4 btn btn-primary"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >

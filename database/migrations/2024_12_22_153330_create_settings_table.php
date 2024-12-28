@@ -19,9 +19,9 @@ return new class extends Migration
             $table->longText('ai_personality')->default('')->nullable();
             $table->longText('ai_prompt_prefix')->default('')->nullable();
 
-            $table->string('openai_api_key')->default('')->nullable();
+            $table->string('openai_api_key')->unique()->default('')->nullable();
 
-            $table->string('meta_page_id')->default('')->nullable();
+            $table->string('meta_page_id')->unique()->default('')->nullable();
 
             $table->timestamps();
         });

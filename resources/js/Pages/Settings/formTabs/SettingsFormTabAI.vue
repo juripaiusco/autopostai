@@ -11,6 +11,7 @@ const props = defineProps({
     <label class="form-label">
         Profilo dell'AI
     </label>
+
     <textarea class="form-control h-[216px]"
               placeholder="Descrivi nel modo più dettagliato possibile il profilo che deve avere l'AI
 
