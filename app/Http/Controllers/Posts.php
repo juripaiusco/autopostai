@@ -26,8 +26,6 @@ class Posts extends Controller
         // Query data
         $data = \App\Models\Post::query();
 
-        $data = $data->where('user_id', auth()->user()->id);
-
         // Request validate
         request()->validate([
             'orderby' => ['in:' . implode(',', $request_validate_array)],
@@ -60,6 +58,8 @@ class Posts extends Controller
             'posts.wordpress_on',
             'posts.newsletter_on',
         ]);
+
+        $data = $data->where('user_id', auth()->user()->id);
 
         $data = $data->paginate(env('VIEWS_PAGINATE'))->withQueryString();
 
