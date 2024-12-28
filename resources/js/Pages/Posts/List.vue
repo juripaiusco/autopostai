@@ -66,6 +66,10 @@ let modalData = ref(props.data);
                         data: data.data,
                         structure: [{
                             class: 'text-left',
+                            label: 'Account',
+                            field: 'user.name'
+                        }, {
+                            class: 'text-left',
                             label: 'Titolo',
                             field: 'title'
                         }, {

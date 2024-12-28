@@ -25,6 +25,7 @@ class Posts extends Controller
 
         // Query data
         $data = \App\Models\Post::query();
+        $data = $data->with('user');
 
         // Request validate
         request()->validate([
@@ -48,7 +49,7 @@ class Posts extends Controller
             $data->orderby(request('orderby'), strtoupper(request('ordertype')));
         }
 
-        $data = $data->select([
+        /*$data = $data->select([
             'posts.id',
             'posts.title',
             'posts.published',
@@ -57,9 +58,11 @@ class Posts extends Controller
             'posts.meta_instagram_on',
             'posts.wordpress_on',
             'posts.newsletter_on',
-        ]);
+        ]);*/
 
-        $data = $data->where('user_id', auth()->user()->id);
+        if (auth()->user()->parent_id != null) {
+            $data = $data->where('user_id', auth()->user()->id);
+        }
 
         $data = $data->paginate(env('VIEWS_PAGINATE'))->withQueryString();
 
