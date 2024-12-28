@@ -19,7 +19,8 @@ class Users extends Controller
     {
         $request_search_array = [
             'name',
-            'email'
+            'email',
+            'child_on'
         ];
 
         $request_validate_array = $request_search_array;
@@ -53,6 +54,7 @@ class Users extends Controller
             'users.id',
             'users.name',
             'users.email',
+            'users.child_on',
         ]);
 
         if (auth()->user()->parent_id == null) {

@@ -73,6 +73,24 @@ let modalData = ref(props.data);
                             label: 'E-mail',
                             field: 'email'
                         }, {
+                            class: 'text-center w-[10%]',
+                            label: 'Manager',
+                            field: 'child_on',
+                            fnc: function (d) {
+
+                                let html = ''
+
+                                if (d.child_on === 1) {
+
+                                    html += '<div class=\'ml-10 !text-center text-green-500\'>'
+                                    html += '<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.5\' stroke=\'currentColor\' class=\'size-6\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\'/></svg>'
+                                    html += '</div>'
+
+                                }
+
+                                return html
+                            }
+                        }, {
                             class: 'w-[1%]',
                             classBtn: 'btn-dark',
                             btnEdit: true,
