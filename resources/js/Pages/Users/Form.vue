@@ -39,6 +39,13 @@ const form = useForm(dataForm);
 
         <ApplicationContainer>
 
+            <div v-if="form.errors.message"
+                 class="alert alert-danger">
+
+                {{ form.errors.message }}
+
+            </div>
+
             <form @submit.prevent="form.post(route(
                 form.id ? 'user.update' : 'user.store',
                 form.id ? form.id : ''
@@ -51,8 +58,13 @@ const form = useForm(dataForm);
                             Profilo Account
                         </h2>
 
-                        <small class="text-xs font-normal">
-                            Creato da {{ form.parent.name }} - {{ form.parent.email }}
+                        <small  class="text-xs font-normal">
+                            <span v-if="form.parent">
+                                Creato da {{ form.parent.name }} - {{ form.parent.email }}
+                            </span>
+                            <span v-else>
+                                Sta venendo creato da {{ $page.props.auth.user.name }} - {{ $page.props.auth.user.email }}
+                            </span>
                         </small>
 
                         <br><br>
@@ -131,6 +143,8 @@ const form = useForm(dataForm);
                                v-model="form.child_max" />
                         <div class="text-red-500 text-center"
                              v-if="form.errors.child_max">{{ __(form.errors.child_max) }}</div>
+
+                        <br>
 
                     </div>
                     <div class="col-lg">

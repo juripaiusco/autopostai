@@ -107,6 +107,15 @@ class Users extends Controller
      */
     public function store(Request $request)
     {
+        $user = User::with('children')->where('id', auth()->id())->first();
+
+        if ($user->parent_id && $user->child_on == 1 && $user->child_max <= $user->children()->count()) {
+
+            return redirect()->back()->withErrors([
+                'message' => 'Hai raggiunto il numero massimo di utenti, non puoi crearne altri',
+            ]);
+        }
+
         $request->validate([
             'name'      => ['required'],
             'email'     => ['required'],
