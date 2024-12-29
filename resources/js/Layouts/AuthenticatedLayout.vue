@@ -49,7 +49,7 @@ const showingNavigationDropdown = ref(false);
                                 </NavLink>
 
                                 <NavLink class="w-[100px] text-center"
-                                         :href="route('post.index')"
+                                         :href="route('post.index') + '?orderby=published_at&ordertype=desc&s='"
                                          :active="route().current().search('post') === 0 ? true : false">
                                     Posts
                                 </NavLink>
