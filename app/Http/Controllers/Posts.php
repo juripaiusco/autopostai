@@ -60,8 +60,15 @@ class Posts extends Controller
             'posts.newsletter_on',
         ]);*/
 
-        if (auth()->user()->parent_id != null) {
+        if (auth()->user()->parent_id && !auth()->user()->child_on) {
             $data = $data->where('user_id', auth()->user()->id);
+        }
+
+        if (auth()->user()->parent_id && auth()->user()->child_on) {
+            $parentId = auth()->user()->id;
+            $data = $data->whereHas('user', function ($query) use ($parentId) {
+                $query->where('parent_id', $parentId);
+            });
         }
 
         $data = $data->paginate(env('VIEWS_PAGINATE'))->withQueryString();
