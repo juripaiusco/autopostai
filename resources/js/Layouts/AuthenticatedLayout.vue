@@ -78,6 +78,9 @@ const showingNavigationDropdown = ref(false);
                                                 <span v-if="$page.props.auth.user.child_on">
                                                     &nbsp;-&nbsp;Manager
                                                 </span>
+                                                <span v-if="!$page.props.auth.user.parent_id">
+                                                    &nbsp;-&nbsp;Amministratore
+                                                </span>
 
                                                 <svg
                                                     class="-me-0.5 ms-2 h-4 w-4"
