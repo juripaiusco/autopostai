@@ -67,7 +67,23 @@ let modalData = ref(props.data);
                         structure: [{
                             class: 'text-left',
                             label: 'Account',
-                            field: 'user.name'
+                            field: 'user.name',
+                            fnc: function (d) {
+
+                                let html = d.user.name
+
+                                if (d.user.child_on === 1) {
+
+                                    html += '<strong> - Manager</strong>'
+
+                                }
+
+                                html += '<br><small>'
+                                html += d.user.email
+                                html += '</small>'
+
+                                return html
+                            }
                         }, {
                             class: 'text-left',
                             label: 'Titolo',

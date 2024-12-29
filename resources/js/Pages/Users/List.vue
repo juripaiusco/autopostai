@@ -66,9 +66,25 @@ let modalData = ref(props.data);
                         data: data.data,
                         structure: [{
                             class: 'text-left',
-                            label: 'Nome',
-                            field: 'name'
-                        }, {
+                            label: 'Account',
+                            field: 'name',
+                            fnc: function (d) {
+
+                                let html = d.name
+
+                                if (d.child_on === 1) {
+
+                                    html += '<strong> - Manager</strong>'
+
+                                }
+
+                                html += '<br><small>'
+                                html += d.email
+                                html += '</small>'
+
+                                return html
+                            }
+                        }, /*{
                             class: 'text-left',
                             label: 'E-mail',
                             field: 'email'
@@ -90,7 +106,7 @@ let modalData = ref(props.data);
 
                                 return html
                             }
-                        }, {
+                        }, */{
                             class: 'w-[1%]',
                             classBtn: 'btn-dark',
                             btnEdit: true,
