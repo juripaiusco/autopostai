@@ -60,14 +60,6 @@ function changeImg() {
                 <div class="row">
                     <div class="col-lg">
 
-                        <img :src="form.img"
-                             class="rounded" >
-
-                        <br>
-
-                    </div>
-                    <div class="col-lg">
-
                         <div class="row">
                             <div class="col-lg-7">
 
@@ -108,46 +100,6 @@ function changeImg() {
                         </label>
                         <textarea class="form-control h-[216px]"
                                   v-model="form.ai_prompt_post"></textarea>
-
-                        <br><br>
-
-                        <div class="input-group">
-                            <input type="file"
-                                   class="form-control"
-                                   @input="form.img = $event.target.files[0]"
-                                   @change="changeImg()"
-                                   id="img">
-                            <label class="input-group-text" for="img">Upload Immagine</label>
-                        </div>
-                        <progress v-if="form.progress" :value="form.progress.percentage" max="100">
-                            {{ form.progress.percentage }}%
-                        </progress>
-
-                        <br>
-
-                        <div class="form-check form-switch !mb-3">
-
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   id="img_ai_check_on"
-                                   true-value="1"
-                                   false-value="0"
-                                   v-model="form.img_ai_check_on"
-                                   checked />
-
-                            <label class="form-check-label"
-                                   for="img_ai_check_on">
-                                <span class="text-gray-500 text-[0.9em]">
-                                    Interpretazione dell'immagine da parte dell'AI
-                                    <br>
-                                    <small>
-                                        Se nel testo del prompt chiedi all'AI di interpretare l'immagine questa
-                                        spunta dev'essere attiva
-                                    </small>
-                                </span>
-                            </label>
-
-                        </div>
 
                         <br>
 
@@ -241,6 +193,54 @@ function changeImg() {
 
                             </div>
                         </div>
+
+                    </div>
+                    <div class="col-lg">
+
+                        <br><br>
+
+                        <div class="input-group">
+                            <input type="file"
+                                   class="form-control"
+                                   @input="form.img = $event.target.files[0]"
+                                   @change="changeImg()"
+                                   id="img">
+                            <label class="input-group-text" for="img">Upload Immagine</label>
+                        </div>
+                        <progress v-if="form.progress" :value="form.progress.percentage" max="100">
+                            {{ form.progress.percentage }}%
+                        </progress>
+
+                        <br>
+
+                        <div class="form-check form-switch !mb-3">
+
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="img_ai_check_on"
+                                   true-value="1"
+                                   false-value="0"
+                                   v-model="form.img_ai_check_on"
+                                   checked />
+
+                            <label class="form-check-label"
+                                   for="img_ai_check_on">
+                                <span class="text-gray-500 text-[0.9em]">
+                                    Interpretazione dell'immagine da parte dell'AI
+                                    <br>
+                                    <small>
+                                        Se nel testo del prompt chiedi all'AI di interpretare l'immagine questa
+                                        spunta dev'essere attiva
+                                    </small>
+                                </span>
+                            </label>
+
+                        </div>
+                        
+                        <img :src="form.img"
+                             class="rounded" >
+
+                        <br>
 
                     </div>
                 </div>
