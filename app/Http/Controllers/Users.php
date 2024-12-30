@@ -27,6 +27,7 @@ class Users extends Controller
 
         // Query data
         $data = \App\Models\User::query();
+//        $data = $data->with('posts');
 
         // Request validate
         request()->validate([

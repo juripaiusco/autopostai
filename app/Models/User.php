@@ -22,6 +22,11 @@ class User extends Authenticatable
         return $this->hasMany(User::class, 'parent_id');
     }
 
+    public function posts()
+    {
+        return $this->hasMany(Post::class, 'user_id');
+    }
+
     public function settings()
     {
         return $this->hasOne(Settings::class, 'user_id', 'id');

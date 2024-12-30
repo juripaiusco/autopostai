@@ -65,6 +65,30 @@ let modalData = ref(props.data);
                         routeSearch: 'user.index',
                         data: data.data,
                         structure: [{
+                            class: 'text-left w-[5%]',
+                            label: '',
+                            field: '',
+                            fnc: function (d) {
+
+                                let html = ''
+
+                                if (d.child_on === 1) {
+
+                                    html += '<div class=\'text-center\'>'
+                                    html += '<i class=\'fa-solid fa-user-tie\'></i>'
+                                    html += '</div>'
+
+                                } else {
+
+                                    html += '<div class=\'text-center\'>'
+                                    html += '<i class=\'fa-solid fa-user\'></i>'
+                                    html += '</div>'
+
+                                }
+
+                                return html
+                            }
+                        }, {
                             class: 'text-left',
                             label: 'Account',
                             field: 'name',
@@ -85,6 +109,19 @@ let modalData = ref(props.data);
                                 return html
                             }
                         }, /*{
+                            class: 'text-center',
+                            label: 'Post',
+                            field: '',
+                            fnc: function (d) {
+
+                                let html = ''
+
+                                if (d.posts.length)
+                                    html += d.posts.length
+
+                                return html
+                            }
+                        }, *//*{
                             class: 'text-left',
                             label: 'E-mail',
                             field: 'email'
