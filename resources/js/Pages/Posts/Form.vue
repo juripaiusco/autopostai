@@ -262,7 +262,7 @@ function changeImg() {
 
                         </div>
 
-                        <img :src="form.img"
+                        <img v-if="form.img" :src="form.img"
                              class="rounded" >
 
                         <br>

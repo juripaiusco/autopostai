@@ -170,7 +170,9 @@ class Posts extends Controller
     public function show(Request $request, string $id)
     {
         $data = \App\Models\Post::with('user')->find($id);
-        $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
+
+        if ($data->img)
+            $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
 
         if ($request->input('inertiaVisit') == true && !$request->session()->get('saveRedirectPosts')) {
             $request->session()->put('saveRedirectPosts', Redirect::back()->getTargetUrl());
@@ -190,7 +192,9 @@ class Posts extends Controller
     public function edit(Request $request, string $id)
     {
         $data = \App\Models\Post::with('user')->find($id);
-        $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
+
+        if ($data->img)
+            $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
 
         if ($request->input('inertiaVisit') == true && !$request->session()->get('saveRedirectPosts')) {
             $request->session()->put('saveRedirectPosts', Redirect::back()->getTargetUrl());
