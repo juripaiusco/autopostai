@@ -66,6 +66,13 @@ if (props.data.newsletter_on === '1')
                     <br>
 
                     <label class="form-label">
+                        Proprietario del post
+                    </label>
+                    {{ data.user.name }} - {{ data.user.email }}
+
+                    <br><br>
+
+                    <label class="form-label">
                         Data pubblicazione
                     </label>
                     {{ __date(data.published_at) }}

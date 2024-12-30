@@ -169,7 +169,7 @@ class Posts extends Controller
      */
     public function show(Request $request, string $id)
     {
-        $data = \App\Models\Post::find($id);
+        $data = \App\Models\Post::with('user')->find($id);
         $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
 
         if ($request->input('inertiaVisit') == true && !$request->session()->get('saveRedirectPosts')) {
