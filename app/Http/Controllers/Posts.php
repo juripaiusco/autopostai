@@ -101,6 +101,36 @@ class Posts extends Controller
 
         $data['saveRedirect'] = Redirect::back()->getTargetUrl();
 
+        /**
+         * Query per recuperare gli utente a cui collegare il post
+         * la query viene creata seguendo delle regole di gestione
+         * degli account:
+         * L'amministratore può collegare i post a tutti gli utenti
+         * Il Manager può collegare i post solo ai suoi sotto utenti
+         */
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        if (!auth()->user()->parent_id || (auth()->user()->parent_id && auth()->user()->child_on)) {
+
+            // Query data per mostrare gli utenti a cui collegare il Post
+            $data['users'] = \App\Models\User::query();
+            $data['users'] = $data['users']->with('children');
+
+            // Se l'utente è admin
+            if (!auth()->user()->parent_id) {
+                $data['users'] = $data['users']->whereNotNull('parent_id');
+                $data['users'] = $data['users']->whereNull('child_on');
+            }
+
+            // Se l'utente è Manager, mostro solo i suoi utenti
+            if (auth()->user()->parent_id && auth()->user()->child_on) {
+                $data['users'] = $data['users']->where('parent_id', auth()->user()->id);
+            }
+
+            $data['users'] = $data['users']->get();
+
+        }
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
         $data = json_decode(json_encode($data), true);
 
         return Inertia::render('Posts/Form', [
@@ -121,10 +151,13 @@ class Posts extends Controller
         $saveRedirect = $request['saveRedirect'];
         unset($request['saveRedirect']);
         unset($request['img']);
+        unset($request['users']);
 
         $post = new \App\Models\Post();
         $post->fill($request->all());
-        $post->user_id = auth()->user()->id;
+
+        $post->user_id = $request->input('user_id') ? $request->input('user_id') : auth()->user()->id;
+
         $post->save();
         $this->save_img('posts', $post, $request);
 
@@ -156,7 +189,7 @@ class Posts extends Controller
      */
     public function edit(Request $request, string $id)
     {
-        $data = \App\Models\Post::find($id);
+        $data = \App\Models\Post::with('user')->find($id);
         $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
 
         if ($request->input('inertiaVisit') == true && !$request->session()->get('saveRedirectPosts')) {
@@ -185,6 +218,7 @@ class Posts extends Controller
         unset($request['created_at']);
         unset($request['updated_at']);
         unset($request['img']);
+        unset($request['user']);
 
         $post = \App\Models\Post::find($id);
         $post->fill($request->all());

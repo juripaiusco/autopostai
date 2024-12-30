@@ -60,6 +60,31 @@ function changeImg() {
                 <div class="row">
                     <div class="col-lg">
 
+                        <label class="form-label">
+                            Account al quale è collegato il post
+                            <br>
+                            <small>Imposta quale account deve pubblicare questo post</small>
+                        </label>
+                        <select v-if="data.users"
+                                class="form-select"
+                                aria-label="Default select example"
+                                v-model="form.user_id">
+                            <option disabled value="">Seleziona l'account</option>
+                            <option v-for="user in data.users" :key="user.id" :value="user.id">
+                                {{ user.name }} - {{ user.email }}
+                            </option>
+                        </select>
+                        <div class="text-red-500 text-center"
+                             v-if="form.errors.user_id">{{ __(form.errors.user_id) }}</div>
+
+                        <input v-if="data.user"
+                               type="text"
+                               class="form-control"
+                               disabled
+                               :value="(form.user.name + ' - ' + form.user.email)" />
+
+                        <br>
+
                         <div class="row">
                             <div class="col-lg-7">
 
@@ -236,7 +261,7 @@ function changeImg() {
                             </label>
 
                         </div>
-                        
+
                         <img :src="form.img"
                              class="rounded" >
 
