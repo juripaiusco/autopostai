@@ -1,5 +1,7 @@
 import '../css/app.css';
 import './bootstrap';
+import '@fortawesome/fontawesome-free/css/all.css';
+import '@fortawesome/fontawesome-free/js/all.js';
 import './scss/style.scss';
 import '../../node_modules/bootstrap/dist/js/bootstrap.bundle';
 

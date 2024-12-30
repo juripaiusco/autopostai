@@ -95,14 +95,13 @@ let modalData = ref(props.data);
                             fnc: function (d) {
 
                                 let socialArray = new Array();
-                                d.meta_facebook_on == 1 ? socialArray.push('FB')  : '';
-                                d.meta_instagram_on == 1 ? socialArray.push('IG')  : '';
-                                d.wordpress_on == 1 ? socialArray.push('WP')  : '';
-                                d.newsletter_on == 1 ? socialArray.push('Newsletter')  : '';
+                                d.meta_facebook_on == 1 ? socialArray.push('<i class=\'fa-brands fa-facebook\'></i>')  : '';
+                                d.meta_instagram_on == 1 ? socialArray.push('<i class=\'fa-brands fa-instagram\'></i>')  : '';
+                                d.wordpress_on == 1 ? socialArray.push('<i class=\'fa-brands fa-wordpress-simple\'></i>')  : '';
+                                d.newsletter_on == 1 ? socialArray.push('<i class=\'fa-regular fa-envelope\'></i>')  : '';
 
-                                let html = '<small class=\'text-xs\'>'
-                                html += socialArray.join(' / ');
-                                html += '</small>'
+                                let html = ''
+                                html += socialArray.join('&nbsp;&nbsp;&nbsp;');
 
                                 return html
 
