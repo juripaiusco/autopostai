@@ -219,11 +219,55 @@ if (form.img_ai_check_on === '') {
 
                         <br><br>
 
-                        <div class="input-group">
+                        <!-- Mostra l'anteprima -->
+                        <div v-if="previewUrl"
+                             @click="triggerFileInput"
+                             class="
+                             cursor-pointer
+                             hover:opacity-60">
+                            <img :src="previewUrl"
+                                 alt="Anteprima immagine"
+                                 class="rounded"
+                            />
+                        </div>
+                        <!-- Mostra l'immagine caricata se esiste -->
+                        <div v-else
+                             @click="triggerFileInput"
+                             class="
+                             cursor-pointer
+                             hover:opacity-60">
+                            <img v-if="form.img"
+                                 :src="form.img"
+                                 :alt="form.title"
+                                 class="rounded" >
+                        </div>
+
+                        <div
+                            v-if="!form.img && !previewUrl"
+                            @click="triggerFileInput"
+                            class="
+                             border
+                             border-dashed
+                             border-4
+                             border-gray-200
+                             text-gray-300
+                             text-8xl
+                             p-20
+                             text-center
+                             rounded
+                             cursor-pointer" >
+
+                            <i class="fa-regular fa-image"></i>
+
+                        </div>
+
+                        <div class="input-group"
+                             style="display: none;" >
                             <input type="file"
                                    class="form-control"
                                    @input="form.img = $event.target.files[0]"
                                    @change="onFileChange"
+                                   ref="fileInput"
                                    id="img">
                             <label class="input-group-text" for="img">Upload Immagine</label>
                         </div>
@@ -256,34 +300,6 @@ if (form.img_ai_check_on === '') {
                             </label>
 
                         </div>
-
-                        <!-- Mostra l'anteprima -->
-                        <div v-if="previewUrl">
-                            <img :src="previewUrl"
-                                 alt="Anteprima immagine"
-                                 class="rounded"
-                            />
-                        </div>
-                        <!-- Mostra l'immagine caricata se esiste -->
-                        <div v-else>
-                            <img v-if="form.img"
-                                 :src="form.img"
-                                 class="rounded" >
-                        </div>
-
-                        <!-- <div v-else
-                             class="
-                             border
-                             border-gray-200
-                             text-gray-300
-                             text-8xl
-                             p-20
-                             text-center
-                             rounded" >
-
-                            <i class="fa-regular fa-image"></i>
-
-                        </div> -->
 
                         <br>
 
@@ -322,6 +338,9 @@ export default {
         };
     },
     methods: {
+        triggerFileInput() {
+            this.$refs.fileInput.click(); // Simula il click sull'input file
+        },
         onFileChange(event) {
             const file = event.target.files[0]; // Ottieni il file selezionato
             if (file) {
