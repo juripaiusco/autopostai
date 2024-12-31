@@ -223,6 +223,7 @@ if (form.img_ai_check_on === '') {
                             <input type="file"
                                    class="form-control"
                                    @input="form.img = $event.target.files[0]"
+                                   @change="onFileChange"
                                    id="img">
                             <label class="input-group-text" for="img">Upload Immagine</label>
                         </div>
@@ -256,10 +257,20 @@ if (form.img_ai_check_on === '') {
 
                         </div>
 
-                        <img v-if="form.img"
-                             :src="form.img"
-                             class="rounded" >
-                        <div v-else
+                        <!-- Mostra l'anteprima -->
+                        <div v-if="previewUrl">
+                            <img :src="previewUrl"
+                                 alt="Anteprima immagine"
+                                 class="rounded"
+                            />
+                        </div>
+                        <div v-else>
+                            <img v-if="form.img"
+                                 :src="form.img"
+                                 class="rounded" >
+                        </div>
+
+                        <!-- <div v-else
                              class="
                              border
                              border-gray-200
@@ -271,7 +282,7 @@ if (form.img_ai_check_on === '') {
 
                             <i class="fa-regular fa-image"></i>
 
-                        </div>
+                        </div> -->
 
                         <br>
 
@@ -301,3 +312,28 @@ if (form.img_ai_check_on === '') {
 <style scoped>
 
 </style>
+
+<script>
+export default {
+    data() {
+        return {
+            previewUrl: null, // URL per l'anteprima dell'immagine
+        };
+    },
+    methods: {
+        onFileChange(event) {
+            const file = event.target.files[0]; // Ottieni il file selezionato
+            if (file) {
+                // Usa FileReader per generare l'anteprima
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.previewUrl = e.target.result; // Imposta l'URL dell'anteprima
+                };
+                reader.readAsDataURL(file); // Leggi il file come Data URL
+            } else {
+                this.previewUrl = null; // Se nessun file selezionato, resetta
+            }
+        },
+    },
+};
+</script>
