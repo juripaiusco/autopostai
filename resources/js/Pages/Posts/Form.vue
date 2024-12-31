@@ -5,7 +5,6 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import ApplicationHeader from "@/Components/ApplicationHeader.vue";
 import ApplicationContainer from "@/Components/ApplicationContainer.vue";
 import {useForm} from "@inertiajs/vue3";
-import {ref} from "vue";
 import {__date} from "@/ComponentsExt/Date.js";
 
 const props = defineProps({
@@ -25,10 +24,6 @@ if (form.published_at === '') {
 
 if (form.img_ai_check_on === '') {
     form.img_ai_check_on = 1;
-}
-
-function changeImg() {
-    console.log('changeImg');
 }
 
 </script>
@@ -228,7 +223,6 @@ function changeImg() {
                             <input type="file"
                                    class="form-control"
                                    @input="form.img = $event.target.files[0]"
-                                   @change="changeImg()"
                                    id="img">
                             <label class="input-group-text" for="img">Upload Immagine</label>
                         </div>
@@ -262,8 +256,22 @@ function changeImg() {
 
                         </div>
 
-                        <img v-if="form.img" :src="form.img"
+                        <img v-if="form.img"
+                             :src="form.img"
                              class="rounded" >
+                        <div v-else
+                             class="
+                             border
+                             border-gray-200
+                             text-gray-300
+                             text-8xl
+                             p-20
+                             text-center
+                             rounded" >
+
+                            <i class="fa-regular fa-image"></i>
+
+                        </div>
 
                         <br>
 
