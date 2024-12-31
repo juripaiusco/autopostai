@@ -264,6 +264,7 @@ if (form.img_ai_check_on === '') {
                                  class="rounded"
                             />
                         </div>
+                        <!-- Mostra l'immagine caricata se esiste -->
                         <div v-else>
                             <img v-if="form.img"
                                  :src="form.img"
