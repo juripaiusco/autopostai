@@ -8,8 +8,7 @@ import pytz
 
 load_dotenv(dotenv_path=".laravel-env")
 
-def main():
-
+def post_sending():
     # Recupero i dati dal database per generare i Post
     mysql = Mysql()
     mysql.connect()
@@ -27,28 +26,28 @@ def main():
     current_time = datetime.now(local_timezone).strftime('%Y-%m-%d %H:%M:%S')
 
     query = f"""
-            SELECT  autopostai_posts.id AS id,
-                    autopostai_posts.user_id AS user_id,
-                    autopostai_posts.ai_prompt_post AS ai_prompt_post,
-                    autopostai_posts.img AS img,
-                    autopostai_posts.img_ai_check_on AS img_ai_check_on,
-                    autopostai_posts.meta_facebook_on AS meta_facebook_on,
-                    autopostai_posts.meta_instagram_on AS meta_instagram_on,
-                    autopostai_posts.wordpress_on AS wordpress_on,
-                    autopostai_posts.newsletter_on AS newsletter_on,
-                    autopostai_posts.published_at AS published_at,
-                    autopostai_posts.published AS published,
-                    autopostai_settings.ai_personality AS ai_personality,
-                    autopostai_settings.ai_prompt_prefix AS ai_prompt_prefix,
-                    autopostai_settings.openai_api_key AS openai_api_key,
-                    autopostai_settings.meta_page_id AS meta_page_id
+                SELECT  autopostai_posts.id AS id,
+                        autopostai_posts.user_id AS user_id,
+                        autopostai_posts.ai_prompt_post AS ai_prompt_post,
+                        autopostai_posts.img AS img,
+                        autopostai_posts.img_ai_check_on AS img_ai_check_on,
+                        autopostai_posts.meta_facebook_on AS meta_facebook_on,
+                        autopostai_posts.meta_instagram_on AS meta_instagram_on,
+                        autopostai_posts.wordpress_on AS wordpress_on,
+                        autopostai_posts.newsletter_on AS newsletter_on,
+                        autopostai_posts.published_at AS published_at,
+                        autopostai_posts.published AS published,
+                        autopostai_settings.ai_personality AS ai_personality,
+                        autopostai_settings.ai_prompt_prefix AS ai_prompt_prefix,
+                        autopostai_settings.openai_api_key AS openai_api_key,
+                        autopostai_settings.meta_page_id AS meta_page_id
 
-                FROM autopostai_posts
-                    INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_posts.user_id
+                    FROM autopostai_posts
+                        INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_posts.user_id
 
-            WHERE autopostai_posts.published IS NULL
-                AND autopostai_posts.published_at <= "{current_time}"
-        """
+                WHERE autopostai_posts.published IS NULL
+                    AND autopostai_posts.published_at <= "{current_time}"
+            """
     rows = mysql.query(query)
     print("\n- - - - - -\n")
 
@@ -155,6 +154,41 @@ def main():
             query="UPDATE autopostai_posts SET published = %s WHERE id = %s",
             parameters=(1, row['id'])
         )
+
+    mysql.close()
+
+
+def main():
+    # post_sending()
+    mysql = Mysql()
+    mysql.connect()
+
+    query = f"""
+                    SELECT  autopostai_posts.id AS id,
+                            autopostai_posts.user_id AS user_id,
+                            autopostai_posts.ai_prompt_post AS ai_prompt_post,
+                            autopostai_posts.img AS img,
+                            autopostai_posts.img_ai_check_on AS img_ai_check_on,
+                            autopostai_posts.meta_facebook_on AS meta_facebook_on,
+                            autopostai_posts.meta_instagram_on AS meta_instagram_on,
+                            autopostai_posts.wordpress_on AS wordpress_on,
+                            autopostai_posts.newsletter_on AS newsletter_on,
+                            autopostai_posts.published_at AS published_at,
+                            autopostai_posts.published AS published,
+                            autopostai_settings.ai_personality AS ai_personality,
+                            autopostai_settings.ai_prompt_prefix AS ai_prompt_prefix,
+                            autopostai_settings.openai_api_key AS openai_api_key,
+                            autopostai_settings.meta_page_id AS meta_page_id
+
+                        FROM autopostai_posts
+                            INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_posts.user_id
+
+                    WHERE autopostai_posts.published = '1'
+                        LIMIT 0, 10
+                """
+    rows = mysql.query(query)
+
+    print(rows);
 
     mysql.close()
 
