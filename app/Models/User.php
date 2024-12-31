@@ -6,11 +6,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
+    protected static function booted()
+    {
+        static::deleting(function ($user) {
+
+            $user->posts()->each(function ($post) {
+
+                if ($post->img) {
+                    Storage::disk('public')->deleteDirectory('posts/' . $post->id);
+                }
+            });
+        });
+    }
 
     public function parent()
     {

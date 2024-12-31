@@ -14,7 +14,10 @@ return new class extends Migration
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
 
-            $table->bigInteger('user_id')->index();
+            // Campo coerente con l'ID della tabella users
+            $table->unsignedBigInteger('user_id');
+            // Relazione e comportamento in cascata
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
             $table->string('title');
             $table->longText('ai_prompt_post')->default('')->nullable();
