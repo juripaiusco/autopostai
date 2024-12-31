@@ -20,6 +20,11 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
+        // Controlla se c'è già almeno un utente registrato
+        if (\App\Models\User::count() > 0) {
+            return Inertia::render('Auth/Login');
+        }
+
         return Inertia::render('Auth/Register');
     }
 
