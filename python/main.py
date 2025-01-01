@@ -201,7 +201,13 @@ def comments_get():
             for comment in comments['data']:
                 # Estrarre e convertire la data
                 raw_date = comment['created_time']  # es: '2024-12-31T16:09:53+0000'
-                converted_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z').strftime('%Y-%m-%d %H:%M:%S')
+
+                # Parsing della data con il fuso orario originale
+                original_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
+                # Conversione in un altro fuso orario (es. UTC)
+                utc_date = original_date.astimezone(pytz.UTC)
+                # Formattazione della data convertita
+                converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
 
                 mysql.query(f"""
                         INSERT IGNORE INTO autopostai_comments (
@@ -224,6 +230,7 @@ def comments_get():
                 ))
 
     mysql.close()
+
 
 def comments_reply():
     mysql = Mysql()
