@@ -59,11 +59,32 @@ class Meta:
     if response.status_code == 200:
       print("Post Facebook pubblicato con successo!")
       print("Risposta API:", response.json())
-      return response.json().get("post_id")
+      return response.json().get("post_id") or response.json().get("id")
     else:
       print("Errore nella pubblicazione del post.")
       print("Codice di stato:", response.status_code)
       print("Errore:", response.json())
+
+
+  def fb_get_comments(self, post_id):
+      url = f"{self.META_API_BASE_URL}/{post_id}/comments"
+      params = {"access_token": self.fb_page_access_token()}
+
+      response = requests.get(url, params=params)
+
+      return response.json()
+
+
+  def fb_reply_comments(self, comment_id, reply_message):
+      url = f"{self.META_API_BASE_URL}/{comment_id}/comments"
+      payload = {
+          "message": reply_message,
+          "access_token": self.fb_page_access_token(),
+      }
+
+      response = requests.post(url, data=payload)
+
+      return response.json()
 
 
   # Recupero l'ID dell'account Instagram collegato alla pagina Facebook

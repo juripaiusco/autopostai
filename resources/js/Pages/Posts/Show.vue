@@ -112,15 +112,37 @@ if (props.data.newsletter_on === '1')
                     </div>
 
                 </div>
-                <!-- <div class="col-lg text-center">
+                <div class="col-lg text-center">
 
                     <h2 class="text-xl font-bold text-center">Commenti</h2>
 
                     <br>
 
-                    In lavorazione...
+                    <div v-for="comment in data.comments">
+                        <div class="card text-left mb-2">
+                            <div class="card-body">
+                                <label class="form-label">
+                                    <li v-if="comment.channel === 'facebook'"
+                                        class="fa-brands fa-facebook"></li>
+                                    <li v-if="comment.channel === 'instagram'"
+                                        class="fa-brands fa-instagram"></li>
+                                    <li v-if="comment.channel === 'wordpress'"
+                                        class="fa-brands fa-wordpress"></li>
+                                    &nbsp;{{ comment.from_name }} ha scritto:
+                                </label>
+                                {{ comment.message }}
 
-                </div> -->
+                                <div v-if="comment.reply" class="mt-5">
+                                    <label class="form-label">
+                                        Risposta:
+                                    </label>
+                                    {{ comment.reply }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
             <div class="text-right mt-10">

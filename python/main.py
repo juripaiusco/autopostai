@@ -8,7 +8,7 @@ import pytz
 
 load_dotenv(dotenv_path=".laravel-env")
 
-def post_sending():
+def posts_sending():
     # Recupero i dati dal database per generare i Post
     mysql = Mysql()
     mysql.connect()
@@ -49,7 +49,7 @@ def post_sending():
                     AND autopostai_posts.published_at <= "{current_time}"
             """
     rows = mysql.query(query)
-    print("\n- - - - - -\n")
+    print("\nPosts sending...\n")
 
     # Leggo tutti i post
     for row in rows:
@@ -111,6 +111,9 @@ def post_sending():
         # Classe Meta
         meta = Meta(page_id=row['meta_page_id'])
 
+        fb_post_id = None
+        ig_post_id = None
+
         # Verifico se l'immagine è stata caricata e la invio ai canali scelti
         if row['img']:
 
@@ -150,47 +153,163 @@ def post_sending():
         #                                                       #
         #########################################################
 
+        if fb_post_id or ig_post_id is not None:
+            mysql.query(
+                query="UPDATE autopostai_posts SET published = %s WHERE id = %s",
+                parameters=(1, row['id'])
+            )
+
+    mysql.close()
+
+
+def comments_get():
+    mysql = Mysql()
+    mysql.connect()
+
+    query = f"""
+        SELECT  autopostai_posts.id AS id,
+                autopostai_posts.user_id AS user_id,
+                autopostai_posts.ai_prompt_post AS ai_prompt_post,
+                autopostai_posts.img AS img,
+                autopostai_posts.img_ai_check_on AS img_ai_check_on,
+                autopostai_posts.meta_facebook_id AS meta_facebook_id,
+                autopostai_posts.meta_instagram_id AS meta_instagram_id,
+                autopostai_posts.wordpress_id AS wordpress_id,
+                autopostai_posts.newsletter_id AS newsletter_id,
+                autopostai_posts.published_at AS published_at,
+                autopostai_posts.published AS published,
+                autopostai_settings.ai_personality AS ai_personality,
+                autopostai_settings.ai_prompt_prefix AS ai_prompt_prefix,
+                autopostai_settings.openai_api_key AS openai_api_key,
+                autopostai_settings.meta_page_id AS meta_page_id
+
+            FROM autopostai_posts
+                INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_posts.user_id
+
+        WHERE autopostai_posts.published = '1'
+            LIMIT 0, 10
+    """
+    rows = mysql.query(query)
+
+    print("\nImport comments...\n")
+
+    for row in rows:
+        meta = Meta(page_id=row['meta_page_id'])
+        comments = meta.fb_get_comments(row['meta_facebook_id'])
+
+        if comments.get('error') is None:
+            for comment in comments['data']:
+                # Estrarre e convertire la data
+                raw_date = comment['created_time']  # es: '2024-12-31T16:09:53+0000'
+                converted_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z').strftime('%Y-%m-%d %H:%M:%S')
+
+                mysql.query(f"""
+                        INSERT IGNORE INTO autopostai_comments (
+                            post_id,
+                            channel,
+                            from_id,
+                            from_name,
+                            message_id,
+                            message,
+                            created_time
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                    row['id'],
+                    "facebook",
+                    comment['from']['id'],
+                    comment['from']['name'],
+                    comment['id'],
+                    comment['message'],
+                    converted_date
+                ))
+
+    mysql.close()
+
+def comments_reply():
+    mysql = Mysql()
+    mysql.connect()
+
+    query = f"""
+            SELECT  autopostai_comments.id AS id,
+                    autopostai_comments.from_name AS from_name,
+                    autopostai_comments.message_id AS message_id,
+                    autopostai_comments.message AS message,
+                    autopostai_posts.ai_content AS ai_content,
+                    autopostai_settings.ai_personality AS ai_personality,
+                    autopostai_settings.ai_prompt_prefix AS ai_prompt_prefix,
+                    autopostai_settings.openai_api_key AS openai_api_key,
+                    autopostai_settings.meta_page_id AS meta_page_id
+
+                FROM autopostai_comments
+                    INNER JOIN autopostai_posts ON autopostai_posts.id = autopostai_comments.post_id
+                    INNER JOIN autopostai_users ON autopostai_users.id = autopostai_posts.user_id
+                    INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_users.id
+
+            WHERE autopostai_comments.reply IS NULL
+        """
+    rows = mysql.query(query)
+
+    print("\nReply comments...\n")
+
+    for row in rows:
+        prompt = ""
+
+        if row['ai_personality']:
+            prompt = prompt + "Immedesimati in questa persona:\n" + row['ai_personality'] + "\n\n"
+
+        if row['ai_prompt_prefix']:
+            prompt = prompt + row['ai_prompt_prefix'] + "\n\n"
+
+        prompt = prompt + "È stato creato questo post:\n"
+        prompt = prompt + row['ai_content'] + "\n"
+        prompt = prompt + "\n"
+        prompt = prompt + row['from_name'] + " ha risposto con un commento:"
+        prompt = prompt + "\n"
+        prompt = prompt + row['message'] + "\n"
+        prompt = prompt + "\n"
+        prompt = prompt + """
+            Impersonando la persona all'inizio, scrivi un risposta breve, positiva ed inclusiva,
+            che faccia felice chi la legge. Utilizza un tono informale.
+            """
+
+        #########################################################
+        #                                                       #
+        #               Collegamento ad OpenAI                  #
+        #                                                       #
+        #########################################################
+
+        # Classe OpenAI
+        gpt = GPT(api_key=row['openai_api_key'])
+        reply = gpt.generate(prompt)
+
+        #########################################################
+        #                                                       #
+        #                 Collegamento a Meta                   #
+        #                                                       #
+        #########################################################
+
+        # Classe Meta
+        meta = Meta(page_id=row['meta_page_id'])
+        reply_id = meta.fb_reply_comments(row['message_id'], reply)
+
+        #########################################################
+        #                                                       #
+        #           Imposto il commento come replicato          #
+        #                                                       #
+        #########################################################
+
         mysql.query(
-            query="UPDATE autopostai_posts SET published = %s WHERE id = %s",
-            parameters=(1, row['id'])
+            query="UPDATE autopostai_comments SET reply_id = %s, reply = %s WHERE id = %s",
+            parameters=(reply_id['id'], reply, row['id'])
         )
 
     mysql.close()
 
 
 def main():
-    # post_sending()
-    mysql = Mysql()
-    mysql.connect()
-
-    query = f"""
-                    SELECT  autopostai_posts.id AS id,
-                            autopostai_posts.user_id AS user_id,
-                            autopostai_posts.ai_prompt_post AS ai_prompt_post,
-                            autopostai_posts.img AS img,
-                            autopostai_posts.img_ai_check_on AS img_ai_check_on,
-                            autopostai_posts.meta_facebook_on AS meta_facebook_on,
-                            autopostai_posts.meta_instagram_on AS meta_instagram_on,
-                            autopostai_posts.wordpress_on AS wordpress_on,
-                            autopostai_posts.newsletter_on AS newsletter_on,
-                            autopostai_posts.published_at AS published_at,
-                            autopostai_posts.published AS published,
-                            autopostai_settings.ai_personality AS ai_personality,
-                            autopostai_settings.ai_prompt_prefix AS ai_prompt_prefix,
-                            autopostai_settings.openai_api_key AS openai_api_key,
-                            autopostai_settings.meta_page_id AS meta_page_id
-
-                        FROM autopostai_posts
-                            INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_posts.user_id
-
-                    WHERE autopostai_posts.published = '1'
-                        LIMIT 0, 10
-                """
-    rows = mysql.query(query)
-
-    print(rows);
-
-    mysql.close()
+    posts_sending()
+    comments_get()
+    comments_reply()
 
 
 if __name__ == "__main__":
