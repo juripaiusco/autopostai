@@ -89,6 +89,18 @@ let modalData = ref(props.data);
                             label: 'Titolo',
                             field: 'title'
                         }, {
+                            class: 'text-center w-[5%]',
+                            label: 'Commenti',
+                            field: 'comments',
+                            fnc: function (d) {
+
+                                let html = ''
+                                html += d.comments.length
+
+                                return html
+
+                            }
+                        }, {
                             class: 'text-center w-[20%]',
                             label: 'Media channel',
                             field: 'media_channel',

@@ -25,7 +25,7 @@ class Posts extends Controller
 
         // Query data
         $data = \App\Models\Post::query();
-        $data = $data->with('user');
+        $data = $data->with(['user', 'comments']);
 
         // Request validate
         request()->validate([
