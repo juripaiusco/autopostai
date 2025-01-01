@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from lib.gpt import GPT
 from lib.meta import Meta
 from lib.mysql import Mysql
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 load_dotenv(dotenv_path=".laravel-env")
@@ -203,7 +203,8 @@ def comments_get():
                 raw_date = comment['created_time']  # es: '2024-12-31T16:09:53+0000'
 
                 # Parsing della data con il fuso orario originale
-                original_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
+                facebook_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
+                original_date = facebook_date + timedelta(hours=1)
                 # Conversione in un altro fuso orario (es. UTC)
                 utc_date = original_date.astimezone(pytz.UTC)
                 # Formattazione della data convertita
