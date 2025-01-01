@@ -236,7 +236,7 @@ def comments_get():
                     comment['message'],
                     converted_date
                 ))
-                
+
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     mysql.close()
