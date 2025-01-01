@@ -194,6 +194,13 @@ def comments_get():
     print("\nImport comments...\n")
 
     for row in rows:
+
+        #########################################################
+        #                                                       #
+        #     Collegamento a Meta e importazione commenti       #
+        #                                                       #
+        #########################################################
+
         meta = Meta(page_id=row['meta_page_id'])
         comments = meta.fb_get_comments(row['meta_facebook_id'])
 
@@ -229,6 +236,8 @@ def comments_get():
                     comment['message'],
                     converted_date
                 ))
+                
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     mysql.close()
 
