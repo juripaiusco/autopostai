@@ -8,6 +8,12 @@ import pytz
 
 load_dotenv(dotenv_path=".laravel-env")
 
+# Fuso orario locale (ad esempio, Europa/Roma)
+LOCAL_TIMEZONE = pytz.timezone('Europe/Rome')
+
+# Ottieni la data attuale
+CURRENT_TIME = datetime.now(LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
+
 def posts_sending():
     # Recupero i dati dal database per generare i Post
     mysql = Mysql()
@@ -18,12 +24,6 @@ def posts_sending():
     #                     Query MySQL                       #
     #                                                       #
     #########################################################
-
-    # Fuso orario locale (ad esempio, Europa/Roma)
-    local_timezone = pytz.timezone('Europe/Rome')
-
-    # Ottieni la data attuale
-    current_time = datetime.now(local_timezone).strftime('%Y-%m-%d %H:%M:%S')
 
     query = f"""
                 SELECT  autopostai_posts.id AS id,
@@ -46,7 +46,7 @@ def posts_sending():
                         INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_posts.user_id
 
                 WHERE autopostai_posts.published IS NULL
-                    AND autopostai_posts.published_at <= "{current_time}"
+                    AND autopostai_posts.published_at <= "{CURRENT_TIME}"
             """
     rows = mysql.query(query)
     print("\nPosts sending...\n")
@@ -217,7 +217,7 @@ def comments_get():
                             from_name,
                             message_id,
                             message,
-                            created_time
+                            message_created_time
                         ) VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """, (
                     row['id'],
@@ -306,8 +306,8 @@ def comments_reply():
         #########################################################
 
         mysql.query(
-            query="UPDATE autopostai_comments SET reply_id = %s, reply = %s WHERE id = %s",
-            parameters=(reply_id['id'], reply, row['id'])
+            query="UPDATE autopostai_comments SET reply_id = %s, reply = %s, reply_created_time = %s WHERE id = %s",
+            parameters=(reply_id['id'], reply, CURRENT_TIME, row['id'])
         )
 
     mysql.close()
