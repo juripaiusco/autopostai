@@ -27,7 +27,8 @@ return new class extends Migration
             $table->string('channel')->default('')->nullable();
             $table->string('from_id')->default('')->nullable();
             $table->string('from_name')->default('')->nullable();
-            $table->timestamp('created_time');
+            $table->timestamp('message_created_time')->default(null)->nullable();
+            $table->timestamp('reply_created_time')->default(null)->nullable();
 
             $table->timestamps();
         });

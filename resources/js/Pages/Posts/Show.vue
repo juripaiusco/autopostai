@@ -128,15 +128,19 @@ if (props.data.newsletter_on === '1')
                                         class="fa-brands fa-instagram"></li>
                                     <li v-if="comment.channel === 'wordpress'"
                                         class="fa-brands fa-wordpress"></li>
-                                    &nbsp;{{ comment.from_name }} ha scritto il {{ __date(comment.created_time) }}:
+                                    &nbsp;{{ comment.from_name }} ha scritto:
                                 </label>
                                 {{ comment.message }}
+                                <br>
+                                <small class="text-[11px] text-gray-500">{{ __date(comment.message_created_time) }}</small>
 
                                 <div v-if="comment.reply" class="mt-5">
                                     <label class="form-label">
                                         Risposta:
                                     </label>
                                     {{ comment.reply }}
+                                    <br>
+                                    <small class="text-[11px] text-gray-500">{{ __date(comment.reply_created_time) }}</small>
                                 </div>
                             </div>
                         </div>

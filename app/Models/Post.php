@@ -16,6 +16,6 @@ class Post extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class, 'post_id')
-            ->orderBy('created_time', 'desc');
+            ->orderBy('message_created_time', 'desc');
     }
 }
