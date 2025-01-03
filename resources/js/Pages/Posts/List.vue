@@ -21,6 +21,8 @@ const props = defineProps({
 let modalShow = ref(false);
 let modalData = ref(props.data);
 
+let app_url = import.meta.env.VITE_APP_URL;
+
 </script>
 
 <template>
@@ -89,6 +91,21 @@ let modalData = ref(props.data);
                             label: 'Titolo',
                             field: 'title'
                         }, {
+                            class: 'text-center',
+                            label: 'Immagine',
+                            field: 'img',
+                            fnc: function (d) {
+
+                                let html = ''
+
+                                if (d.img) {
+                                    html += '<img src=\'' + app_url + '/storage/posts/' + d.id + '/' + d.img + '\' class=\'w-12 h-12 m-auto object-cover rounded-lg\' />'
+                                }
+
+                                return html
+
+                            }
+                        }, {
                             class: 'text-center w-[5%]',
                             label: 'Commenti',
                             field: 'comments',
@@ -124,10 +141,11 @@ let modalData = ref(props.data);
                             field: 'published_at',
                             fnc: function (d) {
 
-                                let html = ''
+                                let html = '<small>'
                                 html += __date(d.published_at, 'day')
                                 html += ' '
                                 html += __date(d.published_at, 'hour')
+                                html += '</small>'
 
                                 return html
 
