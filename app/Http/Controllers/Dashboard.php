@@ -64,10 +64,29 @@ class Dashboard extends Controller
         /**
          * Recupero i commenti
          */
-        /*$comments = \App\Models\Comment::query();
+        $comments = \App\Models\Comment::query();
 
-        $comments = $comments->get();*/
-        $comments = [];
+        // Se l'utente è singolo
+        if (auth()->user()->parent_id && !auth()->user()->child_on) {
+            $comments = $comments->with('post');
+            $comments = $comments->whereHas('post', function ($query) {
+                $query->where('user_id', auth()->user()->id);
+            });
+        }
+
+        // Se l'utente è Manager
+        if (auth()->user()->parent_id && auth()->user()->child_on) {
+            $parentId = auth()->user()->id;
+            $comments = $comments->with('post');
+            $comments = $comments->whereHas('post', function ($query) use ($parentId) {
+                $query = $query->with('user');
+                $query->whereHas('user', function ($query) use ($parentId) {
+                    $query->where('parent_id', $parentId);
+                });
+            });
+        }
+
+        $comments = $comments->get();
 
         // - - - - - - - - - - - - - - - - - - - - - - - -
 
