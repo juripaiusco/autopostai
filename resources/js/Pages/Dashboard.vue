@@ -3,12 +3,20 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import ApplicationContainer from "@/Components/ApplicationContainer.vue";
 import ApplicationHeader from "@/Components/ApplicationHeader.vue";
+
+const props = defineProps({
+    data: Object,
+    filters: Object,
+});
+
 </script>
 
 <template>
+
     <Head title="Dashboard" />
 
     <AuthenticatedLayout>
+
         <template #header>
 
             <ApplicationHeader :breadcrumb-array="['Dashboard']" />
@@ -16,7 +24,59 @@ import ApplicationHeader from "@/Components/ApplicationHeader.vue";
         </template>
 
         <ApplicationContainer>
-            <h2 class="text-3xl mb-2">You're logged in!</h2>
+
+            <div class="row text-center">
+                <div v-if="data.users !== false" class="col">
+
+                    <div class="card">
+                        <div class="card-header">
+
+                            Account
+                            <small>( non manager )</small>
+
+                        </div>
+                        <div class="card-body">
+
+                            {{ data.users.length }}
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col">
+
+                    <div class="card">
+                        <div class="card-header">
+
+                            Posts
+
+                        </div>
+                        <div class="card-body">
+
+                            {{ data.posts.length }}
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col">
+
+                    <div class="card">
+                        <div class="card-header">
+
+                            Commenti
+
+                        </div>
+                        <div class="card-body">
+
+                            {{ data.comments.length }}
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
         </ApplicationContainer>
 
     </AuthenticatedLayout>

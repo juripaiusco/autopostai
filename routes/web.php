@@ -1,22 +1,21 @@
 <?php
 
+use App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Posts;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Settings;
 use App\Http\Controllers\Users;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', function () {
     return redirect('/dashboard');
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+//Route::get('/dashboard', [Dashboard::class])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+
+    Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
 
     Route::get('/users', [Users::class, 'index'])->name('user.index');
     Route::get('/users/show/{id}', [Users::class, 'show'])->name('user.show');
