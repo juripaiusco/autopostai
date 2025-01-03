@@ -108,18 +108,112 @@ const form = useForm(dataForm);
 
                         <br>
 
-                        <div class="form-check form-switch !mb-3">
+                        <label>
+                            <span class="text-gray-500 text-[0.9em]">
+                                Scegli in quale canale può pubblicare {{ form.name ? form.name : 'questo account' }}
+                            </span>
+                        </label>
 
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   id="child_on"
-                                   true-value="1"
-                                   false-value="0"
-                                   v-model="form.child_on"
-                                   checked />
+                        <div class="row !mt-2">
+                            <div class="col-lg">
 
-                            <label class="form-check-label"
-                                   for="child_on">
+                                <div class="form-check form-switch !mb-3">
+
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="channel_facebook_on"
+                                           true-value="1"
+                                           false-value="0"
+                                           v-model="form.channel_facebook_on"
+                                           checked />
+
+                                    <label class="form-check-label"
+                                           for="channel_facebook_on">
+                                        <span class="text-gray-500 text-[0.9em]">Facebook</span>
+                                    </label>
+
+                                </div>
+
+                            </div>
+                            <div class="col-lg">
+
+                                <div class="form-check form-switch !mb-3">
+
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="channel_instagram_on"
+                                           true-value="1"
+                                           false-value="0"
+                                           v-model="form.channel_instagram_on"
+                                           checked />
+
+                                    <label class="form-check-label"
+                                           for="channel_instagram_on">
+                                        <span class="text-gray-500 text-[0.9em]">Instagram</span>
+                                    </label>
+
+                                </div>
+
+                            </div>
+                            <div class="col-lg">
+
+                                <div class="form-check form-switch !mb-3">
+
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="channel_wordpress_on"
+                                           true-value="1"
+                                           false-value="0"
+                                           v-model="form.channel_wordpress_on"
+                                           checked />
+
+                                    <label class="form-check-label"
+                                           for="channel_wordpress_on">
+                                        <span class="text-gray-500 text-[0.9em]">WordPress</span>
+                                    </label>
+
+                                </div>
+
+                            </div>
+                            <div class="col-lg">
+
+                                <div class="form-check form-switch !mb-3">
+
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="channel_newsletter_on"
+                                           true-value="1"
+                                           false-value="0"
+                                           v-model="form.channel_newsletter_on"
+                                           checked />
+
+                                    <label class="form-check-label"
+                                           for="channel_newsletter_on">
+                                        <span class="text-gray-500 text-[0.9em]">Newsletter</span>
+                                    </label>
+
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <div class="card">
+                            <div class="card-body">
+
+                                <div class="form-check form-switch !mb-3">
+
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="child_on"
+                                           true-value="1"
+                                           false-value="0"
+                                           v-model="form.child_on"
+                                           checked />
+
+                                    <label class="form-check-label"
+                                           for="child_on">
                                 <span class="text-gray-500 text-[0.9em]">
                                     L'account può creare sotto utenti
                                     <br>
@@ -127,24 +221,25 @@ const form = useForm(dataForm);
                                         Nel caso in cui questo account abbia più brand da gestire
                                     </small>
                                 </span>
-                            </label>
+                                    </label>
 
+                                </div>
+
+                                <br>
+
+                                <label class="form-label">
+                                    Numero account max
+                                    <br>
+                                    <small>Numero massimo di sotto account che possono essere generati</small>
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       v-model="form.child_max" />
+                                <div class="text-red-500 text-center"
+                                     v-if="form.errors.child_max">{{ __(form.errors.child_max) }}</div>
+
+                            </div>
                         </div>
-
-                        <br>
-
-                        <label class="form-label">
-                            Numero account max
-                            <br>
-                            <small>Numero massimo di sotto account che possono essere generati</small>
-                        </label>
-                        <input type="text"
-                               class="form-control"
-                               v-model="form.child_max" />
-                        <div class="text-red-500 text-center"
-                             v-if="form.errors.child_max">{{ __(form.errors.child_max) }}</div>
-
-                        <br>
 
                     </div>
                     <div class="col-lg">
