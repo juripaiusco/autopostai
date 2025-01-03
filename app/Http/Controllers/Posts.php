@@ -60,10 +60,12 @@ class Posts extends Controller
             'posts.newsletter_on',
         ]);*/
 
+        // Se l'utente è singolo
         if (auth()->user()->parent_id && !auth()->user()->child_on) {
             $data = $data->where('user_id', auth()->user()->id);
         }
 
+        // Se l'utente è Manager
         if (auth()->user()->parent_id && auth()->user()->child_on) {
             $parentId = auth()->user()->id;
             $data = $data->whereHas('user', function ($query) use ($parentId) {
