@@ -170,7 +170,7 @@ function checkChannelsByUser() {
 
                                 <div class="form-check form-switch !mb-3">
 
-                                    <input :disabled="channel_facebook_on === '0'"
+                                    <input :disabled="channel_facebook_on === '0' || channel_facebook_on === null"
                                            class="form-check-input"
                                            type="checkbox"
                                            id="meta_facebook"
@@ -191,7 +191,7 @@ function checkChannelsByUser() {
 
                                 <div class="form-check form-switch !mb-3">
 
-                                    <input :disabled="channel_instagram_on === '0'"
+                                    <input :disabled="channel_instagram_on === '0' || channel_instagram_on === null"
                                            class="form-check-input"
                                            type="checkbox"
                                            id="meta_instagram"
@@ -212,7 +212,7 @@ function checkChannelsByUser() {
 
                                 <div class="form-check form-switch !mb-3">
 
-                                    <input :disabled="channel_wordpress_on === '0'"
+                                    <input :disabled="channel_wordpress_on === '0' || channel_wordpress_on === null"
                                            class="form-check-input"
                                            type="checkbox"
                                            id="wordpress"
@@ -233,7 +233,7 @@ function checkChannelsByUser() {
 
                                 <div class="form-check form-switch !mb-3">
 
-                                    <input :disabled="channel_newsletter_on === '0'"
+                                    <input :disabled="channel_newsletter_on === '0' || channel_newsletter_on === null"
                                            class="form-check-input"
                                            type="checkbox"
                                            id="newsletter"
