@@ -128,6 +128,13 @@ class Posts extends Controller
 
             $data['users'] = $data['users']->get();
 
+        } else if (auth()->user()->parent_id) {
+
+            $data['user'] = \App\Models\User::query();
+            $data['user'] = $data['user']->where('id', auth()->user()->id);
+
+            $data['user'] = $data['user']->first();
+
         }
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

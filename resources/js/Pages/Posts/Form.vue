@@ -6,6 +6,7 @@ import ApplicationHeader from "@/Components/ApplicationHeader.vue";
 import ApplicationContainer from "@/Components/ApplicationContainer.vue";
 import {useForm} from "@inertiajs/vue3";
 import {__date} from "@/ComponentsExt/Date.js";
+import {ref} from "vue";
 
 const props = defineProps({
     data: Object,
@@ -24,6 +25,29 @@ if (form.published_at === '') {
 
 if (form.img_ai_check_on === '') {
     form.img_ai_check_on = 1;
+}
+
+
+// Abilitazione canali in base alle impostazioni utente
+let channel_facebook_on = form.id || (form.user && form.user.id) ? form.user.channel_facebook_on : ref('0');
+let channel_instagram_on = form.id || (form.user && form.user.id) ? form.user.channel_instagram_on : ref('0');
+let channel_wordpress_on = form.id || (form.user && form.user.id) ? form.user.channel_wordpress_on : ref('0');
+let channel_newsletter_on = form.id || (form.user && form.user.id) ? form.user.channel_newsletter_on : ref('0');
+
+function checkChannelsByUser() {
+
+    const user = props.data.users.find(u => u.id === form.user_id);
+
+    channel_facebook_on.value = user.channel_facebook_on ? user.channel_facebook_on : '0'
+    channel_instagram_on.value = user.channel_instagram_on ? user.channel_instagram_on : '0'
+    channel_wordpress_on.value = user.channel_wordpress_on ? user.channel_wordpress_on : '0'
+    channel_newsletter_on.value = user.channel_newsletter_on ? user.channel_newsletter_on : '0'
+
+    form.meta_facebook_on = 0
+    form.meta_instagram_on = 0
+    form.wordpress_on = 0
+    form.newsletter_on = 0
+
 }
 
 </script>
@@ -55,30 +79,42 @@ if (form.img_ai_check_on === '') {
                 <div class="row">
                     <div class="col-lg">
 
-                        <label class="form-label">
-                            Account al quale è collegato il post
+                        <div v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on">
+
+                            <label class="form-label">
+                                Account al quale è collegato il post
+                                <br>
+                                <small>
+                                    <span v-if="form.id">
+                                        Il post verrà pubblicato dall'account {{ form.user.email }}
+                                    </span>
+                                    <span v-else>
+                                        Imposta quale account deve pubblicare questo post
+                                    </span>
+                                </small>
+                            </label>
+                            <select v-if="data.users"
+                                    class="form-select"
+                                    aria-label="Default select example"
+                                    @change="checkChannelsByUser"
+                                    v-model="form.user_id">
+                                <option disabled value="">Seleziona l'account</option>
+                                <option v-for="user in data.users" :key="user.id" :value="user.id">
+                                    {{ user.name }} - {{ user.email }}
+                                </option>
+                            </select>
+                            <div class="text-red-500 text-center"
+                                 v-if="form.errors.user_id">{{ __(form.errors.user_id) }}</div>
+
+                            <input v-if="data.user"
+                                   type="text"
+                                   class="form-control"
+                                   disabled
+                                   :value="(form.user.name + ' - ' + form.user.email)" />
+
                             <br>
-                            <small>Imposta quale account deve pubblicare questo post</small>
-                        </label>
-                        <select v-if="data.users"
-                                class="form-select"
-                                aria-label="Default select example"
-                                v-model="form.user_id">
-                            <option disabled value="">Seleziona l'account</option>
-                            <option v-for="user in data.users" :key="user.id" :value="user.id">
-                                {{ user.name }} - {{ user.email }}
-                            </option>
-                        </select>
-                        <div class="text-red-500 text-center"
-                             v-if="form.errors.user_id">{{ __(form.errors.user_id) }}</div>
 
-                        <input v-if="data.user"
-                               type="text"
-                               class="form-control"
-                               disabled
-                               :value="(form.user.name + ' - ' + form.user.email)" />
-
-                        <br>
+                        </div>
 
                         <div class="row">
                             <div class="col-lg-7">
@@ -134,7 +170,8 @@ if (form.img_ai_check_on === '') {
 
                                 <div class="form-check form-switch !mb-3">
 
-                                    <input class="form-check-input"
+                                    <input :disabled="channel_facebook_on === '0'"
+                                           class="form-check-input"
                                            type="checkbox"
                                            id="meta_facebook"
                                            true-value="1"
@@ -154,7 +191,8 @@ if (form.img_ai_check_on === '') {
 
                                 <div class="form-check form-switch !mb-3">
 
-                                    <input class="form-check-input"
+                                    <input :disabled="channel_instagram_on === '0'"
+                                           class="form-check-input"
                                            type="checkbox"
                                            id="meta_instagram"
                                            true-value="1"
@@ -174,7 +212,7 @@ if (form.img_ai_check_on === '') {
 
                                 <div class="form-check form-switch !mb-3">
 
-                                    <input disabled
+                                    <input :disabled="channel_wordpress_on === '0'"
                                            class="form-check-input"
                                            type="checkbox"
                                            id="wordpress"
@@ -195,7 +233,7 @@ if (form.img_ai_check_on === '') {
 
                                 <div class="form-check form-switch !mb-3">
 
-                                    <input disabled
+                                    <input :disabled="channel_newsletter_on === '0'"
                                            class="form-check-input"
                                            type="checkbox"
                                            id="newsletter"
