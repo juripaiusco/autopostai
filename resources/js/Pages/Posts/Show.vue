@@ -96,7 +96,14 @@ if (props.data.newsletter_on === '1')
                     <label class="form-label">
                         Pubblicato su:
                     </label>
-                    {{ mediaChannelArray.join(' / ') }}
+                    <i v-if="data.meta_facebook_on === '1'"
+                       class="fa-brands fa-facebook"></i>&nbsp;
+                    <i v-if="data.meta_instagram_on === '1'"
+                       class="fa-brands fa-instagram"></i>&nbsp;
+                    <i v-if="data.wordpress_on === '1'"
+                       class="fa-brands fa-wordpress-simple"></i>&nbsp;
+                    <i v-if="data.newsletter_on === '1'"
+                       class="fa-regular fa-envelope"></i>
 
                 </div>
                 <div class="col-lg">
