@@ -38,6 +38,7 @@ fi
 
 # Esegui il container
 docker run \
+  -it \
   --rm \
   --net $NETWORK_NAME \
   --ip $CONTAINER_IP \
