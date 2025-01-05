@@ -2,8 +2,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "dev": "vite"
+        "build": "dotenv -e .env.production vite build",
+        "dev": "dotenv -e .env vite"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
@@ -12,6 +12,7 @@
         "autoprefixer": "^10.4.12",
         "axios": "^1.7.4",
         "concurrently": "^9.0.1",
+        "dotenv-cli": "^8.0.0",
         "laravel-vite-plugin": "^1.0",
         "postcss": "^8.4.31",
         "sass-embedded": "^1.83.0",
