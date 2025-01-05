@@ -19,7 +19,7 @@ def posts_sending():
     # Recupero i dati dal database per generare i Post
     mysql = Mysql()
     mysql.connect()
-    
+
     #########################################################
     #                                                       #
     #                     Query MySQL                       #
@@ -202,6 +202,7 @@ def comments_get():
         #                                                       #
         #########################################################
 
+        # Collegamento a Facebook
         meta = Meta(page_id=row['meta_page_id'])
         comments = meta.fb_get_comments(row['meta_facebook_id'])
 
@@ -240,6 +241,45 @@ def comments_get():
 
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+        # Collegamento ad Instagram
+        meta = Meta(page_id=row['meta_page_id'])
+        comments = meta.ig_get_comments(row['meta_instagram_id'])
+
+        if comments.get('error') is None:
+            for comment in comments['data']:
+                # Estrarre e convertire la data
+                raw_date = comment['timestamp']  # es: '2024-12-31T16:09:53+0000'
+
+                # Parsing della data con il fuso orario originale
+                facebook_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
+                original_date = facebook_date + timedelta(hours=1)
+                # Conversione in un altro fuso orario (es. UTC)
+                utc_date = original_date.astimezone(pytz.UTC)
+                # Formattazione della data convertita
+                converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
+
+                mysql.query(f"""
+                        INSERT IGNORE INTO autopostai_comments (
+                            post_id,
+                            channel,
+                            from_id,
+                            from_name,
+                            message_id,
+                            message,
+                            message_created_time
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                    row['id'],
+                    "instagram",
+                    comment['from']['id'],
+                    comment['from']['username'],
+                    comment['id'],
+                    comment['text'],
+                    converted_date
+                ))
+
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     mysql.close()
 
 
@@ -249,6 +289,7 @@ def comments_reply():
 
     query = f"""
             SELECT  autopostai_comments.id AS id,
+                    autopostai_comments.channel AS channel,
                     autopostai_comments.from_name AS from_name,
                     autopostai_comments.message_id AS message_id,
                     autopostai_comments.message AS message,
@@ -278,7 +319,7 @@ def comments_reply():
         if row['ai_prompt_prefix']:
             prompt = prompt + row['ai_prompt_prefix'] + "\n\n"
 
-        prompt = prompt + "È stato creato questo post:\n"
+        prompt = prompt + f"È stato creato questo post su {row['channel']}:\n"
         prompt = prompt + row['ai_content'] + "\n"
         prompt = prompt + "\n"
         prompt = prompt + row['from_name'] + " ha risposto con un commento:"
@@ -296,6 +337,8 @@ def comments_reply():
         #                                                       #
         #########################################################
 
+        reply_id = None
+
         # Classe OpenAI
         gpt = GPT(api_key=row['openai_api_key'])
         reply = gpt.generate(prompt)
@@ -308,7 +351,12 @@ def comments_reply():
 
         # Classe Meta
         meta = Meta(page_id=row['meta_page_id'])
-        reply_id = meta.fb_reply_comments(row['message_id'], reply)
+
+        if row['channel'] == "facebook":
+            reply_id = meta.fb_reply_comments(row['message_id'], reply)
+
+        if row['channel'] == "instagram":
+            reply_id = meta.ig_reply_comments(row['message_id'], reply)
 
         #########################################################
         #                                                       #
@@ -316,10 +364,11 @@ def comments_reply():
         #                                                       #
         #########################################################
 
-        mysql.query(
-            query="UPDATE autopostai_comments SET reply_id = %s, reply = %s, reply_created_time = %s WHERE id = %s",
-            parameters=(reply_id['id'], reply, CURRENT_TIME, row['id'])
-        )
+        if reply_id is not None:
+            mysql.query(
+                query="UPDATE autopostai_comments SET reply_id = %s, reply = %s, reply_created_time = %s WHERE id = %s",
+                parameters=(reply_id['id'], reply, CURRENT_TIME, row['id'])
+            )
 
     mysql.close()
 

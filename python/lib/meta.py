@@ -126,8 +126,8 @@ class Meta:
         print("Post Instagram caricato con successo!")
         print("Risposta API:", response.json())
         post_id = response.json().get("id")
-        self.ig_pubblicate_post(post_id)
-        return post_id
+        post_id_publish = self.ig_pubblicate_post(post_id)
+        return post_id_publish
     else:
         print("Errore nel caricamento dell'immagine:", response.json())
 
@@ -144,5 +144,28 @@ class Meta:
     if response.status_code == 200:
         print("Post Instagram pubblicato con successo!")
         print("Risposta API:", response.json())
+        post_id = response.json().get("id")
+        return post_id
     else:
         print("Errore nella pubblicazione:", response.json())
+
+
+  def ig_get_comments(self, post_id):
+      url = f"{self.META_API_BASE_URL}/{post_id}/comments?fields=text,from,timestamp"
+      params = {"access_token": self.fb_page_access_token()}
+
+      response = requests.get(url, params=params)
+
+      return response.json()
+
+
+  def ig_reply_comments(self, comment_id, reply_message):
+      url = f"{self.META_API_BASE_URL}/{comment_id}/replies"
+      payload = {
+          "message": reply_message,
+          "access_token": self.fb_page_access_token(),
+      }
+
+      response = requests.post(url, data=payload)
+
+      return response.json()
