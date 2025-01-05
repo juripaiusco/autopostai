@@ -115,74 +115,78 @@ const mediaChannels = [
 
                         <br>
 
-                        <h2 class="text-2xl font-bold">
-                            Comunicazione Account
-                        </h2>
+                        <div v-if="form.child_on !== 1 && form.child_on !== '1'">
 
-                        <small  class="text-xs font-normal">
-                            Scegli come gestire la comunicazione e in quali canali può pubblicare
-                            {{ form.name ? form.name : 'questo account' }}
-                        </small>
+                            <h2 class="text-2xl font-bold">
+                                Comunicazione Account
+                            </h2>
 
-                        <br>
+                            <small  class="text-xs font-normal">
+                                Scegli come gestire la comunicazione e in quali canali può pubblicare
+                                {{ form.name ? form.name : 'questo account' }}
+                            </small>
 
-                        <div v-for="(mediaChannel, index) in mediaChannels" :key="index"
-                             class="card mt-4">
-                            <div class="card-body">
+                            <br>
 
-                                <div class="form-check form-switch">
+                            <div v-for="(mediaChannel, index) in mediaChannels" :key="index"
+                                 class="card mt-4">
+                                <div class="card-body">
 
-                                    <input class="form-check-input"
-                                           type="checkbox"
-                                           :id="'channel_' + mediaChannel + '_on'"
-                                           true-value="1"
-                                           false-value="0"
-                                           v-model="form['channel_' + mediaChannel + '_on']"
-                                           checked />
+                                    <div class="form-check form-switch">
 
-                                    <label class="form-check-label"
-                                           :for="'channel_' + mediaChannel + '_on'">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               :id="'channel_' + mediaChannel + '_on'"
+                                               true-value="1"
+                                               false-value="0"
+                                               v-model="form['channel_' + mediaChannel + '_on']"
+                                               checked />
+
+                                        <label class="form-check-label"
+                                               :for="'channel_' + mediaChannel + '_on'">
                                         <span class="capitalize text-gray-500 text-[0.9em]">
                                             {{ mediaChannel }}
                                         </span>
-                                    </label>
+                                        </label>
 
-                                </div>
+                                    </div>
 
-                                <div v-if="form['channel_' + mediaChannel + '_on'] === '1'"
-                                     class="form-check form-switch">
+                                    <div v-if="form['channel_' + mediaChannel + '_on'] === '1'"
+                                         class="form-check form-switch">
 
-                                    <input class="form-check-input"
-                                           type="checkbox"
-                                           :id="'channel_' + mediaChannel + '_reply_on'"
-                                           true-value="1"
-                                           false-value="0"
-                                           v-model="form['channel_' + mediaChannel + '_reply_on']"
-                                           checked />
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               :id="'channel_' + mediaChannel + '_reply_on'"
+                                               true-value="1"
+                                               false-value="0"
+                                               v-model="form['channel_' + mediaChannel + '_reply_on']"
+                                               checked />
 
-                                    <label class="form-check-label"
-                                           :for="'channel_' + mediaChannel + '_reply_on'">
+                                        <label class="form-check-label"
+                                               :for="'channel_' + mediaChannel + '_reply_on'">
                                         <span class="text-gray-500 text-[0.9em]">
                                             Abilita risposte ai commenti
                                         </span>
-                                    </label>
+                                        </label>
+
+                                    </div>
+
+                                    <div v-if="form['channel_' + mediaChannel + '_on'] === '1' && form['channel_' + mediaChannel + '_reply_on'] === '1'"
+                                         class="mt-3">
+                                        <label class="form-label !text-xs">
+                                            Q.tà massima di risposte ai commenti per post (lasciando vuoto
+                                            si risponde a tutti)
+                                        </label>
+                                        <input type="text"
+                                               class="form-control form-control-sm"
+                                               v-model="form['channel_' + mediaChannel + '_reply_n']" />
+                                        <div class="text-red-500 text-center"
+                                             v-if="form['errors']['channel_' + mediaChannel + '_reply_n']">{{ __(form['errors']['channel_' + mediaChannel + '_reply_n']) }}</div>
+                                    </div>
 
                                 </div>
-
-                                <div v-if="form['channel_' + mediaChannel + '_on'] === '1' && form['channel_' + mediaChannel + '_reply_on'] === '1'"
-                                     class="mt-3">
-                                    <label class="form-label !text-xs">
-                                        Q.tà massima di risposte ai commenti per post (lasciando vuoto
-                                        si risponde a tutti)
-                                    </label>
-                                    <input type="text"
-                                           class="form-control form-control-sm"
-                                           v-model="form['channel_' + mediaChannel + '_reply_n']" />
-                                    <div class="text-red-500 text-center"
-                                         v-if="form['errors']['channel_' + mediaChannel + '_reply_n']">{{ __(form['errors']['channel_' + mediaChannel + '_reply_n']) }}</div>
-                                </div>
-
                             </div>
+
                         </div>
 
                         <br>
@@ -190,17 +194,21 @@ const mediaChannels = [
                     </div>
                     <div class="col-lg">
 
-                        <h2 class="text-2xl font-bold">Impostazioni Account</h2>
+                        <div v-if="form.child_on !== 1 && form.child_on !== '1'">
 
-                        <small class="text-xs font-normal">
-                            Le chiavi sono uniche, non duplicarle
-                        </small>
+                            <h2 class="text-2xl font-bold">Impostazioni Account</h2>
 
-                        <br><br>
+                            <small class="text-xs font-normal">
+                                Le chiavi sono uniche, non duplicarle
+                            </small>
 
-                        <SettingsForm :form="!form.settings ? form : form.settings" />
+                            <br><br>
 
-                        <br>
+                            <SettingsForm :form="!form.settings ? form : form.settings" />
+
+                            <br>
+
+                        </div>
 
                         <h2 class="text-2xl font-bold">
                             Account Manager
