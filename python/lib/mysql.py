@@ -22,7 +22,7 @@ class Mysql:
             )
 
             if self.CONNECTION.is_connected():
-                print("Connection to DB is open.")
+                # print("Connection to DB is open.")
                 self.CURSOR = self.CONNECTION.cursor(dictionary=True)
 
         except Error as e:
@@ -34,7 +34,7 @@ class Mysql:
         if self.CONNECTION.is_connected():
             self.CURSOR.close()
             self.CONNECTION.close()
-            print("Connection to DB is closed.")
+            # print("Connection to DB is closed.")
 
 
     def query(self, query, parameters=None):

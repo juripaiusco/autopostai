@@ -5,6 +5,7 @@ from lib.meta import Meta
 from lib.mysql import Mysql
 from datetime import datetime, timedelta
 import pytz
+from tqdm import tqdm
 
 load_dotenv(dotenv_path=".laravel-env")
 
@@ -18,7 +19,7 @@ def posts_sending():
     # Recupero i dati dal database per generare i Post
     mysql = Mysql()
     mysql.connect()
-
+    
     #########################################################
     #                                                       #
     #                     Query MySQL                       #
@@ -49,7 +50,7 @@ def posts_sending():
                     AND autopostai_posts.published_at <= "{CURRENT_TIME}"
             """
     rows = mysql.query(query)
-    print("\nPosts sending...\n")
+    # print("\nPosts sending...\n")
 
     # Leggo tutti i post
     for row in rows:
@@ -119,21 +120,21 @@ def posts_sending():
 
             if row['meta_facebook_on'] == '1':
                 fb_post_id = meta.fb_generate_post(contenuto, img_path)
-                print("\nFacebok post id: ", fb_post_id)
+#                 print("\nFacebok post id: ", fb_post_id)
                 mysql.query(
                     query="UPDATE autopostai_posts SET meta_facebook_id = %s WHERE id = %s",
                     parameters=(fb_post_id, row['id'])
                 )
-                print("\n- - - - - -\n")
+#                 print("\n- - - - - -\n")
 
             if row['meta_instagram_on'] == '1':
                 ig_post_id = meta.ig_generate_post(contenuto, img_url)
-                print("\nInstagram post id: ", ig_post_id)
+#                 print("\nInstagram post id: ", ig_post_id)
                 mysql.query(
                     query="UPDATE autopostai_posts SET meta_instagram_id = %s WHERE id = %s",
                     parameters=(ig_post_id, row['id'])
                 )
-                print("\n- - - - - -\n")
+#                 print("\n- - - - - -\n")
 
         else:
 
@@ -143,7 +144,7 @@ def posts_sending():
                     query="UPDATE autopostai_posts SET meta_facebook_id = %s WHERE id = %s",
                     parameters=(fb_post_id, row['id'])
                 )
-                print("\n- - - - - -\n")
+#                 print("\n- - - - - -\n")
 
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -191,7 +192,7 @@ def comments_get():
     """
     rows = mysql.query(query)
 
-    print("\nImport comments...\n")
+#     print("\nImport comments...\n")
 
     for row in rows:
 
@@ -266,7 +267,7 @@ def comments_reply():
         """
     rows = mysql.query(query)
 
-    print("\nReply comments...\n")
+#     print("\nReply comments...\n")
 
     for row in rows:
         prompt = ""
@@ -324,9 +325,25 @@ def comments_reply():
 
 
 def main():
-    posts_sending()
-    comments_get()
-    comments_reply()
+    progress_bar_desc = 'AutoPostAI'
+    data_list = [
+        'Sending posts',
+        'Get the comments',
+        'Reply to comments',
+    ]
+
+    with tqdm(total=len(data_list), desc=progress_bar_desc, ncols=None) as progress_bar:
+        progress_bar.set_description(f"{progress_bar_desc} - {data_list[0]}")
+        posts_sending()
+        progress_bar.update(1)
+
+        progress_bar.set_description(f"{progress_bar_desc} - {data_list[1]}")
+        comments_get()
+        progress_bar.update(1)
+
+        progress_bar.set_description(f"{progress_bar_desc} - {data_list[2]}")
+        comments_reply()
+        progress_bar.update(1)
 
 
 if __name__ == "__main__":

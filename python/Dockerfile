@@ -7,7 +7,8 @@ RUN pip install \
     openai \
     load_dotenv \
     requests \
-    pytz
+    pytz \
+    tqdm
 
 # Imposta la directory di lavoro
 WORKDIR /app
