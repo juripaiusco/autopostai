@@ -91,6 +91,21 @@ let app_url = import.meta.env.VITE_APP_URL;
                             label: 'Titolo',
                             field: 'title'
                         }, {
+                            class: 'text-center w-[20%]',
+                            label: 'Data pubblicazione',
+                            field: 'published_at',
+                            fnc: function (d) {
+
+                                let html = '<small>'
+                                html += __date(d.published_at, 'day')
+                                html += ' '
+                                html += __date(d.published_at, 'hour')
+                                html += '</small>'
+
+                                return html
+
+                            }
+                        }, {
                             class: 'text-center',
                             label: 'Immagine',
                             field: 'img',
@@ -101,18 +116,6 @@ let app_url = import.meta.env.VITE_APP_URL;
                                 if (d.img) {
                                     html += '<img src=\'' + app_url + '/storage/posts/' + d.id + '/' + d.img + '\' class=\'w-12 h-12 m-auto object-cover rounded-lg\' />'
                                 }
-
-                                return html
-
-                            }
-                        }, {
-                            class: 'text-center w-[5%]',
-                            label: 'Commenti',
-                            field: 'comments',
-                            fnc: function (d) {
-
-                                let html = ''
-                                html += d.comments.length
 
                                 return html
 
@@ -136,16 +139,13 @@ let app_url = import.meta.env.VITE_APP_URL;
 
                             }
                         }, {
-                            class: 'text-center w-[20%]',
-                            label: 'Data pubblicazione',
-                            field: 'published_at',
+                            class: 'text-center w-[5%]',
+                            label: 'Commenti',
+                            field: 'comments',
                             fnc: function (d) {
 
-                                let html = '<small>'
-                                html += __date(d.published_at, 'day')
-                                html += ' '
-                                html += __date(d.published_at, 'hour')
-                                html += '</small>'
+                                let html = ''
+                                html += d.comments.length
 
                                 return html
 
