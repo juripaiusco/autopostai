@@ -4,9 +4,25 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+        <!-- Tag per rendere Mobile la WebApp -->
         <link rel="apple-touch-icon" sizes="180x180" href="{{ URL::asset('apple-touch-icon.png') }}">
         <link rel="icon" type="image/png" sizes="32x32" href="{{ URL::asset('favicon-32x32.png') }}">
         <link rel="icon" type="image/png" sizes="16x16" href="{{ URL::asset('favicon-16x16.png') }}">
+        <link rel="manifest" href="{{ URL::asset('site.webmanifest') }}">
+
+        <!-- Colore della barra superiore -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+        <!-- Abilita la modalità standalone -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+
+        <!-- Nome della tua web app su iOS -->
+        <meta name="apple-mobile-web-app-title" content="AutoPostAI">
+
+        <!-- Icone specifiche per iOS -->
+        <link rel="apple-touch-icon" href="{{ URL::asset('apple-touch-icon.png') }}">
+        <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
