@@ -18,6 +18,13 @@ const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
 
 const form = useForm(dataForm);
 
+const mediaChannels = [
+    'facebook',
+    'instagram',
+    'wordpress',
+    'newsletter'
+];
+
 </script>
 
 <template>
@@ -108,90 +115,71 @@ const form = useForm(dataForm);
 
                         <br>
 
-                        <label>
-                            <span class="text-gray-500 text-[0.9em]">
-                                Scegli in quale canale può pubblicare {{ form.name ? form.name : 'questo account' }}
-                            </span>
-                        </label>
+                        <h2 class="text-2xl font-bold">
+                            Comunicazione Account
+                        </h2>
 
-                        <div class="row !mt-2">
-                            <div class="col-lg">
+                        <small  class="text-xs font-normal">
+                            Scegli come gestire la comunicazione e in quali canali può pubblicare
+                            {{ form.name ? form.name : 'questo account' }}
+                        </small>
 
-                                <div class="form-check form-switch !mb-3">
+                        <br>
+
+                        <div v-for="(mediaChannel, index) in mediaChannels" :key="index"
+                             class="card mt-4">
+                            <div class="card-body">
+
+                                <div class="form-check form-switch">
 
                                     <input class="form-check-input"
                                            type="checkbox"
-                                           id="channel_facebook_on"
+                                           :id="'channel_' + mediaChannel + '_on'"
                                            true-value="1"
                                            false-value="0"
-                                           v-model="form.channel_facebook_on"
+                                           v-model="form['channel_' + mediaChannel + '_on']"
                                            checked />
 
                                     <label class="form-check-label"
-                                           for="channel_facebook_on">
-                                        <span class="text-gray-500 text-[0.9em]">Facebook</span>
+                                           :for="'channel_' + mediaChannel + '_on'">
+                                        <span class="capitalize text-gray-500 text-[0.9em]">
+                                            {{ mediaChannel }}
+                                        </span>
                                     </label>
 
                                 </div>
 
-                            </div>
-                            <div class="col-lg">
-
-                                <div class="form-check form-switch !mb-3">
+                                <div v-if="form['channel_' + mediaChannel + '_on'] === '1'"
+                                     class="form-check form-switch">
 
                                     <input class="form-check-input"
                                            type="checkbox"
-                                           id="channel_instagram_on"
+                                           :id="'channel_' + mediaChannel + '_reply_on'"
                                            true-value="1"
                                            false-value="0"
-                                           v-model="form.channel_instagram_on"
+                                           v-model="form['channel_' + mediaChannel + '_reply_on']"
                                            checked />
 
                                     <label class="form-check-label"
-                                           for="channel_instagram_on">
-                                        <span class="text-gray-500 text-[0.9em]">Instagram</span>
+                                           :for="'channel_' + mediaChannel + '_reply_on'">
+                                        <span class="text-gray-500 text-[0.9em]">
+                                            Abilita risposte ai commenti
+                                        </span>
                                     </label>
 
                                 </div>
 
-                            </div>
-                            <div class="col-lg">
-
-                                <div class="form-check form-switch !mb-3">
-
-                                    <input class="form-check-input"
-                                           type="checkbox"
-                                           id="channel_wordpress_on"
-                                           true-value="1"
-                                           false-value="0"
-                                           v-model="form.channel_wordpress_on"
-                                           checked />
-
-                                    <label class="form-check-label"
-                                           for="channel_wordpress_on">
-                                        <span class="text-gray-500 text-[0.9em]">WordPress</span>
+                                <div v-if="form['channel_' + mediaChannel + '_on'] === '1' && form['channel_' + mediaChannel + '_reply_on'] === '1'"
+                                     class="mt-3">
+                                    <label class="form-label !text-xs">
+                                        Q.tà massima di risposte ai commenti per post (lasciando vuoto
+                                        si risponde a tutti)
                                     </label>
-
-                                </div>
-
-                            </div>
-                            <div class="col-lg">
-
-                                <div class="form-check form-switch !mb-3">
-
-                                    <input class="form-check-input"
-                                           type="checkbox"
-                                           id="channel_newsletter_on"
-                                           true-value="1"
-                                           false-value="0"
-                                           v-model="form.channel_newsletter_on"
-                                           checked />
-
-                                    <label class="form-check-label"
-                                           for="channel_newsletter_on">
-                                        <span class="text-gray-500 text-[0.9em]">Newsletter</span>
-                                    </label>
-
+                                    <input type="text"
+                                           class="form-control form-control-sm"
+                                           v-model="form['channel_' + mediaChannel + '_reply_n']" />
+                                    <div class="text-red-500 text-center"
+                                         v-if="form['errors']['channel_' + mediaChannel + '_reply_n']">{{ __(form['errors']['channel_' + mediaChannel + '_reply_n']) }}</div>
                                 </div>
 
                             </div>
@@ -199,10 +187,32 @@ const form = useForm(dataForm);
 
                         <br>
 
+                    </div>
+                    <div class="col-lg">
+
+                        <h2 class="text-2xl font-bold">Impostazioni Account</h2>
+
+                        <small class="text-xs font-normal">
+                            Le chiavi sono uniche, non duplicarle
+                        </small>
+
+                        <br><br>
+
+                        <SettingsForm :form="!form.settings ? form : form.settings" />
+
+                        <br>
+
+                        <h2 class="text-2xl font-bold">
+                            Account Manager
+                        </h2>
+
+                        <small  class="text-xs font-normal">
+                            Fai diventare manager questo account
+                        </small>
+
+                        <br><br>
+
                         <div class="card">
-                            <div class="card-header">
-                                Fai diventare manager questo account
-                            </div>
                             <div class="card-body">
 
                                 <div class="form-check form-switch !mb-3">
@@ -243,19 +253,6 @@ const form = useForm(dataForm);
 
                             </div>
                         </div>
-
-                    </div>
-                    <div class="col-lg">
-
-                        <h2 class="text-2xl font-bold">Impostazioni Account</h2>
-
-                        <small class="text-xs font-normal">
-                            Le chiavi sono uniche, non duplicarle
-                        </small>
-
-                        <br><br>
-
-                        <SettingsForm :form="!form.settings ? form : form.settings" />
 
                     </div>
                 </div>

@@ -19,9 +19,21 @@ return new class extends Migration
             $table->integer('child_max')->default(0)->nullable();
 
             $table->string('channel_facebook_on', 1)->default(0)->nullable();
+            $table->string('channel_facebook_reply_on', 1)->default(0)->nullable();
+            $table->integer('channel_facebook_reply_n')->default(0)->nullable();
+
             $table->string('channel_instagram_on', 1)->default(0)->nullable();
+            $table->string('channel_instagram_reply_on', 1)->default(0)->nullable();
+            $table->integer('channel_instagram_reply_n')->default(0)->nullable();
+
             $table->string('channel_wordpress_on', 1)->default(0)->nullable();
+            $table->string('channel_wordpress_reply_on', 1)->default(0)->nullable();
+            $table->integer('channel_wordpress_reply_n')->default(0)->nullable();
+
             $table->string('channel_newsletter_on', 1)->default(0)->nullable();
+            $table->string('channel_newsletter_reply_on', 1)->default(0)->nullable();
+            $table->integer('channel_newsletter_reply_n')->default(0)->nullable();
+
 
             $table->string('name');
             $table->string('email')->unique();
