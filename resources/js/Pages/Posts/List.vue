@@ -67,7 +67,53 @@ let app_url = import.meta.env.VITE_APP_URL;
                         routeSearch: 'post.index',
                         data: data.data,
                         structure: [{
+                            class: 'text-center',
+                            label: '',
+                            field: 'img',
+                            fnc: function (d) {
+
+                                let html = ''
+
+                                if (d.img) {
+                                    html += '<img src=\'' + app_url + '/storage/posts/' + d.id + '/' + d.img + '\' class=\'w-12 h-12 m-auto object-cover rounded-lg\' />'
+                                }
+
+                                return html
+
+                            }
+                        }, {
                             class: 'text-left',
+                            label: 'Post',
+                            field: 'published_at',
+                            fnc: function (d) {
+
+                                let html = ''
+
+                                html += d.title
+                                html += '<br>'
+                                html += '<small>'
+                                html += d.user.name + ' - ' + d.user.email
+
+                                if (d.user.child_on === 1) {
+
+                                    html += '<br><strong> - Manager</strong>'
+
+                                }
+
+                                html += '<br>'
+                                html += __date(d.published_at, 'day')
+                                html += ' '
+                                html += __date(d.published_at, 'hour')
+                                html += '</small>'
+
+                                return html
+                            }
+                        }, /*{
+                            class: 'text-left hidden sm:table-cell',
+                            label: 'Titolo',
+                            field: 'title'
+                        }, {
+                            class: 'text-left hidden sm:table-cell',
                             label: 'Account',
                             field: 'user.name',
                             fnc: function (d) {
@@ -87,12 +133,8 @@ let app_url = import.meta.env.VITE_APP_URL;
                                 return html
                             }
                         }, {
-                            class: 'text-left',
-                            label: 'Titolo',
-                            field: 'title'
-                        }, {
-                            class: 'text-center w-[20%]',
-                            label: 'Data pubblicazione',
+                            class: 'text-center w-[20%] hidden sm:table-cell',
+                            label: 'Data',
                             field: 'published_at',
                             fnc: function (d) {
 
@@ -105,24 +147,9 @@ let app_url = import.meta.env.VITE_APP_URL;
                                 return html
 
                             }
-                        }, {
-                            class: 'text-center',
-                            label: 'Immagine',
-                            field: 'img',
-                            fnc: function (d) {
-
-                                let html = ''
-
-                                if (d.img) {
-                                    html += '<img src=\'' + app_url + '/storage/posts/' + d.id + '/' + d.img + '\' class=\'w-12 h-12 m-auto object-cover rounded-lg\' />'
-                                }
-
-                                return html
-
-                            }
-                        }, {
-                            class: 'text-center w-[20%]',
-                            label: 'Media channel',
+                        }, */{
+                            class: 'text-center w-[20%] hidden sm:table-cell',
+                            label: 'Media',
                             field: 'media_channel',
                             fnc: function (d) {
 
@@ -139,7 +166,7 @@ let app_url = import.meta.env.VITE_APP_URL;
 
                             }
                         }, {
-                            class: 'text-center w-[5%]',
+                            class: 'text-center w-[5%] hidden sm:table-cell',
                             label: 'Commenti',
                             field: 'comments',
                             fnc: function (d) {
@@ -151,7 +178,7 @@ let app_url = import.meta.env.VITE_APP_URL;
 
                             }
                         }, {
-                            class: 'text-center w-[5%]',
+                            class: 'text-center w-[5%] hidden sm:table-cell',
                             label: 'Stato',
                             field: 'published',
                             fnc: function (d) {

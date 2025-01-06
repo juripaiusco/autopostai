@@ -44,7 +44,7 @@ if (props.data.newsletter_on === '1')
 
         <ApplicationContainer>
 
-            <div class="text-right mb-10">
+            <div class="max-sm:text-center mb-10">
 
                 <Link class="btn btn-secondary w-[120px]"
                       :href="data.saveRedirect">
@@ -108,7 +108,7 @@ if (props.data.newsletter_on === '1')
                 </div>
                 <div class="col-lg">
 
-                    <h2 class="text-xl font-bold text-center">Contenuto generato dall'AI</h2>
+                    <h2 class="text-xl font-bold text-center max-sm:mt-6">Contenuto generato dall'AI</h2>
 
                     <br>
 
@@ -121,7 +121,7 @@ if (props.data.newsletter_on === '1')
                 </div>
                 <div class="col-lg text-center">
 
-                    <h2 class="text-xl font-bold text-center">Commenti</h2>
+                    <h2 class="text-xl font-bold text-center max-sm:mt-6">Commenti</h2>
 
                     <br>
 
@@ -156,7 +156,7 @@ if (props.data.newsletter_on === '1')
                 </div>
             </div>
 
-            <div class="text-right mt-10">
+            <div class="max-sm:text-center mt-10">
 
                 <Link class="btn btn-secondary w-[120px]"
                       :href="data.saveRedirect">
