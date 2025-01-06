@@ -174,6 +174,20 @@ const showingNavigationDropdown = ref(false);
                         >
                             Dashboard
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on"
+                                           :href="route('user.index')"
+                                           :active="route().current().search('user') === 0 ? true : false">
+                            Account
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('post.index') + '?orderby=published_at&ordertype=desc&s='"
+                                           :active="route().current().search('post') === 0 ? true : false">
+                            Posts
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
+                                 :href="route('settings.index')"
+                                 :active="route().current().search('settings') === 0 ? true : false">
+                            Impostazioni
+                        </ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->
