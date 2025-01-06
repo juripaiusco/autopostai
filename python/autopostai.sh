@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "$(dirname "$0")"
+
 IMAGE_NAME="autopostai"
 NETWORK_NAME="autopostai_network"
 SUBNET="192.168.1.0/24"
