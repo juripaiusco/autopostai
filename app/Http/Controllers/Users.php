@@ -155,6 +155,7 @@ class Users extends Controller
     {
         $data = \App\Models\User::with('parent', 'settings')->find($id);
 
+        unset($data->password);
         $data['saveRedirect'] = Redirect::back()->getTargetUrl();
 
         return Inertia::render('Users/Form', [
@@ -180,6 +181,8 @@ class Users extends Controller
 
         if ($request->input('password')) {
             $request['password'] = Hash::make($request->input('password'));
+        } else {
+            unset($request['password']);
         }
 
         // Salvo l'utente
