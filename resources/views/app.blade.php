@@ -15,7 +15,7 @@
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
         <!-- Abilita la modalità standalone -->
-        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="mobile-web-app-capable" content="yes">
 
         <!-- Nome della tua web app su iOS -->
         <meta name="apple-mobile-web-app-title" content="AutoPostAI">
