@@ -17,6 +17,7 @@ const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
 }));
 
 const form = useForm(dataForm);
+form.password = '';
 
 const mediaChannels = [
     'facebook',

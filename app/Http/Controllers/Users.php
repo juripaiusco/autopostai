@@ -155,7 +155,6 @@ class Users extends Controller
     {
         $data = \App\Models\User::with('parent', 'settings')->find($id);
 
-        unset($data->password);
         $data['saveRedirect'] = Redirect::back()->getTargetUrl();
 
         return Inertia::render('Users/Form', [
