@@ -1,6 +1,16 @@
 #!/bin/bash
 
-cd "$(dirname "$0")"
+PATH_SCRIPT=$(dirname "$0")
+
+cd $PATH_SCRIPT
+
+export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+echo ""
+echo ""
+echo "############################################################"
+echo "Script - START: $(date)"
+echo "------------------------------------------------------------"
 
 IMAGE_NAME="autopostai"
 NETWORK_NAME="autopostai_network"
@@ -47,7 +57,11 @@ docker run \
   --env-file .env \
   -v "$(pwd)/../.env":/app/.laravel-env \
   -v "$(pwd)/../storage":/app/storage \
-  -v "$(pwd)":/app $IMAGE_NAME
+  -v "$(pwd)":/app \
+  $IMAGE_NAME
 
 # Rimuovi la rete Docker dopo l'esecuzione
 docker network rm $NETWORK_NAME
+
+echo "------------------------------------------------------------"
+echo "Script - END: $(date)"
