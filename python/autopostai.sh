@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Crontab
+# */5	*	*	*	*	/var/www/vhosts/server-j.com/autopostai.server-j.com/python/autopostai.sh >> /root/autopostai.log 2>&1
+
 PATH_SCRIPT=$(dirname "$0")
 
 cd $PATH_SCRIPT
@@ -50,7 +53,6 @@ fi
 
 # Esegui il container
 docker run \
-  -it \
   --rm \
   --net $NETWORK_NAME \
   --ip $CONTAINER_IP \
