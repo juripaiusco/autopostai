@@ -52,6 +52,10 @@ input[type=number] {
     -moz-appearance: textfield;
 }
 
+#nprogress > .spinner {
+    top: 95px !important;
+    right: calc(50% - 15px) !important;
+}
 #nprogress .bar {
     display: none;
 }
@@ -59,5 +63,12 @@ input[type=number] {
 @media (prefers-color-scheme: dark) {
     .breadcrumb-item + .breadcrumb-item::before {
         color: white !important;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    #nprogress > .spinner {
+        top: 25px !important;
+        right: calc(50% - 15px) !important;
     }
 }
