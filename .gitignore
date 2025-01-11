@@ -1,5 +1,7 @@
 #Custom
 .DS_Store
+/docs/.cache
+/docs/documentation
 
 # PHPStorm
 /.phpunit.cache
