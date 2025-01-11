@@ -23,9 +23,9 @@ if (form.published_at === '') {
     form.published_at = __date(new Date(), 'date') + ' ' + __date(new Date(), 'hour');
 }
 
-if (form.img_ai_check_on === '') {
+/*if (form.img_ai_check_on === '') {
     form.img_ai_check_on = 1;
-}
+}*/
 
 
 // Abilitazione canali in base alle impostazioni utente
