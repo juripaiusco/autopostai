@@ -22,6 +22,9 @@
 
         <!-- Icone specifiche per iOS -->
         <link rel="apple-touch-icon" href="{{ URL::asset('apple-touch-icon.png') }}">
+
+        <!-- Splash screen all'apertura dell'app iOS -->
+        <link rel="apple-touch-startup-image" href="{{ URL::asset('apple-touch-icon.png') }}">
         <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
