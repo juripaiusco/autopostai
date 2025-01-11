@@ -8,6 +8,36 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
+/**
+ * Lista / Crea / Visualizza / Elimina
+ *
+ * Tramite questa classe vengono creati tutti i contenuti da inviare ai vari canali digitali.
+ *
+ * **Canali digitali:**
+ * - Facebook;
+ * - Instagram;
+ * - WordPress (in lavorazione);
+ * - Newsletter (in lavorazione).
+ *
+ * **Processo per inviare il post:**
+ * 1. Creazione del post
+ * <br>Inserimento dei vari campi: titolo, prompt, ...
+ *
+ * 2. Collegamento ad OpenAI o altro sistema
+ * <br>Interfacciamento ad un LLM, e quindi generazione del contenuto da creare e recupero
+ *
+ * 3. Collegamento ai vari canali selezionati
+ * 4. Recupero dei commenti
+ * 5. Generazione delle risposte
+ *
+ * **Campi del database:**
+ * - Titolo del post (usato come campo interno per riferimento)
+ * - Data di pubblicazione del post
+ * - Prompt da inviare all'AI
+ * - Canali: Facebook / Instagram / ...
+ * - Immagine con check per confermare se l'AI debba o meno interpretarla
+ *
+ */
 class Posts extends Controller
 {
     /**

@@ -6,8 +6,43 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
+/**
+ * Prima schermata dopo il login.
+ *
+ * Questa classe mostra con un colpo d'occhio la situazione
+ * degli utenti e dei post a chi fa login.
+ *
+ * Per adesso è molto banale, ma in futuro implementerà queste
+ * features:
+ * - Mostra quanti tocken sono stati consumati;
+ * - Mostra quanto è stato speso in base ai tocken utilizzati.
+ *
+ * Volendo implementare un sistema a pagamento, magari ad abbonamento,
+ * in questa schermata sarà possibile mostrare quanti tocken, o il cost
+ * raggiunto prima che il sistema non invii più dati fino al prossimo
+ * rinnovo.
+ */
 class Dashboard extends Controller
 {
+    /**
+     * Renderizzione tramite Inertia dei dati
+     *
+     * Se sei un amministratore vengono mostrati questi dati:
+     * - il numero degli utenti;
+     * - il numero dei post;
+     * - il numero dei commenti.
+     *
+     * Se sei un manager vengono mostrati questi dati:
+     * - il numero dei tuoi sotto utenti;
+     * - il numero dei post dei tuoi sotto utenti;
+     * - il numero dei commenti dei tuoi sotto utenti.
+     *
+     * Se sei un utente vengono mostrati questi dati:
+     * - il numero dei tuoi post;
+     * - il numero dei tuoi commenti.
+     *
+     * @return \Inertia\Response
+     */
     public function index()
     {
         /**
