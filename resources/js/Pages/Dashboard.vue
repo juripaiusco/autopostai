@@ -26,7 +26,7 @@ const props = defineProps({
         <ApplicationContainer>
 
             <div class="row text-center">
-                <div v-if="data.users !== false" class="col">
+                <div v-if="data.users !== false" class="col-lg mb-6 md:mb-0">
 
                     <div class="card">
                         <div class="card-header">
@@ -43,7 +43,7 @@ const props = defineProps({
                     </div>
 
                 </div>
-                <div class="col">
+                <div class="col-lg mb-6 md:mb-0">
 
                     <div class="card">
                         <div class="card-header">
@@ -59,7 +59,7 @@ const props = defineProps({
                     </div>
 
                 </div>
-                <div class="col">
+                <div class="col-lg">
 
                     <div class="card">
                         <div class="card-header">
