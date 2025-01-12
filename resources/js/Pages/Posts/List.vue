@@ -16,6 +16,7 @@ import {Inertia} from "@inertiajs/inertia";
 const props = defineProps({
     data: Object,
     filters: Object,
+    token: Object,
 });
 
 let modalShow = ref(false);
@@ -312,15 +313,18 @@ import axios from 'axios';
 export default {
     data() {
         let posts = ref(this.$props.data.data);
+        const token = this.$props.token.plainTextToken;
         const isLoading = ref(false);
         const error = ref(null);
         let interval = null;
 
         const fetchPosts = () => {
             isLoading.value = true;
-            axios.get('/public/index.php/api/posts')
-                .then(response => {
-
+            axios.get('/public/index.php/api/posts',  {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }).then(response => {
                     const newPosts = response.data;
 
                     // Aggiorna solo i post esistenti che hanno lo stesso ID

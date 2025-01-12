@@ -43,7 +43,7 @@ class Posts extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $request_search_array = [
             'title',
@@ -109,7 +109,8 @@ class Posts extends Controller
 
         return Inertia::render('Posts/List', [
             'data' => $data,
-            'filters' => request()->all(['s', 'orderby', 'ordertype'])
+            'filters' => request()->all(['s', 'orderby', 'ordertype']),
+            'token' => $request->user()->createToken('posts')
         ]);
     }
 
