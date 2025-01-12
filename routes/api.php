@@ -8,5 +8,8 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::get('/posts', function () {
-    return App\Models\Post::latest()->get();
+    return App\Models\Post::with(['user', 'comments'])
+        ->take(env('VIEWS_PAGINATE'))
+        ->latest()
+        ->get();
 })/*->middleware('auth:sanctum')*/;

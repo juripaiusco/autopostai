@@ -65,7 +65,7 @@ let app_url = import.meta.env.VITE_APP_URL;
                         filters: filters,
                         tblName: 'post',
                         routeSearch: 'post.index',
-                        data: data.data,
+                        data: posts,
                         structure: [{
                             class: 'text-center',
                             label: '',
@@ -304,3 +304,58 @@ let app_url = import.meta.env.VITE_APP_URL;
 <style scoped>
 
 </style>
+
+<script>
+import { ref, onMounted, onUnmounted } from 'vue';
+import axios from 'axios';
+
+export default {
+    data() {
+        let posts = ref(this.$props.data.data);
+        const isLoading = ref(false);
+        const error = ref(null);
+        let interval = null;
+
+        const fetchPosts = () => {
+            isLoading.value = true;
+            axios.get('/public/index.php/api/posts')
+                .then(response => {
+
+                    const newPosts = response.data;
+
+                    // Aggiorna solo i post esistenti che hanno lo stesso ID
+                    newPosts.forEach(newPost => {
+                        const index = posts.value.findIndex(post => post.id === newPost.id);
+                        if (index !== -1) {
+                            // Se il post esiste già, sostituisci solo quello
+                            posts.value[index] = newPost;
+                        } else {
+                            // Altrimenti, aggiungi il nuovo post
+                            posts.value.push(newPost);
+                        }
+                    });
+
+                    error.value = null; // Reset errore
+                })
+                .catch(err => {
+                    console.error(err);
+                    error.value = 'Errore nel recupero dei dati';
+                })
+                .finally(() => {
+                    isLoading.value = false;
+                });
+        };
+
+        onMounted(() => {
+            fetchPosts(); // Caricamento iniziale
+            interval = setInterval(fetchPosts, 5000); // 5 secondi
+        });
+
+        onUnmounted(() => {
+            clearInterval(interval); // Pulisci l'intervallo
+        });
+
+        return { posts, isLoading, error };
+    },
+};
+</script>
