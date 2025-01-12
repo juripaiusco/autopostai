@@ -108,13 +108,10 @@ let app_url = import.meta.env.VITE_APP_URL;
                                 }
 
                                 html += '<br>'
-                                html += '<div class=\'row md:!hidden\'>'
-                                    html += '<div class=\'col-4\'>'
-                                    html += d.comments.length + ' <i class=\'fa-regular fa-comments\'></i>'
-                                    html += '</div>'
-                                    html += '<div class=\'col\'>'
-                                    html += socialArray.join('&nbsp;&nbsp;');
-                                    html += '</div>'
+                                html += '<div class=\'sm:hidden\'>'
+                                html += socialArray.join('&nbsp;&nbsp;');
+                                html += '<br>'
+                                html += d.comments.length + ' <i class=\'fa-regular fa-comments\'></i>'
                                 html += '</div>'
 
                                 html += __date(d.published_at, 'day')
