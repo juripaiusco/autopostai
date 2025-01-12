@@ -88,6 +88,12 @@ let app_url = import.meta.env.VITE_APP_URL;
                             field: 'published_at',
                             fnc: function (d) {
 
+                                let socialArray = new Array();
+                                d.meta_facebook_on == 1 ? socialArray.push('<i class=\'fa-brands fa-facebook\'></i>')  : '';
+                                d.meta_instagram_on == 1 ? socialArray.push('<i class=\'fa-brands fa-instagram\'></i>')  : '';
+                                d.wordpress_on == 1 ? socialArray.push('<i class=\'fa-brands fa-wordpress-simple\'></i>')  : '';
+                                d.newsletter_on == 1 ? socialArray.push('<i class=\'fa-regular fa-envelope\'></i>')  : '';
+
                                 let html = ''
 
                                 html += d.title
@@ -102,6 +108,15 @@ let app_url = import.meta.env.VITE_APP_URL;
                                 }
 
                                 html += '<br>'
+                                html += '<div class=\'row md:!hidden\'>'
+                                    html += '<div class=\'col-4\'>'
+                                    html += d.comments.length + ' <i class=\'fa-regular fa-comments\'></i>'
+                                    html += '</div>'
+                                    html += '<div class=\'col\'>'
+                                    html += socialArray.join('&nbsp;&nbsp;');
+                                    html += '</div>'
+                                html += '</div>'
+
                                 html += __date(d.published_at, 'day')
                                 html += ' '
                                 html += __date(d.published_at, 'hour')
