@@ -22,6 +22,9 @@
 
         <!-- Icone specifiche per iOS -->
         <link rel="apple-touch-icon" href="{{ URL::asset('apple-touch-icon.png') }}">
+
+        <script src="https://cdn.jsdelivr.net/npm/ios-pwa-splash@1.0.0/cdn.min.js"></script>
+        <script>iosPWASplash('{{ URL::asset('apple-icon-512x512.png') }}', '#000000');</script>
         <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
