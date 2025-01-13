@@ -364,7 +364,7 @@ export default {
 
         onMounted(() => {
             fetchPosts(); // Caricamento iniziale
-            interval = setInterval(fetchPosts, 5000); // 5 secondi
+            interval = setInterval(fetchPosts, 30000); // 30 secondi
         });
 
         onUnmounted(() => {
