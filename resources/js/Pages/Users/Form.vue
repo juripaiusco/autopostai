@@ -19,13 +19,6 @@ const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
 const form = useForm(dataForm);
 form.password = '';
 
-const mediaChannels = [
-    'facebook',
-    'instagram',
-    'wordpress',
-    'newsletter'
-];
-
 </script>
 
 <template>
@@ -129,42 +122,43 @@ const mediaChannels = [
 
                             <br>
 
-                            <div v-for="(mediaChannel, index) in mediaChannels" :key="index"
+                            <div v-for="(channel, index) in data.channels" :key="index"
                                  class="card mt-4">
+
                                 <div class="card-body">
 
                                     <div class="form-check form-switch">
 
                                         <input class="form-check-input"
                                                type="checkbox"
-                                               :id="'channel_' + mediaChannel + '_on'"
+                                               :id="index + '_channel_on'"
                                                true-value="1"
                                                false-value="0"
-                                               v-model="form['channel_' + mediaChannel + '_on']"
+                                               v-model="form['channels'][index]['on']"
                                                checked />
 
                                         <label class="form-check-label"
-                                               :for="'channel_' + mediaChannel + '_on'">
+                                               :for="index + '_channel_on'">
                                         <span class="capitalize text-gray-500 text-[0.9em]">
-                                            {{ mediaChannel }}
+                                            {{ channel.name }}
                                         </span>
                                         </label>
 
                                     </div>
 
-                                    <div v-if="form['channel_' + mediaChannel + '_on'] === '1'"
+                                    <div v-if="form['channels'][index]['on'] === '1'"
                                          class="form-check form-switch">
 
                                         <input class="form-check-input"
                                                type="checkbox"
-                                               :id="'channel_' + mediaChannel + '_reply_on'"
+                                               :id="index + '_reply_on'"
                                                true-value="1"
                                                false-value="0"
-                                               v-model="form['channel_' + mediaChannel + '_reply_on']"
+                                               v-model="form['channels'][index]['reply_on']"
                                                checked />
 
                                         <label class="form-check-label"
-                                               :for="'channel_' + mediaChannel + '_reply_on'">
+                                               :for="index + '_reply_on'">
                                         <span class="text-gray-500 text-[0.9em]">
                                             Abilita risposte ai commenti
                                         </span>
@@ -172,20 +166,19 @@ const mediaChannels = [
 
                                     </div>
 
-                                    <div v-if="form['channel_' + mediaChannel + '_on'] === '1' && form['channel_' + mediaChannel + '_reply_on'] === '1'"
+                                    <div v-if="form['channels'][index]['on'] === '1' && form['channels'][index]['reply_on'] === '1'"
                                          class="mt-3">
                                         <label class="form-label !text-xs">
                                             Q.tà massima di risposte ai commenti per post (lasciando vuoto
                                             si risponde a tutti)
                                         </label>
-                                        <input type="text"
+                                        <input type="number"
                                                class="form-control form-control-sm"
-                                               v-model="form['channel_' + mediaChannel + '_reply_n']" />
-                                        <div class="text-red-500 text-center"
-                                             v-if="form['errors']['channel_' + mediaChannel + '_reply_n']">{{ __(form['errors']['channel_' + mediaChannel + '_reply_n']) }}</div>
+                                               v-model="form['channels'][index]['reply_n']" />
                                     </div>
 
                                 </div>
+
                             </div>
 
                         </div>

@@ -7,11 +7,41 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class Users extends Controller
 {
+    public function get_channels()
+    {
+        $channels = [
+            'facebook' => [
+                'name' => 'Facebook',
+                'on' => null,
+                'reply_on' => null,
+                'reply_n' => null,
+            ],
+            'instagram' => [
+                'name' => 'Instagram',
+                'on' => null,
+                'reply_on' => null,
+                'reply_n' => null,
+            ],
+            'wordpress' => [
+                'name' => 'WordPress',
+                'on' => null,
+                'reply_on' => null,
+                'reply_n' => null,
+            ],
+            'newsletter' => [
+                'name' => 'Newsletter',
+                'on' => null,
+                'reply_on' => null,
+                'reply_n' => null,
+            ],
+        ];
+
+        return $channels;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -95,6 +125,8 @@ class Users extends Controller
 
         $data['saveRedirect'] = Redirect::back()->getTargetUrl();
 
+        $data['channels'] = $this->get_channels();
+
         $data = json_decode(json_encode($data), true);
 
         return Inertia::render('Users/Form', [
@@ -131,6 +163,7 @@ class Users extends Controller
         // Salvo il nuovo utente
         $user = new \App\Models\User();
         $user->fill($request->all());
+        $user->channels = json_encode($request->input('channels'));
         $user->save();
 
         // Salvo le impostazioni del nuovo utente
@@ -156,6 +189,8 @@ class Users extends Controller
         $data = \App\Models\User::with('parent', 'settings')->find($id);
 
         $data['saveRedirect'] = Redirect::back()->getTargetUrl();
+
+        $data['channels'] = json_decode($data->channels, true);
 
         return Inertia::render('Users/Form', [
             'data' => $data,
@@ -187,6 +222,7 @@ class Users extends Controller
         // Salvo l'utente
         $user = \App\Models\User::find($id);
         $user->fill($request->all());
+        $user->channels = json_encode($request->input('channels'));
         $user->save();
 
         // Salvo le impostazioni dell'utente

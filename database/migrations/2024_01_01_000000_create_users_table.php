@@ -17,24 +17,7 @@ return new class extends Migration
             $table->foreign('parent_id')->references('id')->on('users')->onDelete('cascade');
             $table->integer('child_on')->default(0)->nullable();
             $table->integer('child_max')->default(0)->nullable();
-
-            $table->string('channel_facebook_on', 1)->default(0)->nullable();
-            $table->string('channel_facebook_reply_on', 1)->default(0)->nullable();
-            $table->integer('channel_facebook_reply_n')->default(0)->nullable();
-
-            $table->string('channel_instagram_on', 1)->default(0)->nullable();
-            $table->string('channel_instagram_reply_on', 1)->default(0)->nullable();
-            $table->integer('channel_instagram_reply_n')->default(0)->nullable();
-
-            $table->string('channel_wordpress_on', 1)->default(0)->nullable();
-            $table->string('channel_wordpress_reply_on', 1)->default(0)->nullable();
-            $table->integer('channel_wordpress_reply_n')->default(0)->nullable();
-
-            $table->string('channel_newsletter_on', 1)->default(0)->nullable();
-            $table->string('channel_newsletter_reply_on', 1)->default(0)->nullable();
-            $table->integer('channel_newsletter_reply_n')->default(0)->nullable();
-
-
+            $table->json('channels')->nullable();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
