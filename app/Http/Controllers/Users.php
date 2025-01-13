@@ -9,8 +9,54 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
+/**
+ * Gestione utenti
+ *
+ * Qui vengono creati gli utenti:
+ * - Manager
+ * - Utenti
+ *
+ * L'amministratore piò creare utenti e manager, i manager
+ * possono creare sotto utenti.
+ *
+ * **Manager**
+ * Possono gestire il proprio profilo e i sotto utentei. Un manager
+ * può creare un numero limitato di sotto utenti, questo numero viene
+ * definito dall'amministratore.
+ * Un mananger può gestire il profilo dei propri sotto utenti. Un manager
+ * può creare dei post per il proprio sotto utente.
+ *
+ * **Utente**
+ * L'utente può gestire il proprio profilo, i propri post e le proprie
+ * impostazioni.
+ */
 class Users extends Controller
 {
+    /**
+     * Questo metodo è la struttura dei canali di comunicazione.
+     *
+     * In questo metodo sono definiti i canali cominicativi con le relative opzioni.
+     * Questo significa che la struttura diventa un'impostazione per l'utente, in ogni
+     * utente viene definito cosa può fare e che tipo di canale può utilizzare.
+     *
+     * In un secondo momento quando viene generato il post, questa struttura viene ripresa
+     * per mostrare quali canali possono essere utilizzati per il post, ma con le regole
+     * definite nel profilo utente.
+     *
+     * *Esempio:*
+     * 1. Genero un utente, inserisco quali canali può usare e con quali opzioni
+     * 2. Genero un post, seleziono l'utente e in base alle impostazioni creare nel
+     * punto 1, il post si comporta seguendo le regole utente.
+     *
+     * Questo metodo è un filo che lega opzini utente e opzioni post, così se in futuro
+     * ci saranno nuovi canali da aggiungere, basterà inserirli qui, con le relative opzioni
+     * e automaticamente queste verranno mostrare nel profilo utente e nella scheda del post.
+     *
+     * La logica di come verranno usate queste regole è dettata nello script Python utilizzato
+     * per il collegamento ai vari canali.
+     *
+     * @return array[]
+     */
     public function get_channels()
     {
         $channels = [
