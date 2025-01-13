@@ -83,6 +83,7 @@ class Users extends Controller
         $channels = [
             'facebook' => [
                 'name' => 'Facebook',
+                'css_class' => 'fa-brands fa-facebook',
                 'id' => null,
                 'on' => null,
                 'reply_on' => null,
@@ -90,6 +91,7 @@ class Users extends Controller
             ],
             'instagram' => [
                 'name' => 'Instagram',
+                'css_class' => 'fa-brands fa-instagram',
                 'id' => null,
                 'on' => null,
                 'reply_on' => null,
@@ -97,6 +99,7 @@ class Users extends Controller
             ],
             'wordpress' => [
                 'name' => 'WordPress',
+                'css_class' => 'fa-brands fa-wordpress-simple',
                 'id' => null,
                 'on' => null,
                 'reply_on' => null,
@@ -104,6 +107,7 @@ class Users extends Controller
             ],
             'newsletter' => [
                 'name' => 'Newsletter',
+                'css_class' => 'fa-regular fa-envelope',
                 'id' => null,
                 'on' => null,
                 'reply_on' => null,
