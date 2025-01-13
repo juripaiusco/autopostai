@@ -88,11 +88,14 @@ let app_url = import.meta.env.VITE_APP_URL;
                             field: 'published_at',
                             fnc: function (d) {
 
-                                let socialArray = new Array();
-                                d.meta_facebook_on == 1 ? socialArray.push('<i class=\'fa-brands fa-facebook\'></i>')  : '';
-                                d.meta_instagram_on == 1 ? socialArray.push('<i class=\'fa-brands fa-instagram\'></i>')  : '';
-                                d.wordpress_on == 1 ? socialArray.push('<i class=\'fa-brands fa-wordpress-simple\'></i>')  : '';
-                                d.newsletter_on == 1 ? socialArray.push('<i class=\'fa-regular fa-envelope\'></i>')  : '';
+                                let channels = JSON.parse(d.channels);
+                                let channelsArray = [];
+
+                                for (let index in channels) {
+                                    if (channels[index]['on'] === '1') {
+                                        channelsArray.push('<i class=\'' + channels[index]['css_class'] + '\'></i>')
+                                    }
+                                }
 
                                 let html = ''
 
@@ -109,7 +112,7 @@ let app_url = import.meta.env.VITE_APP_URL;
 
                                 html += '<br>'
                                 html += '<div class=\'sm:hidden\'>'
-                                html += socialArray.join('&nbsp;&nbsp;');
+                                html += channelsArray.join('&nbsp;&nbsp;');
                                 html += '<br>'
                                 html += d.comments.length + ' <i class=\'fa-regular fa-comments\'></i>'
                                 html += '</div>'
@@ -163,17 +166,20 @@ let app_url = import.meta.env.VITE_APP_URL;
                         }, */{
                             class: 'text-center w-[20%] hidden sm:table-cell',
                             label: 'Media',
-                            field: 'media_channel',
+                            field: 'channels',
                             fnc: function (d) {
 
-                                let socialArray = new Array();
-                                d.meta_facebook_on == 1 ? socialArray.push('<i class=\'fa-brands fa-facebook\'></i>')  : '';
-                                d.meta_instagram_on == 1 ? socialArray.push('<i class=\'fa-brands fa-instagram\'></i>')  : '';
-                                d.wordpress_on == 1 ? socialArray.push('<i class=\'fa-brands fa-wordpress-simple\'></i>')  : '';
-                                d.newsletter_on == 1 ? socialArray.push('<i class=\'fa-regular fa-envelope\'></i>')  : '';
+                                let channels = JSON.parse(d.channels);
+                                let channelsArray = [];
+
+                                for (let index in channels) {
+                                    if (channels[index]['on'] === '1') {
+                                        channelsArray.push('<i class=\'' + channels[index]['css_class'] + '\'></i>')
+                                    }
+                                }
 
                                 let html = ''
-                                html += socialArray.join('&nbsp;&nbsp;&nbsp;');
+                                html += channelsArray.join('&nbsp;&nbsp;&nbsp;');
 
                                 return html
 

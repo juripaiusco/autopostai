@@ -175,7 +175,7 @@ function checkChannelsByUser() {
                                 Scegli in quale canale pubblicare il tuo post
                             </span>
                         </label>
-                        
+
                         <div class="row !mt-2">
                             <div v-for="(channel, index) in data.channels"
                                  :key="index"
