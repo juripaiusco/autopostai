@@ -6,6 +6,7 @@ from lib.mysql import Mysql
 from datetime import datetime, timedelta
 import pytz
 from tqdm import tqdm
+import json
 
 load_dotenv(dotenv_path=".laravel-env")
 
@@ -14,6 +15,8 @@ LOCAL_TIMEZONE = pytz.timezone('Europe/Rome')
 
 # Ottieni la data attuale
 CURRENT_TIME = datetime.now(LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
+
+DB_PREFIX = os.getenv('DB_PREFIX')
 
 def posts_sending(debug = False):
     # Recupero i dati dal database per generare i Post
@@ -27,27 +30,24 @@ def posts_sending(debug = False):
     #########################################################
 
     query = f"""
-                SELECT  autopostai_posts.id AS id,
-                        autopostai_posts.user_id AS user_id,
-                        autopostai_posts.ai_prompt_post AS ai_prompt_post,
-                        autopostai_posts.img AS img,
-                        autopostai_posts.img_ai_check_on AS img_ai_check_on,
-                        autopostai_posts.meta_facebook_on AS meta_facebook_on,
-                        autopostai_posts.meta_instagram_on AS meta_instagram_on,
-                        autopostai_posts.wordpress_on AS wordpress_on,
-                        autopostai_posts.newsletter_on AS newsletter_on,
-                        autopostai_posts.published_at AS published_at,
-                        autopostai_posts.published AS published,
-                        autopostai_settings.ai_personality AS ai_personality,
-                        autopostai_settings.ai_prompt_prefix AS ai_prompt_prefix,
-                        autopostai_settings.openai_api_key AS openai_api_key,
-                        autopostai_settings.meta_page_id AS meta_page_id
+                SELECT  {DB_PREFIX}posts.id AS id,
+                        {DB_PREFIX}posts.user_id AS user_id,
+                        {DB_PREFIX}posts.ai_prompt_post AS ai_prompt_post,
+                        {DB_PREFIX}posts.img AS img,
+                        {DB_PREFIX}posts.img_ai_check_on AS img_ai_check_on,
+                        {DB_PREFIX}posts.channels AS channels,
+                        {DB_PREFIX}posts.published_at AS published_at,
+                        {DB_PREFIX}posts.published AS published,
+                        {DB_PREFIX}settings.ai_personality AS ai_personality,
+                        {DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
+                        {DB_PREFIX}settings.openai_api_key AS openai_api_key,
+                        {DB_PREFIX}settings.meta_page_id AS meta_page_id
 
-                    FROM autopostai_posts
-                        INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_posts.user_id
+                    FROM {DB_PREFIX}posts
+                        INNER JOIN {DB_PREFIX}settings ON {DB_PREFIX}settings.user_id = {DB_PREFIX}posts.user_id
 
-                WHERE autopostai_posts.published IS NULL
-                    AND autopostai_posts.published_at <= "{CURRENT_TIME}"
+                WHERE {DB_PREFIX}posts.published IS NULL
+                    AND {DB_PREFIX}posts.published_at <= "{CURRENT_TIME}"
             """
     rows = mysql.query(query)
 
@@ -56,6 +56,8 @@ def posts_sending(debug = False):
 
     # Leggo tutti i post
     for row in rows:
+
+        channels = json.loads(row['channels'])
 
         #########################################################
         #                                                       #
@@ -114,35 +116,35 @@ def posts_sending(debug = False):
         # Classe Meta
         meta = Meta(page_id=row['meta_page_id'])
 
-        fb_post_id = None
-        ig_post_id = None
+        channels['facebook']['id'] = None
+        channels['instagram']['id'] = None
 
         # Verifico se l'immagine è stata caricata e la invio ai canali scelti
         if row['img']:
 
-            if row['meta_facebook_on'] == '1':
-                fb_post_id = meta.fb_generate_post(contenuto, img_path)
+            if channels['facebook']['on'] == '1':
+                channels['facebook']['id'] = meta.fb_generate_post(contenuto, img_path)
 
                 if debug is True:
-                    print("\nFacebok post id: ", fb_post_id)
+                    print("\nFacebok post id: ", channels['facebook']['id'])
 
                 mysql.query(
-                    query="UPDATE autopostai_posts SET meta_facebook_id = %s WHERE id = %s",
-                    parameters=(fb_post_id, row['id'])
+                    query=f"UPDATE {DB_PREFIX}posts SET channels = %s WHERE id = %s",
+                    parameters=(json.dumps(channels), row['id'])
                 )
 
                 if debug is True:
                     print("\n- - - - - -\n")
 
-            if row['meta_instagram_on'] == '1':
-                ig_post_id = meta.ig_generate_post(contenuto, img_url)
+            if channels['instagram']['on'] == '1':
+                channels['instagram']['id'] = meta.ig_generate_post(contenuto, img_url)
 
                 if debug is True:
-                    print("\nInstagram post id: ", ig_post_id)
+                    print("\nInstagram post id: ", channels['instagram']['id'])
 
                 mysql.query(
-                    query="UPDATE autopostai_posts SET meta_instagram_id = %s WHERE id = %s",
-                    parameters=(ig_post_id, row['id'])
+                    query=f"UPDATE {DB_PREFIX}posts SET channels = %s WHERE id = %s",
+                    parameters=(json.dumps(channels), row['id'])
                 )
 
                 if debug is True:
@@ -150,15 +152,15 @@ def posts_sending(debug = False):
 
         else:
 
-            if row['meta_facebook_on'] == '1':
-                fb_post_id = meta.fb_generate_post(contenuto)
+            if channels['facebook']['on'] == '1':
+                channels['facebook']['id'] = meta.fb_generate_post(contenuto)
 
                 if debug is True:
-                    print("\nFacebok post id: ", fb_post_id)
+                    print("\nFacebok post id: ", channels['facebook']['id'])
 
                 mysql.query(
-                    query="UPDATE autopostai_posts SET meta_facebook_id = %s WHERE id = %s",
-                    parameters=(fb_post_id, row['id'])
+                    query=f"UPDATE {DB_PREFIX}posts SET channels = %s WHERE id = %s",
+                    parameters=(json.dumps(channels), row['id'])
                 )
 
                 if debug is True:
@@ -172,9 +174,9 @@ def posts_sending(debug = False):
         #                                                       #
         #########################################################
 
-        if fb_post_id or ig_post_id is not None:
+        if channels['facebook']['id'] or channels['instagram']['id'] is not None:
             mysql.query(
-                query="UPDATE autopostai_posts SET published = %s WHERE id = %s",
+                query=f"UPDATE {DB_PREFIX}posts SET published = %s WHERE id = %s",
                 parameters=(1, row['id'])
             )
 
@@ -186,26 +188,23 @@ def comments_get(debug = False):
     mysql.connect()
 
     query = f"""
-        SELECT  autopostai_posts.id AS id,
-                autopostai_posts.user_id AS user_id,
-                autopostai_posts.ai_prompt_post AS ai_prompt_post,
-                autopostai_posts.img AS img,
-                autopostai_posts.img_ai_check_on AS img_ai_check_on,
-                autopostai_posts.meta_facebook_id AS meta_facebook_id,
-                autopostai_posts.meta_instagram_id AS meta_instagram_id,
-                autopostai_posts.wordpress_id AS wordpress_id,
-                autopostai_posts.newsletter_id AS newsletter_id,
-                autopostai_posts.published_at AS published_at,
-                autopostai_posts.published AS published,
-                autopostai_settings.ai_personality AS ai_personality,
-                autopostai_settings.ai_prompt_prefix AS ai_prompt_prefix,
-                autopostai_settings.openai_api_key AS openai_api_key,
-                autopostai_settings.meta_page_id AS meta_page_id
+        SELECT  {DB_PREFIX}posts.id AS id,
+                {DB_PREFIX}posts.user_id AS user_id,
+                {DB_PREFIX}posts.ai_prompt_post AS ai_prompt_post,
+                {DB_PREFIX}posts.img AS img,
+                {DB_PREFIX}posts.img_ai_check_on AS img_ai_check_on,
+                {DB_PREFIX}posts.channels AS channels,
+                {DB_PREFIX}posts.published_at AS published_at,
+                {DB_PREFIX}posts.published AS published,
+                {DB_PREFIX}settings.ai_personality AS ai_personality,
+                {DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
+                {DB_PREFIX}settings.openai_api_key AS openai_api_key,
+                {DB_PREFIX}settings.meta_page_id AS meta_page_id
 
-            FROM autopostai_posts
-                INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_posts.user_id
+            FROM {DB_PREFIX}posts
+                INNER JOIN {DB_PREFIX}settings ON {DB_PREFIX}settings.user_id = {DB_PREFIX}posts.user_id
 
-        WHERE autopostai_posts.published = '1'
+        WHERE {DB_PREFIX}posts.published = '1'
             LIMIT 0, 10
     """
     rows = mysql.query(query)
@@ -215,6 +214,8 @@ def comments_get(debug = False):
 
     for row in rows:
 
+        channels = json.loads(row['channels'])
+
         #########################################################
         #                                                       #
         #     Collegamento a Meta e importazione commenti       #
@@ -223,7 +224,7 @@ def comments_get(debug = False):
 
         # Collegamento a Facebook
         meta = Meta(page_id=row['meta_page_id'])
-        comments = meta.fb_get_comments(row['meta_facebook_id'])
+        comments = meta.fb_get_comments(channels['facebook']['id'])
 
         if comments.get('error') is None:
             for comment in comments['data']:
@@ -239,7 +240,7 @@ def comments_get(debug = False):
                 converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
 
                 mysql.query(f"""
-                        INSERT IGNORE INTO autopostai_comments (
+                        INSERT IGNORE INTO {DB_PREFIX}comments (
                             post_id,
                             channel,
                             from_id,
@@ -262,7 +263,7 @@ def comments_get(debug = False):
 
         # Collegamento ad Instagram
         meta = Meta(page_id=row['meta_page_id'])
-        comments = meta.ig_get_comments(row['meta_instagram_id'])
+        comments = meta.ig_get_comments(channels['instagram']['id'])
 
         if comments.get('error') is None:
             for comment in comments['data']:
@@ -278,7 +279,7 @@ def comments_get(debug = False):
                 converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
 
                 mysql.query(f"""
-                        INSERT IGNORE INTO autopostai_comments (
+                        INSERT IGNORE INTO {DB_PREFIX}comments (
                             post_id,
                             channel,
                             from_id,
@@ -307,23 +308,23 @@ def comments_reply(debug = False):
     mysql.connect()
 
     query = f"""
-            SELECT  autopostai_comments.id AS id,
-                    autopostai_comments.channel AS channel,
-                    autopostai_comments.from_name AS from_name,
-                    autopostai_comments.message_id AS message_id,
-                    autopostai_comments.message AS message,
-                    autopostai_posts.ai_content AS ai_content,
-                    autopostai_settings.ai_personality AS ai_personality,
-                    autopostai_settings.ai_prompt_prefix AS ai_prompt_prefix,
-                    autopostai_settings.openai_api_key AS openai_api_key,
-                    autopostai_settings.meta_page_id AS meta_page_id
+            SELECT  {DB_PREFIX}comments.id AS id,
+                    {DB_PREFIX}comments.channel AS channel,
+                    {DB_PREFIX}comments.from_name AS from_name,
+                    {DB_PREFIX}comments.message_id AS message_id,
+                    {DB_PREFIX}comments.message AS message,
+                    {DB_PREFIX}posts.ai_content AS ai_content,
+                    {DB_PREFIX}settings.ai_personality AS ai_personality,
+                    {DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
+                    {DB_PREFIX}settings.openai_api_key AS openai_api_key,
+                    {DB_PREFIX}settings.meta_page_id AS meta_page_id
 
-                FROM autopostai_comments
-                    INNER JOIN autopostai_posts ON autopostai_posts.id = autopostai_comments.post_id
-                    INNER JOIN autopostai_users ON autopostai_users.id = autopostai_posts.user_id
-                    INNER JOIN autopostai_settings ON autopostai_settings.user_id = autopostai_users.id
+                FROM {DB_PREFIX}comments
+                    INNER JOIN {DB_PREFIX}posts ON {DB_PREFIX}posts.id = {DB_PREFIX}comments.post_id
+                    INNER JOIN {DB_PREFIX}users ON {DB_PREFIX}users.id = {DB_PREFIX}posts.user_id
+                    INNER JOIN {DB_PREFIX}settings ON {DB_PREFIX}settings.user_id = {DB_PREFIX}users.id
 
-            WHERE autopostai_comments.reply IS NULL
+            WHERE {DB_PREFIX}comments.reply IS NULL
         """
     rows = mysql.query(query)
 
@@ -386,7 +387,7 @@ def comments_reply(debug = False):
 
         if reply_id is not None:
             mysql.query(
-                query="UPDATE autopostai_comments SET reply_id = %s, reply = %s, reply_created_time = %s WHERE id = %s",
+                query=f"UPDATE {DB_PREFIX}comments SET reply_id = %s, reply = %s, reply_created_time = %s WHERE id = %s",
                 parameters=(reply_id['id'], reply, CURRENT_TIME, row['id'])
             )
 
