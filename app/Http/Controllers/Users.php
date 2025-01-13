@@ -55,6 +55,27 @@ class Users extends Controller
      * La logica di come verranno usate queste regole è dettata nello script Python utilizzato
      * per il collegamento ai vari canali.
      *
+     * **Stile della struttura dei canali**
+     * Questo array è strano, perché ha un utilizzo bivalente:
+     * 1. Account
+     * 2. Post
+     *
+     * Nel caso dell'account i campi vengono utilizzati in questo modo:
+     * - name: Nome del canale
+     * - on: se il canale può essere utilizzato dall'utente dei post
+     * - reply_on: se sono accettate risposte
+     * - reply_n: quante risposte sono accettate
+     *
+     * Nel caso dei post i campi vengono utilizzati in questo modo:
+     * name: Nome del canale
+     * - id: ID del post generato, quando viene inviato il post al canale, il post pubblicato
+     * di solito è associato ad un ID univoco, questo ID viene salvato in questo campo
+     * - on: se il post utilizza questa canale. Un post può essere inviato in modo multiplo o singolo
+     * se seleziono solo WordPress il post sarà molto più lungo, nel caso di un social sarà più corto,
+     * di conseguenza ogni post dovrà essere predisposto per il tipo di canale, inserire i social e la
+     * newsletter nella pubblicazione del post non è una buona idea, perché o un canale o l'altro avrà
+     * un contenuto non ideo dal punto di vista formale (social contenuto più corto, sito più lungo).
+     *
      * @return array[]
      */
     public function get_channels()
@@ -62,24 +83,28 @@ class Users extends Controller
         $channels = [
             'facebook' => [
                 'name' => 'Facebook',
+                'id' => null,
                 'on' => null,
                 'reply_on' => null,
                 'reply_n' => null,
             ],
             'instagram' => [
                 'name' => 'Instagram',
+                'id' => null,
                 'on' => null,
                 'reply_on' => null,
                 'reply_n' => null,
             ],
             'wordpress' => [
                 'name' => 'WordPress',
+                'id' => null,
                 'on' => null,
                 'reply_on' => null,
                 'reply_n' => null,
             ],
             'newsletter' => [
                 'name' => 'Newsletter',
+                'id' => null,
                 'on' => null,
                 'reply_on' => null,
                 'reply_n' => null,
