@@ -11,20 +11,6 @@ const props = defineProps({
     filters: Object,
 })
 
-let mediaChannelArray = new Array();
-
-if (props.data.meta_facebook_on === '1')
-    mediaChannelArray.push('Facebook');
-
-if (props.data.meta_instagram_on === '1')
-    mediaChannelArray.push('Instagram');
-
-if (props.data.wordpress_on === '1')
-    mediaChannelArray.push('WordPress');
-
-if (props.data.newsletter_on === '1')
-    mediaChannelArray.push('Newsletter');
-
 </script>
 
 <template>
@@ -96,14 +82,13 @@ if (props.data.newsletter_on === '1')
                     <label class="form-label">
                         Pubblicato su:
                     </label>
-                    <i v-if="data.meta_facebook_on === '1'"
-                       class="fa-brands fa-facebook"></i>&nbsp;
-                    <i v-if="data.meta_instagram_on === '1'"
-                       class="fa-brands fa-instagram"></i>&nbsp;
-                    <i v-if="data.wordpress_on === '1'"
-                       class="fa-brands fa-wordpress-simple"></i>&nbsp;
-                    <i v-if="data.newsletter_on === '1'"
-                       class="fa-regular fa-envelope"></i>
+
+                    <span v-for="(channel, index) in channels = JSON.parse(data.channels)"
+                       :key="index"
+                       class="mr-2">
+                        <i v-if="channel.on === '1'"
+                           :class="channel.css_class"></i>
+                    </span>
 
                 </div>
                 <div class="col-lg">
