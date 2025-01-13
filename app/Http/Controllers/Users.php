@@ -265,7 +265,7 @@ class Users extends Controller
 
         $data['saveRedirect'] = Redirect::back()->getTargetUrl();
 
-        $data['channels'] = json_decode($data->channels, true);
+        $data['channels'] = array_replace($this->get_channels(), json_decode($data->channels, true));
 
         return Inertia::render('Users/Form', [
             'data' => $data,
