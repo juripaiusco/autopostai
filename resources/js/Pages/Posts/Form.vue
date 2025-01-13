@@ -19,30 +19,46 @@ const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
 
 const form = useForm(dataForm);
 
+// Se nuovo post la data viene impostata come attuale
 if (form.published_at === '') {
     form.published_at = __date(new Date(), 'date') + ' ' + __date(new Date(), 'hour');
 }
 
-// Abilitazione canali in base alle impostazioni utente
-let channel_facebook_on = form.id || (form.user && form.user.id) ? form.user.channel_facebook_on : ref('0');
-let channel_instagram_on = form.id || (form.user && form.user.id) ? form.user.channel_instagram_on : ref('0');
-let channel_wordpress_on = form.id || (form.user && form.user.id) ? form.user.channel_wordpress_on : ref('0');
-let channel_newsletter_on = form.id || (form.user && form.user.id) ? form.user.channel_newsletter_on : ref('0');
+/**
+ * Imposto i canali che l'utente può utilizzare, di default i valori
+ * sono null, ma quando seleziono l'utente questa variabile
+ * cambia e ridefinisce i canali che si possono usare.
+ */
+let channel_user_can_set = ref([]);
 
+if (form.id || (form.user && form.user.id)) {
+
+    let channel_user = JSON.parse(form.user.channels);
+
+    for (let index in channel_user) {
+        channel_user_can_set.value[index] = channel_user[index]['on'];
+    }
+
+} else {
+
+    for (let index in props.data.channels) {
+        channel_user_can_set.value[index] = props.data.channels[index]['on'];
+    }
+}
+
+/**
+ * In base all'utente selezionato, abilito o meno i canali in cui il post
+ * può essere pubblicato.
+ */
 function checkChannelsByUser() {
 
     const user = props.data.users.find(u => u.id === form.user_id);
+    const user_channel = JSON.parse(user.channels);
 
-    channel_facebook_on.value = user.channel_facebook_on ? user.channel_facebook_on : '0'
-    channel_instagram_on.value = user.channel_instagram_on ? user.channel_instagram_on : '0'
-    channel_wordpress_on.value = user.channel_wordpress_on ? user.channel_wordpress_on : '0'
-    channel_newsletter_on.value = user.channel_newsletter_on ? user.channel_newsletter_on : '0'
-
-    form.meta_facebook_on = 0
-    form.meta_instagram_on = 0
-    form.wordpress_on = 0
-    form.newsletter_on = 0
-
+    for (let index in user_channel) {
+        channel_user_can_set.value[index] = user_channel[index].on;
+        form.channels[index]['on'] = '0';
+    }
 }
 
 </script>
@@ -159,87 +175,26 @@ function checkChannelsByUser() {
                                 Scegli in quale canale pubblicare il tuo post
                             </span>
                         </label>
-
+                        
                         <div class="row !mt-2">
-                            <div class="col-lg">
+                            <div v-for="(channel, index) in data.channels"
+                                 :key="index"
+                                 class="col-lg">
 
                                 <div class="form-check form-switch !mb-3">
 
-                                    <input :disabled="channel_facebook_on === '0' || channel_facebook_on === null"
+                                    <input :disabled="channel_user_can_set[index] === '0' || channel_user_can_set[index] === null"
                                            class="form-check-input"
                                            type="checkbox"
-                                           id="meta_facebook"
+                                           :id="index"
                                            true-value="1"
                                            false-value="0"
-                                           v-model="form.meta_facebook_on"
+                                           v-model="form.channels[index]['on']"
                                            checked />
 
                                     <label class="form-check-label"
-                                           for="meta_facebook">
-                                        <span class="text-gray-500 text-[0.9em]">Facebook</span>
-                                    </label>
-
-                                </div>
-
-                            </div>
-                            <div class="col-lg">
-
-                                <div class="form-check form-switch !mb-3">
-
-                                    <input :disabled="channel_instagram_on === '0' || channel_instagram_on === null"
-                                           class="form-check-input"
-                                           type="checkbox"
-                                           id="meta_instagram"
-                                           true-value="1"
-                                           false-value="0"
-                                           v-model="form.meta_instagram_on"
-                                           checked />
-
-                                    <label class="form-check-label"
-                                           for="meta_instagram">
-                                        <span class="text-gray-500 text-[0.9em]">Instagram</span>
-                                    </label>
-
-                                </div>
-
-                            </div>
-                            <div class="col-lg">
-
-                                <div class="form-check form-switch !mb-3">
-
-                                    <input :disabled="channel_wordpress_on === '0' || channel_wordpress_on === null"
-                                           class="form-check-input"
-                                           type="checkbox"
-                                           id="wordpress"
-                                           true-value="1"
-                                           false-value="0"
-                                           v-model="form.wordpress_on"
-                                           checked />
-
-                                    <label class="form-check-label"
-                                           for="wordpress">
-                                        <span class="text-gray-500 text-[0.9em]">WordPress</span>
-                                    </label>
-
-                                </div>
-
-                            </div>
-                            <div class="col-lg">
-
-                                <div class="form-check form-switch !mb-3">
-
-                                    <input :disabled="channel_newsletter_on === '0' || channel_newsletter_on === null"
-                                           class="form-check-input"
-                                           type="checkbox"
-                                           id="newsletter"
-                                           true-value="1"
-                                           false-value="0"
-                                           v-model="form.newsletter_on"
-                                           checked />
-
-                                    <label class="form-check-label"
-                                           for="newsletter">
-                                        <span class="text-gray-500 text-[0.9em]">Newsletter</span>
+                                           :for="index">
+                                        <span class="text-gray-500 text-[0.9em]">{{ channel.name }}</span>
                                     </label>
 
                                 </div>

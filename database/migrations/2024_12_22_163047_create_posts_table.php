@@ -24,16 +24,7 @@ return new class extends Migration
             $table->longText('ai_content')->default('')->nullable();
             $table->string('img')->default('')->nullable();
             $table->string('img_ai_check_on', 1)->default(0)->nullable();
-
-            $table->string('meta_facebook_on', 1)->default(0)->nullable();
-            $table->string('meta_facebook_id')->default(0)->nullable();
-            $table->string('meta_instagram_on', 1)->default(0)->nullable();
-            $table->string('meta_instagram_id')->default(0)->nullable();
-            $table->string('wordpress_on', 1)->default(0)->nullable();
-            $table->string('wordpress_id')->default(0)->nullable();
-            $table->string('newsletter_on', 1)->default(0)->nullable();
-            $table->string('newsletter_id')->default(0)->nullable();
-
+            $table->json('channels')->nullable();
             $table->timestamp('published_at')->nullable();
             $table->string('published', 1)->default(0)->nullable();
 

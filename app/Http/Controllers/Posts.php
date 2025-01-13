@@ -134,6 +134,8 @@ class Posts extends Controller
 
         $data['saveRedirect'] = Redirect::back()->getTargetUrl();
 
+        $data['channels'] = (new Users)->get_channels();
+
         /**
          * Query per recuperare gli utente a cui collegare il post
          * la query viene creata seguendo delle regole di gestione
@@ -195,6 +197,7 @@ class Posts extends Controller
 
         $post = new \App\Models\Post();
         $post->fill($request->all());
+        $post->channels = json_encode($request->input('channels'));
 
         $post->user_id = $request->input('user_id') ? $request->input('user_id') : auth()->user()->id;
 
@@ -241,6 +244,8 @@ class Posts extends Controller
         }
 
         $data->saveRedirect = $request->session()->get('saveRedirectPosts');
+
+        $data['channels'] = json_decode($data->channels, true);
 
         return Inertia::render('Posts/Form', [
             'data' => $data,
