@@ -1,4 +1,5 @@
 import os
+from decimal import Decimal
 from dotenv import load_dotenv
 from lib.gpt import GPT
 from lib.meta import Meta
@@ -199,13 +200,18 @@ def comments_get(debug = False):
                 {DB_PREFIX}settings.ai_personality AS ai_personality,
                 {DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
                 {DB_PREFIX}settings.openai_api_key AS openai_api_key,
-                {DB_PREFIX}settings.meta_page_id AS meta_page_id
+                {DB_PREFIX}settings.meta_page_id AS meta_page_id,
+                COUNT({DB_PREFIX}comments.post_id) AS comments_count,
+                SUM(CASE WHEN {DB_PREFIX}comments.channel = 'facebook' THEN 1 ELSE 0 END) AS facebook_comments_count,
+                SUM(CASE WHEN {DB_PREFIX}comments.channel = 'instagram' THEN 1 ELSE 0 END) AS instagram_comments_count
 
             FROM {DB_PREFIX}posts
-                INNER JOIN {DB_PREFIX}settings ON {DB_PREFIX}settings.user_id = {DB_PREFIX}posts.user_id
+                INNER JOIN {DB_PREFIX}settings ON {DB_PREFIX}posts.user_id = {DB_PREFIX}settings.user_id
+                LEFT JOIN {DB_PREFIX}comments ON {DB_PREFIX}posts.id = {DB_PREFIX}comments.post_id
 
         WHERE {DB_PREFIX}posts.published = '1'
-            LIMIT 0, 10
+            AND {DB_PREFIX}posts.replied IS NULL
+            LIMIT 0, 1
     """
     rows = mysql.query(query)
 
@@ -214,99 +220,113 @@ def comments_get(debug = False):
 
     for row in rows:
 
-        channels = json.loads(row['channels'])
+        if row['id'] is not None:
 
-        #########################################################
-        #                                                       #
-        #     Collegamento a Meta e importazione commenti       #
-        #                                                       #
-        #########################################################
+            channels = json.loads(row['channels'])
 
-        if row['meta_page_id'] is not None:
+            #########################################################
+            #                                                       #
+            #     Collegamento a Meta e importazione commenti       #
+            #                                                       #
+            #########################################################
 
-            # Verifico che il post abbia l'impostazione di replica
-            if channels['facebook']['reply_on'] == '1':
+            if row['meta_page_id'] is not None:
 
-                # Collegamento a Facebook
-                meta = Meta(page_id=row['meta_page_id'])
-                comments = meta.fb_get_comments(channels['facebook']['id'])
+                ####### FACEBOOK #############
+                # Verifico che il post abbia l'impostazione di replica
+                if (channels['facebook']['reply_on'] == '1'
+                    and row['facebook_comments_count'] < channels['facebook']['reply_n']):
 
-                if comments.get('error') is None:
-                    for comment in comments['data']:
-                        # Estrarre e convertire la data
-                        raw_date = comment['created_time']  # es: '2024-12-31T16:09:53+0000'
+                    # Collegamento a Facebook
+                    meta = Meta(page_id=row['meta_page_id'])
+                    comments = meta.fb_get_comments(channels['facebook']['id'])
 
-                        # Parsing della data con il fuso orario originale
-                        facebook_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
-                        original_date = facebook_date + timedelta(hours=1)
-                        # Conversione in un altro fuso orario (es. UTC)
-                        utc_date = original_date.astimezone(pytz.UTC)
-                        # Formattazione della data convertita
-                        converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
+                    if comments.get('error') is None:
+                        for comment in comments['data']:
+                            # Estrarre e convertire la data
+                            raw_date = comment['created_time']  # es: '2024-12-31T16:09:53+0000'
 
-                        mysql.query(f"""
-                                INSERT IGNORE INTO {DB_PREFIX}comments (
-                                    post_id,
-                                    channel,
-                                    from_id,
-                                    from_name,
-                                    message_id,
-                                    message,
-                                    message_created_time
-                                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-                            """, (
-                            row['id'],
-                            "facebook",
-                            comment['from']['id'],
-                            comment['from']['name'],
-                            comment['id'],
-                            comment['message'],
-                            converted_date
-                        ))
+                            # Parsing della data con il fuso orario originale
+                            facebook_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
+                            original_date = facebook_date + timedelta(hours=1)
+                            # Conversione in un altro fuso orario (es. UTC)
+                            utc_date = original_date.astimezone(pytz.UTC)
+                            # Formattazione della data convertita
+                            converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
 
-            # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                            mysql.query(f"""
+                                            INSERT IGNORE INTO {DB_PREFIX}comments (
+                                                post_id,
+                                                channel,
+                                                from_id,
+                                                from_name,
+                                                message_id,
+                                                message,
+                                                message_created_time
+                                            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                                        """, (
+                                row['id'],
+                                "facebook",
+                                comment['from']['id'],
+                                comment['from']['name'],
+                                comment['id'],
+                                comment['message'],
+                                converted_date
+                            ))
 
-            # Verifico che il post abbia l'impostazione di replica
-            if channels['facebook']['reply_on'] == '1':
+                # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-                # Collegamento ad Instagram
-                meta = Meta(page_id=row['meta_page_id'])
-                comments = meta.ig_get_comments(channels['instagram']['id'])
+                ####### INSTAGRAM #############
+                # Verifico che il post abbia l'impostazione di replica
+                if (channels['instagram']['reply_on'] == '1'
+                    and row['instagram_comments_count'] < channels['instagram']['reply_n']):
 
-                if comments.get('error') is None:
-                    for comment in comments['data']:
-                        # Estrarre e convertire la data
-                        raw_date = comment['timestamp']  # es: '2024-12-31T16:09:53+0000'
+                    # Collegamento ad Instagram
+                    meta = Meta(page_id=row['meta_page_id'])
+                    comments = meta.ig_get_comments(channels['instagram']['id'])
 
-                        # Parsing della data con il fuso orario originale
-                        facebook_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
-                        original_date = facebook_date + timedelta(hours=1)
-                        # Conversione in un altro fuso orario (es. UTC)
-                        utc_date = original_date.astimezone(pytz.UTC)
-                        # Formattazione della data convertita
-                        converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
+                    if comments.get('error') is None:
+                        for comment in comments['data']:
+                            # Estrarre e convertire la data
+                            raw_date = comment['timestamp']  # es: '2024-12-31T16:09:53+0000'
 
-                        mysql.query(f"""
-                                INSERT IGNORE INTO {DB_PREFIX}comments (
-                                    post_id,
-                                    channel,
-                                    from_id,
-                                    from_name,
-                                    message_id,
-                                    message,
-                                    message_created_time
-                                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-                            """, (
-                            row['id'],
-                            "instagram",
-                            comment['from']['id'],
-                            comment['from']['username'],
-                            comment['id'],
-                            comment['text'],
-                            converted_date
-                        ))
+                            # Parsing della data con il fuso orario originale
+                            facebook_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
+                            original_date = facebook_date + timedelta(hours=1)
+                            # Conversione in un altro fuso orario (es. UTC)
+                            utc_date = original_date.astimezone(pytz.UTC)
+                            # Formattazione della data convertita
+                            converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
 
-            # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                            mysql.query(f"""
+                                            INSERT IGNORE INTO {DB_PREFIX}comments (
+                                                post_id,
+                                                channel,
+                                                from_id,
+                                                from_name,
+                                                message_id,
+                                                message,
+                                                message_created_time
+                                            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                                        """, (
+                                row['id'],
+                                "instagram",
+                                comment['from']['id'],
+                                comment['from']['username'],
+                                comment['id'],
+                                comment['text'],
+                                converted_date
+                            ))
+
+                # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+            # Imposto il post replied nel caso abbia raggiunto i requisiti di risposta
+            if (Decimal(row['facebook_comments_count'] or 0) >= Decimal(channels['facebook']['reply_n'] or 0)
+                and Decimal(row['instagram_comments_count'] or 0) >= Decimal(channels['instagram']['reply_n'] or 0)):
+                mysql.query(
+                    query=f"UPDATE {DB_PREFIX}posts SET replied = %s WHERE id = %s",
+                    parameters=(1, row['id'])
+                )
 
     mysql.close()
 
