@@ -20,11 +20,11 @@ use Inertia\Inertia;
  * - Newsletter (in lavorazione).
  *
  * **Processo per inviare il post:**
- * 1. Creazione del post
- * <br>Inserimento dei vari campi: titolo, prompt, ...
+ * 1. Creazione del post<br>
+ *    Inserimento dei vari campi: titolo, prompt, ...
  *
- * 2. Collegamento ad OpenAI o altro sistema
- * <br>Interfacciamento ad un LLM, e quindi generazione del contenuto da creare e recupero
+ * 2. Collegamento ad OpenAI o altro sistema<br>
+ *    Interfacciamento ad un LLM, e quindi generazione del contenuto da creare e recupero
  *
  * 3. Collegamento ai vari canali selezionati
  * 4. Recupero dei commenti
