@@ -402,6 +402,24 @@ def comments_reply(debug = False):
     mysql.close()
 
 
+#
+# Questa funzione dev'essere richiamata da un contrab ogni minuto.
+#
+# Al suo interno main richiama 3 funzioni principali:
+# 1. posts_sending(debug=debug)
+#    Vengono inviati tutti i post da inviare, cioè nel database ci sono dei
+#    pronti per essere inviati, viene eseguita una query che li richiama e
+#    vengono caricati nei vari canali.
+#
+# 2. comments_get(debug=debug)
+#    Per ogni post inviato viene verificata la presenza di nuovi commenti,
+#    questi ultimi vengono scaricati e salvati nel database, questo per poter
+#    creare una risposta pertinente all'utente che ha commentato.
+#
+# 3. comments_reply(debug=debug)
+#    Invio della risposta al commento, in base al tipo di post e commento fatto,
+#    viene creata una risposta pertinente, in base alle impostazioni create.
+#
 def main():
     debug = True
 
