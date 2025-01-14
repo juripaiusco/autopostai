@@ -19,12 +19,14 @@ return new class extends Migration
             // Relazione e comportamento in cascata
             $table->foreign('post_id')->references('id')->on('posts')->onDelete('cascade');
 
+            $table->string('channel')->default('')->nullable();
+
             $table->string('message_id')->unique();
             $table->longText('message')->default('')->nullable();
 
             $table->string('reply_id')->default(null)->nullable();
-            $table->string('reply')->default(null)->nullable();
-            $table->string('channel')->default('')->nullable();
+            $table->longText('reply')->default(null)->nullable();
+
             $table->string('from_id')->default('')->nullable();
             $table->string('from_name')->default('')->nullable();
             $table->timestamp('message_created_time')->default(null)->nullable();
