@@ -346,10 +346,10 @@ def comments_reply(debug = False):
         prompt = prompt + "\n"
 
         if row['channel'] == 'instagram':
-            prompt = prompt + f"@{row['from_name']}" + " ha risposto con un commento:"
+            prompt = prompt + f"@{row['from_name']} ha risposto con un commento:"
 
         if row['channel'] == 'facebook':
-            prompt = prompt + row['from_name'] + " ha risposto con un commento:"
+            prompt = prompt + f"{row['from_name']} ha risposto con un commento:"
 
         prompt = prompt + row['from_name'] + " ha risposto con un commento:"
         prompt = prompt + "\n"
