@@ -57,6 +57,7 @@ function checkChannelsByUser() {
 
     for (let index in user_channel) {
         channel_user_can_set.value[index] = user_channel[index].on;
+        form.channels[index] = user_channel[index];
         form.channels[index]['on'] = '0';
     }
 }
