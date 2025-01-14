@@ -344,6 +344,13 @@ def comments_reply(debug = False):
         prompt = prompt + f"È stato creato questo post su {row['channel']}:\n"
         prompt = prompt + row['ai_content'] + "\n"
         prompt = prompt + "\n"
+
+        if row['channel'] == 'instagram':
+            prompt = prompt + f"@{row['from_name']}" + " ha risposto con un commento:"
+
+        if row['channel'] == 'facebook':
+            prompt = prompt + row['from_name'] + " ha risposto con un commento:"
+
         prompt = prompt + row['from_name'] + " ha risposto con un commento:"
         prompt = prompt + "\n"
         prompt = prompt + row['message'] + "\n"
