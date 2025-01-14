@@ -223,82 +223,83 @@ def comments_get(debug = False):
         #########################################################
 
         # Collegamento a Facebook
-        meta = Meta(page_id=row['meta_page_id'])
-        comments = meta.fb_get_comments(channels['facebook']['id'])
+        if row['meta_page_id'] is not None:
+            meta = Meta(page_id=row['meta_page_id'])
+            comments = meta.fb_get_comments(channels['facebook']['id'])
 
-        if comments.get('error') is None:
-            for comment in comments['data']:
-                # Estrarre e convertire la data
-                raw_date = comment['created_time']  # es: '2024-12-31T16:09:53+0000'
+            if comments.get('error') is None:
+                for comment in comments['data']:
+                    # Estrarre e convertire la data
+                    raw_date = comment['created_time']  # es: '2024-12-31T16:09:53+0000'
 
-                # Parsing della data con il fuso orario originale
-                facebook_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
-                original_date = facebook_date + timedelta(hours=1)
-                # Conversione in un altro fuso orario (es. UTC)
-                utc_date = original_date.astimezone(pytz.UTC)
-                # Formattazione della data convertita
-                converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
+                    # Parsing della data con il fuso orario originale
+                    facebook_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
+                    original_date = facebook_date + timedelta(hours=1)
+                    # Conversione in un altro fuso orario (es. UTC)
+                    utc_date = original_date.astimezone(pytz.UTC)
+                    # Formattazione della data convertita
+                    converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
 
-                mysql.query(f"""
-                        INSERT IGNORE INTO {DB_PREFIX}comments (
-                            post_id,
-                            channel,
-                            from_id,
-                            from_name,
-                            message_id,
-                            message,
-                            message_created_time
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """, (
-                    row['id'],
-                    "facebook",
-                    comment['from']['id'],
-                    comment['from']['name'],
-                    comment['id'],
-                    comment['message'],
-                    converted_date
-                ))
+                    mysql.query(f"""
+                            INSERT IGNORE INTO {DB_PREFIX}comments (
+                                post_id,
+                                channel,
+                                from_id,
+                                from_name,
+                                message_id,
+                                message,
+                                message_created_time
+                            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """, (
+                        row['id'],
+                        "facebook",
+                        comment['from']['id'],
+                        comment['from']['name'],
+                        comment['id'],
+                        comment['message'],
+                        converted_date
+                    ))
 
-        # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-        # Collegamento ad Instagram
-        meta = Meta(page_id=row['meta_page_id'])
-        comments = meta.ig_get_comments(channels['instagram']['id'])
+            # Collegamento ad Instagram
+            meta = Meta(page_id=row['meta_page_id'])
+            comments = meta.ig_get_comments(channels['instagram']['id'])
 
-        if comments.get('error') is None:
-            for comment in comments['data']:
-                # Estrarre e convertire la data
-                raw_date = comment['timestamp']  # es: '2024-12-31T16:09:53+0000'
+            if comments.get('error') is None:
+                for comment in comments['data']:
+                    # Estrarre e convertire la data
+                    raw_date = comment['timestamp']  # es: '2024-12-31T16:09:53+0000'
 
-                # Parsing della data con il fuso orario originale
-                facebook_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
-                original_date = facebook_date + timedelta(hours=1)
-                # Conversione in un altro fuso orario (es. UTC)
-                utc_date = original_date.astimezone(pytz.UTC)
-                # Formattazione della data convertita
-                converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
+                    # Parsing della data con il fuso orario originale
+                    facebook_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
+                    original_date = facebook_date + timedelta(hours=1)
+                    # Conversione in un altro fuso orario (es. UTC)
+                    utc_date = original_date.astimezone(pytz.UTC)
+                    # Formattazione della data convertita
+                    converted_date = utc_date.strftime('%Y-%m-%d %H:%M:%S')
 
-                mysql.query(f"""
-                        INSERT IGNORE INTO {DB_PREFIX}comments (
-                            post_id,
-                            channel,
-                            from_id,
-                            from_name,
-                            message_id,
-                            message,
-                            message_created_time
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """, (
-                    row['id'],
-                    "instagram",
-                    comment['from']['id'],
-                    comment['from']['username'],
-                    comment['id'],
-                    comment['text'],
-                    converted_date
-                ))
+                    mysql.query(f"""
+                            INSERT IGNORE INTO {DB_PREFIX}comments (
+                                post_id,
+                                channel,
+                                from_id,
+                                from_name,
+                                message_id,
+                                message,
+                                message_created_time
+                            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """, (
+                        row['id'],
+                        "instagram",
+                        comment['from']['id'],
+                        comment['from']['username'],
+                        comment['id'],
+                        comment['text'],
+                        converted_date
+                    ))
 
-        # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     mysql.close()
 
