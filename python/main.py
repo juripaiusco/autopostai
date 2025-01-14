@@ -101,7 +101,7 @@ def posts_sending(debug = False):
 
         # Salvo il contenuto generato dall'AI
         mysql.query(
-            query="UPDATE autopostai_posts SET ai_content = %s WHERE id = %s",
+            query=f"UPDATE {DB_PREFIX}posts SET ai_content = %s WHERE id = %s",
             parameters=(contenuto, row['id'])
         )
 
