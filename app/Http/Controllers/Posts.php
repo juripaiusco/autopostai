@@ -193,6 +193,7 @@ class Posts extends Controller
         $saveRedirect = $request['saveRedirect'];
         unset($request['saveRedirect']);
         unset($request['img']);
+        unset($request['user']);
         unset($request['users']);
 
         $post = new \App\Models\Post();
