@@ -18,8 +18,8 @@ return new class extends Migration
             $table->foreign('parent_id')->references('id')->on('users')->onDelete('cascade');
 
             $table->string('name');
-            $table->integer('child_on')->default(0)->nullable();
-            $table->integer('child_max')->default(0)->nullable();
+            $table->integer('child_on')->default(null)->nullable();
+            $table->integer('child_max')->default(null)->nullable();
             $table->json('channels')->nullable();
             $table->integer('token_limit')->default(0)->nullable();
 
