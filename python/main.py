@@ -1,13 +1,13 @@
 import os
-from decimal import Decimal
-from dotenv import load_dotenv
+import pytz
+import json
+from tqdm import tqdm
 from lib.gpt import GPT
 from lib.meta import Meta
+from decimal import Decimal
 from lib.mysql import Mysql
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
-import pytz
-from tqdm import tqdm
-import json
 
 load_dotenv(dotenv_path=".laravel-env")
 
@@ -210,7 +210,7 @@ def comments_get(debug = False):
                 LEFT JOIN {DB_PREFIX}comments ON {DB_PREFIX}posts.id = {DB_PREFIX}comments.post_id
 
         WHERE {DB_PREFIX}posts.published = '1'
-            AND {DB_PREFIX}posts.replied IS NULL
+            AND {DB_PREFIX}posts.task_complete IS NULL
             LIMIT 0, 1
     """
     rows = mysql.query(query)
@@ -320,11 +320,11 @@ def comments_get(debug = False):
 
                 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            # Imposto il post replied nel caso abbia raggiunto i requisiti di risposta
+            # Imposto il post "task_complete" nel caso abbia raggiunto i requisiti di risposta
             if (Decimal(row['facebook_comments_count'] or 0) >= Decimal(channels['facebook']['reply_n'] or 0)
                 and Decimal(row['instagram_comments_count'] or 0) >= Decimal(channels['instagram']['reply_n'] or 0)):
                 mysql.query(
-                    query=f"UPDATE {DB_PREFIX}posts SET replied = %s WHERE id = %s",
+                    query=f"UPDATE {DB_PREFIX}posts SET task_complete = %s WHERE id = %s",
                     parameters=(1, row['id'])
                 )
 
@@ -353,6 +353,7 @@ def comments_reply(debug = False):
                     INNER JOIN {DB_PREFIX}settings ON {DB_PREFIX}settings.user_id = {DB_PREFIX}users.id
 
             WHERE {DB_PREFIX}comments.reply IS NULL
+                LIMIT 0, 1
         """
     rows = mysql.query(query)
 
@@ -360,6 +361,8 @@ def comments_reply(debug = False):
         print("\nReply comments...\n")
 
     for row in rows:
+
+        # Preparo il prompt da inviare al LLM
         prompt = ""
 
         if row['ai_personality']:
@@ -368,13 +371,20 @@ def comments_reply(debug = False):
         if row['ai_prompt_prefix']:
             prompt = prompt + row['ai_prompt_prefix'] + "\n\n"
 
-        prompt = prompt + f"È stato creato questo post su {row['channel']}:\n"
-        prompt = prompt + row['ai_content'] + "\n"
-        prompt = prompt + "\n"
+        if row['channel']:
+            prompt = prompt + f"È stato creato questo post su {row['channel']}:\n"
 
+        if row['ai_content']:
+            prompt = prompt + row['ai_content'] + "\n"
+            prompt = prompt + "\n"
+
+        # Adatto il tipo di proprietario del commento in base al canale social.
+        # Questo perché con instagram inserendo la @ prima dello username taggherà
+        # la risposta del commento all'utente
         if row['channel'] == 'instagram':
             prompt = prompt + f"@{row['from_name']} ha risposto con un commento:"
 
+        # Adatto il tipo di proprietario del commento in base al canale social
         if row['channel'] == 'facebook':
             prompt = prompt + f"{row['from_name']} ha risposto con un commento:"
 
@@ -394,10 +404,12 @@ def comments_reply(debug = False):
         #########################################################
 
         reply_id = None
+        reply = None
 
         # Classe OpenAI
-        gpt = GPT(api_key=row['openai_api_key'])
-        reply = gpt.generate(prompt)
+        if row['openai_api_key'] is not None:
+            gpt = GPT(api_key=row['openai_api_key'])
+            reply = gpt.generate(prompt)
 
         #########################################################
         #                                                       #
@@ -406,13 +418,14 @@ def comments_reply(debug = False):
         #########################################################
 
         # Classe Meta
-        meta = Meta(page_id=row['meta_page_id'])
+        if reply is not None and row['meta_page_id'] is not None:
+            meta = Meta(page_id=row['meta_page_id'])
 
-        if row['channel'] == "facebook":
-            reply_id = meta.fb_reply_comments(row['message_id'], reply)
+            if row['channel'] == "facebook":
+                reply_id = meta.fb_reply_comments(row['message_id'], reply)
 
-        if row['channel'] == "instagram":
-            reply_id = meta.ig_reply_comments(row['message_id'], reply)
+            if row['channel'] == "instagram":
+                reply_id = meta.ig_reply_comments(row['message_id'], reply)
 
         #########################################################
         #                                                       #
@@ -433,19 +446,42 @@ def comments_reply(debug = False):
 # Questa funzione dev'essere richiamata da un contrab ogni minuto.
 #
 # Al suo interno main richiama 3 funzioni principali:
+#
 # 1. posts_sending()
 #    Vengono inviati tutti i post da inviare, cioè nel database ci sono dei
 #    pronti per essere inviati, viene eseguita una query che li richiama e
 #    vengono caricati nei vari canali.
+#    RAGIONAMENTO: ----------------------------------------------------------
+#    Statisticamente non verranno pubblicati tutti i post allo stesso orario
+#    quindi la query che recupera i post da inviare li prende tutti.
 #
 # 2. comments_get()
 #    Per ogni post inviato viene verificata la presenza di nuovi commenti,
 #    questi ultimi vengono scaricati e salvati nel database, questo per poter
-#    creare una risposta pertinente all'utente che ha commentato.
+#    creare una risposta pertinente all'utente che ha commentato, perché
+#    vengono presi tutti i vari dati per creare una risposta.
+#    RAGIONAMENTO: ----------------------------------------------------------
+#    Viene selezionato un post al minuto e che al suo interno ha gli ID di tutti
+#    i canali utilizzati. In base alle impostazioni del canale vengono fatte
+#    delle azioni, tra cui rispondere ai commenti.
+#    Quando il numero dei commenti scaricati, corrisponde al numero dei commenti
+#    massimo al quale il post può rispondere, il post viene marchiato come "task_complete",
+#    in questo modo non verrà più selezionato dalla query iniziale per scaricare i
+#    commenti.
 #
 # 3. comments_reply()
 #    Invio della risposta al commento, in base al tipo di post e commento fatto,
 #    viene creata una risposta pertinente, in base alle impostazioni create.
+#    RAGIONAMENTO: ----------------------------------------------------------
+#    Viene fatta una query, selezionando un commento alla volta, quindi un commento
+#    al minuto, al quale viene data una risposta, una volta risposto il commento
+#    risulterà risposto, perché avrà un reply e un reply_id.
+#
+#    IMPORTANTE:
+#    Se viene impostato un limite di risposte, per adesso questo probabilmente non
+#    verrà rispettato nei grandi numeri, perché vengono scaricati molti commenti,
+#    ma non è ancora indicato un massimo di download. Bisogna prevedere un controllo
+#    nei commenti del db, così da limitare le risposte.
 #
 def main():
     debug = True
