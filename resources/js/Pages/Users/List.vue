@@ -65,7 +65,7 @@ let modalData = ref(props.data);
                         routeSearch: 'user.index',
                         data: data.data,
                         structure: [{
-                            class: 'text-left w-[5%]',
+                            class: 'text-left w-[5%] hidden md:table-cell',
                             label: '',
                             field: '',
                             fnc: function (d) {
@@ -107,6 +107,22 @@ let modalData = ref(props.data);
                                 html += '</small>'
 
                                 return html
+                            }
+                        }, {
+                            class: 'text-right',
+                            label: 'Token',
+                            field: 'token_limit',
+                            fnc: function (d) {
+
+                                let html = ''
+
+                                if (d.child_on === null) {
+                                    html = new Intl.NumberFormat().format(d.token_limit)
+                                    html = html + '&nbsp;&nbsp;&nbsp;&nbsp;'
+                                }
+
+                                return html;
+
                             }
                         }, /*{
                             class: 'text-center',
