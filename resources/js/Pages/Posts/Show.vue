@@ -132,7 +132,11 @@ const props = defineProps({
                                     </label>
                                     {{ comment.reply }}
                                     <br>
-                                    <small class="text-[11px] text-gray-500">{{ __date(comment.reply_created_time) }}</small>
+                                    <small class="text-[11px] text-gray-500">
+                                        {{ __date(comment.reply_created_time) }}
+                                        -
+                                        {{ comment.token[0].tokens_used }} token
+                                    </small>
                                 </div>
                             </div>
                         </div>

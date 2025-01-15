@@ -213,7 +213,7 @@ class Posts extends Controller
      */
     public function show(Request $request, string $id)
     {
-        $data = \App\Models\Post::with(['user', 'comments'])->find($id);
+        $data = \App\Models\Post::with(['user', 'comments.token', 'token'])->find($id);
 
         if ($data->img)
             $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
