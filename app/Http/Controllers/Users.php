@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
@@ -156,13 +157,26 @@ class Users extends Controller
             $data->orderby(request('orderby'), strtoupper(request('ordertype')));
         }
 
+        $data = $data->leftJoin('token_logs', function ($join) {
+            $join->on('users.id', '=', 'token_logs.user_id')
+                ->whereMonth('token_logs.created_at', now()->month)
+                ->whereYear('token_logs.created_at', now()->year);
+        });
+
         $data = $data->select([
             'users.id',
             'users.name',
             'users.email',
             'users.tokens_limit',
+            DB::raw('COALESCE(SUM(' . env('DB_PREFIX') . 'token_logs.tokens_used), 0) as tokens_used_total'),
             'users.child_on',
-        ]);
+        ])->groupBy(
+            'users.id',
+            'users.name',
+            'users.email',
+            'users.tokens_limit',
+            'users.child_on',
+        );
 
         if (auth()->user()->parent_id == null) {
             $data = $data->whereNotNull('users.parent_id');

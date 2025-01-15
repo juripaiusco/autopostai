@@ -109,16 +109,27 @@ let modalData = ref(props.data);
                                 return html
                             }
                         }, {
-                            class: 'text-right',
+                            class: 'text-center w-[200px] hidden md:table-cell',
                             label: 'Token',
                             field: 'tokens_limit',
                             fnc: function (d) {
 
+                                let tokens_used_total = new Intl.NumberFormat().format(d.tokens_used_total)
+                                let tokens_limit = new Intl.NumberFormat().format(d.tokens_limit)
+                                let percentual = tokens_used_total / tokens_limit * 100
                                 let html = ''
 
                                 if (d.child_on === null) {
-                                    html = new Intl.NumberFormat().format(d.tokens_limit)
-                                    html = html + '&nbsp;&nbsp;&nbsp;&nbsp;'
+                                    html += tokens_used_total
+                                    html += ' / '
+                                    html += '<small>'
+                                    html += tokens_limit
+                                    html += '</small>'
+                                    html += '&nbsp;&nbsp;&nbsp;&nbsp;'
+                                    html += '<br>'
+                                    html += '<div class=\'mt-2 progress\' role=\'progressbar\' style=\'height: 4px\'>' +
+                                     '<div class=\'progress-bar progress-bar-striped progress-bar-animated\' style=\'width: ' + percentual + '%\'></div>' +
+                                      '</div>'
                                 }
 
                                 return html;
