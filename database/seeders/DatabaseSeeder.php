@@ -3,10 +3,14 @@
 namespace Database\Seeders;
 
 use App\Http\Controllers\Users;
+use App\Models\Comment;
+use App\Models\Post;
 use App\Models\Settings;
+use App\Models\Token_log;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,30 +19,75 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Insert admin user --------------------------------------
         $admin = User::factory()->create([
             'name' => 'Juri',
             'email' => 'juripaiusco.dev@gmail.com',
-            'password' => '$2y$12$Lqd8n2GuU7rMXIkwoilTeeBQv0NQdzqMu51K1xptPi5Xi8kGSGwqe',
+            'password' => Hash::make('12345'),
         ]);
 
         Settings::factory()->create([
             'user_id' => $admin->id
         ]);
 
-        // -------------------------------------------------------
+        // Insert Mario user --------------------------------------
+
+        $channels = (new Users())->get_channels();
+        $channels['facebook']['on'] = '1';
+        $channels['instagram']['on'] = '1';
+
+        $user = User::factory()->create([
+            'parent_id' => $admin->id,
+            'name' => 'Mario',
+            'email' => 'mario@test.it',
+            'password' => Hash::make('12345'),
+            'channels' => json_encode($channels),
+            'tokens_limit' => 10000
+        ]);
+
+        Settings::factory()->create([
+            'user_id' => $user->id
+        ]);
+
+        $posts = Post::factory(2)->create([
+            'user_id' => $user->id,
+            'channels' => json_encode($channels)
+        ]);
+
+        foreach ($posts as $post) {
+            Token_log::factory()->create([
+                'user_id' => $user->id,
+                'type' => 'post',
+                'reference_id' => $post->id,
+                'tokens_used' => rand(50, 1000),
+            ]);
+
+            $comments = Comment::factory(3)->create([
+                'post_id' => $post->id
+            ]);
+
+            foreach ($comments as $comment) {
+                Token_log::factory()->create([
+                    'user_id' => $user->id,
+                    'type' => 'comment',
+                    'reference_id' => $comment->id,
+                    'tokens_used' => rand(50, 200),
+                ]);
+            }
+        }
+
+        // Insert Luigi user --------------------------------------
 
         $channels = (new Users())->get_channels();
         $channels['facebook']['on'] = '1';
 
         $user = User::factory()->create([
             'parent_id' => $admin->id,
-            'name' => 'Mario',
-            'email' => 'mario@test.it',
-            'password' => '$2y$12$Lqd8n2GuU7rMXIkwoilTeeBQv0NQdzqMu51K1xptPi5Xi8kGSGwqe',
+            'name' => 'Luigi',
+            'email' => 'luigi@test.it',
+            'password' => Hash::make('12345'),
             'channels' => json_encode($channels),
-            'token_limit' => 10000
+            'tokens_limit' => 10000
         ]);
 
         Settings::factory()->create([
