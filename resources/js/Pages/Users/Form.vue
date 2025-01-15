@@ -52,6 +52,80 @@ form.password = '';
                 form.id ? form.id : ''
                 ))">
 
+                <div v-if="!$page.props.auth.user.parent_id || !$page.props.auth.user.child_on">
+
+                    <h2 class="text-2xl font-bold">
+                        Account Manager
+                    </h2>
+
+                    <small  class="text-xs font-normal">
+                        Gestione amministrativa dell'account
+                    </small>
+
+                    <br><br>
+
+                    <div class="card">
+                        <div class="card-body">
+
+                            <div class="form-check form-switch !mb-3">
+
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       id="child_on"
+                                       true-value="1"
+                                       false-value="0"
+                                       v-model="form.child_on"
+                                       checked />
+
+                                <label class="form-check-label"
+                                       for="child_on">
+                                <span class="text-gray-500 text-[0.9em]">
+                                    L'account può creare sotto utenti
+                                    <br>
+                                    <small>
+                                        Nel caso in cui questo account abbia più brand da gestire
+                                    </small>
+                                </span>
+                                </label>
+
+                            </div>
+
+                            <div v-if="form.child_on === '1' || form.child_on === 1">
+
+                                <label class="form-label">
+                                    Numero account max
+                                    <br>
+                                    <small>Numero massimo di sotto account che possono essere generati</small>
+                                </label>
+                                <input type="number"
+                                       class="form-control"
+                                       v-model="form.child_max" />
+                                <div class="text-red-500 text-center"
+                                     v-if="form.errors.child_max">{{ __(form.errors.child_max) }}</div>
+
+                            </div>
+
+                            <div v-if="form.child_on === '0' || form.child_on === '' || form.child_on === null">
+
+                                <label class="form-label">
+                                    Token al mese
+                                    <br>
+                                    <small>Numero massimo di token utilizzabili al mese</small>
+                                </label>
+                                <input type="number"
+                                       class="form-control"
+                                       v-model="form.token_limit" />
+                                <div class="text-red-500 text-center"
+                                     v-if="form.errors.token_limit">{{ __(form.errors.token_limit) }}</div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <br>
+
+                </div>
+
                 <div class="row">
                     <div class="col-lg">
 
@@ -109,6 +183,9 @@ form.password = '';
 
                         <br>
 
+                    </div>
+                    <div class="col-lg">
+
                         <div v-if="form.child_on !== 1 && form.child_on !== '1'">
 
                             <h2 class="text-2xl font-bold">
@@ -120,10 +197,16 @@ form.password = '';
                                 {{ form.name ? form.name : 'questo account' }}
                             </small>
 
-                            <br>
+                            <br><br>
+
+                            <label class="form-label">
+                                Canali
+                                <br>
+                                <small>Scegli il canale e le varie opzioni</small>
+                            </label>
 
                             <div v-for="(channel, index) in data.channels" :key="index"
-                                 class="card mt-4">
+                                 class="card [&:not(:last-child)]:mb-4">
 
                                 <div class="card-body">
 
@@ -186,77 +269,20 @@ form.password = '';
                         <br>
 
                     </div>
-                    <div class="col-lg">
+                </div>
 
-                        <div v-if="form.child_on !== 1 && form.child_on !== '1'">
+                <div v-if="form.child_on !== 1 && form.child_on !== '1'">
 
-                            <h2 class="text-2xl font-bold">Impostazioni Account</h2>
+                    <h2 class="text-2xl font-bold">Impostazioni Account</h2>
 
-                            <small class="text-xs font-normal">
-                                Le chiavi sono uniche, non duplicarle
-                            </small>
+                    <small class="text-xs font-normal">
+                        Le chiavi sono uniche, non duplicarle
+                    </small>
 
-                            <br><br>
+                    <br><br>
 
-                            <SettingsForm :form="!form.settings ? form : form.settings" />
+                    <SettingsForm :form="!form.settings ? form : form.settings" />
 
-                            <br>
-
-                        </div>
-
-                        <h2 class="text-2xl font-bold">
-                            Account Manager
-                        </h2>
-
-                        <small  class="text-xs font-normal">
-                            Fai diventare manager questo account
-                        </small>
-
-                        <br><br>
-
-                        <div class="card">
-                            <div class="card-body">
-
-                                <div class="form-check form-switch !mb-3">
-
-                                    <input class="form-check-input"
-                                           type="checkbox"
-                                           id="child_on"
-                                           true-value="1"
-                                           false-value="0"
-                                           v-model="form.child_on"
-                                           checked />
-
-                                    <label class="form-check-label"
-                                           for="child_on">
-                                <span class="text-gray-500 text-[0.9em]">
-                                    L'account può creare sotto utenti
-                                    <br>
-                                    <small>
-                                        Nel caso in cui questo account abbia più brand da gestire
-                                    </small>
-                                </span>
-                                    </label>
-
-                                </div>
-
-                                <br>
-
-                                <label class="form-label">
-                                    Numero account max
-                                    <br>
-                                    <small>Numero massimo di sotto account che possono essere generati</small>
-                                </label>
-                                <input type="text"
-                                       class="form-control"
-                                       v-model="form.child_max" />
-                                <div class="text-red-500 text-center"
-                                     v-if="form.errors.child_max">{{ __(form.errors.child_max) }}</div>
-
-                            </div>
-                        </div>
-
-                    </div>
                 </div>
 
                 <div class="text-right mt-10">
