@@ -18,4 +18,10 @@ class Post extends Model
         return $this->hasMany(Comment::class, 'post_id')
             ->orderBy('message_created_time', 'desc');
     }
+
+    public function token()
+    {
+        return $this->hasOne(Token_log::class, 'reference_id')
+            ->where('type', 'post');
+    }
 }

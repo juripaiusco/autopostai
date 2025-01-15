@@ -10,4 +10,10 @@ class Comment extends Model
     {
         return $this->belongsTo(Post::class);
     }
+
+    public function token()
+    {
+        return $this->hasMany(Token_log::class, 'reference_id')
+            ->where('type', 'comment');
+    }
 }
