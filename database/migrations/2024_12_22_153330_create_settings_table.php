@@ -19,12 +19,12 @@ return new class extends Migration
             // Relazione e comportamento in cascata
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
-            $table->longText('ai_personality')->default('')->nullable();
-            $table->longText('ai_prompt_prefix')->default('')->nullable();
+            $table->longText('ai_personality')->default(null)->nullable();
+            $table->longText('ai_prompt_prefix')->default(null)->nullable();
 
-            $table->string('openai_api_key')->unique()->default('')->nullable();
+            $table->string('openai_api_key')->unique()->default(null)->nullable();
 
-            $table->string('meta_page_id')->unique()->default('')->nullable();
+            $table->string('meta_page_id')->unique()->default(null)->nullable();
 
             $table->timestamps();
         });

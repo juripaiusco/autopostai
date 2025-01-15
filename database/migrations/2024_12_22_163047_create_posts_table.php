@@ -23,35 +23,35 @@ return new class extends Migration
             $table->string('title');
 
             // Istruzioni da inviare al LLM
-            $table->longText('ai_prompt_post')->default('')->nullable();
+            $table->longText('ai_prompt_post')->default(null);
 
             // Risposta del LLM
-            $table->longText('ai_content')->default('')->nullable();
+            $table->longText('ai_content')->default(null)->nullable();
 
             // Immagine del post
-            $table->string('img')->default('')->nullable();
+            $table->string('img')->default(null)->nullable();
 
             // Check per dire al LLM se leggere o meno l'immagine
-            $table->string('img_ai_check_on', 1)->default(0)->nullable();
+            $table->string('img_ai_check_on', 1)->default(0);
 
             // Lista dei canali di comunicazione, questa lista è dettata dall'utente
             // se all'utente vengono cambiate impostazioni questo campo rimane invariato,
             // ogni post potrà così avere opzioni capillari, cioè un post può ricevere risposte
             // un altro post ha le risposte chiuse.
-            $table->json('channels')->nullable();
+            $table->json('channels');
 
             // Data pubblicazione del post
             $table->timestamp('published_at')->nullable();
 
             // Flag se il post è pubblicato
-            $table->string('published', 1)->default(0)->nullable();
+            $table->string('published', 1)->default(0);
 
             // Flag se il post ha raggiunto il limite dei commenti ai cui dover rispondere. Nel campo
             // channel vengono impostate le opzioni del post, una di queste è la risposta e il numero di
             // risposte. Una volta raggiunto il numero di commenti scaricati il post si può considerare
             // "task_complete", cioè ha scaricato il numero massimo di commenti, così non verrà più
             // esaminato dallo script Python e non farà più chiamate API ai vari canali.
-            $table->string('task_complete', 1)->default(0)->nullable();
+            $table->string('task_complete', 1)->default(0);
 
             $table->timestamps();
         });
