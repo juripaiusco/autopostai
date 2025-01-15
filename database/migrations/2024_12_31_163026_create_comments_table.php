@@ -21,7 +21,7 @@ return new class extends Migration
 
             $table->string('channel')->default('')->nullable();
 
-            $table->string('message_id')->unique();
+            $table->string('message_id')->default('')->nullable();
             $table->longText('message')->default('')->nullable();
 
             $table->string('reply_id')->default(null)->nullable();
