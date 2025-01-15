@@ -55,7 +55,7 @@ class Posts extends Controller
 
         // Query data
         $data = \App\Models\Post::query();
-        $data = $data->with(['user', 'comments']);
+        $data = $data->with(['user', 'comments', 'token']);
 
         // Request validate
         request()->validate([

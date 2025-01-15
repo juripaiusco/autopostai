@@ -197,6 +197,10 @@ let app_url = import.meta.env.VITE_APP_URL;
 
                             }
                         }, {
+                            class: 'text-right w-[5%] hidden sm:table-cell',
+                            label: 'Token',
+                            field: 'token.tokens_used'
+                        }, /*{
                             class: 'text-center w-[5%] hidden sm:table-cell',
                             label: 'Stato',
                             field: 'published',
@@ -219,7 +223,7 @@ let app_url = import.meta.env.VITE_APP_URL;
                                 return html
 
                             }
-                        }, {
+                        }, */ {
                             class: 'w-[1%]',
                             classBtn: 'btn-dark',
                             btnCustom: true,
