@@ -114,9 +114,9 @@ form.password = '';
                                 </label>
                                 <input type="number"
                                        class="form-control"
-                                       v-model="form.token_limit" />
+                                       v-model="form.tokens_limit" />
                                 <div class="text-red-500 text-center"
-                                     v-if="form.errors.token_limit">{{ __(form.errors.token_limit) }}</div>
+                                     v-if="form.errors.tokens_limit">{{ __(form.errors.tokens_limit) }}</div>
                             </div>
 
                         </div>

@@ -160,7 +160,7 @@ class Users extends Controller
             'users.id',
             'users.name',
             'users.email',
-            'users.token_limit',
+            'users.tokens_limit',
             'users.child_on',
         ]);
 

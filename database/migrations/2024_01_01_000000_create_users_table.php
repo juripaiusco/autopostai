@@ -21,7 +21,7 @@ return new class extends Migration
             $table->integer('child_on')->default(null)->nullable();
             $table->integer('child_max')->default(null)->nullable();
             $table->json('channels')->nullable();
-            $table->integer('token_limit')->default(0)->nullable();
+            $table->integer('tokens_limit')->default(0)->nullable();
 
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();

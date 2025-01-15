@@ -56,7 +56,7 @@ class User extends Authenticatable
         'parent_id',
         'child_on',
         'child_max',
-        'token_limit',
+        'tokens_limit',
         'name',
         'email',
         'password',

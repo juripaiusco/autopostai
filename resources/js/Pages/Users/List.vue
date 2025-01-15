@@ -111,13 +111,13 @@ let modalData = ref(props.data);
                         }, {
                             class: 'text-right',
                             label: 'Token',
-                            field: 'token_limit',
+                            field: 'tokens_limit',
                             fnc: function (d) {
 
                                 let html = ''
 
                                 if (d.child_on === null) {
-                                    html = new Intl.NumberFormat().format(d.token_limit)
+                                    html = new Intl.NumberFormat().format(d.tokens_limit)
                                     html = html + '&nbsp;&nbsp;&nbsp;&nbsp;'
                                 }
 
