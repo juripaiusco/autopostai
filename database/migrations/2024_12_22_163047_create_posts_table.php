@@ -46,12 +46,12 @@ return new class extends Migration
             // Flag se il post è pubblicato
             $table->string('published', 1)->default(0)->nullable();
 
-            // Flag se il post ha concluso le risposte, nel campo channel vengono impostate le opzioni
-            // del post, una di queste è la replica e il numero di repliche, che poi vengono inserite
-            // nella tabella dei commenti. Una volta raggiunto il numero di risposte indicate il post
-            // si può considerare "replied", cioè ha risposto al numero massimo di commenti, così non
-            // verrà più esaminato dallo script Python e non farà più chiamate API ai vari canali.
-            $table->string('replied', 1)->default(0)->nullable();
+            // Flag se il post ha raggiunto il limite dei commenti ai cui dover rispondere. Nel campo
+            // channel vengono impostate le opzioni del post, una di queste è la risposta e il numero di
+            // risposte. Una volta raggiunto il numero di commenti scaricati il post si può considerare
+            // "task_complete", cioè ha scaricato il numero massimo di commenti, così non verrà più
+            // esaminato dallo script Python e non farà più chiamate API ai vari canali.
+            $table->string('task_complete', 1)->default(0)->nullable();
 
             $table->timestamps();
         });
