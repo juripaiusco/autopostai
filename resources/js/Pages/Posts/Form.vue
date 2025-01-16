@@ -308,8 +308,7 @@ function checkChannelsByUser() {
                         Annulla
                     </Link>
 
-                    <button :disabled="!form.user_id && !form.user.id"
-                            type="submit"
+                    <button type="submit"
                             class="btn btn-success ml-2 w-[120px]">Salva</button>
 
                 </div>

@@ -202,7 +202,11 @@ let app_url = import.meta.env.VITE_APP_URL;
                             field: 'token.tokens_used',
                             fnc: function (d) {
 
-                                let token_used_total = d.token.tokens_used
+                                let token_used_total = 0
+
+                                if (d.token && d.token.tokens_used) {
+                                    token_used_total += d.token.tokens_used
+                                }
 
                                 for (let i in d.comments) {
                                     token_used_total += d.comments[i].token.tokens_used
