@@ -106,7 +106,7 @@ let modalData = ref(props.data);
 
                                 let tokens_used_total = new Intl.NumberFormat().format(d.tokens_used_total)
                                 let tokens_limit = new Intl.NumberFormat().format(d.tokens_limit)
-                                let percentual = parseFloat(tokens_used_total / tokens_limit * 100)
+                                let percentual = parseFloat(d.tokens_used_total / d.tokens_limit * 100)
                                 let classNameBarContainer = '!bg-green-300'
                                 let classNameBar = '!bg-green-500'
 
@@ -153,7 +153,7 @@ let modalData = ref(props.data);
 
                                 let tokens_used_total = new Intl.NumberFormat().format(d.tokens_used_total)
                                 let tokens_limit = new Intl.NumberFormat().format(d.tokens_limit)
-                                let percentual = parseFloat(tokens_used_total / tokens_limit * 100)
+                                let percentual = parseFloat(d.tokens_used_total / d.tokens_limit * 100)
                                 let html = ''
                                 let classNameBarContainer = '!bg-green-300'
                                 let classNameBar = '!bg-green-500'
@@ -173,7 +173,7 @@ let modalData = ref(props.data);
                                     '<small>' +
                                         tokens_limit +
                                     '</small>' +
-                                    '&nbsp;&nbsp;&nbsp;&nbsp;<br>' +
+                                    '<br>' +
                                      '<div class=\'mt-2 progress ' + classNameBarContainer + '\' role=\'progressbar\' style=\'height: 4px\'>' +
                                          '<div class=\'progress-bar ' + classNameBar + '\' style=\'width: ' + percentual + '%\'></div>' +
                                      '</div>'
