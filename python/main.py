@@ -338,16 +338,27 @@ def comments_get(debug = False):
                 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
             # Imposto il post "task_complete" nel caso abbia raggiunto i requisiti di risposta
+            task_complete_facebook = 0
+            task_complete_instagram = 0
             task_complete = 0
 
-            if (Decimal(row['facebook_comments_count'] or 0) >= Decimal(channels['facebook']['reply_n'] or 0)
-                and Decimal(row['instagram_comments_count'] or 0) >= Decimal(channels['instagram']['reply_n'] or 0)):
-                task_complete = 1
+            # Verifico se i task per il canale sono completi - FACEBOOK
+            if Decimal(row['facebook_comments_count'] or 0) >= Decimal(channels['facebook']['reply_n'] or 0):
+                task_complete_facebook = 1
 
             if Decimal(channels['facebook']['reply_n'] or 0) > 0 and channels['facebook']['reply_on'] == '0':
-                task_complete = 1
+                task_complete_facebook = 1
+            # ----------------------------------------------------
+
+            # Verifico se i task per il canale sono completi - INSTAGRAM
+            if Decimal(row['instagram_comments_count'] or 0) >= Decimal(channels['instagram']['reply_n'] or 0):
+                task_complete_instagram = 1
 
             if Decimal(channels['instagram']['reply_n'] or 0) > 0 and channels['instagram']['reply_on'] == '0':
+                task_complete_instagram = 1
+            # ----------------------------------------------------
+
+            if task_complete_facebook == 1 and task_complete_instagram == 1:
                 task_complete = 1
 
             if task_complete == 1:
