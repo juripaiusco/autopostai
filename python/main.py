@@ -338,11 +338,22 @@ def comments_get(debug = False):
                 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
             # Imposto il post "task_complete" nel caso abbia raggiunto i requisiti di risposta
+            task_complete = 0
+
             if (Decimal(row['facebook_comments_count'] or 0) >= Decimal(channels['facebook']['reply_n'] or 0)
                 and Decimal(row['instagram_comments_count'] or 0) >= Decimal(channels['instagram']['reply_n'] or 0)):
+                task_complete = 1
+
+            if Decimal(channels['facebook']['reply_n'] or 0) > 0 and channels['facebook']['reply_on'] == '0':
+                task_complete = 1
+
+            if Decimal(channels['instagram']['reply_n'] or 0) > 0 and channels['instagram']['reply_on'] == '0':
+                task_complete = 1
+
+            if task_complete == 1:
                 mysql.query(
                     query=f"UPDATE {DB_PREFIX}posts SET task_complete = %s WHERE id = %s",
-                    parameters=(1, row['id'])
+                    parameters=(task_complete, row['id'])
                 )
 
     mysql.close()
