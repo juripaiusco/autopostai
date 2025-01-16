@@ -106,6 +106,37 @@ let modalData = ref(props.data);
                                 html += d.email
                                 html += '</small>'
 
+                                let tokens_used_total = new Intl.NumberFormat().format(d.tokens_used_total)
+                                let tokens_limit = new Intl.NumberFormat().format(d.tokens_limit)
+                                let percentual = parseFloat(tokens_used_total / tokens_limit * 100)
+                                let classNameBarContainer = '!bg-green-300'
+                                let classNameBar = '!bg-green-500'
+
+                                if (percentual > 80) {
+                                    classNameBarContainer = '!bg-yellow-300'
+                                    classNameBar = '!bg-yellow-500'
+                                }
+                                if (percentual > 95) {
+                                    classNameBarContainer = '!bg-red-300'
+                                    classNameBar = '!bg-red-500'
+                                }
+
+                                if (d.child_on === null) {
+                                    html += '<div class=\'md:hidden\'>'
+
+                                    html += tokens_used_total +
+                                    ' / ' +
+                                    '<small>' +
+                                        tokens_limit +
+                                    '</small>' +
+                                    '&nbsp;&nbsp;&nbsp;&nbsp;<br>' +
+                                     '<div class=\'mt-2 progress ' + classNameBarContainer + '\' role=\'progressbar\' style=\'height: 4px\'>' +
+                                         '<div class=\'progress-bar ' + classNameBar + '\' style=\'width: ' + percentual + '%\'></div>' +
+                                     '</div>'
+
+                                     html += '</div>'
+                                }
+
                                 return html
                             }
                         }, {
