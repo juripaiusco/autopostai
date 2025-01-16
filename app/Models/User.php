@@ -74,7 +74,9 @@ class User extends Authenticatable
 
     public function tokens_used()
     {
-
+        return $this->hasOne(Token_log::class, 'user_id')
+            ->whereMonth('token_logs.created_at', now()->month)
+            ->whereYear('token_logs.created_at', now()->year);
     }
 
     /**

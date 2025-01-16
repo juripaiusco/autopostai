@@ -12,6 +12,7 @@ const showingNavigationDropdown = ref(false);
 </script>
 
 <template>
+
     <div>
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
             <nav
@@ -66,9 +67,11 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div v-if="$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
-                             class="sm:hidden flex shrink-0 items-center w-1/2">
+                             class="sm:hidden text-center mt-3 w-1/2">
 
-                            <ProgressBar :percent=60 />
+                            <label class="text-xs">Token utilizzati</label>
+                            <ProgressBar
+                                :percent="$page.props.auth.tokens_used / $page.props.auth.user.tokens_limit * 100" />
 
                         </div>
 
@@ -108,7 +111,8 @@ const showingNavigationDropdown = ref(false);
                                         <div v-if="$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
                                              class="items-center w-[100%]">
 
-                                            <ProgressBar :percent=60 />
+                                            <ProgressBar
+                                                :percent="$page.props.auth.tokens_used / $page.props.auth.user.tokens_limit * 100" />
 
                                         </div>
 

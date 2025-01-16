@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -33,7 +34,19 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                'tokens_used' => $this->getUserTokens($request->user())
             ],
         ];
+    }
+
+    public function getUserTokens($user)
+    {
+        return Cache::remember(
+            "user_{$user->id}_tokens_used",
+            now()->addMinutes(10),
+            function () use ($user) {
+                return $user->tokens_used()->sum('tokens_used');
+            }
+        );
     }
 }
