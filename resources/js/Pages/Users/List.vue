@@ -10,8 +10,6 @@ import Table from "@/Components/Table/Table.vue";
 import TableSearch from "@/Components/Table/TableSearch.vue";
 import TablePagination from "@/Components/Table/TablePagination.vue";
 import {ref} from "vue";
-import {__date} from "@/ComponentsExt/Date.js";
-import {Inertia} from "@inertiajs/inertia";
 
 const props = defineProps({
     data: Object,
