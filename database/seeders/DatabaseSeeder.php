@@ -103,6 +103,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Pietro',
             'email' => 'pietro@prova.it',
             'password' => Hash::make('12345'),
+            'channels' => json_encode($channels),
             'child_on' => 1,
             'child_max' => 2,
         ]);
