@@ -69,7 +69,7 @@ const showingNavigationDropdown = ref(false);
                         <div v-if="$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
                              class="sm:hidden text-center mt-3 w-1/2">
 
-                            <label class="text-xs">Token utilizzati</label>
+                            <label class="text-xs dark:text-gray-400">Token utilizzati</label>
                             <ProgressBar
                                 :percent="$page.props.auth.tokens_used / $page.props.auth.user.tokens_limit * 100" />
 
