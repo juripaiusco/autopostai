@@ -7,6 +7,7 @@ import ApplicationContainer from "@/Components/ApplicationContainer.vue";
 import {useForm} from "@inertiajs/vue3";
 import {__date} from "@/ComponentsExt/Date.js";
 import {ref} from "vue";
+import {__} from "../../ComponentsExt/Translations.js";
 
 const props = defineProps({
     data: Object,
@@ -115,8 +116,6 @@ function checkChannelsByUser() {
                                     {{ user.name }} - {{ user.email }}
                                 </option>
                             </select>
-                            <div class="text-red-500 text-center"
-                                 v-if="form.errors.user_id">{{ __(form.errors.user_id) }}</div>
 
                             <input v-if="data.user"
                                    type="text"
@@ -129,7 +128,7 @@ function checkChannelsByUser() {
                         </div>
 
                         <div class="row">
-                            <div class="col-lg-7">
+                            <div class="col-lg-7 mb-6 lg:mb-0">
 
                                 <label class="form-label">
                                     Titolo
@@ -139,8 +138,6 @@ function checkChannelsByUser() {
                                 <input type="text"
                                        class="form-control"
                                        v-model="form.title" />
-                                <div class="text-red-500 text-center"
-                                     v-if="form.errors.title">{{ __(form.errors.title) }}</div>
 
                             </div>
                             <div class="col">
@@ -153,8 +150,6 @@ function checkChannelsByUser() {
                                 <input type="datetime-local"
                                        class="form-control"
                                        v-model="form.published_at" />
-                                <div class="text-red-500 text-center"
-                                     v-if="form.errors.published_at">{{ __(form.errors.published_at) }}</div>
 
                             </div>
                         </div>
@@ -168,6 +163,9 @@ function checkChannelsByUser() {
                         </label>
                         <textarea class="form-control h-[216px]"
                                   v-model="form.ai_prompt_post"></textarea>
+                        <div class="text-red-500 text-center"
+                             v-if="form.errors.ai_prompt_post">{{ form.errors.ai_prompt_post }}</div>
+                        {{ form.errors.ai_prompt_post }}
 
                         <br>
 
@@ -302,7 +300,8 @@ function checkChannelsByUser() {
                         Annulla
                     </Link>
 
-                    <button type="submit"
+                    <button :disabled="!form.user_id && !form.user.id"
+                            type="submit"
                             class="btn btn-success ml-2 w-[120px]">Salva</button>
 
                 </div>

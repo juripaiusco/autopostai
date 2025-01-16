@@ -193,7 +193,8 @@ class Posts extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title'      => ['required'],
+            'title' => 'required',
+            'ai_prompt_post' => 'required',
         ]);
 
         $saveRedirect = $request['saveRedirect'];
