@@ -19,6 +19,7 @@ class PostFactory extends Factory
         return [
             'title' => fake()->text(20),
             'ai_prompt_post' => fake()->paragraph(),
+            'ai_content' => fake()->paragraph(),
             'published_at' => date('Y-m-d H:i:00', time()),
             'published' => rand(0, 1),
         ];
