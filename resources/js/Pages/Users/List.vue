@@ -138,6 +138,14 @@ let modalData = ref(props.data);
                                 return html
                             }
                         }, {
+                            class: 'text-center w-[5%] hidden md:table-cell',
+                            label: 'Post',
+                            field: 'post_count'
+                        }, {
+                            class: 'text-center w-[5%] hidden md:table-cell',
+                            label: 'Commenti',
+                            field: 'comment_count'
+                        }, {
                             class: 'text-center w-[200px] hidden md:table-cell',
                             label: 'Token',
                             field: 'tokens_limit',

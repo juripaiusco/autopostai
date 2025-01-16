@@ -169,6 +169,8 @@ class Users extends Controller
             'users.email',
             'users.tokens_limit',
             DB::raw('COALESCE(SUM(' . env('DB_PREFIX') . 'token_logs.tokens_used), 0) as tokens_used_total'),
+            DB::raw('COALESCE(SUM(CASE WHEN ' . env('DB_PREFIX') . 'token_logs.type = "post" THEN 1 ELSE 0 END), 0) as post_count'),
+            DB::raw('COALESCE(SUM(CASE WHEN ' . env('DB_PREFIX') . 'token_logs.type = "comment" THEN 1 ELSE 0 END), 0) as comment_count'),
             'users.child_on',
         ])->groupBy(
             'users.id',
