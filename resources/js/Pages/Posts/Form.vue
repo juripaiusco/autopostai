@@ -116,6 +116,8 @@ function checkChannelsByUser() {
                                     {{ user.name }} - {{ user.email }}
                                 </option>
                             </select>
+                            <div class="text-red-500 text-center"
+                                 v-if="form.errors.user_id">{{ __(form.errors.user_id) }}</div>
 
                             <input v-if="data.user"
                                    type="text"
@@ -137,7 +139,10 @@ function checkChannelsByUser() {
                                 </label>
                                 <input type="text"
                                        class="form-control"
+                                       :class="{'!border !border-red-500' : form.errors.title}"
                                        v-model="form.title" />
+                                <div class="text-red-500 text-center text-xs"
+                                     v-if="form.errors.title">{{ __(form.errors.title) }}</div>
 
                             </div>
                             <div class="col">
@@ -150,6 +155,8 @@ function checkChannelsByUser() {
                                 <input type="datetime-local"
                                        class="form-control"
                                        v-model="form.published_at" />
+                                <div class="text-red-500 text-center"
+                                     v-if="form.errors.published_at">{{ __(form.errors.published_at) }}</div>
 
                             </div>
                         </div>
@@ -162,9 +169,10 @@ function checkChannelsByUser() {
                             <small>L'AI interpresta il testo e genera un contenuto in base alle tue indicazioni</small>
                         </label>
                         <textarea class="form-control h-[216px]"
+                                  :class="{'!border !border-red-500' : form.errors.ai_prompt_post}"
                                   v-model="form.ai_prompt_post"></textarea>
-                        <div class="text-red-500 text-center"
-                             v-if="form.errors.ai_prompt_post">{{ form.errors.ai_prompt_post }}</div>
+                        <div class="text-red-500 text-center text-xs"
+                             v-if="form.errors.ai_prompt_post">{{ __(form.errors.ai_prompt_post) }}</div>
                         {{ form.errors.ai_prompt_post }}
 
                         <br>
