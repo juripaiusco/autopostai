@@ -209,7 +209,9 @@ let app_url = import.meta.env.VITE_APP_URL;
                                 }
 
                                 for (let i in d.comments) {
-                                    token_used_total += d.comments[i].token.tokens_used
+                                    if (d.comments[i].token) {
+                                        token_used_total += d.comments[i].token.tokens_used
+                                    }
                                 }
 
                                 return token_used_total
