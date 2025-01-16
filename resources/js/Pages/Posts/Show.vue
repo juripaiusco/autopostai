@@ -100,6 +100,20 @@ const props = defineProps({
                     <div class="card">
                         <div class="card-body">
                             {{ data.ai_content }}
+
+                            <br>
+
+                            <small class="text-[11px] text-gray-500">
+                                {{ __date(data.published_at) }}
+                                -
+                                <span v-if="data.token.tokens_used">
+                                     {{ data.token.tokens_used }} token
+                                </span>
+                                <span v-else
+                                      class="text-red-500">
+                                    Error: token non disponibile
+                                </span>
+                            </small>
                         </div>
                     </div>
 
