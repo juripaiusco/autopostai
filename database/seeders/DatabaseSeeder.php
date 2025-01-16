@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
             foreach ($comments as $comment) {
                 Token_log::factory()->create([
                     'user_id' => $user->id,
-                    'type' => 'comment',
+                    'type' => 'reply',
                     'reference_id' => $comment->id,
                     'tokens_used' => rand(50, 200),
                 ]);
@@ -162,7 +162,7 @@ class DatabaseSeeder extends Seeder
                 foreach ($comments as $comment) {
                     Token_log::factory()->create([
                         'user_id' => $user->id,
-                        'type' => 'comment',
+                        'type' => 'reply',
                         'reference_id' => $comment->id,
                         'tokens_used' => rand(50, 200),
                     ]);

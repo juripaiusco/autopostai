@@ -143,8 +143,8 @@ let modalData = ref(props.data);
                             field: 'post_count'
                         }, {
                             class: 'text-center w-[5%] hidden md:table-cell',
-                            label: 'Commenti',
-                            field: 'comment_count'
+                            label: 'Reply',
+                            field: 'reply_count'
                         }, {
                             class: 'text-center w-[200px] hidden md:table-cell',
                             label: 'Token',
