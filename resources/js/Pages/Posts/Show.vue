@@ -120,7 +120,7 @@ const props = defineProps({
                 </div>
                 <div class="col-lg text-center">
 
-                    <h2 class="text-xl font-bold text-center max-sm:mt-6">Commenti</h2>
+                    <h2 class="text-xl font-bold text-center mt-6 lg:mt-0">Commenti</h2>
 
                     <br>
 
