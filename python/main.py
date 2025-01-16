@@ -376,6 +376,7 @@ def comments_reply(debug = False):
 
     query = f"""
             SELECT  {DB_PREFIX}comments.id AS id,
+                    {DB_PREFIX}users.id AS user_id,
                     {DB_PREFIX}comments.channel AS channel,
                     {DB_PREFIX}comments.from_name AS from_name,
                     {DB_PREFIX}comments.message_id AS message_id,
