@@ -199,7 +199,18 @@ let app_url = import.meta.env.VITE_APP_URL;
                         }, {
                             class: 'text-right w-[5%] hidden sm:table-cell',
                             label: 'Token',
-                            field: 'token.tokens_used'
+                            field: 'token.tokens_used',
+                            fnc: function (d) {
+
+                                let token_used_total = d.token.tokens_used
+
+                                for (let i in d.comments) {
+                                    token_used_total += d.comments[i].token.tokens_used
+                                }
+
+                                return token_used_total
+
+                            }
                         }, /*{
                             class: 'text-center w-[5%] hidden sm:table-cell',
                             label: 'Stato',

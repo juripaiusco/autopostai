@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 })->middleware('auth:sanctum');*/
 
 Route::get('/posts', function () {
-    return App\Models\Post::with(['user', 'comments', 'token'])
+    return App\Models\Post::with(['user', 'comments.token', 'token'])
         ->take(env('VIEWS_PAGINATE'))
         ->latest()
         ->get();

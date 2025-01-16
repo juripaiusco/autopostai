@@ -149,8 +149,8 @@ const props = defineProps({
                                     <small class="text-[11px] text-gray-500">
                                         {{ __date(comment.reply_created_time) }}
                                         -
-                                        <span v-if="comment.token[0]">
-                                            {{ comment.token[0].tokens_used }} token
+                                        <span v-if="comment.token">
+                                            {{ comment.token.tokens_used }} token
                                         </span>
                                         <span v-else
                                               class="text-red-500">
