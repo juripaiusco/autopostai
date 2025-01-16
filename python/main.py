@@ -47,7 +47,7 @@ def posts_sending(debug = False):
                     FROM {DB_PREFIX}posts
                         INNER JOIN {DB_PREFIX}settings ON {DB_PREFIX}settings.user_id = {DB_PREFIX}posts.user_id
 
-                WHERE {DB_PREFIX}posts.published IS NULL
+                WHERE {DB_PREFIX}posts.published = 0
                     AND {DB_PREFIX}posts.published_at <= "{CURRENT_TIME}"
             """
     rows = mysql.query(query)
@@ -226,8 +226,8 @@ def comments_get(debug = False):
                 INNER JOIN {DB_PREFIX}settings ON {DB_PREFIX}posts.user_id = {DB_PREFIX}settings.user_id
                 LEFT JOIN {DB_PREFIX}comments ON {DB_PREFIX}posts.id = {DB_PREFIX}comments.post_id
 
-        WHERE {DB_PREFIX}posts.published = '1'
-            AND {DB_PREFIX}posts.task_complete IS NULL
+        WHERE {DB_PREFIX}posts.published = 1
+            AND {DB_PREFIX}posts.task_complete = 0
             LIMIT 0, 1
     """
     rows = mysql.query(query)
