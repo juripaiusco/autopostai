@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -120,11 +121,16 @@ class Posts extends Controller
     public function create()
     {
         // Creo un oggetto di dati vuoto
-        $columns = Schema::getColumnListing('posts');
+        $table = 'posts';
+        $columns = Schema::getColumnListing($table);
 
-        $data = array();
+        $data = [];
         foreach ($columns as $field) {
-            $data[$field] = '';
+            // Recupera i dettagli della colonna dal database
+            $columnDetails = DB::selectOne("SHOW COLUMNS FROM " . env('DB_PREFIX') . $table . " WHERE Field = ?", [$field]);
+            $default = $columnDetails->Default;
+
+            $data[$field] = $default ?? '';
         }
 
         unset($data['id']);
