@@ -34,7 +34,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
-                'tokens_used' => $this->getUserTokens($request->user())
+                'tokens_used' => $request->user() ? $this->getUserTokens($request->user()) : 0
             ],
         ];
     }
