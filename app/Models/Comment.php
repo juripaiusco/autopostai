@@ -17,6 +17,6 @@ class Comment extends Model
     public function token()
     {
         return $this->hasMany(Token_log::class, 'reference_id')
-            ->where('type', 'comment');
+            ->where('type', 'reply');
     }
 }
