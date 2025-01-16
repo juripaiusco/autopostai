@@ -104,6 +104,14 @@ const showingNavigationDropdown = ref(false);
                                                 </svg>
                                             </button>
                                         </span>
+
+                                        <div v-if="$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
+                                             class="items-center w-[100%]">
+
+                                            <ProgressBar :percent=60 />
+
+                                        </div>
+
                                     </template>
 
                                     <template #content>
