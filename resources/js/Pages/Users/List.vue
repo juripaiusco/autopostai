@@ -112,11 +112,11 @@ let modalData = ref(props.data);
                                 let classNameBarContainer = '!bg-green-300'
                                 let classNameBar = '!bg-green-500'
 
-                                if (percentual > 80) {
+                                if (percentual >= 75) {
                                     classNameBarContainer = '!bg-yellow-300'
                                     classNameBar = '!bg-yellow-500'
                                 }
-                                if (percentual > 95) {
+                                if (percentual >= 90) {
                                     classNameBarContainer = '!bg-red-300'
                                     classNameBar = '!bg-red-500'
                                 }

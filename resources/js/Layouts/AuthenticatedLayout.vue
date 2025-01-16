@@ -6,6 +6,7 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/vue3';
+import ProgressBar from "@/Components/ProgressBar.vue";
 
 const showingNavigationDropdown = ref(false);
 </script>
@@ -62,6 +63,13 @@ const showingNavigationDropdown = ref(false);
                                 </NavLink>
 
                             </div>
+                        </div>
+
+                        <div v-if="$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
+                             class="sm:hidden flex shrink-0 items-center w-1/2">
+
+                            <ProgressBar :percent=60 />
+
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
