@@ -4,6 +4,7 @@ import requests
 import traceback
 from dotenv import load_dotenv
 from openai import OpenAI
+import tiktoken
 
 load_dotenv()
 
@@ -19,10 +20,25 @@ class GPT:
       print("Please enter a prompt.")
       return None
 
+    # Inizializza l'encoder per il modello
+    encoding = tiktoken.encoding_for_model(model)
+
+    # Conta i token in entrata
+    token_in_entrata = len(encoding.encode(prompt))
+
+    # Invia il prompt ad OpenAI
     if not img_path:
-      return self.generate_txt(prompt, model, temperature)
+      output = self.generate_txt(prompt, model, temperature)
     else:
-      return self.generate_textByImg(prompt, img_path, model, temperature)
+      output = self.generate_textByImg(prompt, img_path, model, temperature)
+
+    # Conta i token in uscita
+    token_in_uscita = len(encoding.encode(output))
+
+    # Totale dei token
+    token_totali = token_in_entrata + token_in_uscita
+
+    return output, token_totali
 
 
   # Viene generato del contenuto di testo in base al prompt

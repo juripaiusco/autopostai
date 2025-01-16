@@ -8,7 +8,8 @@ RUN pip install \
     load_dotenv \
     requests \
     pytz \
-    tqdm
+    tqdm \
+    tiktoken
 
 # Imposta la directory di lavoro
 WORKDIR /app

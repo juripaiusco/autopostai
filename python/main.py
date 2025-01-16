@@ -96,15 +96,32 @@ def posts_sending(debug = False):
 
         # Verifico se l'immagine è da inviare all'AI e se l'immagine esiste
         if row['img_ai_check_on'] == '1' and row['img']:
-            contenuto = gpt.generate(prompt, img_path)
+            contenuto, tokens_used = gpt.generate(prompt, img_path)
         else:
-            contenuto = gpt.generate(prompt)
+            contenuto, tokens_used = gpt.generate(prompt)
 
         # Salvo il contenuto generato dall'AI
         mysql.query(
             query=f"UPDATE {DB_PREFIX}posts SET ai_content = %s WHERE id = %s",
             parameters=(contenuto, row['id'])
         )
+
+        # Salvo i token utilizzati per questo post
+        mysql.query(f"""
+                INSERT INTO {DB_PREFIX}token_logs (
+                    user_id,
+                    type,
+                    reference_id,
+                    tokens_used,
+                    created_at
+                ) VALUES (%s, %s, %s, %s, %s)
+            """, (
+            row['user_id'],
+            "post",
+            row['id'],
+            tokens_used,
+            CURRENT_TIME
+        ))
 
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -409,7 +426,24 @@ def comments_reply(debug = False):
         # Classe OpenAI
         if row['openai_api_key'] is not None:
             gpt = GPT(api_key=row['openai_api_key'])
-            reply = gpt.generate(prompt)
+            reply, tokens_used = gpt.generate(prompt)
+
+            # Salvo i token utilizzati per questo post
+            mysql.query(f"""
+                            INSERT INTO {DB_PREFIX}token_logs (
+                                user_id,
+                                type,
+                                reference_id,
+                                tokens_used,
+                                created_at
+                            ) VALUES (%s, %s, %s, %s, %s)
+                        """, (
+                row['user_id'],
+                "reply",
+                row['id'],
+                tokens_used,
+                CURRENT_TIME
+            ))
 
         #########################################################
         #                                                       #
