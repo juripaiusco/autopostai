@@ -346,7 +346,7 @@ def comments_get(debug = False):
             if Decimal(row['facebook_comments_count'] or 0) >= Decimal(channels['facebook']['reply_n'] or 0):
                 task_complete_facebook = 1
 
-            if Decimal(channels['facebook']['reply_n'] or 0) > 0 and channels['facebook']['reply_on'] == '0':
+            if channels['facebook']['reply_on'] == '0':
                 task_complete_facebook = 1
             # ----------------------------------------------------
 
@@ -354,7 +354,7 @@ def comments_get(debug = False):
             if Decimal(row['instagram_comments_count'] or 0) >= Decimal(channels['instagram']['reply_n'] or 0):
                 task_complete_instagram = 1
 
-            if Decimal(channels['instagram']['reply_n'] or 0) > 0 and channels['instagram']['reply_on'] == '0':
+            if channels['instagram']['reply_on'] == '0':
                 task_complete_instagram = 1
             # ----------------------------------------------------
 
