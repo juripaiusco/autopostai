@@ -1,6 +1,7 @@
 from task.posts_send import posts_send
 from task.comments_get import comments_get
 from task.reply_send import reply_send
+from task.task_complete import task_complete
 
 #
 # Questa funzione dev'essere richiamata da un contrab ogni minuto.
@@ -47,16 +48,15 @@ def main():
     debug = True
 
     posts_send(debug=debug)
-
-    if debug is True:
-        print()
+    if debug is True: print()
 
     comments_get(debug=debug)
-
-    if debug is True:
-        print()
+    if debug is True: print()
 
     reply_send(debug=debug)
+    if debug is True: print()
+
+    task_complete(debug=debug)
 
 if __name__ == "__main__":
     main()
