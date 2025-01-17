@@ -11,30 +11,31 @@ class FacebookPost(BasePost):
         super().__init__(channel_name="Facebook", data=data, debug=debug)
 
     def send(self, content):
-        # Trasformo in array il json dei canali e poi lo seleziono per recuperare l'ID del post
-        channels = json.loads(self.data['channels'])
+        if self.data['meta_page_id'] is not None:
+            # Trasformo in array il json dei canali e poi lo seleziono per recuperare l'ID del post
+            channels = json.loads(self.data['channels'])
 
-        meta = Meta(page_id=self.data['meta_page_id'])
+            meta = Meta(page_id=self.data['meta_page_id'])
 
-        if self.data['img']:
-            # Carico su Facebook il post CON l'immagine
-            channels['facebook']['id'] = meta.fb_generate_post(content, self.img_path_get())
-        else:
-            # Carico su Facebook il post SENZA l'immagine
-            channels['facebook']['id'] = meta.fb_generate_post(content)
+            if self.data['img']:
+                # Carico su Facebook il post CON l'immagine
+                channels['facebook']['id'] = meta.fb_generate_post(content, self.img_path_get())
+            else:
+                # Carico su Facebook il post SENZA l'immagine
+                channels['facebook']['id'] = meta.fb_generate_post(content)
 
-        mysql = Mysql()
-        mysql.connect()
+            mysql = Mysql()
+            mysql.connect()
 
-        # Salvo l'ID del post
-        mysql.query(
-            query=f"UPDATE {cfg.DB_PREFIX}posts SET channels = %s WHERE id = %s",
-            parameters=(json.dumps(channels), self.data['id'])
-        )
+            # Salvo l'ID del post
+            mysql.query(
+                query=f"UPDATE {cfg.DB_PREFIX}posts SET channels = %s WHERE id = %s",
+                parameters=(json.dumps(channels), self.data['id'])
+            )
 
-        if self.debug:
-            print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Facebook - post ID:", channels['facebook']['id'])
+            if self.debug:
+                print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Facebook - post ID:", channels['facebook']['id'])
 
-        mysql.close()
+            mysql.close()
 
-        return channels['facebook']['id']
+            return channels['facebook']['id']
