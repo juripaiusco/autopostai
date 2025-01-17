@@ -9,10 +9,10 @@ from services.meta import Meta
 
 def reply_send(debug = False):
 
-    if debug:
+    if debug is True:
         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Reply send - START -----------------")
 
-    if debug:
+    if debug is True:
         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Database query")
 
     mysql = Mysql()
@@ -20,6 +20,7 @@ def reply_send(debug = False):
 
     rows = mysql.query(f"""
             SELECT  {cfg.DB_PREFIX}comments.id AS id,
+                    {cfg.DB_PREFIX}comments.post_id AS post_id,
                     {cfg.DB_PREFIX}users.id AS user_id,
                     {cfg.DB_PREFIX}comments.channel AS channel,
                     {cfg.DB_PREFIX}comments.from_name AS from_name,
@@ -41,6 +42,13 @@ def reply_send(debug = False):
         """)
 
     for row in rows:
+
+        if debug is True:
+            print(
+                datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                "Reply to Comments - Post ID:",
+                row['post_id']
+            )
 
         if row['channel'] == 'facebook':
             prompt = FacebookReply(data=row).prompt_get()
@@ -81,5 +89,5 @@ def reply_send(debug = False):
 
     mysql.close()
 
-    if debug:
+    if debug is True:
         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Reply send - END -------------------")

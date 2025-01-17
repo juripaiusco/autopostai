@@ -8,10 +8,10 @@ from decimal import Decimal
 
 def comments_get(debug = False):
 
-    if debug:
+    if debug is True:
         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Comments get - START -----------------")
 
-    if debug:
+    if debug is True:
         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Database query")
 
     mysql = Mysql()
@@ -54,6 +54,13 @@ def comments_get(debug = False):
         if row['id'] is not None:
             channels = json.loads(row['channels'])
 
+            if debug is True:
+                print(
+                    datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                    "Comments monitoring - Post ID:",
+                    row['id']
+                )
+
             # Per ogni canale selezionato (Facebook, Instagram, WordPress, ...)
             # recupero i commenti
             for i in channels:
@@ -73,5 +80,5 @@ def comments_get(debug = False):
 
     mysql.close()
 
-    if debug:
+    if debug is True:
         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Comments get - END -------------------")
