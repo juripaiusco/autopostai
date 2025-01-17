@@ -1,6 +1,6 @@
 from task.posts_send import posts_send
 from task.comments_get import comments_get
-from task.replies_send import reply_send
+from task.reply_send import reply_send
 
 #
 # Questa funzione dev'essere richiamata da un contrab ogni minuto.
