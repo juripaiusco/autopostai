@@ -25,11 +25,22 @@ def task_complete(debug = False):
 
     if rows[0]['id'] is not None:
         for row in rows:
+
+            # Calcolo il tempo per il prossimo controllo dei commenti
             next_wait = calculate_next_hold_time(row['check_attempts'])
             mysql.query(
                 query=f"UPDATE {cfg.DB_PREFIX}posts SET on_hold_until = %s, check_attempts = check_attempts + 1 WHERE id = %s",
                 parameters=(now + next_wait, row['id'])
             )
+
+            # Verifico che i commenti abbiano avuto risposta e verifico che
+            # il numero di risposte sia stato sufficiente alle richieste
+            # dell'utente.
+
+
+            # Verifico che sia trascorsa una settimana, in caso marchio il
+            # post come task_complete
+            
 
     mysql.close()
 
