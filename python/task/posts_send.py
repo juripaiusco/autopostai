@@ -1,11 +1,11 @@
 import json
 import config as cfg
-from services.gpt import GPT
 from datetime import datetime
 from services.mysql import Mysql
 from task.posts.base import BasePost
 from task.posts.facebook import FacebookPost
 from task.posts.instagram import InstagramPost
+from task.openai_generate import openai_generate
 
 def posts_send(debug = False):
 
@@ -72,9 +72,9 @@ def posts_send(debug = False):
         # Mi connetto ad OpenAI
         if connect_to_openai == 1:
             if row['img_ai_check_on'] == '1':
-                content = openai_generate(row, prompt, base_post.img_path_get())
+                content = openai_generate(data=row, prompt=prompt, img_path=base_post.img_path_get(), type="post")
             else:
-                content = openai_generate(row, prompt)
+                content = openai_generate(data=row, prompt=prompt, type="post")
 
         # Per ogni canale selezionato (Facebook, Instagram, WordPress, ...)
         # invio il post, con il testo creato da OpenAI
@@ -99,47 +99,6 @@ def posts_send(debug = False):
     if debug:
         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Posts sending - END -------------------")
 
-# In questa funziona mi collego ad OpenAI e recupero l'output
-def openai_generate(data, prompt, img_path = None):
-    # Classe OpenAI
-    gpt = GPT(api_key=data['openai_api_key'])
-
-    # Verifico se l'immagine è da inviare all'AI e se l'immagine esiste
-    if img_path is not None:
-        contenuto, tokens_used = gpt.generate(prompt, img_path)
-    else:
-        contenuto, tokens_used = gpt.generate(prompt)
-
-    # ---------------------------------------------------------
-    mysql = Mysql()
-    mysql.connect()
-
-    # Salvo il contenuto generato dall'AI
-    mysql.query(
-        query=f"UPDATE {cfg.DB_PREFIX}posts SET ai_content = %s WHERE id = %s",
-        parameters=(contenuto, data['id'])
-    )
-
-    # Salvo i token utilizzati per questo post
-    mysql.query(f"""
-                    INSERT INTO {cfg.DB_PREFIX}token_logs (
-                        user_id,
-                        type,
-                        reference_id,
-                        tokens_used,
-                        created_at
-                    ) VALUES (%s, %s, %s, %s, %s)
-                """, (
-        data['user_id'],
-        "post",
-        data['id'],
-        tokens_used,
-        cfg.CURRENT_TIME
-    ))
-
-    mysql.close()
-
-    return contenuto
 
 # Verifico se il post è stato pubblicato, verificando se gli ID
 # dei post sono stati salvati. In caso tutti gli ID siano salvati

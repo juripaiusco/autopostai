@@ -84,7 +84,7 @@ class Meta:
 
       response = requests.post(url, data=payload)
 
-      return response.json()
+      return response.json().get("id")
 
 
   # Recupero l'ID dell'account Instagram collegato alla pagina Facebook
@@ -168,4 +168,4 @@ class Meta:
 
       response = requests.post(url, data=payload)
 
-      return response.json()
+      return response.json().get("id")

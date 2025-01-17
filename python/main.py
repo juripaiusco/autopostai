@@ -1,5 +1,6 @@
 from task.posts_send import posts_send
 from task.comments_get import comments_get
+from task.replies_send import reply_send
 
 #
 # Questa funzione dev'essere richiamata da un contrab ogni minuto.
@@ -28,7 +29,7 @@ from task.comments_get import comments_get
 #    in questo modo non verrà più selezionato dalla query iniziale per scaricare i
 #    commenti.
 #
-# 3. comments_reply()
+# 3. reply_send()
 #    Invio della risposta al commento, in base al tipo di post e commento fatto,
 #    viene creata una risposta pertinente, in base alle impostazioni create.
 #    RAGIONAMENTO: ----------------------------------------------------------
@@ -44,12 +45,18 @@ from task.comments_get import comments_get
 #
 def main():
     debug = True
+
     posts_send(debug=debug)
 
     if debug is True:
         print()
 
     comments_get(debug=debug)
+
+    if debug is True:
+        print()
+
+    reply_send(debug=debug)
 
 if __name__ == "__main__":
     main()
