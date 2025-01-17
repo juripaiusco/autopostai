@@ -359,7 +359,7 @@ def comments_get(debug = False):
 
             if channels['instagram']['reply_on'] == '0':
                 task_complete_instagram = 1
-            
+
             if Decimal(row['instagram_comments_count'] or 0) >= Decimal(channels['instagram']['reply_n'] or 0):
                 task_complete_instagram = 1
             # ----------------------------------------------------
