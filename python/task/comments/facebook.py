@@ -1,5 +1,6 @@
 import json
 import pytz
+import config as cfg
 from typing import List
 from services.meta import Meta
 from datetime import datetime, timedelta
@@ -35,3 +36,9 @@ class FacebookComment(BaseComment):
                         message=comment['message'],
                         message_created_time=converted_date
                     )
+
+            if self.debug is True:
+                print(
+                    datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                    "Facebook commenti importati:",
+                    len(comments.get('data', [])))

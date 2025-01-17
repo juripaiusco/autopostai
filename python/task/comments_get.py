@@ -4,7 +4,7 @@ from datetime import datetime
 from services.mysql import Mysql
 from task.comments.facebook import FacebookComment
 from task.comments.instagram import InstagramComment
-
+from decimal import Decimal
 
 def comments_get(debug = False):
 
@@ -57,14 +57,16 @@ def comments_get(debug = False):
         # recupero i commenti
         for i in channels:
             if (channels[i]['name'] == 'Facebook'
+                and channels[i]['on'] == '1'
                 and channels[i]['reply_on'] == '1'
-                and row['facebook_comments_count'] < channels[i]['reply_n']):
+                and Decimal(row['facebook_comments_count'] or 0) < Decimal(channels[i]['reply_n'] or 0)):
                 facebook_comments = FacebookComment(data=row, debug=debug)
                 facebook_comments.get()
 
             if (channels[i]['name'] == 'Instagram'
+                and channels[i]['on'] == '1'
                 and channels[i]['reply_on'] == '1'
-                and row['instagram_comments_count'] < channels[i]['reply_n']):
+                and Decimal(row['instagram_comments_count'] or 0) < Decimal(channels[i]['reply_n'] or 0)):
                 instagram_comments = InstagramComment(data=row, debug=debug)
                 instagram_comments.get()
 
