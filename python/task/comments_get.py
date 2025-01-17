@@ -71,12 +71,6 @@ def comments_get(debug = False):
                     instagram_comments = InstagramComment(data=row, debug=debug)
                     instagram_comments.get()
 
-        #########################################################
-        #                                                       #
-        #     INSERIRE RAGIONAMENTO PER task_copmlete           #
-        #                                                       #
-        #########################################################
-
     mysql.close()
 
     if debug:
