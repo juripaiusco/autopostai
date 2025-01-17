@@ -42,11 +42,11 @@ def reply_send(debug = False):
 
     for row in rows:
 
-        if row['channel'] == 'instagram':
-            prompt = FacebookReply().prompt_get()
-
         if row['channel'] == 'facebook':
-            prompt = InstagramReply().prompt_get()
+            prompt = FacebookReply(data=row).prompt_get()
+
+        if row['channel'] == 'instagram':
+            prompt = InstagramReply(data=row).prompt_get()
 
         # Recupero la risposta da OpenAI
         reply = openai_generate(data=row, prompt=prompt, type="reply")
@@ -57,9 +57,15 @@ def reply_send(debug = False):
 
             if row['channel'] == "facebook":
                 reply_id = meta.fb_reply_comments(row['message_id'], reply)
+                if debug is True:
+                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Facebook - reply ID:",
+                          reply_id)
 
             if row['channel'] == "instagram":
                 reply_id = meta.ig_reply_comments(row['message_id'], reply)
+                if debug is True:
+                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - reply ID:",
+                          reply_id)
 
         #########################################################
         #                                                       #
