@@ -53,6 +53,9 @@ return new class extends Migration
             // esaminato dallo script Python e non farà più chiamate API ai vari canali.
             $table->string('task_complete', 1)->default(0);
 
+            $table->integer('check_attempts')->default(0);
+            $table->timestamp('on_hold_until')->nullable();
+
             $table->timestamps();
         });
     }
