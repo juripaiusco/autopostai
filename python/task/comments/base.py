@@ -21,24 +21,34 @@ class BaseComment:
         mysql = Mysql()
         mysql.connect()
 
-        mysql.query(f"""
-                INSERT IGNORE INTO {cfg.DB_PREFIX}comments (
-                    post_id,
-                    channel,
-                    from_id,
-                    from_name,
-                    message_id,
-                    message,
-                    message_created_time
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (
-            post_id,
-            channel,
-            from_id,
-            from_name,
-            message_id,
-            message,
-            message_created_time
-        ))
+        rows = mysql.query(f"""
+                    SELECT 1
+                        FROM {cfg.DB_PREFIX}comments
+
+                    WHERE post_id = '{post_id}'
+                        AND channel = '{channel}'
+                        AND message_id = '{message_id}'
+                """)
+        
+        if not rows:
+            mysql.query(f"""
+                            INSERT IGNORE INTO {cfg.DB_PREFIX}comments (
+                                post_id,
+                                channel,
+                                from_id,
+                                from_name,
+                                message_id,
+                                message,
+                                message_created_time
+                            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """, (
+                post_id,
+                channel,
+                from_id,
+                from_name,
+                message_id,
+                message,
+                message_created_time
+            ))
 
         mysql.close()
