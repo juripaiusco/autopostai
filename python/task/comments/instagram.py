@@ -15,7 +15,7 @@ class InstagramComment(BaseComment):
             channels = json.loads(self.data['channels'])
 
             meta = Meta(page_id=self.data['meta_page_id'])
-            comments = meta.fb_get_comments(channels['instagram']['id'])
+            comments = meta.ig_get_comments(channels['instagram']['id'])
 
             if comments.get('error') is None:
                 for comment in comments['data']:
