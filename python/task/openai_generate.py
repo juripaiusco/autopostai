@@ -16,14 +16,10 @@ def openai_generate(data, prompt, img_path = None, type = None):
     # ---------------------------------------------------------
     mysql = Mysql()
     mysql.connect()
-
-    # Salvo il contenuto generato dall'AI
-    mysql.query(
-        query=f"UPDATE {cfg.DB_PREFIX}posts SET ai_content = %s WHERE id = %s",
-        parameters=(contenuto, data['id'])
-    )
-
-    # Salvo i token utilizzati per questo post
+    
+    # Salvo i token utilizzati per generare il contenuto
+    # i token vegono salvati nella tabella token_logs, in questo
+    # modo si riesce a tenere traccia delle interazione con OpenAI
     mysql.query(f"""
                     INSERT INTO {cfg.DB_PREFIX}token_logs (
                         user_id,
