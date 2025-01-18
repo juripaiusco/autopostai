@@ -83,10 +83,11 @@ def task_complete(debug = False):
                     task_complete = 0
 
             # Verifico che sia trascorsa una settimana, in caso marchio il post come task_complete
+            time_diff = (row['on_hold_until'] - row['created_at'])
             if debug is True:
-                print("\n", " " * 18, "Waiting days:", (row['on_hold_until'] - row['created_at']).days)
+                print("\n", " " * 18, "Waiting days:", time_diff.days)
 
-            if (row['on_hold_until'] - row['created_at']).days >= 14:
+            if time_diff.days >= 14:
                 task_complete = 1
 
             # Se il task non è ancora completo, imposto un orario per la
