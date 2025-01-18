@@ -101,13 +101,19 @@ def posts_send(debug = False):
                     if debug:
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Facebook - post sending")
                     facebook_post = FacebookPost(data=row, debug=debug)
-                    facebook_post.send(content)
+                    channels[i]['id'] = facebook_post.send(content)
 
                 if channels[i]['name'] == 'Instagram' and channels[i]['on'] == '1':
                     if debug:
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - post sending")
-                    instagram_post = InstagramPost(data=row)
-                    instagram_post.send(content)
+                    instagram_post = InstagramPost(data=row, debug=debug)
+                    channels[i]['id'] = instagram_post.send(content)
+
+            # Salvo gli ID del post nei vari canali
+            mysql.query(
+                query=f"UPDATE {cfg.DB_PREFIX}posts SET channels = %s WHERE id = %s",
+                parameters=(json.dumps(channels), row['id'])
+            )
 
         # Verifico che il post sia stato pubblicato e lo marchio come published
         if content is not None:

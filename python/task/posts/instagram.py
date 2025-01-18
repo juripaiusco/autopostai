@@ -12,26 +12,12 @@ class InstagramPost(BasePost):
 
     def send(self, content):
         if self.data['meta_page_id'] is not None:
-            # Trasformo in array il json dei canali e poi lo seleziono per recuperare l'ID del post
-            channels = json.loads(self.data['channels'])
-
             meta = Meta(page_id=self.data['meta_page_id'])
 
             # Carico su Instagram il post
-            channels['instagram']['id'] = meta.ig_generate_post(content, self.img_url_get())
-
-            mysql = Mysql()
-            mysql.connect()
-
-            # Salvo l'ID del post
-            mysql.query(
-                query=f"UPDATE {cfg.DB_PREFIX}posts SET channels = %s WHERE id = %s",
-                parameters=(json.dumps(channels), self.data['id'])
-            )
+            post_id = meta.ig_generate_post(content, self.img_url_get())
 
             if self.debug:
-                print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - post ID:", channels['instagram']['id'])
+                print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - post ID:", post_id)
 
-            mysql.close()
-
-            return channels['instagram']['id']
+            return post_id
