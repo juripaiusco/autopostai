@@ -87,6 +87,12 @@ def posts_send(debug = False):
                     debug=debug
                 )
 
+            # Salvo il contenuto generato dall'AI
+            mysql.query(
+                query=f"UPDATE {cfg.DB_PREFIX}posts SET ai_content = %s WHERE id = %s",
+                parameters=(content, row['id'])
+            )
+
         # Per ogni canale selezionato (Facebook, Instagram, WordPress, ...)
         # invio il post, con il testo creato da OpenAI
         if content is not None:
