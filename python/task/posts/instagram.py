@@ -18,7 +18,7 @@ class InstagramPost(BasePost):
             meta = Meta(page_id=self.data['meta_page_id'])
 
             # Carico su Instagram il post
-            channels['instagram']['id'] = meta.ig_generate_post(content, self.img_path_get())
+            channels['instagram']['id'] = meta.ig_generate_post(content, self.img_url_get())
 
             mysql = Mysql()
             mysql.connect()
