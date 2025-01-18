@@ -29,7 +29,7 @@ class BaseComment:
                         AND channel = '{channel}'
                         AND message_id = '{message_id}'
                 """)
-        
+
         if not rows:
             mysql.query(f"""
                             INSERT IGNORE INTO {cfg.DB_PREFIX}comments (

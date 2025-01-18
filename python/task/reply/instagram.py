@@ -23,7 +23,11 @@ class InstagramReply(BaseReply):
             prompt = prompt + self.data['ai_content'] + "\n"
             prompt = prompt + "\n"
 
-        prompt = prompt + f"@{self.data['from_name']} ha risposto con un commento:"
+        if self.data['from_name'] is not None:
+            prompt = prompt + f"@{self.data['from_name']} ha risposto con un commento:"
+        else:
+            prompt = prompt + f"Al post è stato risposto con questo commento:"
+
         prompt = prompt + "\n"
         prompt = prompt + self.data['message'] + "\n"
         prompt = prompt + "\n"
