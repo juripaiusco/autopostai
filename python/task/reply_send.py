@@ -58,7 +58,7 @@ def reply_send(debug = False):
             prompt = InstagramReply(data=row).prompt_get()
 
         # Recupero la risposta da OpenAI
-        reply = openai_generate(data=row, prompt=prompt, type="reply")
+        reply = openai_generate(data=row, prompt=prompt, type="reply", debug=debug)
 
         # Invio la risposta ai commenti Meta
         if reply is not None and row['meta_page_id'] is not None:

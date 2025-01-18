@@ -72,9 +72,20 @@ def posts_send(debug = False):
         # Mi connetto ad OpenAI
         if connect_to_openai == 1:
             if row['img_ai_check_on'] == '1':
-                content = openai_generate(data=row, prompt=prompt, img_path=base_post.img_path_get(), type="post")
+                content = openai_generate(
+                    data=row,
+                    prompt=prompt,
+                    img_path=base_post.img_path_get(),
+                    type="post",
+                    debug=debug
+                )
             else:
-                content = openai_generate(data=row, prompt=prompt, type="post")
+                content = openai_generate(
+                    data=row,
+                    prompt=prompt,
+                    type="post",
+                    debug=debug
+                )
 
         # Per ogni canale selezionato (Facebook, Instagram, WordPress, ...)
         # invio il post, con il testo creato da OpenAI
@@ -93,7 +104,8 @@ def posts_send(debug = False):
                     instagram_post.send(content)
 
         # Verifico che il post sia stato pubblicato e lo marchio come published
-        ctrl_posts_sent(id=row['id'], debug=debug)
+        if content is not None:
+            ctrl_posts_sent(id=row['id'], debug=debug)
 
     mysql.close()
 
