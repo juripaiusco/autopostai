@@ -23,6 +23,7 @@ def comments_get(debug = False):
     #                                                       #
     #########################################################
 
+    time_now = datetime.now(cfg.LOCAL_TIMEZONE)
     rows = mysql.query(f"""
         SELECT  {cfg.DB_PREFIX}posts.id AS id,
                 {cfg.DB_PREFIX}posts.user_id AS user_id,
@@ -46,7 +47,7 @@ def comments_get(debug = False):
 
         WHERE {cfg.DB_PREFIX}posts.published = 1
             AND {cfg.DB_PREFIX}posts.task_complete = 0
-            AND ({cfg.DB_PREFIX}posts.on_hold_until IS NULL OR {cfg.DB_PREFIX}posts.on_hold_until <= NOW())
+            AND ({cfg.DB_PREFIX}posts.on_hold_until IS NULL OR {cfg.DB_PREFIX}posts.on_hold_until <= '{time_now}')
             LIMIT 0, 1
     """)
 
