@@ -90,6 +90,11 @@ def task_complete(debug = False):
             if time_diff.days >= 14:
                 task_complete = 1
 
+            # Verifico se l'utente ha superato il limite di token disponibili
+            # in questo caso imposto il post come task_complete
+            if token_limit_exceeded(user_id=row['user_id']) == True:
+                task_complete = 1
+
             # Se il task non è ancora completo, imposto un orario per la
             # prossima verifica dei commenti
             if task_complete == 0:
@@ -127,3 +132,45 @@ def calculate_next_hold_time(check_attempts):
     max_wait = timedelta(weeks=1)
     next_wait = min(timedelta(minutes=2 ** check_attempts), max_wait)
     return next_wait
+
+# Questa funziona restituisce True se l'utente ha superato il
+# limite dei token disponibili
+def token_limit_exceeded(user_id = None, debug = False):
+    mysql = Mysql()
+    mysql.connect()
+
+    # Verifico quanti token sono stati utilizzati, per non superare la soglia
+    # dei token disponibili per utente
+    rows = mysql.query(f"""
+                SELECT  {cfg.DB_PREFIX}users.id AS id,
+                        {cfg.DB_PREFIX}users.tokens_limit AS tokens_limit,
+                        COALESCE(SUM({cfg.DB_PREFIX}token_logs.tokens_used), 0) as tokens_used_total
+
+                    FROM {cfg.DB_PREFIX}users
+                        LEFT JOIN {cfg.DB_PREFIX}token_logs
+                            ON {cfg.DB_PREFIX}users.id = {cfg.DB_PREFIX}token_logs.user_id
+
+                WHERE {cfg.DB_PREFIX}users.id = {user_id}
+                    AND ({cfg.DB_PREFIX}token_logs.created_at >= DATE_FORMAT(NOW(), '%%Y-%%m-01'))
+                    AND ({cfg.DB_PREFIX}token_logs.created_at < LAST_DAY(NOW()) + INTERVAL 1 DAY)
+
+                GROUP BY
+                    {cfg.DB_PREFIX}users.id
+            """)
+
+    mysql.close()
+
+    # Nel caso in cui i token sono stati superati, il post viene marchiato come task_complete
+    # così non verrà più usato nei prossimi controlli
+    if rows[0]['tokens_used_total'] >= rows[0]['tokens_limit']:
+        if debug is True:
+            print(
+                datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                "User ID: ",
+                user_id,
+                "Token limit exceeded:",
+                f"{rows[0]['tokens_used_total']} / {rows[0]['tokens_limit']}"
+            )
+        return True
+
+    return None
