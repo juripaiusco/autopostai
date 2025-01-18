@@ -78,18 +78,19 @@ def posts_send(debug = False):
 
         # Per ogni canale selezionato (Facebook, Instagram, WordPress, ...)
         # invio il post, con il testo creato da OpenAI
-        for i in channels:
-            if channels[i]['name'] == 'Facebook' and channels[i]['on'] == '1':
-                if debug:
-                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Facebook - post sending")
-                facebook_post = FacebookPost(data=row, debug=debug)
-                facebook_post.send(content)
+        if content is not None:
+            for i in channels:
+                if channels[i]['name'] == 'Facebook' and channels[i]['on'] == '1':
+                    if debug:
+                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Facebook - post sending")
+                    facebook_post = FacebookPost(data=row, debug=debug)
+                    facebook_post.send(content)
 
-            if channels[i]['name'] == 'Instagram' and channels[i]['on'] == '1':
-                if debug:
-                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - post sending")
-                instagram_post = InstagramPost(data=row)
-                instagram_post.send(content)
+                if channels[i]['name'] == 'Instagram' and channels[i]['on'] == '1':
+                    if debug:
+                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - post sending")
+                    instagram_post = InstagramPost(data=row)
+                    instagram_post.send(content)
 
         # Verifico che il post sia stato pubblicato e lo marchio come published
         ctrl_posts_sent(id=row['id'], debug=debug)
