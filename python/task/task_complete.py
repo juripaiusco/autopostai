@@ -84,7 +84,7 @@ def task_complete(debug = False):
 
             # Verifico che sia trascorsa una settimana, in caso marchio il post come task_complete
             if debug is True:
-                print("\n", " " * 19, "Waiting days:", (row['on_hold_until'] - row['created_at']).days)
+                print("\n", " " * 18, "Waiting days:", (row['on_hold_until'] - row['created_at']).days)
 
             if (row['on_hold_until'] - row['created_at']).days >= 14:
                 task_complete = 1
