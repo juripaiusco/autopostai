@@ -92,7 +92,7 @@ def task_complete(debug = False):
 
             # Verifico se l'utente ha superato il limite di token disponibili
             # in questo caso imposto il post come task_complete
-            if token_limit_exceeded(user_id=row['user_id']) == True:
+            if token_limit_exceeded(user_id=row['user_id'], debug=debug) == True:
                 task_complete = 1
 
             # Se il task non è ancora completo, imposto un orario per la
@@ -162,15 +162,16 @@ def token_limit_exceeded(user_id = None, debug = False):
 
     # Nel caso in cui i token sono stati superati, il post viene marchiato come task_complete
     # così non verrà più usato nei prossimi controlli
-    if rows[0]['tokens_used_total'] >= rows[0]['tokens_limit']:
-        if debug is True:
-            print(
-                datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                "User ID: ",
-                user_id,
-                "Token limit exceeded:",
-                f"{rows[0]['tokens_used_total']} / {rows[0]['tokens_limit']}"
-            )
-        return True
+    if rows is not None and len(rows) > 0:
+        if Decimal(rows[0]['tokens_used_total'] or 0) >= Decimal(rows[0]['tokens_limit'] or 0):
+            if debug is True:
+                print(
+                    datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                    "User ID: ",
+                    user_id,
+                    "Token limit exceeded:",
+                    f"{rows[0]['tokens_used_total']} / {rows[0]['tokens_limit']}"
+                )
+            return True
 
     return None

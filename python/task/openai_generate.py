@@ -1,6 +1,5 @@
 import config as cfg
 from services.gpt import GPT
-from datetime import datetime
 from services.mysql import Mysql
 from task.task_complete import token_limit_exceeded
 
@@ -11,7 +10,7 @@ def openai_generate(data, prompt, img_path = None, type = None, debug = False):
 
     # Nel caso in cui i token sono stati superati, il post viene marchiato come task_complete
     # così non verrà più usato nei prossimi controlli
-    if token_limit_exceeded(user_id=data['user_id']) == True and type == 'post':
+    if token_limit_exceeded(user_id=data['user_id'], debug=debug) == True and type == 'post':
         mysql.query(
             query=f"UPDATE {cfg.DB_PREFIX}posts SET published = %s, task_complete = %s WHERE id = %s",
             parameters=(1, 1, data['id'])
