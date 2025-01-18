@@ -50,6 +50,7 @@ def reply_send(debug = False):
                 row['post_id']
             )
 
+        # Preparo i prompt della risposta in base al tipo di canale
         if row['channel'] == 'facebook':
             prompt = FacebookReply(data=row).prompt_get()
 
