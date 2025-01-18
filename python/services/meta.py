@@ -123,8 +123,8 @@ class Meta:
 
     response = requests.post(url, data=payload)
     if response.status_code == 200:
-        print("Post Instagram caricato con successo!")
-        print("Risposta API:", response.json())
+        # print("Post Instagram caricato con successo!")
+        # print("Risposta API:", response.json())
         post_id = response.json().get("id")
         post_id_publish = self.ig_pubblicate_post(post_id)
         return post_id_publish
