@@ -206,6 +206,7 @@ class Posts extends Controller
         $post = new \App\Models\Post();
         $post->fill($request->all());
         $post->channels = json_encode($request->input('channels'));
+        $post->on_hold_until = date('Y-m-d H:i:s');
 
         $post->user_id = $request->input('user_id') ? $request->input('user_id') : auth()->user()->id;
 
