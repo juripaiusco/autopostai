@@ -27,14 +27,16 @@ class BaseReply:
         # Adatto il tipo di proprietario del commento in base al canale social.
         # Questo perché con instagram inserendo la @ prima dello username taggherà
         # la risposta del commento all'utente
-        if self.data['channel'] == 'instagram':
+        if self.data['channel'] == 'instagram' and self.data['from_name'] is not None:
             prompt = prompt + f"@{self.data['from_name']} ha risposto con un commento:"
 
         # Adatto il tipo di proprietario del commento in base al canale social
-        if self.data['channel'] == 'facebook':
+        if self.data['channel'] == 'facebook' and self.data['from_name'] is not None:
             prompt = prompt + f"{self.data['from_name']} ha risposto con un commento:"
 
-        prompt = prompt + self.data['from_name'] + " ha risposto con un commento:"
+        if self.data['from_name'] is None:
+            prompt = prompt + "la risposta al commento è questa:"
+
         prompt = prompt + "\n"
         prompt = prompt + self.data['message'] + "\n"
         prompt = prompt + "\n"

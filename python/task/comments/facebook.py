@@ -30,8 +30,8 @@ class FacebookComment(BaseComment):
                     self.save(
                         post_id=self.data['id'],
                         channel='facebook',
-                        from_id=comment['from']['id'],
-                        from_name=comment['from']['name'],
+                        from_id=comment.get('from', {}).get('id'),
+                        from_name=comment.get('from', {}).get('name'),
                         message_id=comment['id'],
                         message=comment['message'],
                         message_created_time=converted_date

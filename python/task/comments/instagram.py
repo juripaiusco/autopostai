@@ -30,8 +30,8 @@ class InstagramComment(BaseComment):
                     self.save(
                         post_id=self.data['id'],
                         channel='instagram',
-                        from_id=comment['from']['id'],
-                        from_name=comment['from']['username'],
+                        from_id=comment.get('from', {}).get('id'),
+                        from_name=comment.get('from', {}).get('username'),
                         message_id=comment['id'],
                         message=comment['text'],
                         message_created_time=converted_date
