@@ -1,4 +1,6 @@
 #Custom
+.idea
+.docker_image_built
 .DS_Store
 /docs/.cache
 /docs/documentation
