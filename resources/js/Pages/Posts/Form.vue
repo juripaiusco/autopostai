@@ -166,7 +166,7 @@ function checkChannelsByUser() {
                         <label class="form-label">
                             Prompt
                             <br>
-                            <small>L'AI interpresta il testo e genera un contenuto in base alle tue indicazioni</small>
+                            <small>L'AI interpreta il testo e genera un contenuto in base alle tue indicazioni</small>
                         </label>
                         <textarea class="form-control h-[216px]"
                                   :class="{'!border !border-red-500' : form.errors.ai_prompt_post}"
@@ -212,78 +212,117 @@ function checkChannelsByUser() {
                     </div>
                     <div class="col-lg">
 
-                        <br><br>
+                        <nav class="mt-2">
+                            <div class="nav nav-underline nav-fill" id="nav-tab" role="tablist">
 
-                        <!-- Mostra l'anteprima -->
-                        <div v-if="previewUrl"
-                             @click="triggerFileInput"
-                             class="
-                             cursor-pointer
-                             hover:opacity-60">
-                            <img :src="previewUrl"
-                                 alt="Anteprima immagine"
-                                 class="rounded"
-                            />
-                        </div>
-                        <!-- Mostra l'immagine caricata se esiste -->
-                        <div v-else
-                             @click="triggerFileInput"
-                             class="
-                             cursor-pointer
-                             hover:opacity-60">
-                            <img v-if="form.img"
-                                 :src="form.img"
-                                 :alt="form.title"
-                                 class="rounded" >
-                        </div>
+                                <button class="nav-link active"
+                                        id="nav-upload-img-tab"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#nav-upload-img"
+                                        type="button"
+                                        role="tab"
+                                        aria-controls="nav-upload-img"
+                                        aria-selected="true">Upload</button>
 
-                        <div
-                            v-if="!form.img && !previewUrl"
-                            @click="triggerFileInput"
-                            class="
-                             border
-                             border-dashed
-                             border-4
-                             border-gray-200
-                             text-gray-300
-                             text-8xl
-                             p-20
-                             text-center
-                             rounded
-                             cursor-pointer" >
+                                <button class="nav-link"
+                                        id="nav-create-img-tab"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#nav-create-img"
+                                        type="button"
+                                        role="tab"
+                                        aria-controls="nav-create-img"
+                                        aria-selected="true">Crea</button>
 
-                            <i class="fa-regular fa-image"></i>
+                                <button class="nav-link"
+                                        id="nav-select-img-tab"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#nav-select-img"
+                                        type="button"
+                                        role="tab"
+                                        aria-controls="nav-select-img"
+                                        aria-selected="true">Scegli</button>
 
-                        </div>
+                            </div>
+                        </nav>
 
-                        <div class="input-group"
-                             style="display: none;" >
-                            <input type="file"
-                                   class="form-control"
-                                   @input="form.img = $event.target.files[0]"
-                                   @change="onFileChange"
-                                   ref="fileInput"
-                                   id="img">
-                            <label class="input-group-text" for="img">Upload Immagine</label>
-                        </div>
-                        <progress v-if="form.progress" :value="form.progress.percentage" max="100">
-                            {{ form.progress.percentage }}%
-                        </progress>
+                        <div class="tab-content" id="nav-tabContent">
 
-                        <br>
+                            <div class="tab-pane fade show active pt-4"
+                                 id="nav-upload-img"
+                                 role="tabpanel"
+                                 aria-labelledby="nav-upload-img-tab"
+                                 tabindex="0">
 
-                        <div class="form-check form-switch !mb-3">
+                                <!-- Mostra l'anteprima -->
+                                <div v-if="previewUrl"
+                                     @click="triggerFileInput"
+                                     class="
+                                     cursor-pointer
+                                     hover:opacity-60">
+                                    <img :src="previewUrl"
+                                         alt="Anteprima immagine"
+                                         class="rounded"
+                                    />
+                                </div>
+                                <!-- Mostra l'immagine caricata se esiste -->
+                                <div v-else
+                                     @click="triggerFileInput"
+                                     class="
+                                     cursor-pointer
+                                     hover:opacity-60">
+                                    <img v-if="form.img"
+                                         :src="form.img"
+                                         :alt="form.title"
+                                         class="rounded" >
+                                </div>
 
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   id="img_ai_check_on"
-                                   true-value="1"
-                                   false-value="0"
-                                   v-model="form.img_ai_check_on"
-                                   checked />
+                                <div
+                                    v-if="!form.img && !previewUrl"
+                                    @click="triggerFileInput"
+                                    class="
+                                     border
+                                     border-dashed
+                                     border-4
+                                     border-gray-200
+                                     text-gray-300
+                                     text-8xl
+                                     p-20
+                                     text-center
+                                     rounded
+                                     cursor-pointer" >
 
-                            <label class="form-check-label"
-                                   for="img_ai_check_on">
+                                    <i class="fa-regular fa-image"></i>
+
+                                </div>
+
+                                <div class="input-group"
+                                     style="display: none;" >
+                                    <input type="file"
+                                           class="form-control"
+                                           @input="form.img = $event.target.files[0]"
+                                           @change="onFileChange"
+                                           ref="fileInput"
+                                           id="img">
+                                    <label class="input-group-text" for="img">Upload Immagine</label>
+                                </div>
+                                <progress v-if="form.progress" :value="form.progress.percentage" max="100">
+                                    {{ form.progress.percentage }}%
+                                </progress>
+
+                                <br>
+
+                                <div class="form-check form-switch !mb-3">
+
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="img_ai_check_on"
+                                           true-value="1"
+                                           false-value="0"
+                                           v-model="form.img_ai_check_on"
+                                           checked />
+
+                                    <label class="form-check-label"
+                                           for="img_ai_check_on">
                                 <span class="text-gray-500 text-[0.9em]">
                                     Interpretazione dell'immagine da parte dell'AI
                                     <br>
@@ -292,11 +331,49 @@ function checkChannelsByUser() {
                                         spunta dev'essere attiva
                                     </small>
                                 </span>
-                            </label>
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+                            <div class="tab-pane fade show pt-4"
+                                 id="nav-create-img"
+                                 role="tabpanel"
+                                 aria-labelledby="nav-create-img-tab"
+                                 tabindex="0">
+
+                                <label class="form-label">
+                                    Prompt immagine
+                                    <br>
+                                    <small>L'AI interpreta il testo e genera un'immagine in base alle tue indicazioni</small>
+                                </label>
+                                <textarea class="form-control h-[216px]"
+                                          :class="{'!border !border-red-500' : form.errors.ai_prompt_img}"
+                                          v-model="form.ai_prompt_img"></textarea>
+                                <div class="text-red-500 text-center text-xs"
+                                     v-if="form.errors.ai_prompt_img">{{ __(form.errors.ai_prompt_img) }}</div>
+                                {{ form.errors.ai_prompt_img }}
+
+                                <br>
+
+                                <div class="text-center">
+                                    <button class="btn btn-primary">Genera immagine</button>
+                                </div>
+
+                            </div>
+
+                            <div class="tab-pane fade show pt-4"
+                                 id="nav-select-img"
+                                 role="tabpanel"
+                                 aria-labelledby="nav-select-img-tab"
+                                 tabindex="0">
+
+                                Seleziona immagine
+
+                            </div>
 
                         </div>
-
-                        <br>
 
                     </div>
                 </div>
