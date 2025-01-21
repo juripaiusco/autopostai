@@ -80,6 +80,18 @@
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
 
+        <!-- Styles -->
+        <script>
+            // Cambia automaticamente il tema Bootstrap in base alla preferenza
+            const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
+
+            // Ascolta i cambiamenti del tema di sistema
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                document.documentElement.setAttribute('data-bs-theme', event.matches ? 'dark' : 'light');
+            });
+        </script>
+
         <x-translations />
     </head>
     <body class="font-sans antialiased">
