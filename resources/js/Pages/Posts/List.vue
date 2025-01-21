@@ -365,7 +365,7 @@ export default {
 
         const fetchPosts = () => {
             isLoading.value = true;
-            axios.get('/public/index.php/api/posts',  {
+            axios.get(import.meta.env.VITE_APP_URL + '/index.php/api/posts',  {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
