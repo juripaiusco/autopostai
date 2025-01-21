@@ -118,7 +118,7 @@ class Posts extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         // Creo un oggetto di dati vuoto
         $table = 'posts';
@@ -183,7 +183,8 @@ class Posts extends Controller
 
         return Inertia::render('Posts/Form', [
             'data' => $data,
-            'filters' => request()->all(['s', 'orderby', 'ordertype'])
+            'filters' => request()->all(['s', 'orderby', 'ordertype']),
+            'token' => $request->user()->createToken('posts')
         ]);
     }
 
@@ -258,7 +259,8 @@ class Posts extends Controller
 
         return Inertia::render('Posts/Form', [
             'data' => $data,
-            'filters' => request()->all(['s', 'orderby', 'ordertype'])
+            'filters' => request()->all(['s', 'orderby', 'ordertype']),
+            'token' => $request->user()->createToken('posts')
         ]);
     }
 
