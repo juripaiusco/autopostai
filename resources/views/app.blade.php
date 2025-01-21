@@ -80,7 +80,7 @@
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
 
-        <!-- Styles -->
+        <!-- Automatic system Dark Mode -->
         <script>
             // Cambia automaticamente il tema Bootstrap in base alla preferenza
             const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
