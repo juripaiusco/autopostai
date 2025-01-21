@@ -55,24 +55,26 @@ class DatabaseSeeder extends Seeder
         ]);
 
         foreach ($posts as $post) {
-            Token_log::factory()->create([
-                'user_id' => $user->id,
-                'type' => 'post',
-                'reference_id' => $post->id,
-                'tokens_used' => rand(50, 1000),
-            ]);
-
-            $comments = Comment::factory(3)->create([
-                'post_id' => $post->id
-            ]);
-
-            foreach ($comments as $comment) {
+            if ($post->published == 1) {
                 Token_log::factory()->create([
                     'user_id' => $user->id,
-                    'type' => 'reply',
-                    'reference_id' => $comment->id,
-                    'tokens_used' => rand(50, 200),
+                    'type' => 'post',
+                    'reference_id' => $post->id,
+                    'tokens_used' => rand(50, 1000),
                 ]);
+
+                $comments = Comment::factory(3)->create([
+                    'post_id' => $post->id
+                ]);
+
+                foreach ($comments as $comment) {
+                    Token_log::factory()->create([
+                        'user_id' => $user->id,
+                        'type' => 'reply',
+                        'reference_id' => $comment->id,
+                        'tokens_used' => rand(50, 200),
+                    ]);
+                }
             }
         }
 
@@ -148,24 +150,26 @@ class DatabaseSeeder extends Seeder
             ]);
 
             foreach ($posts as $post) {
-                Token_log::factory()->create([
-                    'user_id' => $user->id,
-                    'type' => 'post',
-                    'reference_id' => $post->id,
-                    'tokens_used' => rand(50, 1000),
-                ]);
-
-                $comments = Comment::factory(3)->create([
-                    'post_id' => $post->id
-                ]);
-
-                foreach ($comments as $comment) {
+                if ($post->published == 1) {
                     Token_log::factory()->create([
                         'user_id' => $user->id,
-                        'type' => 'reply',
-                        'reference_id' => $comment->id,
-                        'tokens_used' => rand(50, 200),
+                        'type' => 'post',
+                        'reference_id' => $post->id,
+                        'tokens_used' => rand(50, 1000),
                     ]);
+
+                    $comments = Comment::factory(3)->create([
+                        'post_id' => $post->id
+                    ]);
+
+                    foreach ($comments as $comment) {
+                        Token_log::factory()->create([
+                            'user_id' => $user->id,
+                            'type' => 'reply',
+                            'reference_id' => $comment->id,
+                            'tokens_used' => rand(50, 200),
+                        ]);
+                    }
                 }
             }
         }
