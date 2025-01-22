@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\GenerateImageJob;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ImageController extends Controller
@@ -20,7 +21,7 @@ class ImageController extends Controller
         ]);
 
         // Avvia il job
-        GenerateImageJob::dispatch($prompt, $jobId);
+        GenerateImageJob::dispatch(Auth::id(), $prompt, $jobId);
 
         return response()->json(['job_id' => $jobId]);
     }

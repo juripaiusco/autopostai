@@ -8,6 +8,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class GenerateImageJob implements ShouldQueue
@@ -15,14 +16,17 @@ class GenerateImageJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $timeout = 60;
+
+    protected $userId;
     protected $prompt;
     protected $jobId;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($prompt, $jobId)
+    public function __construct($userId, $prompt, $jobId)
     {
+        $this->userId = $userId;
         $this->prompt = $prompt;
         $this->jobId = $jobId;
     }
@@ -44,11 +48,26 @@ class GenerateImageJob implements ShouldQueue
         $process->run();
 
         if ($process->isSuccessful()) {
+            $docker_img_path = '/docker/stable-diffusion/img/';
+            $storage_disk = Storage::disk('public');
+            $storage_img_user_path = 'stable-diffusion/' . $this->userId . '/';
+
             // Lo script restituisce il nome dell'immagine
             $imageName = trim($process->getOutput());
+
+            if (!$storage_disk->exists($storage_img_user_path)) {
+                $storage_disk->makeDirectory($storage_img_user_path);
+            }
+            Log::info(
+                'Moving image to storage disk from ' .
+                $docker_img_path . $imageName .
+                ' to ' . $storage_disk->path($storage_img_user_path) . $imageName
+            );
+            Storage::move($docker_img_path . $imageName, $storage_disk->path($storage_img_user_path) . $imageName);
+
             DB::table('image_jobs')->where('id', $this->jobId)->update([
                 'status' => 'completed',
-                'image_path' => '/docker/stable-diffusion/img/' . $imageName,
+                'image_path' => $docker_img_path . $imageName,
             ]);
         } else {
             DB::table('image_jobs')->where('id', $this->jobId)->update(['status' => 'failed']);
