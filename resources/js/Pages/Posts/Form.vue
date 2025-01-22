@@ -493,38 +493,57 @@ const startJob = async () => {
 
 <style scoped>
 .loader {
-    width: 48px;
-    height: 48px;
-    border: 5px solid #38bdf8;
-    border-radius: 50%;
-    display: inline-block;
-    box-sizing: border-box;
     position: relative;
-    animation: pulse 1s linear infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 6rem;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+}
+.loader:before,
+.loader:after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    animation: pulsOut 1.8s ease-in-out infinite;
+    filter: drop-shadow(0 0 1rem rgba(255, 255, 255, 0.75));
+}
+.loader:before {
+    width: 100%;
+    padding-bottom: 100%;
+    box-shadow: inset 0 0 0 1rem #fff;
+    animation-name: pulsIn;
 }
 .loader:after {
-    content: '';
-    position: absolute;
-    width: 48px;
-    height: 48px;
-    border: 5px solid #38bdf8;
-    border-radius: 50%;
-    display: inline-block;
-    box-sizing: border-box;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    animation: scaleUp 1s linear infinite;
+    width: calc(100% - 2rem);
+    padding-bottom: calc(100% - 2rem);
+    box-shadow: 0 0 0 0 #fff;
 }
 
-@keyframes scaleUp {
-    0% { transform: translate(-50%, -50%) scale(0) }
-    60% , 100% { transform: translate(-50%, -50%)  scale(1)}
+@keyframes pulsIn {
+    0% {
+        box-shadow: inset 0 0 0 1rem #fff;
+        opacity: 1;
+    }
+    50%, 100% {
+        box-shadow: inset 0 0 0 0 #fff;
+        opacity: 0;
+    }
 }
-@keyframes pulse {
-    0% , 60% , 100%{ transform:  scale(1) }
-    80% { transform:  scale(1.2)}
+
+@keyframes pulsOut {
+    0%, 50% {
+        box-shadow: 0 0 0 0 #fff;
+        opacity: 0;
+    }
+    100% {
+        box-shadow: 0 0 0 1rem #fff;
+        opacity: 1;
+    }
 }
+
 
 .textarea-wrapper {
     position: relative;
