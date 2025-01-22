@@ -283,7 +283,7 @@ const startJob = async () => {
                                         type="button"
                                         role="tab"
                                         aria-controls="nav-upload-img"
-                                        aria-selected="true">Upload</button>
+                                        aria-selected="true">Immagine</button>
 
                                 <button class="nav-link"
                                         id="nav-create-img-tab"
@@ -468,12 +468,13 @@ const startJob = async () => {
                                 <div class="row">
                                     <div v-for="(file, index) in images_array"
                                          :key="index"
-                                         class="col-3">
+                                         class="col-3 mb-4">
 
-                                        <img :src="file"
+                                        <img class="rounded cursor-pointer image_ai_generated"
+                                             :class="{ image_ai_generated_selected: selectedImage === index }"
+                                             :src="file"
                                              :alt="file"
-                                             @click="form.img_selected = file"
-                                             class="rounded cursor-pointer">
+                                             @click="form.img_selected = file; selectImage(index);">
 
                                     </div>
                                 </div>
@@ -506,6 +507,14 @@ const startJob = async () => {
 </template>
 
 <style scoped>
+.image_ai_generated {
+    transition: all .2s;
+}
+.image_ai_generated_selected {
+    border: 4px solid #38bdf8;
+    transform: scale(1.1);
+}
+
 .loader {
     position: relative;
     display: flex;
@@ -587,6 +596,7 @@ export default {
     data: function () {
         return {
             previewUrl: null, // URL per l'anteprima dell'immagine
+            selectedImage: null
         };
     },
     methods: {
@@ -605,6 +615,9 @@ export default {
             } else {
                 this.previewUrl = null; // Se nessun file selezionato, resetta
             }
+        },
+        selectImage(index) {
+            this.selectedImage = index; // Imposta l'immagine selezionata
         },
     },
 };
