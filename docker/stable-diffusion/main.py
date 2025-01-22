@@ -8,11 +8,13 @@ import argparse
 # Configura argparse per accettare il prompt come argomento
 parser = argparse.ArgumentParser(description="Genera un'immagine da un prompt.")
 parser.add_argument('--prompt', type=str, required=True, help='Il prompt per generare l\'immagine')
+parser.add_argument('--image_name', type=str, required=True, help='Il nome dell\'immagine')
 
 args = parser.parse_args()
 
 # Usa il prompt
 PROMPT = args.prompt
+IMAGE_NAME = args.image_name
 
 NUM_INFERENCE_STEPS = 40
 
@@ -34,7 +36,7 @@ def main():
             image_name = huggingface.stableDiffusion_generate_img(
                 prompt=PROMPT,
                 num_inference_steps=NUM_INFERENCE_STEPS,
-                img_name=f"{CURRENT_TIME}-{i + 1}"
+                img_name=IMAGE_NAME
             )
             progress_bar.update(1)
         print(image_name)

@@ -9,7 +9,8 @@
     set +a
 
     PROMPT=$1
-    IMAGE_NAME="stable_diffusion"
+    IMAGE_NAME=$2
+    DOCKER_IMAGE_NAME="stable_diffusion"
     DOCKERFILE="Dockerfile"
 
     # Funzione per controllare se l'immagine è aggiornata
@@ -29,8 +30,8 @@
 
     # Compila l'immagine solo se necessario
     if needs_build; then
-      echo "Costruzione dell'immagine Docker $IMAGE_NAME..."
-      docker build -t $IMAGE_NAME .
+      echo "Costruzione dell'immagine Docker $DOCKER_IMAGE_NAME..."
+      docker build -t $DOCKER_IMAGE_NAME .
       # Aggiorna il timestamp del file di stato
       touch .docker_image_built
     fi
@@ -39,8 +40,9 @@
     docker run \
       --rm \
       --env-file .env \
-      -v $DOCKER_DIR:/app $IMAGE_NAME \
+      -v $DOCKER_DIR:/app $DOCKER_IMAGE_NAME \
       python \
       main.py \
-      --prompt "$PROMPT"
+      --prompt "$PROMPT" \
+      --image_name "$IMAGE_NAME"
 )

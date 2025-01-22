@@ -42,7 +42,7 @@ class GenerateImageJob implements ShouldQueue
 
         // Lancia Docker per generare l'immagine
         $process = new \Symfony\Component\Process\Process([
-            $scriptPath, $this->prompt
+            $scriptPath, $this->prompt, uniqid($this->userId . '-')
         ]);
         $process->run();
 
