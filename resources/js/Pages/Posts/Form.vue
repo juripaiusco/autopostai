@@ -471,7 +471,7 @@ const startJob = async () => {
 
                                         <img :src="file"
                                              :alt="file"
-                                             class="rounded">
+                                             class="rounded cursor-pointer">
 
                                     </div>
                                 </div>

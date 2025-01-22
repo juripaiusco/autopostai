@@ -259,6 +259,7 @@ class Posts extends Controller
         $data->saveRedirect = $request->session()->get('saveRedirectPosts');
 
         $data['channels'] = json_decode($data->channels, true);
+        $data['files'] = $this->get_image_list();
 
         return Inertia::render('Posts/Form', [
             'data' => $data,
