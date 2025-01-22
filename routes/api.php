@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use \App\Http\Controllers\ImageController;
 
 /*Route::get('/user', function (Request $request) {
     return $request->user();
@@ -13,3 +14,9 @@ Route::get('/posts', function () {
         ->latest()
         ->get();
 })->middleware('auth:sanctum');
+
+// Esecuzione di un job in background
+Route::post('/start-job', [ImageController::class, 'startJob'])
+    ->middleware('auth:sanctum');
+Route::get('/check-job-status/{jobId}', [ImageController::class, 'checkJobStatus'])
+    ->middleware('auth:sanctum');

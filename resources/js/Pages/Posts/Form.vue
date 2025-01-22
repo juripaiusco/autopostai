@@ -8,10 +8,12 @@ import {useForm} from "@inertiajs/vue3";
 import {__date} from "@/ComponentsExt/Date.js";
 import {ref} from "vue";
 import {__} from "../../ComponentsExt/Translations.js";
+import axios from "axios";
 
 const props = defineProps({
     data: Object,
     filters: Object,
+    token: Object,
 })
 
 const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
@@ -19,6 +21,8 @@ const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
 }));
 
 const form = useForm(dataForm);
+
+form.ai_prompt_img = '';
 
 // Se nuovo post la data viene impostata come attuale
 if (form.published_at === '') {
@@ -62,6 +66,61 @@ function checkChannelsByUser() {
         form.channels[index]['on'] = '0';
     }
 }
+
+const ai_prompt_img_loading = ref(false);
+const ai_prompt_img_path = ref(null);
+const token = props.token.plainTextToken;
+
+const startJob = async () => {
+    ai_prompt_img_loading.value = true;
+    ai_prompt_img_path.value = null;
+    const app_url = import.meta.env.VITE_APP_URL;
+
+    try {
+        // Avvia il job tramite API
+        const { data } = await axios.post(
+            app_url + "/index.php/api/start-job",
+            { prompt: form.ai_prompt_img },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        const jobId = data.job_id;
+
+        // Polling per verificare lo stato del job
+        let status = "pending";
+        while (status === "pending" || status === "running") {
+            const statusResponse = await axios.get(
+                app_url + `/index.php/api/check-job-status/${jobId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+            status = statusResponse.data.status;
+
+            if (status === "completed") {
+                ai_prompt_img_path.value = statusResponse.data.image_path;
+                break;
+            }
+
+            if (status === "failed") {
+                alert("Errore nella generazione dell’immagine.");
+                break;
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 5000)); // Aspetta 5 secondi
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Si è verificato un errore.");
+    } finally {
+        ai_prompt_img_loading.value = false;
+    }
+};
 
 </script>
 
@@ -173,7 +232,6 @@ function checkChannelsByUser() {
                                   v-model="form.ai_prompt_post"></textarea>
                         <div class="text-red-500 text-center text-xs"
                              v-if="form.errors.ai_prompt_post">{{ __(form.errors.ai_prompt_post) }}</div>
-                        {{ form.errors.ai_prompt_post }}
 
                         <br>
 
@@ -284,7 +342,9 @@ function checkChannelsByUser() {
                                      border-dashed
                                      border-4
                                      border-gray-200
+                                     dark:border-gray-500
                                      text-gray-300
+                                     dark:text-gray-500
                                      text-8xl
                                      p-20
                                      text-center
@@ -343,22 +403,46 @@ function checkChannelsByUser() {
                                  aria-labelledby="nav-create-img-tab"
                                  tabindex="0">
 
-                                <label class="form-label">
-                                    Prompt immagine
+                                <div v-if="ai_prompt_img_path"
+                                     class="
+                                     cursor-pointer
+                                     hover:opacity-60">
+                                    <img v-if="ai_prompt_img_path"
+                                         @click="ai_prompt_img_path = ''"
+                                         :src="ai_prompt_img_path"
+                                         :alt="ai_prompt_img_path"
+                                         class="rounded" >
+                                </div>
+                                <div v-if="!ai_prompt_img_path">
+
+                                    <label v-if="!ai_prompt_img_loading"
+                                           class="form-label">
+                                        Prompt immagine
+                                        <br>
+                                        <small>L'AI interpreta il testo e genera un'immagine in base alle tue indicazioni</small>
+                                    </label>
+                                    <label v-if="ai_prompt_img_loading"
+                                           class="form-label">
+                                        Generazione immagine
+                                        <br>
+                                        <small>L'AI sta generando l'immagine per te...</small>
+                                    </label>
+                                    <textarea class="form-control h-[216px]"
+                                              :disabled="ai_prompt_img_loading"
+                                              :class="{'!border !border-red-500' : form.errors.ai_prompt_img}"
+                                              v-model="form.ai_prompt_img"></textarea>
+                                    <div class="text-red-500 text-center text-xs"
+                                         v-if="form.errors.ai_prompt_img">{{ __(form.errors.ai_prompt_img) }}</div>
+
                                     <br>
-                                    <small>L'AI interpreta il testo e genera un'immagine in base alle tue indicazioni</small>
-                                </label>
-                                <textarea class="form-control h-[216px]"
-                                          :class="{'!border !border-red-500' : form.errors.ai_prompt_img}"
-                                          v-model="form.ai_prompt_img"></textarea>
-                                <div class="text-red-500 text-center text-xs"
-                                     v-if="form.errors.ai_prompt_img">{{ __(form.errors.ai_prompt_img) }}</div>
-                                {{ form.errors.ai_prompt_img }}
 
-                                <br>
+                                    <div class="text-center">
+                                        <button @click="startJob"
+                                                :disabled="ai_prompt_img_loading"
+                                                type="button"
+                                                class="btn btn-primary">Genera immagine</button>
+                                    </div>
 
-                                <div class="text-center">
-                                    <button class="btn btn-primary">Genera immagine</button>
                                 </div>
 
                             </div>
@@ -399,12 +483,20 @@ function checkChannelsByUser() {
 </template>
 
 <style scoped>
-
+.loader {
+    margin-top: 20px;
+    font-size: 18px;
+    color: #555;
+}
+.image {
+    margin-top: 20px;
+    max-width: 100%;
+}
 </style>
 
 <script>
 export default {
-    data() {
+    data: function () {
         return {
             previewUrl: null, // URL per l'anteprima dell'immagine
         };

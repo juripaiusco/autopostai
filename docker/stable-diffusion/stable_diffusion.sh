@@ -1,41 +1,46 @@
 #!/bin/bash
 
-cd "$(dirname "$0")"
+(
+    cd "$(dirname "$0")"
 
-PROMPT=$1
-IMAGE_NAME="stable_diffusion"
-DOCKERFILE="Dockerfile"
+    # Carica il file .env e rende le variabili disponibili
+    set -a
+    source .env
+    set +a
 
-# Funzione per controllare se l'immagine è aggiornata
-needs_build() {
-  if [ ! -f ".docker_image_built" ]; then
-    # Primo build
-    return 0
-  fi
+    PROMPT=$1
+    IMAGE_NAME="stable_diffusion"
+    DOCKERFILE="Dockerfile"
 
-  # Controlla la data di modifica del Dockerfile rispetto al file di stato
-  if [ "$DOCKERFILE" -nt ".docker_image_built" ]; then
-    return 0
-  fi
+    # Funzione per controllare se l'immagine è aggiornata
+    needs_build() {
+      if [ ! -f ".docker_image_built" ]; then
+        # Primo build
+        return 0
+      fi
 
-  return 1
-}
+      # Controlla la data di modifica del Dockerfile rispetto al file di stato
+      if [ "$DOCKERFILE" -nt ".docker_image_built" ]; then
+        return 0
+      fi
 
-# Compila l'immagine solo se necessario
-if needs_build; then
-  echo "Costruzione dell'immagine Docker $IMAGE_NAME..."
-  docker build -t $IMAGE_NAME .
-  # Aggiorna il timestamp del file di stato
-  touch .docker_image_built
-else
-  echo "L'immagine Docker $IMAGE_NAME è aggiornata."
-fi
+      return 1
+    }
 
-# Esegui il container
-docker run \
-  --rm \
-  --env-file .env \
-  -v "$(pwd)":/app $IMAGE_NAME \
-  python \
-  main.py \
-  --prompt "$PROMPT"
+    # Compila l'immagine solo se necessario
+    if needs_build; then
+      echo "Costruzione dell'immagine Docker $IMAGE_NAME..."
+      docker build -t $IMAGE_NAME .
+      # Aggiorna il timestamp del file di stato
+      touch .docker_image_built
+    fi
+
+    # Esegui il container
+    docker run \
+      --rm \
+      --env-file .env \
+      -v $DOCKER_DIR:/app $IMAGE_NAME \
+      python \
+      main.py \
+      --prompt "$PROMPT"
+)

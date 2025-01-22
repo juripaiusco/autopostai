@@ -31,12 +31,13 @@ def main():
     with tqdm(total=len(data_list), desc=progress_bar_desc, ncols=None) as progress_bar:
         for i in data_list:
             progress_bar.set_description(f"{progress_bar_desc} - genero immagine: {i + 1}")
-            huggingface.stableDiffusion_generate_img(
+            image_name = huggingface.stableDiffusion_generate_img(
                 prompt=PROMPT,
                 num_inference_steps=NUM_INFERENCE_STEPS,
                 img_name=f"{CURRENT_TIME}-{i + 1}"
             )
             progress_bar.update(1)
+        print(image_name)
 
 
 if __name__ == '__main__':
