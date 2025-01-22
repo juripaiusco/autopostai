@@ -44,7 +44,7 @@ class GenerateImageJob implements ShouldQueue
         $process->run();
 
         if ($process->isSuccessful()) {
-            // Supponiamo che lo script restituisca il percorso dell'immagine
+            // Lo script restituisce il nome dell'immagine
             $imageName = trim($process->getOutput());
             DB::table('image_jobs')->where('id', $this->jobId)->update([
                 'status' => 'completed',
