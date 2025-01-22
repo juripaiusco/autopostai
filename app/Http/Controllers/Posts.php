@@ -181,6 +181,7 @@ class Posts extends Controller
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
         $data['files'] = $this->get_image_list();
+        $data['img_selected'] = null;
 
         $data = json_decode(json_encode($data), true);
 
@@ -201,11 +202,15 @@ class Posts extends Controller
             'ai_prompt_post' => 'required',
         ]);
 
+        if ($request['img_selected'])
+            $request['img'] = $request['img_selected'];
+
         $saveRedirect = $request['saveRedirect'];
         unset($request['saveRedirect']);
-        unset($request['img']);
         unset($request['user']);
         unset($request['users']);
+        unset($request['files']);
+        unset($request['img_selected']);
 
         $post = new \App\Models\Post();
         $post->fill($request->all());
@@ -260,6 +265,7 @@ class Posts extends Controller
 
         $data['channels'] = json_decode($data->channels, true);
         $data['files'] = $this->get_image_list();
+        $data['img_selected'] = null;
 
         return Inertia::render('Posts/Form', [
             'data' => $data,
@@ -274,15 +280,20 @@ class Posts extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'title'      => ['required'],
+            'title' => 'required',
+            'ai_prompt_post' => 'required',
         ]);
+
+        if ($request['img_selected'])
+            $request['img'] = $request['img_selected'];
 
         $saveRedirect = $request['saveRedirect'];
         unset($request['saveRedirect']);
         unset($request['created_at']);
         unset($request['updated_at']);
-        unset($request['img']);
         unset($request['user']);
+        unset($request['files']);
+        unset($request['img_selected']);
 
         $post = \App\Models\Post::find($id);
         $post->fill($request->all());
@@ -292,7 +303,7 @@ class Posts extends Controller
         return Redirect::to($saveRedirect);
     }
 
-    private function save_img($path, $data, $request)
+    private function save_img($path, $data, Request $request)
     {
         if ($request->file('img')) {
 
@@ -307,6 +318,22 @@ class Posts extends Controller
                         $request->file('img')->get()
                     );
             }
+
+            $data->save();
+        }
+
+        if ($request->input('img')) {
+            $img_name = basename($request->input('img'));
+            $path_img = Storage::disk('public')->path('stable-diffusion/' . Auth::id() . '/' . $img_name);
+
+            Storage::disk('public')->deleteDirectory($path . '/' . $data->id);
+            Storage::disk('public')
+                ->put(
+                    $path . '/' . $data->id . '/' . $img_name,
+                    file_get_contents($path_img)
+                );
+
+            $data->img = $img_name;
 
             $data->save();
         }

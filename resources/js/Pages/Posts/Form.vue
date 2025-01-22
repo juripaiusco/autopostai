@@ -106,6 +106,7 @@ const startJob = async () => {
             if (status === "completed") {
                 ai_prompt_img_path.value = statusResponse.data.image_path;
                 images_array.value.unshift(ai_prompt_img_path.value);
+                form.img_selected = ai_prompt_img_path.value;
                 break;
             }
 
@@ -471,6 +472,7 @@ const startJob = async () => {
 
                                         <img :src="file"
                                              :alt="file"
+                                             @click="form.img_selected = file"
                                              class="rounded cursor-pointer">
 
                                     </div>
