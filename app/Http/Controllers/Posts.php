@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
@@ -179,6 +180,8 @@ class Posts extends Controller
         }
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+        $data['files'] = $this->get_image_list();
+
         $data = json_decode(json_encode($data), true);
 
         return Inertia::render('Posts/Form', [
@@ -320,5 +323,19 @@ class Posts extends Controller
         \App\Models\Post::destroy($id);
 
         return \redirect()->back();
+    }
+
+    public function get_image_list()
+    {
+        $files = Storage::disk('public')->files('stable-diffusion/' . Auth::id() . '/');
+        $files_url = [];
+
+        foreach ($files as $file) {
+            if (substr(basename($file), 0, 1) != '.') {
+                $files_url[] = Storage::disk('public')->url($file);
+            }
+        }
+
+        return array_reverse($files_url);
     }
 }

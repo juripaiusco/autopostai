@@ -70,6 +70,7 @@ function checkChannelsByUser() {
 const ai_prompt_img_loading = ref(false);
 const ai_prompt_img_path = ref(null);
 const token = props.token.plainTextToken;
+let images_array = ref(props.data.files);
 
 const startJob = async () => {
     ai_prompt_img_loading.value = true;
@@ -104,6 +105,7 @@ const startJob = async () => {
 
             if (status === "completed") {
                 ai_prompt_img_path.value = statusResponse.data.image_path;
+                images_array.value.unshift(ai_prompt_img_path.value);
                 break;
             }
 
@@ -462,7 +464,17 @@ const startJob = async () => {
                                  aria-labelledby="nav-select-img-tab"
                                  tabindex="0">
 
-                                Seleziona immagine
+                                <div class="row">
+                                    <div v-for="(file, index) in images_array"
+                                         :key="index"
+                                         class="col-3">
+
+                                        <img :src="file"
+                                             :alt="file"
+                                             class="rounded">
+
+                                    </div>
+                                </div>
 
                             </div>
 
