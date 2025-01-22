@@ -4,6 +4,7 @@
 .DS_Store
 /docs/.cache
 /docs/documentation
+_config.sh
 
 # PHPStorm
 /.phpunit.cache
