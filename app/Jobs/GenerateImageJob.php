@@ -8,7 +8,6 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class GenerateImageJob implements ShouldQueue
@@ -48,26 +47,30 @@ class GenerateImageJob implements ShouldQueue
         $process->run();
 
         if ($process->isSuccessful()) {
-            $docker_img_path = '/docker/stable-diffusion/img/';
-            $storage_disk = Storage::disk('public');
-            $storage_img_user_path = 'stable-diffusion/' . $this->userId . '/';
-
             // Lo script restituisce il nome dell'immagine
             $imageName = trim($process->getOutput());
 
-            if (!$storage_disk->exists($storage_img_user_path)) {
-                $storage_disk->makeDirectory($storage_img_user_path);
+            // Definisco i percorsi per spostare l'immagine generata
+            $storage_disk = Storage::disk('public');
+            $path_docker = '../../../docker/stable-diffusion/img/';
+            $path_docker_img = $path_docker . $imageName;
+            $path_storage_user = 'stable-diffusion/' . $this->userId . '/';
+            $path_storage_user_img = $path_storage_user . $imageName;
+
+            // Creo la directory di destinazione
+            if (!$storage_disk->exists($path_storage_user)) {
+                $storage_disk->makeDirectory($path_storage_user);
             }
-            Log::info(
-                'Moving image to storage disk from ' .
-                $docker_img_path . $imageName .
-                ' to ' . $storage_disk->path($storage_img_user_path) . $imageName
-            );
-            Storage::move($docker_img_path . $imageName, $storage_disk->path($storage_img_user_path) . $imageName);
+
+            // Laravel non accede a percorsi esterni a public, quindi devo copiare l'immagine
+            $storage_disk->put($path_storage_user_img, file_get_contents($storage_disk->path($path_docker_img)));
+
+            // Elimino l'immagine generata
+            unlink($storage_disk->path($path_docker_img));
 
             DB::table('image_jobs')->where('id', $this->jobId)->update([
                 'status' => 'completed',
-                'image_path' => $docker_img_path . $imageName,
+                'image_path' => $storage_disk->url($path_storage_user_img),
             ]);
         } else {
             DB::table('image_jobs')->where('id', $this->jobId)->update(['status' => 'failed']);
