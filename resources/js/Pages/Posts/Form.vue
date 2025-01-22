@@ -289,7 +289,7 @@ const startJob = async () => {
                                         type="button"
                                         role="tab"
                                         aria-controls="nav-create-img"
-                                        aria-selected="true">Crea</button>
+                                        aria-selected="true">Genera</button>
 
                                 <button class="nav-link"
                                         id="nav-select-img-tab"
@@ -425,16 +425,25 @@ const startJob = async () => {
                                            class="form-label">
                                         Generazione immagine
                                         <br>
-                                        <small>L'AI sta generando l'immagine per te...</small>
+                                        <small>L'AI sta generando l'immagine per te.</small>
                                     </label>
-                                    <textarea class="form-control h-[216px]"
-                                              :disabled="ai_prompt_img_loading"
-                                              :class="{'!border !border-red-500' : form.errors.ai_prompt_img}"
-                                              v-model="form.ai_prompt_img"></textarea>
-                                    <div class="text-red-500 text-center text-xs"
-                                         v-if="form.errors.ai_prompt_img">{{ __(form.errors.ai_prompt_img) }}</div>
+                                    <div class="textarea-wrapper">
+                                        <div v-if="ai_prompt_img_loading"
+                                             class="loader-overlay">
+                                            <div class="loader"></div>
+                                        </div>
+                                        <textarea class="form-control h-[216px]"
+                                                  :disabled="ai_prompt_img_loading"
+                                                  :class="{
+                                                  '!border !border-red-500' : form.errors.ai_prompt_img,
+                                                  '!text-gray-500' : ai_prompt_img_loading
+                                              }"
+                                                  v-model="form.ai_prompt_img"></textarea>
+                                        <div class="text-red-500 text-center text-xs"
+                                             v-if="form.errors.ai_prompt_img">{{ __(form.errors.ai_prompt_img) }}</div>
+                                    </div>
 
-                                    <br>
+                                    <br><br>
 
                                     <div class="text-center">
                                         <button @click="startJob"
@@ -484,13 +493,59 @@ const startJob = async () => {
 
 <style scoped>
 .loader {
-    margin-top: 20px;
-    font-size: 18px;
-    color: #555;
+    width: 48px;
+    height: 48px;
+    border: 5px solid #38bdf8;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    position: relative;
+    animation: pulse 1s linear infinite;
 }
-.image {
-    margin-top: 20px;
-    max-width: 100%;
+.loader:after {
+    content: '';
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border: 5px solid #38bdf8;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    animation: scaleUp 1s linear infinite;
+}
+
+@keyframes scaleUp {
+    0% { transform: translate(-50%, -50%) scale(0) }
+    60% , 100% { transform: translate(-50%, -50%)  scale(1)}
+}
+@keyframes pulse {
+    0% , 60% , 100%{ transform:  scale(1) }
+    80% { transform:  scale(1.2)}
+}
+
+.textarea-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%; /* Adatta la larghezza secondo necessità */
+}
+/*.loader {
+    width: 30px;
+    height: 30px;
+}*/
+.loader-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none; /* Non blocca l'interazione con il textarea */
 }
 </style>
 
