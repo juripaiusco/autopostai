@@ -98,7 +98,7 @@ const props = defineProps({
                     <br>
 
                     <div class="card">
-                        <div class="card-body">
+                        <div class="card-body whitespace-pre-line">
                             {{ data.ai_content }}
 
                             <br>
@@ -126,7 +126,7 @@ const props = defineProps({
 
                     <div v-for="comment in data.comments">
                         <div class="card text-left mb-2">
-                            <div class="card-body">
+                            <div class="card-body whitespace-pre-line">
                                 <label class="form-label">
                                     <li v-if="comment.channel === 'facebook'"
                                         class="fa-brands fa-facebook"></li>
