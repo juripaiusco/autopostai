@@ -380,7 +380,7 @@ export default {
                             posts.value[index] = newPost;
                         } else {
                             // Altrimenti, aggiungi il nuovo post
-                            posts.value.push(newPost);
+                            // posts.value.push(newPost);
                         }
                     });
 
