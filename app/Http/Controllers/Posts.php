@@ -42,6 +42,28 @@ use Inertia\Inertia;
  */
 class Posts extends Controller
 {
+    public function getData()
+    {
+        // Query data
+        $data = \App\Models\Post::query();
+        $data = $data->with(['user', 'comments.token', 'token']);
+
+        // Se l'utente è singolo
+        if (auth()->user()->parent_id && !auth()->user()->child_on) {
+            $data = $data->where('user_id', auth()->user()->id);
+        }
+
+        // Se l'utente è Manager
+        if (auth()->user()->parent_id && auth()->user()->child_on) {
+            $parentId = auth()->user()->id;
+            $data = $data->whereHas('user', function ($query) use ($parentId) {
+                $query->where('parent_id', $parentId);
+            });
+        }
+
+        return $data;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -56,8 +78,7 @@ class Posts extends Controller
         $request_validate_array = $request_search_array;
 
         // Query data
-        $data = \App\Models\Post::query();
-        $data = $data->with(['user', 'comments.token', 'token']);
+        $data = $this->getData();
 
         // Request validate
         request()->validate([
@@ -91,19 +112,6 @@ class Posts extends Controller
             'posts.wordpress_on',
             'posts.newsletter_on',
         ]);*/
-
-        // Se l'utente è singolo
-        if (auth()->user()->parent_id && !auth()->user()->child_on) {
-            $data = $data->where('user_id', auth()->user()->id);
-        }
-
-        // Se l'utente è Manager
-        if (auth()->user()->parent_id && auth()->user()->child_on) {
-            $parentId = auth()->user()->id;
-            $data = $data->whereHas('user', function ($query) use ($parentId) {
-                $query->where('parent_id', $parentId);
-            });
-        }
 
         $data = $data->paginate(env('VIEWS_PAGINATE'))->withQueryString();
 

@@ -9,10 +9,13 @@ use \App\Http\Controllers\ImageController;
 })->middleware('auth:sanctum');*/
 
 Route::get('/posts', function () {
-    return App\Models\Post::with(['user', 'comments.token', 'token'])
-        ->take(env('VIEWS_PAGINATE'))
-        ->latest()
-        ->get();
+
+    $posts = new \App\Http\Controllers\Posts();
+    $data = $posts->getData();
+    $data = $data->take(env('VIEWS_PAGINATE'));
+    $data = $data->latest();
+
+    return $data->get();
 })->middleware('auth:sanctum');
 
 // Esecuzione di un job in background
