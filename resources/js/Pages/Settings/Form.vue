@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import {Head, useForm} from '@inertiajs/vue3';
+import {Head, Link, useForm} from '@inertiajs/vue3';
 import ApplicationContainer from "@/Components/ApplicationContainer.vue";
 import ApplicationHeader from "@/Components/ApplicationHeader.vue";
 import SettingsForm from "@/Pages/Settings/SettingsForm.vue";
@@ -36,10 +36,12 @@ const form = useForm(dataForm);
 
                 <SettingsForm :form="form" />
 
-                <div class="text-right mt-10">
+                <div class="text-right mt-10 flex flex-wrap justify-center md:justify-end">
 
-                    <button type="submit"
-                            class="btn btn-success ml-2 w-[120px]">Salva</button>
+                    <div class="w-[100%] text-center md:w-auto">
+                        <button type="submit"
+                                class="btn btn-success w-[100%] md:w-[120px]">Salva</button>
+                    </div>
 
                 </div>
 

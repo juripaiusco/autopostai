@@ -285,15 +285,19 @@ form.password = '';
 
                 </div>
 
-                <div class="text-right mt-10">
+                <div class="text-right mt-10 flex flex-wrap justify-center md:justify-end">
 
-                    <Link class="btn btn-secondary w-[120px]"
-                          :href="data.saveRedirect">
-                        Annulla
-                    </Link>
+                    <div class="w-1/2 text-center md:w-auto">
+                        <Link class="btn btn-secondary w-[100%] md:w-[120px]"
+                              :href="data.saveRedirect">
+                            Annulla
+                        </Link>
+                    </div>
 
-                    <button type="submit"
-                            class="btn btn-success ml-2 w-[120px]">Salva</button>
+                    <div class="w-1/2 text-center md:w-auto">
+                        <button type="submit"
+                                class="btn btn-success ml-2 w-[100%] md:w-[120px]">Salva</button>
+                    </div>
 
                 </div>
 
