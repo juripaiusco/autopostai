@@ -9,7 +9,8 @@ import ModalReady from "@/Components/ModalReady.vue";
 import Table from "@/Components/Table/Table.vue";
 import TableSearch from "@/Components/Table/TableSearch.vue";
 import TablePagination from "@/Components/Table/TablePagination.vue";
-import {ref} from "vue";
+import {ref, computed, onMounted, onUnmounted} from "vue";
+import axios from "axios";
 import {__date} from "@/ComponentsExt/Date.js";
 import {Inertia} from "@inertiajs/inertia";
 
@@ -21,8 +22,61 @@ const props = defineProps({
 
 let modalShow = ref(false);
 let modalData = ref(props.data);
-
 let app_url = import.meta.env.VITE_APP_URL;
+
+// Stato reattivo
+const token = props.token.plainTextToken; // Token dalla prop
+const isLoading = ref(false);
+const error = ref(null);
+
+// Collegare direttamente `posts` ai dati iniziali con computed
+const posts = computed(() => props.data.data);
+
+let interval = null;
+
+// Funzione per recuperare i post
+const fetchPosts = () => {
+    isLoading.value = true;
+    axios
+        .get(app_url + '/index.php/api/posts', {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        })
+        .then((response) => {
+            const newPosts = response.data;
+
+            // Aggiorna solo i post esistenti che hanno lo stesso ID
+            newPosts.forEach((newPost) => {
+                const index = posts.value.findIndex((post) => post.id === newPost.id);
+                if (index !== -1) {
+                    // Se il post esiste già, sostituisci solo quello
+                    posts.value[index] = newPost;
+                } else {
+                    // Altrimenti, aggiungi il nuovo post
+                    // posts.value.push(newPost);
+                }
+            });
+
+            error.value = null; // Reset errore
+        })
+        .catch((err) => {
+            console.error(err);
+            error.value = 'Errore nel recupero dei dati';
+        })
+        .finally(() => {
+            isLoading.value = false;
+        });
+};
+
+// Effetti al montaggio e smontaggio del componente
+onMounted(() => {
+    interval = setInterval(fetchPosts, 30000); // 30 secondi
+});
+
+onUnmounted(() => {
+    clearInterval(interval); // Pulisci l'intervallo
+});
 
 </script>
 
@@ -350,61 +404,3 @@ let app_url = import.meta.env.VITE_APP_URL;
 <style scoped>
 
 </style>
-
-<script>
-import { ref, onMounted, onUnmounted } from 'vue';
-import axios from 'axios';
-
-export default {
-    data() {
-        let posts = ref(this.$props.data.data);
-        const token = this.$props.token.plainTextToken;
-        const isLoading = ref(false);
-        const error = ref(null);
-        let interval = null;
-
-        const fetchPosts = () => {
-            isLoading.value = true;
-            axios.get(import.meta.env.VITE_APP_URL + '/index.php/api/posts',  {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }).then(response => {
-                    const newPosts = response.data;
-
-                    // Aggiorna solo i post esistenti che hanno lo stesso ID
-                    newPosts.forEach(newPost => {
-                        const index = posts.value.findIndex(post => post.id === newPost.id);
-                        if (index !== -1) {
-                            // Se il post esiste già, sostituisci solo quello
-                            posts.value[index] = newPost;
-                        } else {
-                            // Altrimenti, aggiungi il nuovo post
-                            // posts.value.push(newPost);
-                        }
-                    });
-
-                    error.value = null; // Reset errore
-                })
-                .catch(err => {
-                    console.error(err);
-                    error.value = 'Errore nel recupero dei dati';
-                })
-                .finally(() => {
-                    isLoading.value = false;
-                });
-        };
-
-        onMounted(() => {
-            //fetchPosts(); // Caricamento iniziale
-            interval = setInterval(fetchPosts, 30000); // 30 secondi
-        });
-
-        onUnmounted(() => {
-            clearInterval(interval); // Pulisci l'intervallo
-        });
-
-        return { posts, isLoading, error };
-    },
-};
-</script>
