@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 
 class Settings extends Controller
@@ -17,7 +18,8 @@ class Settings extends Controller
         );
 
         return Inertia::render('Settings/Form', [
-            'data' => $data
+            'data' => $data,
+            'success' => Session::get('success')
         ]);
     }
 
@@ -50,5 +52,13 @@ class Settings extends Controller
         $settings = \App\Models\Settings::find($id);
         $settings->fill($request->all());
         $settings->save();
+
+        // Usa Inertia per reindirizzare e passare il messaggio
+        return redirect()
+            ->back()
+            ->with('success', [
+                'time' => time(),
+                'msg' => 'Impostazioni salvate con successo.'
+            ]); // Messaggio di successo
     }
 }

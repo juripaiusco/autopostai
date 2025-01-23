@@ -1,12 +1,14 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import {Head, Link, useForm} from '@inertiajs/vue3';
+import {Head, useForm} from '@inertiajs/vue3';
 import ApplicationContainer from "@/Components/ApplicationContainer.vue";
 import ApplicationHeader from "@/Components/ApplicationHeader.vue";
 import SettingsForm from "@/Pages/Settings/SettingsForm.vue";
+import {onMounted, ref, watch} from "vue";
 
 const props = defineProps({
     data: Object,
+    success: Object
 })
 
 const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
@@ -14,6 +16,20 @@ const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
 }));
 
 const form = useForm(dataForm);
+
+
+// Crea una variabile reattiva per il messaggio
+const successMessage = ref(props.success);
+
+// Aggiorna successMessage quando success cambia
+watch(() => props.success, (newMsg) => {
+    if (newMsg) {
+        successMessage.value = newMsg.msg;
+        setTimeout(() => {
+            successMessage.value = ''; // Nascondi il messaggio dopo 3 secondi
+        }, 3000); // 3 secondi
+    }
+});
 
 </script>
 
@@ -28,6 +44,26 @@ const form = useForm(dataForm);
         </template>
 
         <ApplicationContainer>
+
+            <!-- Mostra il messaggio di successo se presente -->
+            <div v-if="successMessage" class="alert alert-success">
+                {{ successMessage }}
+            </div>
+
+            <!-- <div v-if="successMessage"
+                 class="toast show fixed top-4 sm:top-20"
+                 role="alert"
+                 aria-live="assertive"
+                 aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Impostazioni</strong>
+                    <small class="text-body-secondary"></small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    {{ successMessage }}
+                </div>
+            </div> -->
 
             <form @submit.prevent="form.post(route(
                 form.id ? 'settings.update' : 'settings.store',
