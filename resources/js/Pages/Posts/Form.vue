@@ -476,7 +476,6 @@ const startJob = async () => {
                                                 'image_ai_generated_selected': selectedImage === index,
                                                 '!brightness-125': selectedImage === index,
                                                 'animate-glow': selectedImage === index,
-                                                'static-glow': selectedImage === index,
                                                 'shadow-md': selectedImage === index,
                                                 'shadow-[#38bdf8]/80': selectedImage === index,
                                              }"
