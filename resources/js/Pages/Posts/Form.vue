@@ -469,10 +469,13 @@ const startJob = async () => {
                                 <div class="row">
                                     <div v-for="(file, index) in images_array"
                                          :key="index"
-                                         class="col-3 mb-4">
+                                         class="col-4 col-lg-3 mb-4">
 
-                                        <img class="rounded cursor-pointer image_ai_generated"
-                                             :class="{ image_ai_generated_selected: selectedImage === index }"
+                                        <img class="rounded cursor-pointer image_ai_generated brightness-[0.75]"
+                                             :class="{
+                                                'image_ai_generated_selected': selectedImage === index,
+                                                '!brightness-125 animate-glow shadow-md shadow-[#38bdf8]/80': selectedImage === index,
+                                             }"
                                              :src="file"
                                              :alt="file"
                                              @click="previewUrl = null; form.img = form.img_selected = file; selectImage(index);">
@@ -512,7 +515,7 @@ const startJob = async () => {
     transition: all .2s;
 }
 .image_ai_generated_selected {
-    border: 4px solid #38bdf8;
+    /*border: 4px solid #38bdf8;*/
     transform: scale(1.1);
 }
 
