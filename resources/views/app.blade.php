@@ -75,13 +75,8 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
-        @routes
-        @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
-        @inertiaHead
-
         <!-- Automatic system Dark Mode -->
-        <script>
+        <script language="JavaScript" type="application/javascript">
             // Cambia automaticamente il tema Bootstrap in base alla preferenza
             const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
             document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
@@ -91,6 +86,11 @@
                 document.documentElement.setAttribute('data-bs-theme', event.matches ? 'dark' : 'light');
             });
         </script>
+        
+        <!-- Scripts -->
+        @routes
+        @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
+        @inertiaHead
 
         <x-translations />
     </head>
