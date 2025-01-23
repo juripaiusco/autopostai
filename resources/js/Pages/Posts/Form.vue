@@ -474,7 +474,11 @@ const startJob = async () => {
                                         <img class="rounded cursor-pointer image_ai_generated brightness-[0.75]"
                                              :class="{
                                                 'image_ai_generated_selected': selectedImage === index,
-                                                '!brightness-125 animate-glow shadow-md shadow-[#38bdf8]/80': selectedImage === index,
+                                                '!brightness-125': selectedImage === index,
+                                                'animate-glow': selectedImage === index,
+                                                'static-glow': selectedImage === index,
+                                                'shadow-md': selectedImage === index,
+                                                'shadow-[#38bdf8]/80': selectedImage === index,
                                              }"
                                              :src="file"
                                              :alt="file"

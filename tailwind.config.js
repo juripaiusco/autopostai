@@ -17,12 +17,13 @@ export default {
             },
             keyframes: {
                 glow: {
-                    '0%, 100%': { boxShadow: '0 0 6px 0px rgba(56, 189, 248, 0.5)' },
+                    '0%': { boxShadow: '0 0 0px 0px rgba(56, 189, 248, 0)' },
                     '50%': { boxShadow: '0 0 12px 2px rgba(56, 189, 248, 1)' },
+                    '100%': { boxShadow: '0 0 12px 2px rgba(56, 189, 248, 0.6)' }, // Stile finale
                 },
             },
             animation: {
-                glow: 'glow 2s infinite',
+                glow: 'glow 0.5s ease-in-out 1 forwards',
             },
         },
     },
