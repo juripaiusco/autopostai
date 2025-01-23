@@ -77,16 +77,18 @@
 
         <!-- Automatic system Dark Mode -->
         <script language="JavaScript" type="application/javascript">
-            // Cambia automaticamente il tema Bootstrap in base alla preferenza
-            const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
+            document.addEventListener('DOMContentLoaded', () => {
+                // Cambia automaticamente il tema Bootstrap in base alla preferenza
+                const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
 
-            // Ascolta i cambiamenti del tema di sistema
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-                document.documentElement.setAttribute('data-bs-theme', event.matches ? 'dark' : 'light');
+                // Ascolta i cambiamenti del tema di sistema
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                    document.documentElement.setAttribute('data-bs-theme', event.matches ? 'dark' : 'light');
+                });
             });
         </script>
-        
+
         <!-- Scripts -->
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
