@@ -361,6 +361,10 @@ class Posts extends Controller
         return \redirect()->back();
     }
 
+    /**
+     * Restituisce la lista delle immagini dell'archivio utente
+     * @return array
+     */
     public function get_image_list()
     {
         $files = Storage::disk('public')->files('stable-diffusion/' . Auth::id() . '/');
@@ -373,5 +377,15 @@ class Posts extends Controller
         }
 
         return array_reverse($files_url);
+    }
+
+    /**
+     * Elimina l'immagine selezionata dall'archivio utente
+     * @param string $img
+     * @return bool
+     */
+    public function destroy_image(string $img)
+    {
+        return Storage::disk('public')->delete('stable-diffusion/' . Auth::id() . '/' . $img);
     }
 }

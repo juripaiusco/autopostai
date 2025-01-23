@@ -9,12 +9,20 @@ import {__date} from "@/ComponentsExt/Date.js";
 import {ref} from "vue";
 import {__} from "../../ComponentsExt/Translations.js";
 import axios from "axios";
+import ModalReady from "@/Components/ModalReady.vue";
 
 const props = defineProps({
     data: Object,
     filters: Object,
     token: Object,
-})
+});
+
+let modalShow = ref(false);
+let modalData = ref({
+    'confirmBtnText': 'Sì',
+    'confirmBtnClass': 'btn btn-danger',
+    'confirmFNC': true,
+});
 
 const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
     return props.data ? v : '';
@@ -125,6 +133,13 @@ const startJob = async () => {
         ai_prompt_img_loading.value = false;
     }
 };
+
+function modalDeleteImg(img, index) {
+    // modalData.value.confirmURL = route('post.destroy_image', [img.split('/').pop()]);
+    modalData.value.route = route('post.destroy_image', [img.split('/').pop()]);
+    modalData.value.img = img;
+    modalData.value.index = index;
+}
 
 </script>
 
@@ -469,7 +484,7 @@ const startJob = async () => {
                                 <div class="row">
                                     <div v-for="(file, index) in images_array"
                                          :key="index"
-                                         class="col-4 col-lg-3 mb-4">
+                                         class="col-4 col-lg-3 mb-4 relative">
 
                                         <img class="rounded cursor-pointer image_ai_generated brightness-[0.75]"
                                              :class="{
@@ -482,6 +497,14 @@ const startJob = async () => {
                                              :src="file"
                                              :alt="file"
                                              @click="previewUrl = null; form.img = form.img_selected = file; selectImage(index);">
+
+                                        <div v-if="selectedImage === index"
+                                             class="absolute bottom-0 right-4 bg-white text-gray-500 py-1 px-2 rounded">
+                                            <button type="button"
+                                                    @click="modalShow = true; modalDeleteImg(file, index)">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
 
                                     </div>
                                 </div>
@@ -510,6 +533,33 @@ const startJob = async () => {
                 </div>
 
             </form>
+
+            <ModalReady :show="modalShow"
+                        :data="modalData"
+                        @close="modalShow = false"
+                        @fncConfirm="(data_img) => {
+                            images_array.splice(data_img.index, 1);
+                            modalShow = false;
+                            form.img = form.img_selected = selectedImage = null;
+                            axios.get(data_img.route)
+                                .then(response => {
+                                    console.log(response);
+                                })
+                                .catch(error => {
+                                    console.log(error);
+                                });
+                        }">
+
+                <template #title>Elimina immagine</template>
+                <template #body>
+                    Vuoi eliminare questa immagine?
+
+                    <img class="mt-6 sm:w-1/2 mx-auto rounded"
+                         :src="modalData.img"
+                         :alt="modalData.img">
+                </template>
+
+            </ModalReady>
 
         </ApplicationContainer>
 

@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/posts/edit/{id}', [Posts::class, 'edit'])->name('post.edit');
     Route::post('/posts/update/{id}', [Posts::class, 'update'])->name('post.update');
     Route::get('/posts/destroy/{id}', [Posts::class, 'destroy'])->name('post.destroy');
+    Route::get('/posts/destroy_image/{img}', [Posts::class, 'destroy_image'])->name('post.destroy_image');
 
     Route::get('/settings', [Settings::class, 'index'])->name('settings.index');
     Route::post('/settings/update_by_user/{id}', [Settings::class, 'update_by_user'])->name('settings.update');
