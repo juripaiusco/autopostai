@@ -107,6 +107,7 @@ const startJob = async () => {
                 ai_prompt_img_path.value = statusResponse.data.image_path;
                 images_array.value.unshift(ai_prompt_img_path.value);
                 form.img_selected = ai_prompt_img_path.value;
+                form.img = form.img_selected;
                 break;
             }
 
@@ -474,7 +475,7 @@ const startJob = async () => {
                                              :class="{ image_ai_generated_selected: selectedImage === index }"
                                              :src="file"
                                              :alt="file"
-                                             @click="form.img_selected = file; selectImage(index);">
+                                             @click="previewUrl = null; form.img = form.img_selected = file; selectImage(index);">
 
                                     </div>
                                 </div>
