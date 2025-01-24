@@ -113,9 +113,11 @@ const startJob = async () => {
 
             if (status === "completed") {
                 ai_prompt_img_path.value = statusResponse.data.image_url;
-                images_array.value.unshift(ai_prompt_img_path.value);
-                form.img_selected = ai_prompt_img_path.value;
-                form.img = form.img_selected;
+                images_array.value.unshift({
+                    'image_url': statusResponse.data.image_url,
+                    'prompt': statusResponse.data.prompt,
+                });
+                form.img = form.img_selected = ai_prompt_img_path.value;
                 break;
             }
 
@@ -136,8 +138,8 @@ const startJob = async () => {
 
 function modalDeleteImg(img, index) {
     // modalData.value.confirmURL = route('post.destroy_image', [img.split('/').pop()]);
-    modalData.value.route = route('post.destroy_image', [img.split('/').pop()]);
-    modalData.value.img = img;
+    modalData.value.route = route('post.destroy_image', [img.image_url.split('/').pop()]);
+    modalData.value.img = img.image_url;
     modalData.value.index = index;
     document.activeElement.blur();
 }
@@ -497,9 +499,13 @@ function modalDeleteImg(img, index) {
                                                 'shadow-md': selectedImage === index,
                                                 'shadow-[#38bdf8]/80': selectedImage === index,
                                              }"
-                                             :src="file"
-                                             :alt="file"
-                                             @click="previewUrl = null; form.img = form.img_selected = file; selectImage(index);">
+                                             :src="file.image_url"
+                                             :alt="file.image_url"
+                                             @click="
+                                             previewUrl = null;
+                                             form.img = form.img_selected = file.image_url;
+                                             form.ai_prompt_img = file.prompt;
+                                             selectImage(index);">
 
                                         <div v-if="selectedImage === index"
                                              class="absolute bottom-0 right-4 bg-white text-gray-500 py-1 px-2 rounded">
@@ -543,7 +549,7 @@ function modalDeleteImg(img, index) {
                         @fncConfirm="(data_img) => {
                             images_array.splice(data_img.index, 1);
                             modalShow = false;
-                            form.img = form.img_selected = selectedImage = null;
+                            form.ai_prompt_img = ai_prompt_img_path = form.img = form.img_selected = selectedImage = null;
                             axios.get(data_img.route)
                                 .then(response => {
                                     console.log(response);

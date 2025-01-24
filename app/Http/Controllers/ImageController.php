@@ -33,6 +33,7 @@ class ImageController extends Controller
         return response()->json([
             'status' => $job->status,
             'image_url' => $job->image_url,
+            'prompt' => $job->prompt,
         ]);
     }
 }

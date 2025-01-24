@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ImageJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -376,7 +377,9 @@ class Posts extends Controller
             }
         }
 
-        return array_reverse($files_url);
+        $imageJobs = ImageJob::whereIn('image_url', $files_url)->orderBy('created_at', 'desc')->get();
+
+        return $imageJobs;
     }
 
     /**
