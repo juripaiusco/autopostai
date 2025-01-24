@@ -139,6 +139,7 @@ function modalDeleteImg(img, index) {
     modalData.value.route = route('post.destroy_image', [img.split('/').pop()]);
     modalData.value.img = img;
     modalData.value.index = index;
+    document.activeElement.blur();
 }
 
 </script>
@@ -290,7 +291,9 @@ function modalDeleteImg(img, index) {
                     <div class="col-lg">
 
                         <nav class="mt-2">
-                            <div class="nav nav-underline nav-fill" id="nav-tab" role="tablist">
+                            <div class="nav nav-underline nav-justified"
+                                 id="nav-tab"
+                                 role="tablist">
 
                                 <button class="nav-link active"
                                         id="nav-upload-img-tab"
