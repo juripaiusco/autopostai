@@ -27,7 +27,7 @@ def reply_send(debug = False):
                     {cfg.DB_PREFIX}comments.message_id AS message_id,
                     {cfg.DB_PREFIX}comments.message AS message,
                     {cfg.DB_PREFIX}posts.ai_content AS ai_content,
-                    {cfg.DB_PREFIX}posts.ai_content AS ai_prompt_comment,
+                    {cfg.DB_PREFIX}posts.ai_prompt_comment AS ai_prompt_comment,
                     {cfg.DB_PREFIX}settings.ai_personality AS ai_personality,
                     {cfg.DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
                     {cfg.DB_PREFIX}settings.openai_api_key AS openai_api_key,

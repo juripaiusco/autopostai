@@ -16,6 +16,9 @@ class InstagramReply(BaseReply):
         if self.data['ai_prompt_prefix']:
             prompt = prompt + self.data['ai_prompt_prefix'] + "\n\n"
 
+        if self.data['ai_prompt_comment']:
+            prompt = prompt + self.data['ai_prompt_comment'] + "\n\n"
+
         if self.data['channel']:
             prompt = prompt + f"È stato creato questo post su {self.data['channel']}:\n"
 
@@ -31,10 +34,6 @@ class InstagramReply(BaseReply):
         prompt = prompt + "\n"
         prompt = prompt + self.data['message'] + "\n"
         prompt = prompt + "\n"
-
-        if self.data['ai_prompt_comment']:
-            prompt = prompt + self.data['ai_prompt_comment'] + "\n"
-            prompt = prompt + "\n"
 
         prompt = prompt + """
                             Impersonando la persona all'inizio, scrivi un risposta breve, positiva ed inclusiva,
