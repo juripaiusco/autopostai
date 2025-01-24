@@ -80,6 +80,13 @@ const props = defineProps({
                     <br><br>
 
                     <label class="form-label">
+                        Prompt commenti
+                    </label>
+                    {{ data.ai_prompt_comment }}
+
+                    <br><br>
+
+                    <label class="form-label">
                         Pubblicato su:
                     </label>
 

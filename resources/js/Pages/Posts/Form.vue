@@ -10,6 +10,7 @@ import {ref} from "vue";
 import {__} from "../../ComponentsExt/Translations.js";
 import axios from "axios";
 import ModalReady from "@/Components/ModalReady.vue";
+import Comments_prompt from "@/Pages/Posts/comments_prompt.vue";
 
 const props = defineProps({
     data: Object,
@@ -75,6 +76,10 @@ function checkChannelsByUser() {
     }
 }
 
+/**
+ * Genero l'immagine in base al prompt inserito
+ * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
+ */
 const ai_prompt_img_loading = ref(false);
 const ai_prompt_img_path = ref(null);
 const token = props.token.plainTextToken;
@@ -118,6 +123,7 @@ const startJob = async () => {
                     'prompt': statusResponse.data.prompt,
                 });
                 form.img = form.img_selected = ai_prompt_img_path.value;
+                selectedImage = 0;
                 break;
             }
 
@@ -142,6 +148,16 @@ function modalDeleteImg(img, index) {
     modalData.value.img = img.image_url;
     modalData.value.index = index;
     document.activeElement.blur();
+}
+
+/**
+ * Seleziona l'immagine
+ * @type {[null] extends [Ref] ? IfAny<null, Ref<null>, null> : Ref<UnwrapRef<null>, UnwrapRef<null> | null>}
+ */
+let selectedImage = ref(null);
+
+function selectImage(index) {
+    selectedImage = index; // Imposta l'immagine selezionata
 }
 
 </script>
@@ -247,7 +263,7 @@ function modalDeleteImg(img, index) {
                         <label class="form-label">
                             Prompt
                             <br>
-                            <small>L'AI interpreta il testo e genera un contenuto in base alle tue indicazioni</small>
+                            <small>L'AI genera un contenuto in base alle tue indicazioni</small>
                         </label>
                         <textarea class="form-control h-[216px]"
                                   :class="{'!border !border-red-500' : form.errors.ai_prompt_post}"
@@ -286,6 +302,15 @@ function modalDeleteImg(img, index) {
 
                                 </div>
 
+                            </div>
+                        </div>
+
+                        <div class="hidden sm:block">
+                            <br>
+                            <div class="card !bg-gray-100">
+                                <div class="card-body">
+                                    <comments_prompt :data="data" :form="form" />
+                                </div>
                             </div>
                         </div>
 
@@ -443,7 +468,7 @@ function modalDeleteImg(img, index) {
                                            class="form-label">
                                         Prompt immagine
                                         <br>
-                                        <small>L'AI interpreta il testo e genera un'immagine in base alle tue indicazioni</small>
+                                        <small>L'AI genera un'immagine in base alle tue indicazioni</small>
                                     </label>
                                     <label v-if="ai_prompt_img_loading"
                                            class="form-label">
@@ -522,6 +547,15 @@ function modalDeleteImg(img, index) {
 
                         </div>
 
+                    </div>
+                </div>
+
+                <div class="sm:hidden">
+                    <br>
+                    <div class="card !bg-gray-100">
+                        <div class="card-body">
+                            <comments_prompt :data="data" :form="form" />
+                        </div>
                     </div>
                 </div>
 
@@ -666,7 +700,6 @@ export default {
     data: function () {
         return {
             previewUrl: null, // URL per l'anteprima dell'immagine
-            selectedImage: null
         };
     },
     methods: {
@@ -685,9 +718,6 @@ export default {
             } else {
                 this.previewUrl = null; // Se nessun file selezionato, resetta
             }
-        },
-        selectImage(index) {
-            this.selectedImage = index; // Imposta l'immagine selezionata
         },
     },
 };

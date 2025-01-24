@@ -28,6 +28,9 @@ return new class extends Migration
             // Risposta del LLM
             $table->longText('ai_content')->default(null)->nullable();
 
+            // Istruzioni da inviare al LLM per il commento
+            $table->longText('ai_prompt_comment')->default(null)->nullable();
+
             // Immagine del post
             $table->string('img')->default(null)->nullable();
 
