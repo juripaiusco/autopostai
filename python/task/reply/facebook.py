@@ -31,6 +31,11 @@ class FacebookReply(BaseReply):
         prompt = prompt + "\n"
         prompt = prompt + self.data['message'] + "\n"
         prompt = prompt + "\n"
+
+        if self.data['ai_prompt_comment']:
+            prompt = prompt + self.data['ai_prompt_comment'] + "\n"
+            prompt = prompt + "\n"
+
         prompt = prompt + """
                             Impersonando la persona all'inizio, scrivi un risposta breve, positiva ed inclusiva,
                             che faccia felice chi la legge. Utilizza un tono informale.
