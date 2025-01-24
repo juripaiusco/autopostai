@@ -128,8 +128,8 @@ def task_complete(debug = False):
         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Task complete CTRL - END --------------")
 
 def calculate_next_hold_time(check_attempts):
-    # Incremento esponenziale con un limite massimo di 1 settimana
-    max_wait = timedelta(weeks=1)
+    # Incremento esponenziale con un limite massimo di 1 giorno
+    max_wait = timedelta(days=1)
     next_wait = min(timedelta(minutes=2 ** check_attempts), max_wait)
     return next_wait
 
