@@ -282,7 +282,7 @@ function selectImage(index) {
                         <div class="row !mt-2">
                             <div v-for="(channel, index) in data.channels"
                                  :key="index"
-                                 class="col-lg">
+                                 class="col-6 col-lg-3">
 
                                 <div class="form-check form-switch !mb-3">
 
