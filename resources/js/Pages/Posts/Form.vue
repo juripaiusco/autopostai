@@ -112,7 +112,7 @@ const startJob = async () => {
             status = statusResponse.data.status;
 
             if (status === "completed") {
-                ai_prompt_img_path.value = statusResponse.data.image_path;
+                ai_prompt_img_path.value = statusResponse.data.image_url;
                 images_array.value.unshift(ai_prompt_img_path.value);
                 form.img_selected = ai_prompt_img_path.value;
                 form.img = form.img_selected;

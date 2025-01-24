@@ -70,7 +70,9 @@ class GenerateImageJob implements ShouldQueue
 
             DB::table('image_jobs')->where('id', $this->jobId)->update([
                 'status' => 'completed',
-                'image_path' => $storage_disk->url($path_storage_user_img),
+                'image_url' => $storage_disk->url($path_storage_user_img),
+                'prompt' => $this->prompt,
+                'model' => 'stable-diffusion 3.5',
             ]);
         } else {
             DB::table('image_jobs')->where('id', $this->jobId)->update(['status' => 'failed']);

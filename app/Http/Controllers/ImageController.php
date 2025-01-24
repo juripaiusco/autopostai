@@ -32,7 +32,7 @@ class ImageController extends Controller
 
         return response()->json([
             'status' => $job->status,
-            'image_path' => $job->image_path,
+            'image_url' => $job->image_url,
         ]);
     }
 }

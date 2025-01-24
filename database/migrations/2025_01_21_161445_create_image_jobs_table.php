@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('image_jobs', function (Blueprint $table) {
             $table->id();
             $table->string('status')->default('pending'); // pending, running, completed, failed
-            $table->string('image_path')->nullable();     // Percorso immagine generata
+            $table->string('image_url')->nullable();     // URL immagine generata
+            $table->longText('prompt')->nullable();
+            $table->string('model')->nullable();
             $table->timestamps();
         });
     }
