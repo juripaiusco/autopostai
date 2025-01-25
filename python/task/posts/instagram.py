@@ -1,10 +1,8 @@
 from task.posts.base import BasePost
-import json
 import config as cfg
 from typing import List
 from services.meta import Meta
 from datetime import datetime
-from services.mysql import Mysql
 
 class InstagramPost(BasePost):
     def __init__(self, data: List[any] = None, debug=False):
