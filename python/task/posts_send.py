@@ -5,7 +5,9 @@ from services.mysql import Mysql
 from task.posts.base import BasePost
 from task.posts.facebook import FacebookPost
 from task.posts.instagram import InstagramPost
+from task.posts.wordpress import WordPressPost
 from task.openai_generate import openai_generate
+
 
 def posts_send(debug = False):
 
@@ -99,15 +101,24 @@ def posts_send(debug = False):
             for i in channels:
                 if channels[i]['name'] == 'Facebook' and channels[i]['on'] == '1':
                     if debug:
-                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Facebook - post sending")
+                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                              "Facebook - post sending")
                     facebook_post = FacebookPost(data=row, debug=debug)
                     channels[i]['id'] = facebook_post.send(content)
 
                 if channels[i]['name'] == 'Instagram' and channels[i]['on'] == '1':
                     if debug:
-                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - post sending")
+                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                              "Instagram - post sending")
                     instagram_post = InstagramPost(data=row, debug=debug)
                     channels[i]['id'] = instagram_post.send(content)
+
+                if channels[i]['name'] == 'WordPress' and channels[i]['on'] == '1':
+                    if debug:
+                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                              "WordPress - post sending")
+                    wordpress_post = WordPressPost(data=row, debug=debug)
+                    channels[i]['id'] = wordpress_post.send(content)
 
             # Salvo gli ID del post nei vari canali
             mysql.query(
