@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import ApplicationContainer from "@/Components/ApplicationContainer.vue";
 import ApplicationHeader from "@/Components/ApplicationHeader.vue";
 
@@ -28,35 +28,39 @@ const props = defineProps({
             <div class="row text-center">
                 <div v-if="data.users !== false" class="col-lg mb-6 lg:mb-0">
 
-                    <div class="card">
-                        <div class="card-header">
+                    <Link :href="route('user.index')">
+                        <div class="card">
+                            <div class="card-header">
 
-                            Account
-                            <small>( non manager )</small>
+                                Account
+                                <small>( non manager )</small>
 
+                            </div>
+                            <div class="card-body">
+
+                                {{ data.users.length }}
+
+                            </div>
                         </div>
-                        <div class="card-body">
-
-                            {{ data.users.length }}
-
-                        </div>
-                    </div>
+                    </Link>
 
                 </div>
                 <div class="col-lg mb-6 lg:mb-0">
 
-                    <div class="card">
-                        <div class="card-header">
+                    <Link :href="route('post.index')">
+                        <div class="card">
+                            <div class="card-header">
 
-                            Posts
+                                Posts
 
+                            </div>
+                            <div class="card-body">
+
+                                {{ data.posts.length }}
+
+                            </div>
                         </div>
-                        <div class="card-body">
-
-                            {{ data.posts.length }}
-
-                        </div>
-                    </div>
+                    </Link>
 
                 </div>
                 <div class="col-lg">
