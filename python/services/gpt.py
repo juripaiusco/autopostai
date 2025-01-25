@@ -52,7 +52,8 @@ class GPT:
       # Chiamata API per generare il completamento
       chat_completion = client.chat.completions.create(
         messages=[
-          {"role": "user", "content": prompt}
+            {"role": "system", "content": "Rispondi sempre solo con l'output richiesto, senza aggiungere altro."},
+            {"role": "user", "content": prompt}
         ],
         model=model,
         temperature=temperature,
