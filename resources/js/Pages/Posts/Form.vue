@@ -307,7 +307,7 @@ function selectImage(index) {
 
                         <div class="hidden sm:block">
                             <br>
-                            <div class="card !bg-gray-100">
+                            <div class="card !bg-gray-100 dark:!bg-gray-900/40">
                                 <div class="card-body">
                                     <comments_prompt :data="data" :form="form" />
                                 </div>
@@ -552,7 +552,7 @@ function selectImage(index) {
 
                 <div class="sm:hidden">
                     <br>
-                    <div class="card !bg-gray-100">
+                    <div class="card !bg-gray-100 dark:!bg-gray-900/40">
                         <div class="card-body">
                             <comments_prompt :data="data" :form="form" />
                         </div>
