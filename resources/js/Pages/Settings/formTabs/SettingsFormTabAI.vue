@@ -15,21 +15,25 @@ const props = defineProps({
     <textarea class="form-control h-[216px]"
               placeholder="Descrivi nel modo più dettagliato possibile il profilo che deve avere l'AI
 
-Esempio: Sono personaggio simpatico, che parla in modo informale e che cerca di creare un rapporto di amicizia
-con l'utente. Cerco di essere sempre positivo e di dare consigli utili e incoraggianti. Vivo in Veneto e mi piace.
-Sono un artigiano e mi piace creare oggetti con le mie mani. Mi piace la musica e il cibo. Sono un grande appassionato.
-
-In sostanza se l'AI va a sostituire i post che creerai tu, devi inserire qui la tua personalità e il tuo modo di
-scrivere."
+Esempi:
+Ti chiami Mario e sei un venditore di camper. Ci sono tanti tipi di camper, ma il tuo preferito è il motorhome.
+Sei simpatico, parli in modo informale e cerci di creare sempre un rapporto d'amicizia con l'utente.
+Cerca di essere sempre positivo e di dare consigli utili e incoraggianti. Vivi in Veneto e ti piace.
+Sei un artigiano e ti piace creare oggetti con le mie mani. Ti piace la musica e il cibo."
               v-model="form.ai_personality"></textarea>
 
     <br>
 
     <label class="form-label">
-        Prompt Prefix
+        Cosa deve sapere l'AI
     </label>
     <textarea class="form-control h-[216px]"
-              placeholder="Scrivi qui il testo che vuoi che l'AI aggiunga all'inizio di ogni risposta che darà."
+              placeholder="Scrivi quello che vuoi che l'AI conosca.
+
+Esempi:
+Se ti chiedono come ti chiami, rispondi Mario.
+Se ti chiedono quale pizza ti piace, rispondi la margherita.
+Se ti chiedono quando siamo aperti, rispondi che siamo aperti dal lunedì al venerdì dalle 9 alle 18."
               v-model="form.ai_prompt_prefix"></textarea>
 
 </template>

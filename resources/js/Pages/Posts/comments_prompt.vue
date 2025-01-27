@@ -13,7 +13,7 @@ const props = defineProps({
     <label class="form-label">
         Prompt commenti
         <br>
-        <small>L'AI genera i commenti in base alle tue indicazioni</small>
+        <small>L'AI risponde ai commenti in base alle tue indicazioni</small>
     </label>
     <textarea class="form-control h-[216px]"
               :class="{'!border !border-red-500' : form.errors.ai_prompt_comment}"
