@@ -9,97 +9,87 @@ import tiktoken
 load_dotenv()
 
 class GPT:
-  def __init__(self, api_key = os.getenv("OPENAI_API_KEY")):
-    self.api_key = api_key
+    def __init__(self, api_key = os.getenv("OPENAI_API_KEY"), debug = False):
+        self.api_key = api_key
+        self.debug = debug
 
+    # Generazione del contenuto
+    def generate(self, prompt, model = os.getenv("OPENAI_MODEL"), temperature = 1.0, img_path = ""):
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
 
-  # Generazione del contenuto
-  def generate(self, prompt, img_path = "", model = os.getenv("OPENAI_MODEL"), temperature = 1.0):
+            messages = [
+                {"role": "system", "content": "Rispondi sempre solo con l'output richiesto, senza aggiungere altro."},
+                {"role": "user", "content": prompt}
+            ]
 
-    if not prompt:
-      print("Please enter a prompt.")
-      return None
+            # Se è presente un'immagine, aggiungila al payload
+            if img_path:
+                base64_image = self.image_to_base64(img_path)
+                if not base64_image:
+                    return "Errore durante la conversione dell'immagine."
+                messages.append({
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
+                        }
+                    ]
+                })
 
-    # Inizializza l'encoder per il modello
-    encoding = tiktoken.encoding_for_model(model)
+            payload = {
+                "model": model,
+                "messages": messages,
+                "temperature": temperature
+            }
 
-    # Conta i token in entrata
-    token_in_entrata = len(encoding.encode(prompt))
+            response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
 
-    # Invia il prompt ad OpenAI
-    if not img_path:
-      output = self.generate_txt(prompt, model, temperature)
-    else:
-      output = self.generate_textByImg(prompt, img_path, model, temperature)
+            if response.status_code == 200:
+                response_data = response.json()
 
-    # Conta i token in uscita
-    token_in_uscita = len(encoding.encode(output))
+                # Calcola i token
+                usage = response_data.get("usage", {})
+                total_tokens = usage.get("total_tokens", 0)
 
-    # Totale dei token
-    token_totali = token_in_entrata + token_in_uscita
+                return response_data['choices'][0]['message']['content'], total_tokens
+            else:
+                return f"Error: {response.status_code}: {response.text}"
 
-    return output, token_totali
+        except Exception as e:
+            if self.debug == True:
+                print(f"Errore con l'API di OpenAI: {e}")
+            traceback.print_exc()
+            return None
 
+    # Metodo per convertire un'immagine in Base64
+    def image_to_base64(self, img_path):
+        try:
+            with open(img_path, "rb") as img_file:
+                return base64.b64encode(img_file.read()).decode("utf-8")
+        except Exception as e:
+            print(f"Errore durante la conversione dell'immagine in base64: {e}")
+            traceback.print_exc()
+            return None
 
-  # Viene generato del contenuto di testo in base al prompt
-  def generate_txt(self, prompt, model, temperature):
-    try:
-      # Inizializza il client OpenAI
-      client = OpenAI(
-        api_key=os.environ.get("OPENAI_API_KEY", self.api_key),
-      )
-
-      # Chiamata API per generare il completamento
-      chat_completion = client.chat.completions.create(
-        messages=[
-            {"role": "system", "content": "Rispondi sempre solo con l'output richiesto, senza aggiungere altro."},
-            {"role": "user", "content": prompt}
-        ],
-        model=model,
-        temperature=temperature,
-      )
-
-      # Restituisci il contenuto del messaggio
-      return chat_completion.choices[0].message.content
-
-    except Exception as e:
-      print(f"Errore con l'API di OpenAI: {e}")
-      traceback.print_exc()
-      return None
-
-  # Caricamento dell'immagine con un prompt
-  def generate_textByImg(self, prompt, img_path, model, temperature):
-    headers = {
-      "Authorization": f"Bearer {self.api_key}",
-      "Content-Type": "application/json"
-    }
-
-    payload = {
-      "model": f"{model}",
-      "messages": [
-        {
-          "role": "user",
-          "content": [
-            {"type": "text",
-             "text": f"{prompt}",},
-            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{self.image_to_base64(img_path)}"}}
-          ]
-        }
-      ],
-      "max_tokens": 500
-    }
-
-    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-
-    if response.status_code == 200:
-      response_data = response.json()
-      generated_text = response_data['choices'][0]['message']['content']
-      return generated_text
-    else:
-      return f"Error: {response.status_code}: {response.text}"
-
-
-  # Metodo per convertire un'immagine in Base64
-  def image_to_base64(self, image_path):
-    with open(image_path, "rb") as img_file:
-      return base64.b64encode(img_file.read()).decode("utf-8")
+    def calculate_tokens(self, messages, model):
+        try:
+            # Usa la libreria tiktoken per calcolare i token
+            encoding = tiktoken.encoding_for_model(model)
+            num_tokens = 0
+            for message in messages:
+                for key, value in message.items():
+                    num_tokens += len(encoding.encode(value))
+            return num_tokens
+        except Exception as e:
+            print(f"Errore durante il calcolo dei token: {e}")
+            traceback.print_exc()
+            return 0
