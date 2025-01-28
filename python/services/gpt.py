@@ -31,6 +31,9 @@ class GPT:
                     content=prompt
                 )
 
+            if self.debug is True:
+                print(self.messages)
+
             payload = {
                 "model": model,
                 "messages": self.messages,

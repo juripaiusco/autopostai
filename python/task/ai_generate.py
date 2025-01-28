@@ -25,8 +25,30 @@ def ai_generate(data, prompt, img_path = None, type = None, debug = False):
         role="system",
         content=data['ai_personality'] +
                 data['ai_prompt_prefix'] +
+                (data['ai_prompt_comment'] if type == 'reply' else '') +
                 "Rispondi sempre solo con l'output richiesto, senza aggiungere altro."
     )
+
+    if type == 'reply':
+        if img_path is not None:
+            gpt.set_role_img(data['ai_prompt_post'], img_path)
+        else:
+            gpt.set_role(
+                role="user",
+                content=data['ai_prompt_post']
+            )
+
+        gpt.set_role(
+            role="assistant",
+            content=data['ai_content']
+        )
+        gpt.set_role(
+            role="assistant",
+            content=prompt
+        )
+        prompt = "Rispondi al commento"
+        img_path = None
+
     contenuto, tokens_used = gpt.generate(prompt, img_path)
 
     # ---------------------------------------------------------

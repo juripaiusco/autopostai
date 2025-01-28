@@ -2,6 +2,7 @@ import config as cfg
 from datetime import datetime
 from services.mysql import Mysql
 from task.ai_generate import ai_generate
+from task.reply.base import BaseReply
 from task.reply.facebook import FacebookReply
 from task.reply.instagram import InstagramReply
 from services.meta import Meta
@@ -26,8 +27,11 @@ def reply_send(debug = False):
                     {cfg.DB_PREFIX}comments.from_name AS from_name,
                     {cfg.DB_PREFIX}comments.message_id AS message_id,
                     {cfg.DB_PREFIX}comments.message AS message,
+                    {cfg.DB_PREFIX}posts.ai_prompt_post AS ai_prompt_post,
                     {cfg.DB_PREFIX}posts.ai_content AS ai_content,
                     {cfg.DB_PREFIX}posts.ai_prompt_comment AS ai_prompt_comment,
+                    {cfg.DB_PREFIX}posts.img AS img,
+                    {cfg.DB_PREFIX}posts.img_ai_check_on AS img_ai_check_on,
                     {cfg.DB_PREFIX}settings.ai_personality AS ai_personality,
                     {cfg.DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
                     {cfg.DB_PREFIX}settings.openai_api_key AS openai_api_key,
@@ -51,6 +55,8 @@ def reply_send(debug = False):
                 row['post_id']
             )
 
+        base_reply = BaseReply(data=row)
+
         # Preparo i prompt della risposta in base al tipo di canale
         if row['channel'] == 'facebook':
             prompt = FacebookReply(data=row).prompt_get()
@@ -62,6 +68,7 @@ def reply_send(debug = False):
         reply = ai_generate(
             data=row,
             prompt=prompt,
+            img_path=base_reply.img_path_get() if row['img_ai_check_on'] == '1' else None,
             type="reply",
             debug=debug
         )
