@@ -14,14 +14,7 @@ class BasePost:
         # Creo il prompt
         prompt = ""
 
-        if self.data['ai_personality'] is not None:
-            prompt = prompt + f"{self.data['ai_personality']}\n\n"
-
-        if self.data['ai_prompt_prefix'] is not None:
-            prompt = prompt + f"{self.data['ai_prompt_prefix']}\n\n"
-
         if self.data['ai_prompt_post'] is not None:
-            prompt = prompt + "#Guidelines\n"
             prompt = prompt + f"{self.data['ai_prompt_post']}"
 
         return prompt
