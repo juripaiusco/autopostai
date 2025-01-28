@@ -3,8 +3,8 @@ from services.gpt import GPT
 from services.mysql import Mysql
 from task.task_complete import token_limit_exceeded
 
-# In questa funziona mi collego ad OpenAI e recupero l'output
-def openai_generate(data, prompt, img_path = None, type = None, debug = False):
+# In questa funziona mi collego al LLM e recupero l'output dopo aver inviato il prompt
+def ai_generate(data, prompt, img_path = None, type = None, debug = False):
     mysql = Mysql()
     mysql.connect()
 
