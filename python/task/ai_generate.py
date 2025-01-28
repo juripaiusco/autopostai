@@ -21,12 +21,18 @@ def ai_generate(data, prompt, img_path = None, type = None, debug = False):
     # ---------------------------------------------------------
     # OpenAI
     gpt = GPT(api_key=data['openai_api_key'])
+    gpt.set_role(
+        role="system",
+        content=data['ai_personality'] +
+                data['ai_prompt_prefix'] +
+                "Rispondi sempre solo con l'output richiesto, senza aggiungere altro."
+    )
     contenuto, tokens_used = gpt.generate(prompt, img_path)
 
     # ---------------------------------------------------------
     # Salvo i token utilizzati per generare il contenuto
     # i token vegono salvati nella tabella token_logs, in questo
-    # modo si riesce a tenere traccia delle interazione con OpenAI
+    # modo si riesce a tenere traccia delle interazione con il LLM
     mysql.query(f"""
                     INSERT INTO {cfg.DB_PREFIX}token_logs (
                         user_id,

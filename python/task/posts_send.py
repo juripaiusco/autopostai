@@ -57,22 +57,22 @@ def posts_send(debug = False):
 
         #########################################################
         #                                                       #
-        #               Collegamento ad OpenAI                  #
+        #                 Collegamento al LLM                   #
         #                                                       #
         #########################################################
 
-        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "OpenAi - create content")
+        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "LLM - create content")
 
         # Verifico che ci sia almeno un canale attivato per l'invio di post
         # se non ci sono canali attivati, non verrà fatta nessuna connessione
-        # ad OpenAI
-        connect_to_openai = 0
+        # al LLM
+        connect_to_llm = 0
         for i in channels:
             if channels[i]['on'] == '1':
-                connect_to_openai = 1
+                connect_to_llm = 1
 
-        # Mi connetto ad OpenAI
-        if connect_to_openai == 1:
+        # Mi connetto al LLM
+        if connect_to_llm == 1:
             content = ai_generate(
                 data=row,
                 prompt=prompt,
@@ -88,7 +88,7 @@ def posts_send(debug = False):
             )
 
         # Per ogni canale selezionato (Facebook, Instagram, WordPress, ...)
-        # invio il post, con il testo creato da OpenAI
+        # invio il post, con il testo creato dal LLM
         if content is not None:
             for i in channels:
                 if channels[i]['name'] == 'Facebook' and channels[i]['on'] == '1':

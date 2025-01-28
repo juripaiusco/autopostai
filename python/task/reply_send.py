@@ -58,7 +58,7 @@ def reply_send(debug = False):
         if row['channel'] == 'instagram':
             prompt = InstagramReply(data=row).prompt_get()
 
-        # Recupero la risposta da OpenAI
+        # Recupero la risposta dal LLM
         reply = ai_generate(
             data=row,
             prompt=prompt,
