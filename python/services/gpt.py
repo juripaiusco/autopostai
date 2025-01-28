@@ -51,7 +51,7 @@ class GPT:
                 "temperature": temperature
             }
 
-            response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+            response = requests.post(os.getenv("OPENAI_API_URL"), headers=headers, json=payload)
 
             if response.status_code == 200:
                 response_data = response.json()
