@@ -12,6 +12,7 @@ class GPT:
     def __init__(self, api_key = os.getenv("OPENAI_API_KEY"), debug = False):
         self.api_key = api_key
         self.debug = debug
+        self.messages = []
 
     # Generazione del contenuto
     def generate(self, prompt, model = os.getenv("OPENAI_MODEL"), temperature = 1.0, img_path = None):
@@ -21,33 +22,18 @@ class GPT:
                 "Content-Type": "application/json"
             }
 
-            messages = [
-                {"role": "system", "content": "Rispondi sempre solo con l'output richiesto, senza aggiungere altro."},
-                {"role": "user", "content": prompt}
-            ]
-
             # Se è presente un'immagine, aggiungila al payload
             if img_path:
-                base64_image = self.image_to_base64(img_path)
-                if not base64_image:
-                    return "Errore durante la conversione dell'immagine."
-                messages.append({
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": prompt
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
-                        }
-                    ]
-                })
+                self.set_role_img(prompt, img_path)
+            else:
+                self.set_role(
+                    role="user",
+                    content=prompt
+                )
 
             payload = {
                 "model": model,
-                "messages": messages,
+                "messages": self.messages,
                 "temperature": temperature
             }
 
@@ -69,6 +55,30 @@ class GPT:
                 print(f"Errore con l'API di OpenAI: {e}")
             traceback.print_exc()
             return None
+
+    def set_role(self, role, content):
+        self.messages.append({
+            "role": role,
+            "content": content
+        })
+
+    def set_role_img(self, prompt, img_path):
+        base64_image = self.image_to_base64(img_path)
+        if not base64_image:
+            return "Errore durante la conversione dell'immagine."
+        self.set_role(
+            role="user",
+            content=[
+                {
+                    "type": "text",
+                    "text": prompt
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
+                }
+            ]
+        )
 
     # Metodo per convertire un'immagine in Base64
     def image_to_base64(self, img_path):
