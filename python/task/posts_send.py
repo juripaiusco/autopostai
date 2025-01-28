@@ -76,7 +76,7 @@ def posts_send(debug = False):
             content = ai_generate(
                 data=row,
                 prompt=prompt,
-                img_path=base_post.img_path_get() if row['img_ai_check_on'] == '1' else "",
+                img_path=base_post.img_path_get() if row['img_ai_check_on'] == '1' else None,
                 type="post",
                 debug=debug
             )

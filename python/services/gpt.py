@@ -14,7 +14,7 @@ class GPT:
         self.debug = debug
 
     # Generazione del contenuto
-    def generate(self, prompt, model = os.getenv("OPENAI_MODEL"), temperature = 1.0, img_path = ""):
+    def generate(self, prompt, model = os.getenv("OPENAI_MODEL"), temperature = 1.0, img_path = None):
         try:
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
