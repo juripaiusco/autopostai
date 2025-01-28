@@ -19,10 +19,8 @@ def ai_generate(data, prompt, img_path = None, type = None, debug = False):
         return None
 
     # ---------------------------------------------------------
-    # Classe OpenAI
+    # OpenAI
     gpt = GPT(api_key=data['openai_api_key'])
-
-    # Verifico se l'immagine è da inviare all'AI e se l'immagine esiste
     contenuto, tokens_used = gpt.generate(prompt, img_path)
 
     # ---------------------------------------------------------
