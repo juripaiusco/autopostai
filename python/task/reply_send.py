@@ -1,7 +1,7 @@
 import config as cfg
 from datetime import datetime
 from services.mysql import Mysql
-from task.openai_generate import openai_generate
+from task.ai_generate import ai_generate
 from task.reply.facebook import FacebookReply
 from task.reply.instagram import InstagramReply
 from services.meta import Meta
@@ -59,7 +59,12 @@ def reply_send(debug = False):
             prompt = InstagramReply(data=row).prompt_get()
 
         # Recupero la risposta da OpenAI
-        reply = openai_generate(data=row, prompt=prompt, type="reply", debug=debug)
+        reply = ai_generate(
+            data=row,
+            prompt=prompt,
+            type="reply",
+            debug=debug
+        )
 
         # Invio la risposta ai commenti Meta
         if reply is not None and row['meta_page_id'] is not None:

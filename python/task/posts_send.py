@@ -6,7 +6,7 @@ from task.posts.base import BasePost
 from task.posts.facebook import FacebookPost
 from task.posts.instagram import InstagramPost
 from task.posts.wordpress import WordPressPost
-from task.openai_generate import openai_generate
+from task.ai_generate import ai_generate
 
 
 def posts_send(debug = False):
@@ -73,21 +73,13 @@ def posts_send(debug = False):
 
         # Mi connetto ad OpenAI
         if connect_to_openai == 1:
-            if row['img_ai_check_on'] == '1':
-                content = openai_generate(
-                    data=row,
-                    prompt=prompt,
-                    img_path=base_post.img_path_get(),
-                    type="post",
-                    debug=debug
-                )
-            else:
-                content = openai_generate(
-                    data=row,
-                    prompt=prompt,
-                    type="post",
-                    debug=debug
-                )
+            content = ai_generate(
+                data=row,
+                prompt=prompt,
+                img_path=base_post.img_path_get() if row['img_ai_check_on'] == '1' else "",
+                type="post",
+                debug=debug
+            )
 
             # Salvo il contenuto generato dall'AI
             mysql.query(
