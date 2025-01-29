@@ -86,6 +86,17 @@ class Meta:
 
       return response.json().get("id")
 
+  def fb_delete(self, post_id):
+      url = f"{self.META_API_BASE_URL}/{post_id}"
+      params = {"access_token": self.fb_page_access_token()}
+
+      response = requests.delete(url, params=params)
+
+      if response.status_code == 200:
+          return response.json().get("id")
+      else:
+          print(f'Errore durante l\'eliminazione del post da Facebook: {response.text}')
+
 
   # Recupero l'ID dell'account Instagram collegato alla pagina Facebook
   def ig_get_instagram_account_id(self):
@@ -169,3 +180,14 @@ class Meta:
       response = requests.post(url, data=payload)
 
       return response.json().get("id")
+
+  def ig_delete(self, post_id):
+      url = f"{self.META_API_BASE_URL}/{post_id}"
+      params = {"access_token": self.fb_page_access_token()}
+
+      response = requests.delete(url, params=params)
+
+      if response.status_code == 200:
+          return response.json().get("id")
+      else:
+          print(f'Errore durante l\'eliminazione del post da Facebook: {response.text}')
