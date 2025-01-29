@@ -123,7 +123,7 @@ onUnmounted(() => {
                         data: posts,
                         route_emit: 'btnCustom_ShowOrEdit',
                         structure: [{
-                            class: 'text-center w-[5%]',
+                            class: 'text-center w-[70px]',
                             label: '',
                             field: 'img',
                             fnc: function (d) {
