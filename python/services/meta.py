@@ -93,7 +93,7 @@ class Meta:
       response = requests.delete(url, params=params)
 
       if response.status_code == 200:
-          return response.json().get("id")
+          return post_id if response.json().get("success") == True else None
       else:
           print(f'Errore durante l\'eliminazione del post da Facebook: {response.text}')
 
@@ -188,6 +188,6 @@ class Meta:
       response = requests.delete(url, params=params)
 
       if response.status_code == 200:
-          return response.json().get("id")
+          return post_id if response.json().get("success") == True else None
       else:
           print(f'Errore durante l\'eliminazione del post da Facebook: {response.text}')
