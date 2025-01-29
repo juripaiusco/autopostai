@@ -23,9 +23,9 @@ def ai_generate(data, prompt, img_path = None, type = None, debug = False):
     gpt = GPT(api_key=data['openai_api_key'])
     gpt.set_role(
         role="system",
-        content=data['ai_personality'] +
-                data['ai_prompt_prefix'] +
-                (data['ai_prompt_comment'] if type == 'reply' else '') +
+        content=(data['ai_personality'] if data['ai_personality'] is not None else '') +
+                (data['ai_prompt_prefix'] if data['ai_prompt_prefix'] is not None else '') +
+                (data['ai_prompt_comment'] if type == 'reply' and data['ai_prompt_comment'] is not None else '') +
                 "Rispondi sempre solo con l'output richiesto, senza aggiungere altro."
     )
 
@@ -49,7 +49,7 @@ def ai_generate(data, prompt, img_path = None, type = None, debug = False):
         prompt = "Rispondi al commento"
         img_path = None
 
-    contenuto, tokens_used = gpt.generate(prompt, img_path)
+    contenuto, tokens_used = gpt.generate(prompt=prompt, img_path=img_path)
 
     # ---------------------------------------------------------
     # Salvo i token utilizzati per generare il contenuto
