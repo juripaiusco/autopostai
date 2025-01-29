@@ -190,4 +190,4 @@ class Meta:
       if response.status_code == 200:
           return post_id if response.json().get("success") == True else None
       else:
-          print(f'Errore durante l\'eliminazione del post da Facebook: {response.text}')
+          print(f'Errore durante l\'eliminazione del post da Instagram: {response.text}')
