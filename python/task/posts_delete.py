@@ -99,7 +99,7 @@ def ctrl_posts_deleted(id, debug = False):
         deleted = 1
 
         for i in channels:
-            if channels[i]['id'] == channels[i].get('id_del', None):
+            if channels[i]['id'] == channels[i].get('id_del', None) and channels[i]['on'] == '1':
                 deleted = 0
 
         if debug is True:
