@@ -26,6 +26,9 @@ return new class extends Migration
 
             $table->string('meta_page_id')->unique()->default(null)->nullable();
 
+            $table->string('wordpress_url')->default(null)->nullable();
+            $table->string('wordpress_token')->default(null)->nullable();
+
             $table->timestamps();
         });
     }
