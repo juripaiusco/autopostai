@@ -59,6 +59,9 @@ return new class extends Migration
             $table->integer('check_attempts')->default(0);
             $table->timestamp('on_hold_until')->nullable();
 
+            // Flag se il post è eliminato dai vari channels
+            $table->string('deleted', 1)->default(0);
+
             $table->softDeletes();
             $table->timestamps();
         });
