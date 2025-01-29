@@ -1,7 +1,7 @@
 <script setup>
 
 import { Head } from '@inertiajs/vue3';
-import {Link} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import ApplicationHeader from "@/Components/ApplicationHeader.vue";
 import ApplicationContainer from "@/Components/ApplicationContainer.vue";
@@ -121,6 +121,7 @@ onUnmounted(() => {
                         tblName: 'post',
                         routeSearch: 'post.index',
                         data: posts,
+                        route_emit: 'btnCustom_ShowOrEdit',
                         structure: [{
                             class: 'text-center',
                             label: '',
@@ -356,7 +357,8 @@ onUnmounted(() => {
                            url = route('post.edit', d.id);
                        }
 
-                       Inertia.visit(url, {
+                       router.visit(url)
+                       /*Inertia.visit(url, {
                            method: 'get',
                            only: ['posts'],
                            headers: {
@@ -367,7 +369,7 @@ onUnmounted(() => {
                            data: {
                                inertiaVisit: true
                            }
-                       })
+                       })*/
 
                    }"
                    @openModal="(data, route) => {

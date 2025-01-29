@@ -62,6 +62,7 @@ let modalData = ref(props.data);
                         tblName: 'post',
                         routeSearch: 'user.index',
                         data: data.data,
+                        route_row: 'user.edit',
                         structure: [{
                             class: 'text-left w-[5%] hidden md:table-cell',
                             label: '',

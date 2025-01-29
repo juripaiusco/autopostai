@@ -1,11 +1,31 @@
 <script setup>
-
 import TableTh from "@/Components/Table/TableTh.vue";
-import {Link} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
+// import { defineEmits } from "vue";
 
 defineProps({
     data: Object,
 });
+
+const emit = defineEmits();
+
+function routeRow(route_row, route_emit, data, struct) {
+    
+    if (route_emit !== undefined) {
+
+        emit(route_emit, data);
+
+    } else {
+
+        if (route_row !== undefined &&
+            struct.btnShow !== true &&
+            struct.btnEdit !== true &&
+            struct.btnDel !== true) {
+
+            router.visit(route(route_row, data.id))
+        }
+    }
+}
 
 </script>
 
@@ -47,9 +67,11 @@ defineProps({
                         ||
                         (typeof struct.btnDel === 'function' && struct.btnDel(d) === true))
                     "
+                    @click="routeRow(data.route_row, data.route_emit, d, struct)"
                     class="align-middle"
                     :class="struct.class, struct.classData, {
-                        'text-center': (struct.btnShow === true || struct.btnEdit === true || struct.btnDel === true)
+                        'text-center': (struct.btnShow === true || struct.btnEdit === true || struct.btnDel === true),
+                        'cursor-pointer': data.route_row || data.route_emit
                     }">
 
                     <template v-if="typeof struct.fnc !== 'function'">
