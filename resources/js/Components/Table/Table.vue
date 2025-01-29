@@ -10,18 +10,16 @@ defineProps({
 const emit = defineEmits();
 
 function routeRow(route_row, route_emit, data, struct) {
-    
-    if (route_emit !== undefined) {
 
-        emit(route_emit, data);
+    if (struct.btnShow !== true &&
+        struct.btnEdit !== true &&
+        struct.btnDel !== true) {
 
-    } else {
+        if (route_emit !== undefined) {
+            emit(route_emit, data);
+        }
 
-        if (route_row !== undefined &&
-            struct.btnShow !== true &&
-            struct.btnEdit !== true &&
-            struct.btnDel !== true) {
-
+        if (route_row !== undefined) {
             router.visit(route(route_row, data.id))
         }
     }
