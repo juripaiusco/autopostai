@@ -120,7 +120,7 @@ let modalData = ref(props.data);
                                     classNameBar = '!bg-red-500'
                                 }
 
-                                if (d.child_on === null) {
+                                /*if (d.child_on === null) {
                                     html += '<div class=\'md:hidden\'>'
 
                                     html += tokens_used_total +
@@ -134,7 +134,7 @@ let modalData = ref(props.data);
                                      '</div>'
 
                                      html += '</div>'
-                                }
+                                }*/
 
                                 return html
                             }
@@ -147,7 +147,7 @@ let modalData = ref(props.data);
                             label: 'Reply',
                             field: 'reply_count'
                         }, {
-                            class: 'text-center w-[200px] hidden md:table-cell',
+                            class: 'text-center sm:w-[200px]',
                             label: 'Token',
                             field: 'tokens_limit',
                             fnc: function (d) {

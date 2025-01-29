@@ -123,7 +123,7 @@ onUnmounted(() => {
                         data: posts,
                         route_emit: 'btnCustom_ShowOrEdit',
                         structure: [{
-                            class: 'text-center',
+                            class: 'text-center w-[5%]',
                             label: '',
                             field: 'img',
                             fnc: function (d) {
@@ -170,11 +170,11 @@ onUnmounted(() => {
                                 html += channelsArray.join('&nbsp;&nbsp;');
                                 html += '<br>'
                                 html += d.comments.length + ' <i class=\'fa-regular fa-comments\'></i>'
-                                html += '</div>'
-
+                                html += '<br>'
                                 html += __date(d.published_at, 'day')
                                 html += ' '
                                 html += __date(d.published_at, 'hour')
+                                html += '</div>'
                                 html += '</small>'
 
                                 return html
@@ -203,23 +203,8 @@ onUnmounted(() => {
 
                                 return html
                             }
-                        }, {
-                            class: 'text-center w-[20%] hidden sm:table-cell',
-                            label: 'Data',
-                            field: 'published_at',
-                            fnc: function (d) {
-
-                                let html = '<small>'
-                                html += __date(d.published_at, 'day')
-                                html += ' '
-                                html += __date(d.published_at, 'hour')
-                                html += '</small>'
-
-                                return html
-
-                            }
                         }, */{
-                            class: 'text-center w-[20%] hidden sm:table-cell',
+                            class: 'text-center w-[15%] hidden sm:table-cell',
                             label: 'Media',
                             field: 'channels',
                             fnc: function (d) {
@@ -235,6 +220,21 @@ onUnmounted(() => {
 
                                 let html = ''
                                 html += channelsArray.join('&nbsp;&nbsp;&nbsp;');
+
+                                return html
+
+                            }
+                        }, {
+                            class: 'text-center w-[15%] hidden sm:table-cell',
+                            label: 'Pubblicazione',
+                            field: 'published_at',
+                            fnc: function (d) {
+
+                                let html = '<small>'
+                                html += __date(d.published_at, 'day')
+                                html += ' '
+                                html += __date(d.published_at, 'hour')
+                                html += '</small>'
 
                                 return html
 
