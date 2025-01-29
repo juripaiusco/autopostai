@@ -33,6 +33,7 @@ def task_complete(debug = False):
             WHERE {cfg.DB_PREFIX}posts.published = 1
                 AND {cfg.DB_PREFIX}posts.task_complete = 0
                 AND ({cfg.DB_PREFIX}posts.on_hold_until IS NULL OR {cfg.DB_PREFIX}posts.on_hold_until <= '{time_now}')
+                AND {cfg.DB_PREFIX}posts.deleted_at is null
         """)
 
     if rows[0]['id'] is not None:

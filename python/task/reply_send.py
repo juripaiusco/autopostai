@@ -43,6 +43,7 @@ def reply_send(debug = False):
                     INNER JOIN {cfg.DB_PREFIX}settings ON {cfg.DB_PREFIX}settings.user_id = {cfg.DB_PREFIX}users.id
 
             WHERE {cfg.DB_PREFIX}comments.reply IS NULL
+                AND {cfg.DB_PREFIX}posts.deleted_at is null
                 LIMIT 0, 1
         """)
 

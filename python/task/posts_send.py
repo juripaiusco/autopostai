@@ -46,6 +46,7 @@ def posts_send(debug = False):
 
         WHERE {cfg.DB_PREFIX}posts.published = 0
             AND {cfg.DB_PREFIX}posts.published_at <= "{cfg.CURRENT_TIME}"
+            AND {cfg.DB_PREFIX}posts.deleted_at is null
     """)
 
     for row in rows:
