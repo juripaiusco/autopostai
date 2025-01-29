@@ -91,15 +91,13 @@ def ctrl_posts_deleted(id, debug = False):
                 WHERE {cfg.DB_PREFIX}posts.id = {id}
             """)
 
-    deleted = 0
+    deleted = 1
 
     if rows is not None:
         channels = json.loads(rows[0]['channels'])
 
-        deleted = 1
-
         for i in channels:
-            if channels[i]['id'] == channels[i].get('id_del', None) and channels[i]['on'] == '1':
+            if channels[i]['id'] != channels[i].get('id_del', None) and channels[i]['on'] == '1':
                 deleted = 0
 
         if debug is True:
