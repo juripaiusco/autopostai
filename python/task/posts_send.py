@@ -146,15 +146,13 @@ def ctrl_posts_sent(id, debug = False):
             WHERE {cfg.DB_PREFIX}posts.id = {id}
         """)
 
-    published = 0
+    published = 1
 
     # Verifico i channels e se l'ID del post è stato recuperato
     # se ho l'ID e il canale è impostato su ON, il post è stato
     # pubblicato.
     if rows is not None:
         channels = json.loads(rows[0]['channels'])
-
-        published = 1
 
         for i in channels:
             if channels[i]['id'] is None and channels[i]['on'] == '1':
