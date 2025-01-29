@@ -57,8 +57,10 @@ def posts_delete(debug = False):
                     if debug:
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
                               channels[i]['name'], "- post deleting - ID:", channels[i]['id'])
-                    instagram_post = InstagramPost(data=row, debug=debug)
-                    channels[i]['id_del'] = instagram_post.delete(channels[i]['id'])
+                        print("The Instagram API does not allow for the deletion of posts")
+                    # instagram_post = InstagramPost(data=row, debug=debug)
+                    # channels[i]['id_del'] = instagram_post.delete(channels[i]['id'])
+                    channels[i]['id_del'] = channels[i]['id']
 
         # Salvo gli ID dei post eliminati nei vari canali
         mysql.query(
