@@ -2,6 +2,7 @@ from task.posts_send import posts_send
 from task.comments_get import comments_get
 from task.reply_send import reply_send
 from task.task_complete import task_complete
+from task.posts_delete import posts_delete
 
 #
 # Questa funzione dev'essere richiamata da un contrab ogni minuto.
@@ -57,6 +58,9 @@ def main():
     if debug is True: print()
 
     task_complete(debug=debug)
+    if debug is True: print()
+
+    posts_delete(debug=debug)
 
 if __name__ == "__main__":
     main()
