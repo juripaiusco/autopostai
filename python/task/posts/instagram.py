@@ -19,3 +19,8 @@ class InstagramPost(BasePost):
                 print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - post ID:", post_id)
 
             return post_id
+
+    def delete(self, post_id):
+        if self.data['meta_page_id'] is not None:
+            meta = Meta(page_id=self.data['meta_page_id'])
+            return meta.ig_delete(post_id)
