@@ -94,21 +94,21 @@ def posts_send(debug = False):
                 if channels[i]['name'] == 'Facebook' and channels[i]['on'] == '1':
                     if debug:
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                              "Facebook - post sending")
+                              channels[i]['name'], "- post sending")
                     facebook_post = FacebookPost(data=row, debug=debug)
                     channels[i]['id'] = facebook_post.send(content)
 
                 if channels[i]['name'] == 'Instagram' and channels[i]['on'] == '1':
                     if debug:
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                              "Instagram - post sending")
+                              channels[i]['name'], "- post sending")
                     instagram_post = InstagramPost(data=row, debug=debug)
                     channels[i]['id'] = instagram_post.send(content)
 
                 if channels[i]['name'] == 'WordPress' and channels[i]['on'] == '1':
                     if debug:
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                              "WordPress - post sending")
+                              channels[i]['name'], "- post sending")
                     wordpress_post = WordPressPost(data=row, debug=debug)
                     channels[i]['id'] = wordpress_post.send(content)
 
