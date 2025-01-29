@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ImageJob;
+use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +47,7 @@ class Posts extends Controller
     public function getData()
     {
         // Query data
-        $data = \App\Models\Post::query();
+        $data = Post::query();
         $data = $data->with(['user', 'comments.token', 'token']);
 
         // Se l'utente è singolo
@@ -221,7 +222,7 @@ class Posts extends Controller
         unset($request['files']);
         unset($request['img_selected']);
 
-        $post = new \App\Models\Post();
+        $post = new Post();
         $post->fill($request->all());
         $post->channels = json_encode($request->input('channels'));
         $post->on_hold_until = date('Y-m-d H:i:s');
@@ -239,7 +240,7 @@ class Posts extends Controller
      */
     public function show(Request $request, string $id)
     {
-        $data = \App\Models\Post::with(['user', 'comments.token', 'token'])->find($id);
+        $data = Post::with(['user', 'comments.token', 'token'])->find($id);
 
         if ($data->img)
             $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
@@ -261,7 +262,7 @@ class Posts extends Controller
      */
     public function edit(Request $request, string $id)
     {
-        $data = \App\Models\Post::with('user')->find($id);
+        $data = Post::with('user')->find($id);
 
         if ($data->img)
             $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
@@ -304,7 +305,7 @@ class Posts extends Controller
         unset($request['files']);
         unset($request['img_selected']);
 
-        $post = \App\Models\Post::find($id);
+        $post = Post::find($id);
         $post->fill($request->all());
         $post->save();
         $this->save_img('posts', $post, $request);
@@ -349,15 +350,27 @@ class Posts extends Controller
 
         return $data;
     }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function delete(string $id)
+    {
+        $post = Post::find($id);
+        $post->delete();
+
+        return \redirect()->back();
+    }
+
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        $post = \App\Models\Post::find($id);
+        $post = Post::find($id);
         Storage::disk('public')->deleteDirectory('posts/' . $post->id);
 
-        \App\Models\Post::destroy($id);
+        Post::destroy($id);
 
         return \redirect()->back();
     }

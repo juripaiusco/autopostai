@@ -343,7 +343,7 @@ onUnmounted(() => {
                             class: 'w-[1%]',
                             classBtn: 'btn-dark',
                             btnDel: true,
-                            route: 'post.destroy'
+                            route: 'post.delete'
                         }],
                     }"
                    @btnCustom_ShowOrEdit="(d) => {
