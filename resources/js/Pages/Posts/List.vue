@@ -168,10 +168,12 @@ onUnmounted(() => {
                                     html += '</small>'
                                 }
 
-                                if (d.published == 1) {
-                                    html += '<div class=\'sm:hidden my-1 flex justify-around text-xs p-1 rounded border border-1 bg-green-200 border-green-500 text-green-600 dark:bg-green-900 dark:border-green-500 dark:text-green-500\'>'
-                                } else {
+                                if (d.published == 0) {
                                     html += '<div class=\'sm:hidden my-1 flex justify-around text-xs p-1 rounded border border-1 bg-yellow-200 border-yellow-500 text-yellow-600 dark:bg-yellow-900 dark:border-yellow-500 dark:text-yellow-500\'>'
+                                } else if (d.published == 1 && d.task_complete == 0) {
+                                    html += '<div class=\'sm:hidden my-1 flex justify-around text-xs p-1 rounded border border-1 bg-green-200 border-green-500 text-green-600 dark:bg-green-900 dark:border-green-500 dark:text-green-500\'>'
+                                } else if (d.task_complete == 1) {
+                                    html += '<div class=\'sm:hidden my-1 flex justify-around text-xs p-1 rounded border border-1 bg-gray-200 border-gray-500 text-gray-600 dark:bg-gray-900 dark:border-gray-500 dark:text-gray-500\'>'
                                 }
 
                                 html += '<div>' + channelsArray.join('&nbsp;&nbsp;') + '</div>'
