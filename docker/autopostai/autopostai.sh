@@ -57,8 +57,8 @@ docker run \
   --net $NETWORK_NAME \
   --ip $CONTAINER_IP \
   --env-file .env \
-  -v "$(pwd)/../.env":/app/.laravel-env \
-  -v "$(pwd)/../storage":/app/storage \
+  -v "$(pwd)/../../.env":/app/.laravel-env \
+  -v "$(pwd)/../../storage":/app/storage \
   -v "$(pwd)":/app \
   $IMAGE_NAME
 
