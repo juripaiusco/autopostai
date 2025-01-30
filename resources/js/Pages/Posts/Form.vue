@@ -171,7 +171,7 @@ function selectImage(index) {
         <template #header>
 
             <ApplicationHeader :breadcrumb-array="[
-                'Post',
+                'Posts',
                 data.id ?
                     form.title :
                         form.title.length > 0 ? form.title : 'Nuovo Post'

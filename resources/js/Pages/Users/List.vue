@@ -219,7 +219,7 @@ let modalData = ref(props.data);
                                 return html
                             }
                         }, */{
-                            class: 'w-[1%]',
+                            class: 'w-[1%] hidden sm:table-cell',
                             classBtn: 'btn-dark',
                             btnEdit: true,
                             route: 'user.edit'

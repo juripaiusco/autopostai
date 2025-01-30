@@ -58,7 +58,7 @@ class Settings extends Controller
             ->back()
             ->with('success', [
                 'time' => time(),
-                'msg' => 'Impostazioni salvate con successo.'
+                'msg' => 'Impostazioni salvate'
             ]); // Messaggio di successo
     }
 }

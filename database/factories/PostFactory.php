@@ -17,7 +17,7 @@ class PostFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => fake()->text(20),
+            'title' => fake()->text(60),
             'ai_prompt_post' => fake()->paragraph(),
             'ai_content' => fake()->paragraph(),
             'ai_prompt_comment' => fake()->paragraph(),

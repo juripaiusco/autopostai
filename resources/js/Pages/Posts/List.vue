@@ -154,56 +154,33 @@ onUnmounted(() => {
 
                                 let html = ''
 
-                                html += d.title
-                                html += '<br>'
-                                html += '<small>'
-                                html += d.user.name + ' - ' + d.user.email
+                                html += '<span class=\'hidden sm:inline\'>' + d.title + '</span>'
+                                html += '<span class=\'inline sm:hidden\'>' + d.title.substring(0, 25) + '</span>'
 
-                                if (d.user.child_on === 1) {
-
-                                    html += '<br><strong> - Manager</strong>'
-
+                                if (d.title.length >= 25) {
+                                    html += '<span class=\'inline sm:hidden\'> ...</span>'
                                 }
 
-                                html += '<br>'
-                                html += '<div class=\'sm:hidden\'>'
-                                html += channelsArray.join('&nbsp;&nbsp;');
-                                html += '<br>'
-                                html += '<i class=\'fa-regular fa-comments\'></i> ' + d.comments.length
-                                html += '<br>'
-                                html += __date(d.published_at, 'day')
-                                html += ' '
-                                html += __date(d.published_at, 'hour')
-                                html += '</div>'
-                                html += '</small>'
+                                if (!$page.props.auth.user.parent_id || $page.props.auth.user.child_on) {
+                                    html += '<br>'
+                                    html += '<small>'
+                                    html += d.user.name + '<span class=\'hidden sm:inline\'> - ' + d.user.email + '</span>'
+                                    html += '</small>'
+                                }
+
+                                if (d.published == 1) {
+                                    html += '<div class=\'sm:hidden my-1 flex justify-around text-xs p-1 rounded border border-1 bg-green-200 border-green-500 text-green-600 dark:bg-green-900 dark:border-green-500 dark:text-green-500\'>'
+                                } else {
+                                    html += '<div class=\'sm:hidden my-1 flex justify-around text-xs p-1 rounded border border-1 bg-yellow-200 border-yellow-500 text-yellow-600 dark:bg-yellow-900 dark:border-yellow-500 dark:text-yellow-500\'>'
+                                }
+
+                                html += '<div>' + channelsArray.join('&nbsp;&nbsp;') + '</div>'
+                                html += '<div><i class=\'fa-regular fa-comments\'></i> ' + d.comments.length + '</div>'
+                                html += '<div>' + __date(d.published_at, 'day') + ' ' + __date(d.published_at, 'hour') + '</div>'
 
                                 return html
                             }
-                        }, /*{
-                            class: 'text-left hidden sm:table-cell',
-                            label: 'Titolo',
-                            field: 'title'
                         }, {
-                            class: 'text-left hidden sm:table-cell',
-                            label: 'Account',
-                            field: 'user.name',
-                            fnc: function (d) {
-
-                                let html = d.user.name
-
-                                if (d.user.child_on === 1) {
-
-                                    html += '<strong> - Manager</strong>'
-
-                                }
-
-                                html += '<br><small>'
-                                html += d.user.email
-                                html += '</small>'
-
-                                return html
-                            }
-                        }, */{
                             class: 'text-center w-[15%] hidden sm:table-cell',
                             label: 'Media',
                             field: 'channels',
@@ -272,31 +249,8 @@ onUnmounted(() => {
                                 return token_used_total
 
                             }
-                        }, /*{
-                            class: 'text-center w-[5%] hidden sm:table-cell',
-                            label: 'Stato',
-                            field: 'published',
-                            fnc: function (d) {
-
-                                let html = ''
-
-                                if (d.published == 1) {
-                                    html += '<div class=\'text-center text-green-500\'>'
-                                    // html += '<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.5\' stroke=\'currentColor\' class=\'size-6\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\'/></svg>'
-                                    html += '<i class=\'fa-regular fa-circle-check\'></i>'
-                                    html += '</div>'
-                                } else {
-                                    html += '<div class=\'text-center text-yellow-500\'>'
-                                    // html += '<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.5\' stroke=\'currentColor\' class=\'size-6\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z\' /></svg>'
-                                    html += '<i class=\'fa-regular fa-clock\'></i>'
-                                    html += '</div>'
-                                }
-
-                                return html
-
-                            }
-                        }, */ {
-                            class: 'w-[1%]',
+                        }, {
+                            class: 'w-[1%] hidden sm:table-cell',
                             classBtn: 'btn-dark',
                             btnCustom: true,
                             route: 'post.edit',
@@ -326,21 +280,7 @@ onUnmounted(() => {
 
                                 return html
                             }
-                        }/*, {
-                            class: 'w-[1%]',
-                            classBtn: '',
-                            btnShow: function (d) {
-                                return d.published === '1'
-                            },
-                            route: 'post.show'
                         }, {
-                            class: 'w-[1%]',
-                            classBtn: 'btn-dark',
-                            btnEdit: function (d) {
-                                return d.published !== '1'
-                            },
-                            route: 'post.edit'
-                        }*/, {
                             class: 'w-[1%]',
                             classBtn: 'btn-dark',
                             btnDel: true,
@@ -358,18 +298,6 @@ onUnmounted(() => {
                        }
 
                        router.visit(url)
-                       /*Inertia.visit(url, {
-                           method: 'get',
-                           only: ['posts'],
-                           headers: {
-                               'X-Inertia': true,
-                           },
-                           replace: true,
-                           preserveState: false,
-                           data: {
-                               inertiaVisit: true
-                           }
-                       })*/
 
                    }"
                    @openModal="(data, route) => {

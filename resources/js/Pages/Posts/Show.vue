@@ -22,7 +22,7 @@ const props = defineProps({
         <template #header>
 
             <ApplicationHeader :breadcrumb-array="[
-                'Post',
+                'Posts',
                 data.title
             ]" />
 
