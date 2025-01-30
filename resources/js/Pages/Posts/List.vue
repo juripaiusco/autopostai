@@ -315,10 +315,22 @@ onUnmounted(() => {
                 <template #title>Elimina post</template>
                 <template #body>
                     Vuoi eliminare
+                    <br>
                     <span class="font-semibold">
                         {{ modalData.title }}
                     </span>
                     ?
+
+                    <div v-if="modalData.published == 1">
+                        <br>
+
+                        <div class="alert alert-warning">
+                            Il post verrà eliminato da tutti i canali tranne che per Instagram.
+                            <br>
+                            Per Instagram bisogna eliminare il post manualmente.
+                        </div>
+                    </div>
+
                 </template>
 
             </ModalReady>
