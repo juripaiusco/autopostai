@@ -35,13 +35,13 @@ const showingNavigationDropdown = ref(false);
                             <div
                                 class="hidden sm:-my-px sm:ml-10 sm:flex"
                             >
-                                <NavLink
+                                <!-- <NavLink
                                     class="w-[100px] text-center"
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
                                     Dashboard
-                                </NavLink>
+                                </NavLink> -->
 
                                 <NavLink v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on"
                                          class="w-[100px] text-center"
@@ -188,12 +188,12 @@ const showingNavigationDropdown = ref(false);
                     class="sm:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
+                        <!-- <ResponsiveNavLink
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
                             Dashboard
-                        </ResponsiveNavLink>
+                        </ResponsiveNavLink> -->
                         <ResponsiveNavLink v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on"
                                            :href="route('user.index')"
                                            :active="route().current().search('user') === 0 ? true : false">

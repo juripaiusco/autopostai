@@ -8,14 +8,17 @@ use App\Http\Controllers\Users;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect('/dashboard');
+    return redirect('/posts?orderby=published_at&ordertype=desc&s=');
 });
 
 //Route::get('/dashboard', [Dashboard::class])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
+//    Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', function () {
+        return redirect('/posts?orderby=published_at&ordertype=desc&s=');
+    })->name('dashboard');
 
     Route::get('/users', [Users::class, 'index'])->name('user.index');
     Route::get('/users/show/{id}', [Users::class, 'show'])->name('user.show');
