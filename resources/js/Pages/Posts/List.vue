@@ -169,7 +169,7 @@ onUnmounted(() => {
                                 html += '<div class=\'sm:hidden\'>'
                                 html += channelsArray.join('&nbsp;&nbsp;');
                                 html += '<br>'
-                                html += d.comments.length + ' <i class=\'fa-regular fa-comments\'></i>'
+                                html += '<i class=\'fa-regular fa-comments\'></i> ' + d.comments.length
                                 html += '<br>'
                                 html += __date(d.published_at, 'day')
                                 html += ' '
