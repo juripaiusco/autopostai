@@ -36,7 +36,8 @@ const props = defineProps({
                     aria-controls="nav-google"
                     aria-selected="false">Google</button> -->
 
-            <button class="nav-link"
+            <button v-if="!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
+                    class="nav-link"
                     id="nav-openai-tab"
                     data-bs-toggle="tab"
                     data-bs-target="#nav-openai"
