@@ -42,7 +42,9 @@ class GenerateImageJob implements ShouldQueue
 
         // Lancia Docker per generare l'immagine
         $process = new \Symfony\Component\Process\Process([
-            $scriptPath, $this->prompt, uniqid($this->userId . '-' . date('YmdHis') . '-')
+            $scriptPath, // Script Python
+            $this->prompt, // Prompt
+            uniqid($this->userId . '-' . date('YmdHis') . '-') // Nome dell'immagine
         ]);
         $process->run();
 
@@ -68,9 +70,14 @@ class GenerateImageJob implements ShouldQueue
             // Elimino l'immagine generata
             unlink($storage_disk->path($path_docker_img));
 
+            $image_url = $storage_disk->url($path_storage_user_img);
+            if (env('APP_URL') != 'http://localhost/public') {
+                $image_url = str_repeat($storage_disk->url($path_storage_user_img), 'public/', '');
+            }
+
             DB::table('image_jobs')->where('id', $this->jobId)->update([
                 'status' => 'completed',
-                'image_url' => $storage_disk->url($path_storage_user_img),
+                'image_url' => $image_url,
                 'prompt' => $this->prompt,
                 'model' => 'stable-diffusion 3.5',
             ]);
