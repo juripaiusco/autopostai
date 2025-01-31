@@ -277,6 +277,10 @@ class Posts extends Controller
         $data['files'] = $this->get_image_list();
         $data['img_selected'] = null;
 
+        if ($data->published == 1) {
+            return redirect()->route('post.show', ['id' => $id]);
+        }
+
         return Inertia::render('Posts/Form', [
             'data' => $data,
             'filters' => request()->all(['s', 'orderby', 'ordertype']),
