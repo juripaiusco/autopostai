@@ -8,6 +8,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class GenerateImageJob implements ShouldQueue
@@ -69,10 +70,10 @@ class GenerateImageJob implements ShouldQueue
 
             // Elimino l'immagine generata
             unlink($storage_disk->path($path_docker_img));
-
+            
             $image_url = $storage_disk->url($path_storage_user_img);
-            if (env('APP_URL') != 'http://localhost/public') {
-                $image_url = str_repeat($storage_disk->url($path_storage_user_img), 'public/', '');
+            if (env('APP_ENV') == 'production') {
+                $image_url = str_replace('public/', '', $image_url);
             }
 
             DB::table('image_jobs')->where('id', $this->jobId)->update([
