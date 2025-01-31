@@ -17,6 +17,7 @@ const props = defineProps({
     data: Object,
     filters: Object,
     token: Object,
+    auth: Object
 });
 
 let modalShow = ref(false);
@@ -85,6 +86,7 @@ const ai_prompt_img_loading = ref(false);
 const ai_prompt_img_path = ref(null);
 const token = props.token.plainTextToken;
 let images_array = ref(props.data.files);
+let images_used = ref(props.auth.images_used);
 
 const startJob = async () => {
     ai_prompt_img_loading.value = true;
@@ -119,6 +121,7 @@ const startJob = async () => {
 
             if (status === "completed") {
                 ai_prompt_img_path.value = statusResponse.data.image_url;
+                images_used.value = statusResponse.data.images_used;
                 images_array.value.unshift({
                     'image_url': statusResponse.data.image_url,
                     'prompt': statusResponse.data.prompt,
@@ -333,7 +336,7 @@ function selectImage(index) {
 
                                 <button v-if="
                                         (!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on) ||
-                                        $page.props.auth.images_used < $page.props.auth.user.image_model_limit
+                                        images_used < $page.props.auth.user.image_model_limit
                                         "
                                         class="nav-link"
                                         id="nav-create-img-tab"
@@ -454,44 +457,23 @@ function selectImage(index) {
 
                             </div>
 
-                            <div class="tab-pane fade show pt-4"
+                            <div v-if="
+                                    (!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on) ||
+                                    images_used < $page.props.auth.user.image_model_limit
+                                 "
+                                 class="tab-pane fade show pt-4"
                                  id="nav-create-img"
                                  role="tabpanel"
                                  aria-labelledby="nav-create-img-tab"
                                  tabindex="0">
 
-                                <div v-if="ai_prompt_img_path"
-                                     class="
-                                     cursor-pointer
-                                     hover:opacity-60">
-                                    <img v-if="ai_prompt_img_path"
-                                         @click="ai_prompt_img_path = ''"
-                                         :src="ai_prompt_img_path"
-                                         :alt="ai_prompt_img_path"
-                                         class="rounded" >
-                                </div>
-                                <div v-if="!ai_prompt_img_path">
+                                <div>
 
                                     <label v-if="!ai_prompt_img_loading"
                                            class="form-label">
                                         Prompt immagine
                                         <br>
-                                        <small>
-
-                                            L'AI genera un'immagine in base alle tue indicazioni.
-
-                                            <div v-if="$page.props.auth.user.image_model_limit > 0"
-                                                 class="mt-[14px] mb-4">
-                                                Puoi generare ancora
-                                                {{ $page.props.auth.user.image_model_limit - $page.props.auth.images_used }}
-                                                immagini
-
-                                                <ProgressBar
-                                                    :classNameBarContainer="'!h-[2px]'"
-                                                    :percent="$page.props.auth.images_used / $page.props.auth.user.image_model_limit * 100" />
-                                            </div>
-
-                                        </small>
+                                        <small>L'AI genera un'immagine in base alle tue indicazioni.</small>
                                     </label>
                                     <label v-if="ai_prompt_img_loading"
                                            class="form-label">
@@ -499,7 +481,35 @@ function selectImage(index) {
                                         <br>
                                         <small>L'AI sta generando l'immagine per te.</small>
                                     </label>
-                                    <div class="textarea-wrapper">
+
+                                    <div v-if="$page.props.auth.user.image_model_limit > 0"
+                                         class="mt-[9.5px] mb-4">
+                                        <label class="form-label">
+                                            <small>
+                                                Puoi generare ancora
+                                                {{ $page.props.auth.user.image_model_limit - images_used }}
+                                                immagini
+
+                                                <ProgressBar
+                                                    :classNameBarContainer="'!h-[2px]'"
+                                                    :percent="images_used / $page.props.auth.user.image_model_limit * 100" />
+                                            </small>
+                                        </label>
+                                    </div>
+
+                                    <div v-if="ai_prompt_img_path"
+                                         class="
+                                     cursor-pointer
+                                     hover:opacity-60">
+                                        <img v-if="ai_prompt_img_path"
+                                             @click="ai_prompt_img_path = ''"
+                                             :src="ai_prompt_img_path"
+                                             :alt="ai_prompt_img_path"
+                                             class="rounded" >
+                                    </div>
+
+                                    <div v-if="!ai_prompt_img_path"
+                                         class="textarea-wrapper">
                                         <div v-if="ai_prompt_img_loading"
                                              class="loader-overlay">
                                             <div class="loader"></div>
@@ -513,15 +523,15 @@ function selectImage(index) {
                                                   v-model="form.ai_prompt_img"></textarea>
                                         <div class="text-red-500 text-center text-xs"
                                              v-if="form.errors.ai_prompt_img">{{ __(form.errors.ai_prompt_img) }}</div>
-                                    </div>
 
-                                    <br><br>
+                                        <br>
 
-                                    <div class="text-center">
-                                        <button @click="startJob"
-                                                :disabled="ai_prompt_img_loading"
-                                                type="button"
-                                                class="btn btn-primary">Genera immagine</button>
+                                        <div class="text-center">
+                                            <button @click="startJob"
+                                                    :disabled="ai_prompt_img_loading"
+                                                    type="button"
+                                                    class="btn btn-primary">Genera immagine</button>
+                                        </div>
                                     </div>
 
                                 </div>
@@ -649,7 +659,7 @@ function selectImage(index) {
     justify-content: center;
     width: 100%;
     max-width: 6rem;
-    margin-top: 3rem;
+    margin-top: -1rem;
     margin-bottom: 3rem;
 }
 .loader:before,
