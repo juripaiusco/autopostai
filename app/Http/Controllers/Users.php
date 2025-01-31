@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
@@ -280,6 +281,10 @@ class Users extends Controller
     {
         $data = \App\Models\User::with('parent', 'settings')->find($id);
 
+        if (!Auth::user()->can('viewAny', $data)) {
+            abort(403);
+        }
+
         $data['saveRedirect'] = Redirect::back()->getTargetUrl();
 
         $data['channels'] = array_replace($this->get_channels(), json_decode($data->channels, true));
@@ -313,6 +318,11 @@ class Users extends Controller
 
         // Salvo l'utente
         $user = \App\Models\User::find($id);
+
+        if (!Auth::user()->can('viewAny', $user)) {
+            abort(403);
+        }
+
         $user->fill($request->all());
         $user->channels = json_encode($request->input('channels'));
         $user->save();
@@ -329,6 +339,11 @@ class Users extends Controller
      */
     public function destroy(string $id)
     {
+        $user = \App\Models\User::find($id);
+        if (!Auth::user()->can('viewAny', $user)) {
+            abort(403);
+        }
+
         \App\Models\User::destroy($id);
 
         $settings = \App\Models\Settings::where('user_id', $id)->first();
