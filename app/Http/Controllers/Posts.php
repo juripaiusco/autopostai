@@ -242,6 +242,10 @@ class Posts extends Controller
     {
         $data = Post::with(['user', 'comments.token', 'token'])->find($id);
 
+        if (!Auth::user()->can('viewAny', $data)) {
+            abort(403);
+        }
+
         if ($data->img)
             $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
 
@@ -263,6 +267,10 @@ class Posts extends Controller
     public function edit(Request $request, string $id)
     {
         $data = Post::with('user')->find($id);
+
+        if (!Auth::user()->can('viewAny', $data)) {
+            abort(403);
+        }
 
         if ($data->img)
             $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
@@ -310,6 +318,11 @@ class Posts extends Controller
         unset($request['img_selected']);
 
         $post = Post::find($id);
+
+        if (!Auth::user()->can('viewAny', $post)) {
+            abort(403);
+        }
+
         $post->fill($request->all());
         $post->save();
         $this->save_img('posts', $post, $request);
@@ -361,6 +374,11 @@ class Posts extends Controller
     public function delete(string $id)
     {
         $post = Post::find($id);
+
+        if (!Auth::user()->can('viewAny', $post)) {
+            abort(403);
+        }
+
         $post->delete();
 
         return \redirect()->back();
@@ -372,6 +390,11 @@ class Posts extends Controller
     public function destroy(string $id)
     {
         $post = Post::find($id);
+
+        if (!Auth::user()->can('viewAny', $post)) {
+            abort(403);
+        }
+
         Storage::disk('public')->deleteDirectory('posts/' . $post->id);
 
         Post::destroy($id);
