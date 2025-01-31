@@ -70,7 +70,7 @@ class GenerateImageJob implements ShouldQueue
 
             // Elimino l'immagine generata
             unlink($storage_disk->path($path_docker_img));
-            
+
             $image_url = $storage_disk->url($path_storage_user_img);
             if (env('APP_ENV') == 'production') {
                 $image_url = str_replace('public/', '', $image_url);
