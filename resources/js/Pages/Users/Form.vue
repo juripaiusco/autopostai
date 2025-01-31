@@ -90,33 +90,54 @@ form.password = '';
 
                             </div>
 
-                            <div v-if="form.child_on === '1' || form.child_on === 1">
+                            <div class="row">
+                                <div class="col-lg-6">
 
-                                <label class="form-label">
-                                    Numero account max
-                                    <br>
-                                    <small>Numero massimo di sotto account che possono essere generati</small>
-                                </label>
-                                <input type="number"
-                                       class="form-control"
-                                       v-model="form.child_max" />
-                                <div class="text-red-500 text-center"
-                                     v-if="form.errors.child_max">{{ __(form.errors.child_max) }}</div>
+                                    <div v-if="form.child_on === '1' || form.child_on === 1">
 
-                            </div>
+                                        <label class="form-label">
+                                            Numero account max
+                                            <br>
+                                            <small>Numero massimo di sotto account</small>
+                                        </label>
+                                        <input type="number"
+                                               class="form-control"
+                                               v-model="form.child_max" />
+                                        <div class="text-red-500 text-center"
+                                             v-if="form.errors.child_max">{{ __(form.errors.child_max) }}</div>
 
-                            <div v-if="form.child_on === '0' || form.child_on === '' || form.child_on === null">
+                                    </div>
 
-                                <label class="form-label">
-                                    Token al mese
-                                    <br>
-                                    <small>Numero massimo di token utilizzabili al mese</small>
-                                </label>
-                                <input type="number"
-                                       class="form-control"
-                                       v-model="form.tokens_limit" />
-                                <div class="text-red-500 text-center"
-                                     v-if="form.errors.tokens_limit">{{ __(form.errors.tokens_limit) }}</div>
+                                    <div v-if="form.child_on === '0' || form.child_on === '' || form.child_on === null">
+
+                                        <label class="form-label">
+                                            Token al mese
+                                            <br>
+                                            <small>Numero massimo di token utilizzabili al mese</small>
+                                        </label>
+                                        <input type="number"
+                                               class="form-control"
+                                               v-model="form.tokens_limit" />
+                                        <div class="text-red-500 text-center"
+                                             v-if="form.errors.tokens_limit">{{ __(form.errors.tokens_limit) }}</div>
+
+                                    </div>
+
+                                </div>
+                                <div class="col-lg-6 !mt-6 sm:!mt-0">
+
+                                    <label class="form-label">
+                                        Immagini al mese
+                                        <br>
+                                        <small>Numero massimo di immagini generate al mese</small>
+                                    </label>
+                                    <input type="number"
+                                           class="form-control"
+                                           v-model="form.image_model_limit" />
+                                    <div class="text-red-500 text-center"
+                                         v-if="form.errors.image_model_limit">{{ __(form.errors.image_model_limit) }}</div>
+
+                                </div>
                             </div>
 
                         </div>

@@ -77,6 +77,7 @@ class GenerateImageJob implements ShouldQueue
             }
 
             DB::table('image_jobs')->where('id', $this->jobId)->update([
+                'user_id' => $this->userId,
                 'status' => 'completed',
                 'image_url' => $image_url,
                 'prompt' => $this->prompt,

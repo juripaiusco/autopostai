@@ -34,7 +34,8 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
-                'tokens_used' => $request->user() ? $this->getUserTokens($request->user()) : 0
+                'tokens_used' => $request->user() ? $this->getUserTokens($request->user()) : 0,
+                'images_used' => $request->user() ? $this->getImagesUsed($request->user()) : 0
             ],
         ];
     }
@@ -43,10 +44,15 @@ class HandleInertiaRequests extends Middleware
     {
         return Cache::remember(
             "user_{$user->id}_tokens_used",
-            now()->addMinutes(10),
+            now()->addMinutes(5),
             function () use ($user) {
                 return $user->tokens_used()->sum('tokens_used');
             }
         );
+    }
+
+    public function getImagesUsed($user)
+    {
+        return $user->images_used()->count();
     }
 }

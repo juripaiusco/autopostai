@@ -2,6 +2,7 @@
 
 const props = defineProps({
     percent: Number,
+    classNameBarContainer: String,
 });
 
 let classNameBarContainer = '!bg-green-100'
@@ -16,6 +17,8 @@ if (props.percent >= 90) {
     classNameBarContainer = '!bg-red-100'
     classNameBar = '!bg-red-500'
 }
+
+classNameBarContainer += ' ' + props.classNameBarContainer
 
 </script>
 

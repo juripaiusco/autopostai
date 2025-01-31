@@ -24,6 +24,7 @@ class User extends Authenticatable
         'child_on',
         'child_max',
         'tokens_limit',
+        'image_model_limit',
         'name',
         'email',
         'password',
@@ -74,9 +75,16 @@ class User extends Authenticatable
 
     public function tokens_used()
     {
-        return $this->hasOne(Token_log::class, 'user_id')
+        return $this->hasMany(Token_log::class, 'user_id')
             ->whereMonth('token_logs.created_at', now()->month)
             ->whereYear('token_logs.created_at', now()->year);
+    }
+
+    public function images_used()
+    {
+        return $this->hasMany(ImageJob::class, 'user_id')
+            ->whereMonth('image_jobs.created_at', now()->month)
+            ->whereYear('image_jobs.created_at', now()->year);
     }
 
     /**

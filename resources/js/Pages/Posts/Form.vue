@@ -11,6 +11,7 @@ import {__} from "../../ComponentsExt/Translations.js";
 import axios from "axios";
 import ModalReady from "@/Components/ModalReady.vue";
 import Comments_prompt from "@/Pages/Posts/comments_prompt.vue";
+import ProgressBar from "@/Components/ProgressBar.vue";
 
 const props = defineProps({
     data: Object,
@@ -143,7 +144,6 @@ const startJob = async () => {
 };
 
 function modalDeleteImg(img, index) {
-    // modalData.value.confirmURL = route('post.destroy_image', [img.split('/').pop()]);
     modalData.value.route = route('post.destroy_image', [img.image_url.split('/').pop()]);
     modalData.value.img = img.image_url;
     modalData.value.index = index;
@@ -331,7 +331,11 @@ function selectImage(index) {
                                         aria-controls="nav-upload-img"
                                         aria-selected="true">Immagine</button>
 
-                                <button class="nav-link"
+                                <button v-if="
+                                        (!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on) ||
+                                        $page.props.auth.images_used < $page.props.auth.user.image_model_limit
+                                        "
+                                        class="nav-link"
                                         id="nav-create-img-tab"
                                         data-bs-toggle="tab"
                                         data-bs-target="#nav-create-img"
@@ -340,7 +344,11 @@ function selectImage(index) {
                                         aria-controls="nav-create-img"
                                         aria-selected="true">Genera</button>
 
-                                <button class="nav-link"
+                                <button v-if="
+                                        (!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on) ||
+                                        $page.props.auth.user.image_model_limit > 0
+                                        "
+                                        class="nav-link"
                                         id="nav-select-img-tab"
                                         data-bs-toggle="tab"
                                         data-bs-target="#nav-select-img"
@@ -468,7 +476,22 @@ function selectImage(index) {
                                            class="form-label">
                                         Prompt immagine
                                         <br>
-                                        <small>L'AI genera un'immagine in base alle tue indicazioni</small>
+                                        <small>
+
+                                            L'AI genera un'immagine in base alle tue indicazioni.
+
+                                            <div v-if="$page.props.auth.user.image_model_limit > 0"
+                                                 class="mt-[14px] mb-4">
+                                                Puoi generare ancora
+                                                {{ $page.props.auth.user.image_model_limit - $page.props.auth.images_used }}
+                                                immagini
+
+                                                <ProgressBar
+                                                    :classNameBarContainer="'!h-[2px]'"
+                                                    :percent="$page.props.auth.images_used / $page.props.auth.user.image_model_limit * 100" />
+                                            </div>
+
+                                        </small>
                                     </label>
                                     <label v-if="ai_prompt_img_loading"
                                            class="form-label">

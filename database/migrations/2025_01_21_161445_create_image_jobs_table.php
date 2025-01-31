@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('image_jobs', function (Blueprint $table) {
             $table->id();
+
+            // Campo coerente con l'ID della tabella users
+            $table->unsignedBigInteger('user_id')->nullable();
+            // Relazione e comportamento in cascata
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
             $table->string('status')->default('pending'); // pending, running, completed, failed
             $table->string('image_url')->nullable();     // URL immagine generata
             $table->longText('prompt')->nullable();
