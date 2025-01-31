@@ -83,8 +83,9 @@ class User extends Authenticatable
     public function images_used()
     {
         return $this->hasMany(ImageJob::class, 'user_id')
-            ->whereMonth('image_jobs.created_at', now()->month)
-            ->whereYear('image_jobs.created_at', now()->year);
+            ->whereDay('image_jobs.created_at', now()->day)
+            /*->whereMonth('image_jobs.created_at', now()->month)
+            ->whereYear('image_jobs.created_at', now()->year)*/;
     }
 
     /**

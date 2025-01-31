@@ -129,7 +129,7 @@ form.password = '';
                                     <label class="form-label">
                                         Immagini al mese
                                         <br>
-                                        <small>Numero massimo di immagini generate al mese</small>
+                                        <small>Numero massimo di immagini generate al giorno</small>
                                     </label>
                                     <input type="number"
                                            class="form-control"
