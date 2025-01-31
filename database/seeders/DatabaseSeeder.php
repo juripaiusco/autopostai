@@ -144,7 +144,7 @@ class DatabaseSeeder extends Seeder
                 'user_id' => $user->id
             ]);
 
-            $posts = Post::factory(2)->create([
+            $posts = Post::factory(5)->create([
                 'user_id' => $user->id,
                 'channels' => json_encode($channels)
             ]);
