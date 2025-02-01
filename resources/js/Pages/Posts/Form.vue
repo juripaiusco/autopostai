@@ -519,7 +519,8 @@ Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è be
                                         <textarea class="form-control h-[216px]"
                                                   :disabled="
                                                   ai_prompt_img_loading ||
-                                                  images_used >= $page.props.auth.user.image_model_limit
+                                                  (images_used >= $page.props.auth.user.image_model_limit &&
+                                                  $page.props.auth.user.parent_id)
                                                   "
                                                   :class="{
                                                   '!border !border-red-500' : form.errors.ai_prompt_img,
@@ -536,7 +537,8 @@ Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è be
                                             <button @click="startJob"
                                                     :disabled="
                                                     ai_prompt_img_loading ||
-                                                    images_used >= $page.props.auth.user.image_model_limit
+                                                    (images_used >= $page.props.auth.user.image_model_limit &&
+                                                    $page.props.auth.user.parent_id)
                                                     "
                                                     type="button"
                                                     class="btn btn-primary">Genera immagine</button>
