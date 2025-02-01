@@ -270,7 +270,9 @@ function selectImage(index) {
                         </label>
                         <textarea class="form-control h-[216px]"
                                   :class="{'!border !border-red-500' : form.errors.ai_prompt_post}"
-                                  v-model="form.ai_prompt_post"></textarea>
+                                  v-model="form.ai_prompt_post"
+                                  placeholder="Esempio:
+Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è bello mangiare la pizza"></textarea>
                         <div class="text-red-500 text-center text-xs"
                              v-if="form.errors.ai_prompt_post">{{ __(form.errors.ai_prompt_post) }}</div>
 
@@ -336,7 +338,7 @@ function selectImage(index) {
 
                                 <button v-if="
                                         (!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on) ||
-                                        images_used < $page.props.auth.user.image_model_limit
+                                        $page.props.auth.user.image_model_limit > 0
                                         "
                                         class="nav-link"
                                         id="nav-create-img-tab"
@@ -459,7 +461,7 @@ function selectImage(index) {
 
                             <div v-if="
                                     (!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on) ||
-                                    images_used < $page.props.auth.user.image_model_limit
+                                    $page.props.auth.user.image_model_limit > 0
                                  "
                                  class="tab-pane fade show pt-4"
                                  id="nav-create-img"
@@ -483,7 +485,7 @@ function selectImage(index) {
                                     </label>
 
                                     <div v-if="$page.props.auth.user.image_model_limit > 0"
-                                         class="mt-[9.5px] mb-4">
+                                         class="mt-[7.5px] mb-4">
                                         <label class="form-label">
                                             <small>
                                                 Puoi generare ancora
@@ -499,8 +501,8 @@ function selectImage(index) {
 
                                     <div v-if="ai_prompt_img_path"
                                          class="
-                                     cursor-pointer
-                                     hover:opacity-60">
+                                         cursor-pointer
+                                         hover:opacity-60">
                                         <img v-if="ai_prompt_img_path"
                                              @click="ai_prompt_img_path = ''"
                                              :src="ai_prompt_img_path"
@@ -515,10 +517,14 @@ function selectImage(index) {
                                             <div class="loader"></div>
                                         </div>
                                         <textarea class="form-control h-[216px]"
-                                                  :disabled="ai_prompt_img_loading"
+                                                  :disabled="
+                                                  ai_prompt_img_loading ||
+                                                  images_used >= $page.props.auth.user.image_model_limit
+                                                  "
                                                   :class="{
                                                   '!border !border-red-500' : form.errors.ai_prompt_img,
-                                                  '!text-gray-500' : ai_prompt_img_loading
+                                                  '!text-gray-500' : ai_prompt_img_loading  ||
+                                                  images_used >= $page.props.auth.user.image_model_limit
                                               }"
                                                   v-model="form.ai_prompt_img"></textarea>
                                         <div class="text-red-500 text-center text-xs"
@@ -528,7 +534,10 @@ function selectImage(index) {
 
                                         <div class="text-center">
                                             <button @click="startJob"
-                                                    :disabled="ai_prompt_img_loading"
+                                                    :disabled="
+                                                    ai_prompt_img_loading ||
+                                                    images_used >= $page.props.auth.user.image_model_limit
+                                                    "
                                                     type="button"
                                                     class="btn btn-primary">Genera immagine</button>
                                         </div>
