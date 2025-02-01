@@ -30,8 +30,8 @@
 
     # Compila l'immagine solo se necessario
     if needs_build; then
-      echo "Costruzione dell'immagine Docker $DOCKER_IMAGE_NAME..."
-      docker build -t $DOCKER_IMAGE_NAME .
+      # echo "Costruzione dell'immagine Docker $DOCKER_IMAGE_NAME..."
+      docker build -t $DOCKER_IMAGE_NAME . > /dev/null 2>&1
       # Aggiorna il timestamp del file di stato
       touch .docker_image_built
     fi
