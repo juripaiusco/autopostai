@@ -298,7 +298,7 @@ class Users extends Controller
         if (!Auth::user()->can('view', Auth::user())) {
             abort(403);
         }
-        
+
         $data = \App\Models\User::with('parent', 'settings')->find($id);
 
         if (!Auth::user()->can('viewAny', $data)) {
