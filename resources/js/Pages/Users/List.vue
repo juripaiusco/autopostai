@@ -152,31 +152,35 @@ let modalData = ref(props.data);
                             field: 'image_model_limit',
                             fnc: function (d) {
 
-                                let total = new Intl.NumberFormat().format(d.images_used_total)
-                                let limit = new Intl.NumberFormat().format(d.image_model_limit)
-                                let percentual = parseFloat(total / limit * 100)
                                 let html = ''
-                                let classNameBarContainer = '!bg-green-300'
-                                let classNameBar = '!bg-green-500'
+                                
+                                if (d.image_model_limit > 0) {
+                                    let total = new Intl.NumberFormat().format(d.images_used_total)
+                                    let limit = new Intl.NumberFormat().format(d.image_model_limit)
+                                    let percentual = parseFloat(total / limit * 100)
 
-                                if (percentual > 80) {
-                                    classNameBarContainer = '!bg-yellow-300'
-                                    classNameBar = '!bg-yellow-500'
-                                }
-                                if (percentual > 95) {
-                                    classNameBarContainer = '!bg-red-300'
-                                    classNameBar = '!bg-red-500'
-                                }
+                                    let classNameBarContainer = '!bg-green-300'
+                                    let classNameBar = '!bg-green-500'
 
-                                html += total +
-                                    ' / ' +
-                                    '<small>' +
-                                        limit +
-                                    '</small>' +
-                                    '<br>' +
-                                    '<div class=\'mt-2 progress ' + classNameBarContainer + '\' role=\'progressbar\' style=\'height: 4px\'>' +
-                                        '<div class=\'progress-bar ' + classNameBar + '\' style=\'width: ' + percentual + '%\'></div>' +
-                                    '</div>'
+                                    if (percentual > 80) {
+                                        classNameBarContainer = '!bg-yellow-300'
+                                        classNameBar = '!bg-yellow-500'
+                                    }
+                                    if (percentual > 95) {
+                                        classNameBarContainer = '!bg-red-300'
+                                        classNameBar = '!bg-red-500'
+                                    }
+
+                                    html += total +
+                                        ' / ' +
+                                        '<small>' +
+                                            limit +
+                                        '</small>' +
+                                        '<br>' +
+                                        '<div class=\'mt-2 progress ' + classNameBarContainer + '\' role=\'progressbar\' style=\'height: 4px\'>' +
+                                            '<div class=\'progress-bar ' + classNameBar + '\' style=\'width: ' + percentual + '%\'></div>' +
+                                        '</div>'
+                                }
 
                                 return html;
 
