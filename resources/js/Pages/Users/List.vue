@@ -153,7 +153,7 @@ let modalData = ref(props.data);
                             fnc: function (d) {
 
                                 let html = ''
-                                
+
                                 if (d.image_model_limit > 0) {
                                     let total = new Intl.NumberFormat().format(d.images_used_total)
                                     let limit = new Intl.NumberFormat().format(d.image_model_limit)
