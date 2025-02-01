@@ -164,12 +164,19 @@ class Users extends Controller
                 ->whereYear('token_logs.created_at', now()->year);
         });
 
+        $data = $data->leftJoin('image_jobs', function ($join) {
+            $join->on('users.id', '=', 'image_jobs.user_id')
+                ->whereDay('image_jobs.created_at', now()->day);
+        });
+
         $data = $data->select([
             'users.id',
             'users.name',
             'users.email',
             'users.tokens_limit',
+            'users.image_model_limit',
             DB::raw('COALESCE(SUM(' . env('DB_PREFIX') . 'token_logs.tokens_used), 0) as tokens_used_total'),
+            DB::raw('COALESCE(COUNT(DISTINCT(' . env('DB_PREFIX') . 'image_jobs.id)), 0) as images_used_total'),
             DB::raw('COALESCE(SUM(CASE WHEN ' . env('DB_PREFIX') . 'token_logs.type = "post" THEN 1 ELSE 0 END), 0) as post_count'),
             DB::raw('COALESCE(SUM(CASE WHEN ' . env('DB_PREFIX') . 'token_logs.type = "reply" THEN 1 ELSE 0 END), 0) as reply_count'),
             'users.child_on',
@@ -178,6 +185,7 @@ class Users extends Controller
             'users.name',
             'users.email',
             'users.tokens_limit',
+            'users.image_model_limit',
             'users.child_on',
         );
 

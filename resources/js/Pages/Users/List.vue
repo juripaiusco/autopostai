@@ -147,6 +147,43 @@ let modalData = ref(props.data);
                             label: 'Reply',
                             field: 'reply_count'
                         }, {
+                            class: 'text-center sm:w-[1%] hidden sm:table-cell',
+                            label: 'Immagini',
+                            field: 'image_model_limit',
+                            fnc: function (d) {
+
+                                let total = new Intl.NumberFormat().format(d.images_used_total)
+                                let limit = new Intl.NumberFormat().format(d.image_model_limit)
+                                let percentual = parseFloat(total / limit * 100)
+                                let html = ''
+                                let classNameBarContainer = '!bg-green-300'
+                                let classNameBar = '!bg-green-500'
+
+                                if (percentual > 80) {
+                                    classNameBarContainer = '!bg-yellow-300'
+                                    classNameBar = '!bg-yellow-500'
+                                }
+                                if (percentual > 95) {
+                                    classNameBarContainer = '!bg-red-300'
+                                    classNameBar = '!bg-red-500'
+                                }
+
+                                if (d.child_on === null) {
+                                    html += total +
+                                    ' / ' +
+                                    '<small>' +
+                                        limit +
+                                    '</small>' +
+                                    '<br>' +
+                                     '<div class=\'mt-2 progress ' + classNameBarContainer + '\' role=\'progressbar\' style=\'height: 4px\'>' +
+                                         '<div class=\'progress-bar ' + classNameBar + '\' style=\'width: ' + percentual + '%\'></div>' +
+                                     '</div>'
+                                }
+
+                                return html;
+
+                            }
+                        }, {
                             class: 'text-center sm:w-[200px]',
                             label: 'Token',
                             field: 'tokens_limit',
