@@ -168,17 +168,15 @@ let modalData = ref(props.data);
                                     classNameBar = '!bg-red-500'
                                 }
 
-                                if (d.child_on === null) {
-                                    html += total +
+                                html += total +
                                     ' / ' +
                                     '<small>' +
                                         limit +
                                     '</small>' +
                                     '<br>' +
-                                     '<div class=\'mt-2 progress ' + classNameBarContainer + '\' role=\'progressbar\' style=\'height: 4px\'>' +
-                                         '<div class=\'progress-bar ' + classNameBar + '\' style=\'width: ' + percentual + '%\'></div>' +
-                                     '</div>'
-                                }
+                                    '<div class=\'mt-2 progress ' + classNameBarContainer + '\' role=\'progressbar\' style=\'height: 4px\'>' +
+                                        '<div class=\'progress-bar ' + classNameBar + '\' style=\'width: ' + percentual + '%\'></div>' +
+                                    '</div>'
 
                                 return html;
 
