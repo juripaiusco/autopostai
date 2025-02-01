@@ -124,6 +124,10 @@ class Users extends Controller
      */
     public function index()
     {
+        if (!Auth::user()->can('view', Auth::user())) {
+            abort(403);
+        }
+
         $request_search_array = [
             'name',
             'email',
@@ -208,6 +212,10 @@ class Users extends Controller
      */
     public function create()
     {
+        if (!Auth::user()->can('view', Auth::user())) {
+            abort(403);
+        }
+
         // Creo un oggetto di dati vuoto
         $columns_users = Schema::getColumnListing('users');
         $columns_settings = Schema::getColumnListing('settings');
@@ -287,6 +295,10 @@ class Users extends Controller
      */
     public function edit(string $id)
     {
+        if (!Auth::user()->can('view', Auth::user())) {
+            abort(403);
+        }
+        
         $data = \App\Models\User::with('parent', 'settings')->find($id);
 
         if (!Auth::user()->can('viewAny', $data)) {

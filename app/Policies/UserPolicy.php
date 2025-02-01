@@ -27,7 +27,11 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        return false;
+                // Se l'utente è manager può vedere i suoi sotto utenti
+        return  ($user->parent_id && $user->child_on === 1) ||
+
+                // Se l'utente è admin può vedere tutto
+                (!$user->parent_id && !$user->child_on);
     }
 
     /**
