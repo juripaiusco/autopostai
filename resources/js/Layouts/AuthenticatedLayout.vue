@@ -52,8 +52,17 @@ const showingNavigationDropdown = ref(false);
 
                                 <NavLink class="w-[100px] text-center"
                                          :href="route('post.index') + '?orderby=published_at&ordertype=desc&s='"
-                                         :active="route().current().search('post') === 0 ? true : false">
+                                         :active="
+                                         (route().current().search('post') === 0 &&
+                                         route().current().search('post.schedule') !== 0)
+                                         ? true : false">
                                     Posts
+                                </NavLink>
+
+                                <NavLink class="w-[100px] text-center"
+                                         :href="route('post.schedule')"
+                                         :active="route().current().search('post.schedule') === 0 ? true : false">
+                                    Calendarizza
                                 </NavLink>
 
                                 <NavLink v-if="$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
@@ -200,8 +209,15 @@ const showingNavigationDropdown = ref(false);
                             Account
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('post.index') + '?orderby=published_at&ordertype=desc&s='"
-                                           :active="route().current().search('post') === 0 ? true : false">
+                                           :active="
+                                           (route().current().search('post') === 0 &&
+                                           route().current().search('post.schedule') !== 0)
+                                           ? true : false">
                             Posts
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('post.schedule')"
+                                           :active="route().current().search('post.schedule') === 0 ? true : false">
+                            Calendarizza
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
                                  :href="route('settings.index')"

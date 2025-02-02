@@ -126,10 +126,7 @@ class Posts extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(Request $request)
+    private function getDataNewPost()
     {
         // Creo un oggetto di dati vuoto
         $table = 'posts';
@@ -195,8 +192,31 @@ class Posts extends Controller
 
         $data = json_decode(json_encode($data), true);
 
+        return $data;
+    }
+
+    public function schedule(Request $request)
+    {
+        return Inertia::render('Posts/Schedule', [
+            'data' => $this->getDataNewPost(),
+            'filters' => request()->all(['s', 'orderby', 'ordertype'])
+        ]);
+    }
+
+    public function schedule_store(Request $request)
+    {
+        $saveRedirect = route('post.index') . '?orderby=published_at&ordertype=desc&s=';
+
+        return Redirect::to($saveRedirect);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(Request $request)
+    {
         return Inertia::render('Posts/Form', [
-            'data' => $data,
+            'data' => $this->getDataNewPost(),
             'filters' => request()->all(['s', 'orderby', 'ordertype']),
             'token' => $request->user()->createToken('posts')
         ]);
@@ -216,11 +236,14 @@ class Posts extends Controller
             $request['img'] = $request['img_selected'];
 
         $saveRedirect = $request['saveRedirect'];
+
         unset($request['saveRedirect']);
         unset($request['user']);
         unset($request['users']);
         unset($request['files']);
+        unset($request['ai_prompt_img']);
         unset($request['img_selected']);
+        unset($request['schedule']);
 
         $post = new Post();
         $post->fill($request->all());
@@ -315,6 +338,7 @@ class Posts extends Controller
         unset($request['updated_at']);
         unset($request['user']);
         unset($request['files']);
+        unset($request['ai_prompt_img']);
         unset($request['img_selected']);
 
         $post = Post::find($id);
