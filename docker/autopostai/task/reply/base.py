@@ -9,8 +9,8 @@ class BaseReply:
 
     def img_path_get(self):
         if self.data['img'] is not None:
-            return f"./storage/app/public/posts/{self.data['id']}/{self.data['img']}"
+            return f"./storage/app/public/posts/{self.data['post_id']}/{self.data['img']}"
 
     def img_url_get(self):
         if self.data['img'] is not None:
-            return f"{cfg.URL}/storage/posts/{self.data['id']}/{self.data['img']}"
+            return f"{cfg.URL}/storage/posts/{self.data['post_id']}/{self.data['img']}"
