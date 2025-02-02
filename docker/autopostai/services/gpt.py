@@ -3,7 +3,6 @@ import base64
 import requests
 import traceback
 from dotenv import load_dotenv
-from openai import OpenAI
 import tiktoken
 
 load_dotenv()
@@ -31,8 +30,14 @@ class GPT:
                     content=prompt
                 )
 
-            self.messages = self.messages.replace("\n", " ")
-            self.messages = " ".join(self.messages.split())
+            self.messages = [
+                {**msg, "content": msg.get("content", "").replace("\n", " ")}
+                for msg in self.messages
+            ]
+            self.messages = [
+                {**msg, "content": " ".join(msg.get("content", "").split())}
+                for msg in self.messages
+            ]
             if self.debug is True:
                 print(self.messages)
 
