@@ -31,6 +31,8 @@ class GPT:
                     content=prompt
                 )
 
+            self.messages = self.messages.replace("\n", " ")
+            self.messages = " ".join(self.messages.split())
             if self.debug is True:
                 print(self.messages)
 

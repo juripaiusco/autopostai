@@ -11,13 +11,13 @@ class FacebookReply(BaseReply):
         prompt = ""
 
         if self.data['channel']:
-            prompt = prompt + f"È stato creato questo post su {self.data['channel']} "
+            prompt = prompt + f"Il post è stato creato su {self.data['channel']} "
 
         if self.data['from_name'] is not None:
-            prompt = prompt + f"e {self.data['from_name']} ha risposto con questo commento:"
+            prompt = prompt + f"e {self.data['from_name']} ha risposto con questo commento: "
         else:
-            prompt = prompt + f"ed è stato risposto con questo commento:"
+            prompt = prompt + f"ed è stato risposto con questo commento: "
 
-        prompt = prompt + f"\n{self.data['message']}"
+        prompt = prompt + self.data['message']
 
         return prompt

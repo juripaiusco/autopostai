@@ -13,9 +13,8 @@ class BasePost:
     def prompt_get(self):
         # Creo il prompt
         prompt = ""
-
         if self.data['ai_prompt_post'] is not None:
-            prompt = prompt + f"{self.data['ai_prompt_post']}"
+            prompt = f"{self.data['ai_prompt_post']}"
 
         return prompt
 
