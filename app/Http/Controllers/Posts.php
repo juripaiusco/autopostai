@@ -255,9 +255,8 @@ class Posts extends Controller
 
         if ($published_at) {
             $post->published_at = $published_at;
+            $post->title = $request['title'] . ' ' . date('d/m/Y H:i', strtotime($published_at));
         }
-
-        $post->title = $request['title'] . ' ' . date('d/m/Y H:i', strtotime($published_at));
 
         $post->channels = json_encode($request->input('channels'));
         $post->on_hold_until = date('Y-m-d H:i:s');
