@@ -164,6 +164,15 @@ def token_limit_exceeded(user_id = None, debug = False):
     # Nel caso in cui i token sono stati superati, il post viene marchiato come task_complete
     # così non verrà più usato nei prossimi controlli
     if rows is not None and len(rows) > 0:
+        if debug is True:
+            print(
+                datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                "User ID: ",
+                user_id,
+                "Token limit:",
+                f"{rows[0]['tokens_used_total']} / {rows[0]['tokens_limit']}"
+            )
+
         if Decimal(rows[0]['tokens_used_total'] or 0) >= Decimal(rows[0]['tokens_limit'] or 0):
             if debug is True:
                 print(
