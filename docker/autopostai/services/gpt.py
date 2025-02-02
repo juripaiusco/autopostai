@@ -31,11 +31,21 @@ class GPT:
                 )
 
             self.messages = [
-                {**msg, "content": msg.get("content", "").replace("\n", " ")}
+                {
+                    **msg,
+                    "content": msg.get("content", "").replace("\n", " ")
+                    if isinstance(msg.get("content", ""), str)
+                    else msg.get("content", "")
+                }
                 for msg in self.messages
             ]
             self.messages = [
-                {**msg, "content": " ".join(msg.get("content", "").split())}
+                {
+                    **msg,
+                    "content": " ".join(msg.get("content", "").split())
+                    if isinstance(msg.get("content", ""), str)
+                    else msg.get("content", "")
+                }
                 for msg in self.messages
             ]
             if self.debug is True:
