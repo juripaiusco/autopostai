@@ -206,6 +206,12 @@ class Posts extends Controller
     public function schedule_store(Request $request)
     {
         $saveRedirect = route('post.index') . '?orderby=published_at&ordertype=desc&s=';
+        $published_at_array = $request->published_at;
+
+        foreach ($published_at_array as $published_at)
+        {
+            $this->storeData($request, $published_at);
+        }
 
         return Redirect::to($saveRedirect);
     }
@@ -222,10 +228,7 @@ class Posts extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    private function storeData(Request $request, $published_at = '')
     {
         $request->validate([
             'title' => 'required',
@@ -235,8 +238,6 @@ class Posts extends Controller
         if ($request['img_selected'])
             $request['img'] = $request['img_selected'];
 
-        $saveRedirect = $request['saveRedirect'];
-
         unset($request['saveRedirect']);
         unset($request['user']);
         unset($request['users']);
@@ -245,8 +246,19 @@ class Posts extends Controller
         unset($request['img_selected']);
         unset($request['schedule']);
 
+        if ($published_at) {
+            unset($request['published_at']);
+        }
+
         $post = new Post();
         $post->fill($request->all());
+
+        if ($published_at) {
+            $post->published_at = $published_at;
+        }
+
+        $post->title = $request['title'] . ' ' . date('d/m/Y H:i', strtotime($published_at));
+
         $post->channels = json_encode($request->input('channels'));
         $post->on_hold_until = date('Y-m-d H:i:s');
 
@@ -254,6 +266,15 @@ class Posts extends Controller
 
         $post->save();
         $this->save_img('posts', $post, $request);
+    }
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $saveRedirect = $request['saveRedirect'];
+
+        $this->storeData($request);
 
         return Redirect::to($saveRedirect);
     }

@@ -15,13 +15,6 @@ const props = defineProps({
 let form = props.form;
 
 /**
- * Se nuovo post la data viene impostata come attuale
- */
-if (form.published_at === '') {
-    form.published_at = __date(new Date(), 'date') + ' ' + __date(new Date(), 'hour');
-}
-
-/**
  * Imposto i canali che l'utente può utilizzare, di default i valori
  * sono null, ma quando seleziono l'utente questa variabile
  * cambia e ridefinisce i canali che si possono usare.
@@ -101,7 +94,10 @@ function checkChannelsByUser() {
     </div>
 
     <div class="row">
-        <div class="col-lg-7 mb-6 lg:mb-0">
+        <div class="col-lg"
+             :class="{
+                'mb-6 lg:mb-0' : form.schedule !== 1
+             }">
 
             <label class="form-label">
                 Titolo
@@ -116,7 +112,8 @@ function checkChannelsByUser() {
                  v-if="form.errors.title">{{ __(form.errors.title) }}</div>
 
         </div>
-        <div class="col">
+        <div v-if="form.schedule !== 1"
+             class="col-lg-5">
 
             <label class="form-label">
                 Data e Ora pubblicazione

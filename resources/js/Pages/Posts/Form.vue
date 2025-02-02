@@ -12,6 +12,7 @@ import ModalReady from "@/Components/ModalReady.vue";
 import SectionComments from "@/Pages/Posts/Sections/SectionComments.vue";
 import ProgressBar from "@/Components/ProgressBar.vue";
 import SectionPost from "@/Pages/Posts/Sections/SectionPost.vue";
+import {__date} from "@/ComponentsExt/Date.js";
 
 const props = defineProps({
     data: Object,
@@ -30,6 +31,13 @@ let modalData = ref({
 const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
     return props.data ? v : '';
 }));
+
+/**
+ * Se nuovo post la data viene impostata come attuale
+ */
+if (dataForm['published_at'] === '') {
+    dataForm['published_at'] = __date(new Date(), 'date') + ' ' + __date(new Date(), 'hour');
+}
 
 dataForm['ai_prompt_img'] = '';
 
