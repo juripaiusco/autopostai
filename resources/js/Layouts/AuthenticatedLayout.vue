@@ -274,7 +274,7 @@ const showingNavigationDropdown = ref(false);
         </div>
 
         <!-- Movile botton Nav -->
-        <nav class="fixed bottom-[-2px] w-full py-2 pb-8 bg-gray-100 text-gray-400 border border-gray-100 border-t-gray-200 dark:bg-gray-900 dark:text-gray-600 dark:border-gray-900 dark:border-t-gray-700 sm:hidden">
+        <nav class="fixed z-10 bottom-[-2px] w-full py-2 pb-8 bg-gray-100 text-gray-400 border border-gray-100 border-t-gray-200 dark:bg-gray-900 dark:text-gray-600 dark:border-gray-900 dark:border-t-gray-700 sm:hidden">
             <div class="container-fluid mx-auto flex justify-around">
 
                 <Link v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on"
