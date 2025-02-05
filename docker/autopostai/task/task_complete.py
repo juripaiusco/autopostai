@@ -150,10 +150,10 @@ def token_limit_exceeded(user_id = None, debug = False):
                     FROM {cfg.DB_PREFIX}users
                         LEFT JOIN {cfg.DB_PREFIX}token_logs
                             ON {cfg.DB_PREFIX}users.id = {cfg.DB_PREFIX}token_logs.user_id
+                            AND ({cfg.DB_PREFIX}token_logs.created_at >= DATE_FORMAT(NOW(), '%%Y-%%m-01'))
+                            AND ({cfg.DB_PREFIX}token_logs.created_at < LAST_DAY(NOW()) + INTERVAL 1 DAY)
 
                 WHERE {cfg.DB_PREFIX}users.id = {user_id}
-                    AND ({cfg.DB_PREFIX}token_logs.created_at >= DATE_FORMAT(NOW(), '%%Y-%%m-01'))
-                    AND ({cfg.DB_PREFIX}token_logs.created_at < LAST_DAY(NOW()) + INTERVAL 1 DAY)
 
                 GROUP BY
                     {cfg.DB_PREFIX}users.id
