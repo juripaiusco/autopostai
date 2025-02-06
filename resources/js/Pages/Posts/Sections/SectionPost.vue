@@ -63,7 +63,7 @@ function setChannels(user_channel) {
 </script>
 
 <template>
-    
+
     <div v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on">
 
         <label class="form-label">

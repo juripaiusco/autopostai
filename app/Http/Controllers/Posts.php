@@ -44,6 +44,78 @@ use Inertia\Inertia;
  */
 class Posts extends Controller
 {
+    private function getDataNewPost()
+    {
+        // Creo un oggetto di dati vuoto
+        $table = 'posts';
+        $columns = Schema::getColumnListing($table);
+
+        $data = [];
+        foreach ($columns as $field) {
+            // Recupera i dettagli della colonna dal database
+            $columnDetails = DB::selectOne("SHOW COLUMNS FROM " . env('DB_PREFIX') . $table . " WHERE Field = ?", [$field]);
+            $default = $columnDetails->Default;
+
+            $data[$field] = $default ?? '';
+        }
+
+        unset($data['id']);
+        unset($data['deleted_at']);
+        unset($data['created_at']);
+        unset($data['updated_at']);
+
+        $data['saveRedirect'] = Redirect::back()->getTargetUrl();
+        if (!strstr($data['saveRedirect'], 'posts?')) {
+            $data['saveRedirect'] = route('post.index') . '?orderby=published_at&ordertype=desc&s=';
+        }
+
+        $data['channels'] = (new Users)->get_channels();
+
+        /**
+         * Query per recuperare gli utente a cui collegare il post
+         * la query viene creata seguendo delle regole di gestione
+         * degli account:
+         * L'amministratore può collegare i post a tutti gli utenti
+         * Il Manager può collegare i post solo ai suoi sotto utenti
+         */
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        if (!auth()->user()->parent_id || (auth()->user()->parent_id && auth()->user()->child_on)) {
+
+            // Query data per mostrare gli utenti a cui collegare il Post
+            $data['users'] = \App\Models\User::query();
+            $data['users'] = $data['users']->with('children');
+
+            // Se l'utente è admin
+            if (!auth()->user()->parent_id) {
+                $data['users'] = $data['users']->whereNotNull('parent_id');
+                $data['users'] = $data['users']->whereNull('child_on');
+            }
+
+            // Se l'utente è Manager, mostro solo i suoi utenti
+            if (auth()->user()->parent_id && auth()->user()->child_on) {
+                $data['users'] = $data['users']->where('parent_id', auth()->user()->id);
+            }
+
+            $data['users'] = $data['users']->get();
+
+        } else if (auth()->user()->parent_id) {
+
+            $data['user'] = \App\Models\User::query();
+            $data['user'] = $data['user']->where('id', auth()->user()->id);
+
+            $data['user'] = $data['user']->first();
+
+        }
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        $data['files'] = $this->get_image_list();
+        $data['img_selected'] = null;
+
+        $data = json_decode(json_encode($data), true);
+
+        return $data;
+    }
+
     public function getData()
     {
         // Query data
@@ -124,75 +196,6 @@ class Posts extends Controller
             'filters' => request()->all(['s', 'orderby', 'ordertype']),
             'token' => $request->user()->createToken('posts')
         ]);
-    }
-
-    private function getDataNewPost()
-    {
-        // Creo un oggetto di dati vuoto
-        $table = 'posts';
-        $columns = Schema::getColumnListing($table);
-
-        $data = [];
-        foreach ($columns as $field) {
-            // Recupera i dettagli della colonna dal database
-            $columnDetails = DB::selectOne("SHOW COLUMNS FROM " . env('DB_PREFIX') . $table . " WHERE Field = ?", [$field]);
-            $default = $columnDetails->Default;
-
-            $data[$field] = $default ?? '';
-        }
-
-        unset($data['id']);
-        unset($data['deleted_at']);
-        unset($data['created_at']);
-        unset($data['updated_at']);
-
-        $data['saveRedirect'] = Redirect::back()->getTargetUrl();
-
-        $data['channels'] = (new Users)->get_channels();
-
-        /**
-         * Query per recuperare gli utente a cui collegare il post
-         * la query viene creata seguendo delle regole di gestione
-         * degli account:
-         * L'amministratore può collegare i post a tutti gli utenti
-         * Il Manager può collegare i post solo ai suoi sotto utenti
-         */
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        if (!auth()->user()->parent_id || (auth()->user()->parent_id && auth()->user()->child_on)) {
-
-            // Query data per mostrare gli utenti a cui collegare il Post
-            $data['users'] = \App\Models\User::query();
-            $data['users'] = $data['users']->with('children');
-
-            // Se l'utente è admin
-            if (!auth()->user()->parent_id) {
-                $data['users'] = $data['users']->whereNotNull('parent_id');
-                $data['users'] = $data['users']->whereNull('child_on');
-            }
-
-            // Se l'utente è Manager, mostro solo i suoi utenti
-            if (auth()->user()->parent_id && auth()->user()->child_on) {
-                $data['users'] = $data['users']->where('parent_id', auth()->user()->id);
-            }
-
-            $data['users'] = $data['users']->get();
-
-        } else if (auth()->user()->parent_id) {
-
-            $data['user'] = \App\Models\User::query();
-            $data['user'] = $data['user']->where('id', auth()->user()->id);
-
-            $data['user'] = $data['user']->first();
-
-        }
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-        $data['files'] = $this->get_image_list();
-        $data['img_selected'] = null;
-
-        $data = json_decode(json_encode($data), true);
-
-        return $data;
     }
 
     public function schedule(Request $request)
