@@ -42,7 +42,7 @@ function delDate(index) {
 
 <template>
 
-    <Head title="Clienti" />
+    <Head title="Calendarizza" />
 
     <AuthenticatedLayout>
 
