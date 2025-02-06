@@ -23,11 +23,8 @@ let channel_user_can_set = ref([]);
 
 if (form.id || (form.user && form.user.id)) {
 
-    let channel_user = JSON.parse(form.user.channels);
-
-    for (let index in channel_user) {
-        channel_user_can_set.value[index] = channel_user[index]['on'];
-    }
+    let user_channel = JSON.parse(form.user.channels);
+    setChannels(user_channel)
 
 } else {
 
@@ -44,18 +41,29 @@ function checkChannelsByUser() {
 
     const user = props.data.users.find(u => u.id === form.user_id);
     const user_channel = JSON.parse(user.channels);
+    setChannels(user_channel)
+}
 
+/**
+ * Imposta la variabili channels e quali canali possono essere attivati
+ * dall'utente.
+ * @param user_channel
+ */
+function setChannels(user_channel) {
     for (let index in user_channel) {
         channel_user_can_set.value[index] = user_channel[index].on;
         form.channels[index] = user_channel[index];
-        form.channels[index]['on'] = '0';
+
+        if (!form.id) {
+            form.channels[index]['on'] = '0';
+        }
     }
 }
 
 </script>
 
 <template>
-
+    
     <div v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on">
 
         <label class="form-label">
