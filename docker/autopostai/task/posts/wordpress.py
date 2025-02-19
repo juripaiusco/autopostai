@@ -24,8 +24,33 @@ class WordPressPost(BasePost):
                 auth=auth,
                 json=data
             )
-
             post_id = response.json().get("id")
+
+            # Upload immagine
+            if self.data['img']:
+                # Percorso del file da caricare
+                file_path = self.img_path_get()
+
+                # URL API per caricare l'immagine
+                url = f"{self.data['wordpress_url']}/wp-json/wp/v2/media"
+
+                # Aprire il file e inviare la richiesta
+                with open(file_path, "rb") as img:
+                    files = {"file": img}
+                    headers = {"Content-Disposition": f"attachment; filename={file_path}"}
+                    response = requests.post(url, auth=auth, files=files, headers=headers)
+
+                # Ottenere l'ID dell'immagine caricata
+                image_id = response.json().get("id")
+
+                # URL per aggiornare il post
+                url = f"{self.data['wordpress_url']}/wp-json/wp/v2/posts/{post_id}"
+
+                # Dati per assegnare l'immagine come immagine in evidenza
+                data = {"featured_media": image_id}
+
+                # Invia la richiesta PATCH per aggiornare il post
+                response = requests.post(url, auth=auth, json=data)
 
             if self.debug:
                 print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "WordPress - post ID:", response.json().get("id"))
