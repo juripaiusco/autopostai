@@ -30,6 +30,7 @@ def posts_send(debug = False):
         SELECT  {cfg.DB_PREFIX}posts.id AS id,
                 {cfg.DB_PREFIX}posts.user_id AS user_id,
                 {cfg.DB_PREFIX}posts.ai_prompt_post AS ai_prompt_post,
+                {cfg.DB_PREFIX}posts.title AS title,
                 {cfg.DB_PREFIX}posts.img AS img,
                 {cfg.DB_PREFIX}posts.img_ai_check_on AS img_ai_check_on,
                 {cfg.DB_PREFIX}posts.channels AS channels,
@@ -38,7 +39,10 @@ def posts_send(debug = False):
                 {cfg.DB_PREFIX}settings.ai_personality AS ai_personality,
                 {cfg.DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
                 {cfg.DB_PREFIX}settings.openai_api_key AS openai_api_key,
-                {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id
+                {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id,
+                {cfg.DB_PREFIX}settings.wordpress_url AS wordpress_url,
+                {cfg.DB_PREFIX}settings.wordpress_username AS wordpress_username,
+                {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password
 
             FROM {cfg.DB_PREFIX}posts
                 INNER JOIN {cfg.DB_PREFIX}settings
