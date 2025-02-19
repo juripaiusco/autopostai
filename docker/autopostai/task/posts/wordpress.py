@@ -31,3 +31,14 @@ class WordPressPost(BasePost):
                 print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "WordPress - post ID:", response.json().get("id"))
 
             return post_id
+
+    def delete(self, post_id):
+        if self.data['wordpress_url'] is not None:
+            auth = HTTPBasicAuth(self.data['wordpress_username'], self.data['wordpress_password'])
+
+            response = requests.delete(
+                f"{self.data['wordpress_url']}/wp-json/wp/v2/posts/{post_id}",
+                auth=auth
+            )
+
+            return response.json().get("id")

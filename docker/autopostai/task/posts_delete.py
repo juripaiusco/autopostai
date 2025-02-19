@@ -29,7 +29,10 @@ def posts_delete(debug = False):
             SELECT  {cfg.DB_PREFIX}posts.id AS id,
                     {cfg.DB_PREFIX}posts.user_id AS user_id,
                     {cfg.DB_PREFIX}posts.channels AS channels,
-                    {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id
+                    {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id,
+                    {cfg.DB_PREFIX}settings.wordpress_url AS wordpress_url,
+                    {cfg.DB_PREFIX}settings.wordpress_username AS wordpress_username,
+                    {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password
 
                 FROM {cfg.DB_PREFIX}posts
                     INNER JOIN {cfg.DB_PREFIX}settings
@@ -61,6 +64,14 @@ def posts_delete(debug = False):
                     # instagram_post = InstagramPost(data=row, debug=debug)
                     # channels[i]['id_del'] = instagram_post.delete(channels[i]['id'])
                     channels[i]['id_del'] = channels[i]['id']
+
+            if channels[i]['name'] == 'WordPress' and channels[i]['on'] == '1':
+                if channels[i]['id'] != channels[i].get('id_del', None):
+                    if debug:
+                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                              channels[i]['name'], "- post deleting - ID:", channels[i]['id'])
+                    wordpress_post = WordPressPost(data=row, debug=debug)
+                    channels[i]['id_del'] = wordpress_post.delete(channels[i]['id'])
 
         # Salvo gli ID dei post eliminati nei vari canali
         mysql.query(
