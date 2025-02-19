@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List
 import requests
 from requests.auth import HTTPBasicAuth
+import markdown
 
 class WordPressPost(BasePost):
     def __init__(self, data: List[any] = None, debug = False):
@@ -13,9 +14,15 @@ class WordPressPost(BasePost):
         if self.data['wordpress_url'] is not None:
             auth = HTTPBasicAuth(self.data['wordpress_username'], self.data['wordpress_password'])
 
+            # Separare il titolo dal resto del contenuto
+            lines = content.strip().split("\n", 1)
+            title = lines[0].replace("#", "").strip()  # Prende solo il testo dopo `#`
+            body = lines[1].strip() if len(lines) > 1 else ""  # Il resto del contenuto
+            body_html = markdown.markdown(body)
+
             data = {
-                "title": self.data['title'],
-                "content": content,
+                "title": title,
+                "content": body_html,
                 "status": "publish"
             }
 
