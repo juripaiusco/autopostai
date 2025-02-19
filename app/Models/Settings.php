@@ -15,5 +15,8 @@ class Settings extends Model
         'ai_prompt_prefix',
         'openai_api_key',
         'meta_page_id',
+        'wordpress_url',
+        'wordpress_username',
+        'wordpress_password',
     ];
 }

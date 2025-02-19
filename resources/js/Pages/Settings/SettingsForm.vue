@@ -55,7 +55,7 @@ const props = defineProps({
                     aria-controls="nav-meta"
                     aria-selected="false">Meta</button>
 
-            <!-- <button class="nav-link"
+            <button class="nav-link"
                     id="nav-wordpress-tab"
                     data-bs-toggle="tab"
                     data-bs-target="#nav-wordpress"
@@ -64,7 +64,7 @@ const props = defineProps({
                     aria-controls="nav-wordpress"
                     aria-selected="false">WordPress</button>
 
-            <button class="nav-link"
+            <!-- <button class="nav-link"
                     id="nav-newsletter-tab"
                     data-bs-toggle="tab"
                     data-bs-target="#nav-newsletter"
