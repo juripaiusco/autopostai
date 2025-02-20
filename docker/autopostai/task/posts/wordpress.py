@@ -31,7 +31,9 @@ class WordPressPost(BasePost):
                 auth=auth,
                 json=data
             )
+
             post_id = response.json().get("id")
+            post_url = response.json().get("link")
 
             # Upload immagine
             if self.data['img']:
@@ -62,7 +64,7 @@ class WordPressPost(BasePost):
             if self.debug:
                 print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "WordPress - post ID:", response.json().get("id"))
 
-            return post_id
+            return post_id, post_url
 
     def delete(self, post_id):
         if self.data['wordpress_url'] is not None:

@@ -93,8 +93,19 @@ const props = defineProps({
                     <span v-for="(channel, index) in channels = JSON.parse(data.channels)"
                        :key="index"
                        class="mr-2">
-                        <i v-if="channel.on === '1'"
-                           :class="channel.css_class"></i>
+                        <div v-if="channel.url"
+                             class="inline">
+                            <a :href="channel.url"
+                               target="_blank">
+                                <i v-if="channel.on === '1'"
+                                   :class="channel.css_class"></i>
+                            </a>
+                        </div>
+                        <div v-else
+                             class="inline">
+                            <i v-if="channel.on === '1'"
+                               :class="channel.css_class"></i>
+                        </div>
                     </span>
 
                 </div>

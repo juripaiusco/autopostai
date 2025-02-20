@@ -115,7 +115,7 @@ def posts_send(debug = False):
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
                               channels[i]['name'], "- post sending")
                     wordpress_post = WordPressPost(data=row, debug=debug)
-                    channels[i]['id'] = wordpress_post.send(content)
+                    channels[i]['id'], channels[i]['url'] = wordpress_post.send(content)
 
             # Salvo gli ID del post nei vari canali
             mysql.query(
