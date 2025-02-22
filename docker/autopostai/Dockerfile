@@ -10,7 +10,8 @@ RUN pip install \
     pytz \
     tqdm \
     tiktoken \
-    markdown
+    markdown \
+    pillow
 
 # Imposta la directory di lavoro
 WORKDIR /app
