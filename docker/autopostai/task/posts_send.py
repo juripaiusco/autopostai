@@ -30,6 +30,7 @@ def posts_send(debug = False):
         SELECT  {cfg.DB_PREFIX}posts.id AS id,
                 {cfg.DB_PREFIX}posts.user_id AS user_id,
                 {cfg.DB_PREFIX}posts.ai_prompt_post AS ai_prompt_post,
+                {cfg.DB_PREFIX}posts.ai_content AS ai_content,
                 {cfg.DB_PREFIX}posts.title AS title,
                 {cfg.DB_PREFIX}posts.img AS img,
                 {cfg.DB_PREFIX}posts.img_ai_check_on AS img_ai_check_on,
@@ -76,6 +77,10 @@ def posts_send(debug = False):
             if channels[i]['on'] == '1':
                 connect_to_llm = 1
 
+        if row['ai_content'] is not None:
+            connect_to_llm = 0
+            content = row['ai_content']
+
         # Mi connetto al LLM
         if connect_to_llm == 1:
             content = ai_generate(
@@ -96,21 +101,27 @@ def posts_send(debug = False):
         # invio il post, con il testo creato dal LLM
         if content is not None:
             for i in channels:
-                if channels[i]['name'] == 'Facebook' and channels[i]['on'] == '1':
+                if (channels[i]['name'] == 'Facebook'
+                    and channels[i]['on'] == '1'
+                    and channels[i]['id'] is None):
                     if debug:
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
                               channels[i]['name'], "- post sending")
                     facebook_post = FacebookPost(data=row, debug=debug)
                     channels[i]['id'] = facebook_post.send(content)
 
-                if channels[i]['name'] == 'Instagram' and channels[i]['on'] == '1':
+                if (channels[i]['name'] == 'Instagram'
+                    and channels[i]['on'] == '1'
+                    and channels[i]['id'] is None):
                     if debug:
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
                               channels[i]['name'], "- post sending")
                     instagram_post = InstagramPost(data=row, debug=debug)
                     channels[i]['id'] = instagram_post.send(content)
 
-                if channels[i]['name'] == 'WordPress' and channels[i]['on'] == '1':
+                if (channels[i]['name'] == 'WordPress'
+                    and channels[i]['on'] == '1'
+                    and channels[i]['id'] is None):
                     if debug:
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
                               channels[i]['name'], "- post sending")
