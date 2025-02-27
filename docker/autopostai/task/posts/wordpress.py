@@ -10,6 +10,16 @@ class WordPressPost(BasePost):
     def __init__(self, data: List[any] = None, debug = False):
         super().__init__(channel_name="WordPress", data=data, debug=debug)
 
+    def prompt_get(self):
+        # Creo il prompt
+        prompt = ("Generami un articolo per wordpress formattato in Markdown, "
+                  "con un titolo (#), sottotitoli (##), elenchi e grassetto (**bold**).")
+
+        if self.data['ai_prompt_post'] is not None:
+            prompt = f"{prompt} {self.data['ai_prompt_post']}"
+
+        return prompt
+
     def send(self, content):
         if self.data['wordpress_url'] is not None:
             auth = HTTPBasicAuth(self.data['wordpress_username'], self.data['wordpress_password'])

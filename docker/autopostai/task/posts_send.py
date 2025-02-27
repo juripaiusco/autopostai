@@ -58,9 +58,6 @@ def posts_send(debug = False):
 
         channels = json.loads(row['channels'])
 
-        base_post = BasePost(data=row)
-        prompt = base_post.prompt_get()
-
         #########################################################
         #                                                       #
         #                 Collegamento al LLM                   #
@@ -69,79 +66,105 @@ def posts_send(debug = False):
 
         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "LLM - create content")
 
-        # Verifico che ci sia almeno un canale attivato per l'invio di post
-        # se non ci sono canali attivati, non verrà fatta nessuna connessione
-        # al LLM
-        connect_to_llm = 0
-        for i in channels:
-            if channels[i]['on'] == '1':
-                connect_to_llm = 1
-
-        if row['ai_content'] is not None:
-            connect_to_llm = 0
-            content = row['ai_content']
-
-        # Mi connetto al LLM
-        if connect_to_llm == 1:
-            content = ai_generate(
-                data=row,
-                prompt=prompt,
-                img_path=base_post.img_path_get() if row['img_ai_check_on'] == '1' else None,
-                type="post",
-                debug=debug
-            )
-
-            # Salvo il contenuto generato dall'AI
-            mysql.query(
-                query=f"UPDATE {cfg.DB_PREFIX}posts SET ai_content = %s WHERE id = %s",
-                parameters=(content, row['id'])
-            )
-
         # Per ogni canale selezionato (Facebook, Instagram, WordPress, ...)
         # invio il post, con il testo creato dal LLM
-        if content is not None:
-            for i in channels:
-                if (channels[i]['name'] == 'Facebook'
-                    and channels[i]['on'] == '1'
-                    and channels[i]['id'] is None):
-                    if debug:
-                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                              channels[i]['name'], "- post sending")
-                    facebook_post = FacebookPost(data=row, debug=debug)
-                    channels[i]['id'] = facebook_post.send(content)
+        for i in channels:
+            if (channels[i]['name'] == 'Facebook'
+                and channels[i]['on'] == '1'
+                and channels[i]['id'] is None):
+                if debug:
+                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                          channels[i]['name'], "- post sending")
+                facebook_post = FacebookPost(data=row, debug=debug)
+                channels[i]['id'] = facebook_post.send(ai_content_get(
+                    channelName=channels[i]['name'],
+                    data=row,
+                    debug=debug
+                ))
 
-                if (channels[i]['name'] == 'Instagram'
-                    and channels[i]['on'] == '1'
-                    and channels[i]['id'] is None):
-                    if debug:
-                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                              channels[i]['name'], "- post sending")
-                    instagram_post = InstagramPost(data=row, debug=debug)
-                    channels[i]['id'] = instagram_post.send(content)
+            if (channels[i]['name'] == 'Instagram'
+                and channels[i]['on'] == '1'
+                and channels[i]['id'] is None):
+                if debug:
+                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                          channels[i]['name'], "- post sending")
+                instagram_post = InstagramPost(data=row, debug=debug)
+                channels[i]['id'] = instagram_post.send(ai_content_get(
+                    channelName=channels[i]['name'],
+                    data=row,
+                    debug=debug
+                ))
 
-                if (channels[i]['name'] == 'WordPress'
-                    and channels[i]['on'] == '1'
-                    and channels[i]['id'] is None):
-                    if debug:
-                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                              channels[i]['name'], "- post sending")
-                    wordpress_post = WordPressPost(data=row, debug=debug)
-                    channels[i]['id'], channels[i]['url'] = wordpress_post.send(content)
+            if (channels[i]['name'] == 'WordPress'
+                and channels[i]['on'] == '1'
+                and channels[i]['id'] is None):
+                if debug:
+                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                          channels[i]['name'], "- post sending")
+                wordpress_post = WordPressPost(data=row, debug=debug)
+                channels[i]['id'], channels[i]['url'] = wordpress_post.send(ai_content_get(
+                    channelName=channels[i]['name'],
+                    data=row,
+                    debug=debug
+                ))
 
-            # Salvo gli ID del post nei vari canali
-            mysql.query(
-                query=f"UPDATE {cfg.DB_PREFIX}posts SET channels = %s WHERE id = %s",
-                parameters=(json.dumps(channels), row['id'])
-            )
+        # Salvo gli ID del post nei vari canali
+        mysql.query(
+            query=f"UPDATE {cfg.DB_PREFIX}posts SET channels = %s WHERE id = %s",
+            parameters=(json.dumps(channels), row['id'])
+        )
 
         # Verifico che il post sia stato pubblicato e lo marchio come published
-        if content is not None:
-            ctrl_posts_sent(id=row['id'], debug=debug)
+        ctrl_posts_sent(id=row['id'], debug=debug)
 
     mysql.close()
 
     if debug:
         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Posts sending - END -------------------")
+
+
+# Creo il contenuto tramite LLM e poi salvo il contenuto del post,
+# viene passato la tipologia di post e in base alla tipologia viene
+# modificato il prompt.
+def ai_content_get(channelName, data, debug = False):
+    mysql = Mysql()
+    mysql.connect()
+
+    # Verifico che il contenuto sia già stato creato dal LLM
+    row = mysql.query(f"""
+            SELECT  {cfg.DB_PREFIX}posts.ai_content AS ai_content
+                FROM {cfg.DB_PREFIX}posts
+            WHERE {cfg.DB_PREFIX}posts.id = {data['id']}
+        """)
+
+    if row[0]['ai_content'] is not None:
+        return row[0]['ai_content']
+
+    base_post = BasePost(data=data)
+    prompt = base_post.prompt_get()
+
+    if channelName == 'WordPress':
+        wordpress_post = WordPressPost(data=data)
+        prompt = wordpress_post.prompt_get()
+
+    # Mi connetto al LLM
+    content = ai_generate(
+        data=data,
+        prompt=prompt,
+        img_path=base_post.img_path_get() if data['img_ai_check_on'] == '1' else None,
+        type="post",
+        debug=debug
+    )
+
+    # Salvo il contenuto generato dall'AI
+    mysql.query(
+        query=f"UPDATE {cfg.DB_PREFIX}posts SET ai_content = %s WHERE id = %s",
+        parameters=(content, data['id'])
+    )
+
+    mysql.close()
+
+    return content
 
 
 # Verifico se il post è stato pubblicato, verificando se gli ID
