@@ -40,7 +40,7 @@ const props = defineProps({
             </div>
 
             <div class="row">
-                <div class="col-lg">
+                <div class="col-lg whitespace-pre-line">
 
                     <h2 class="text-xl font-bold text-center">Istruzioni inviate all'AI</h2>
 
