@@ -58,7 +58,7 @@ def posts_update(debug = False):
                 if debug:
                     print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
                           channels[i]['name'], "- post updateding")
-                facebook_post = FacebookPost(data=row, debug=debug)
+                # facebook_post = FacebookPost(data=row, debug=debug)
                 # channels[i]['id'] = facebook_post.update(channels[i]['id'], row['ai_content'])
 
             if (channels[i]['name'] == 'Instagram'
@@ -67,7 +67,7 @@ def posts_update(debug = False):
                 if debug:
                     print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
                           channels[i]['name'], "- post updateding")
-                instagram_post = InstagramPost(data=row, debug=debug)
+                # instagram_post = InstagramPost(data=row, debug=debug)
                 # channels[i]['id'] = instagram_post.update(channels[i]['id'], row['ai_content'])
 
             if (channels[i]['name'] == 'WordPress'
