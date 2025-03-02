@@ -51,40 +51,37 @@ let edit_ai_content = ref(false);
 
         <ApplicationContainer>
 
-            <!-- <div class="max-sm:text-center mb-10">
-
-                <Link class="btn btn-secondary w-[120px]"
-                      :href="data.saveRedirect">
-                    Indietro
-                </Link>
-
-            </div> -->
+            <h2 class="text-xl font-bold mb-3">Istruzioni inviate all'AI</h2>
 
             <div class="row">
-                <div class="col-lg whitespace-pre-line">
-
-                    <h2 class="text-xl font-bold text-center">Istruzioni inviate all'AI</h2>
-
-                    <br>
+                <div class="col-lg-4">
 
                     <img :src="data.img"
                          class="rounded" >
 
+                </div>
+                <div class="col-lg whitespace-pre-line">
+
+                    <div class="row">
+                        <div class="col-lg !mt-6 sm:!mt-0">
+
+                            <label class="form-label">
+                                Proprietario del post
+                            </label>
+                            {{ data.user.name }} - {{ data.user.email }}
+
+                        </div>
+                        <div class="col-lg !mt-6 sm:!mt-0 sm:text-right">
+
+                            <label class="form-label">
+                                Data pubblicazione
+                            </label>
+                            {{ __date(data.published_at) }}
+
+                        </div>
+                    </div>
+
                     <br>
-
-                    <label class="form-label">
-                        Proprietario del post
-                    </label>
-                    {{ data.user.name }} - {{ data.user.email }}
-
-                    <br><br>
-
-                    <label class="form-label">
-                        Data pubblicazione
-                    </label>
-                    {{ __date(data.published_at) }}
-
-                    <br><br>
 
                     <label class="form-label">
                         Titolo
@@ -127,8 +124,8 @@ let edit_ai_content = ref(false);
                     </label>
 
                     <span v-for="(channel, index) in channels = JSON.parse(data.channels)"
-                       :key="index"
-                       class="mr-2">
+                          :key="index"
+                          class="mr-2">
                         <div v-if="channel.url"
                              class="inline">
                             <a :href="channel.url"
@@ -145,94 +142,92 @@ let edit_ai_content = ref(false);
                     </span>
 
                 </div>
-                <div class="col-lg">
+            </div>
 
-                    <h2 class="text-xl font-bold text-center max-sm:mt-6">Contenuto generato dall'AI</h2>
+            <hr class="my-6">
 
-                    <br>
+            <h2 class="text-xl font-bold mb-3 max-sm:mt-6">Contenuto generato dall'AI</h2>
 
-                    <div class="card">
-                        <div class="card-body whitespace-pre-line">
+            <div class="card">
+                <div class="card-body whitespace-pre-line">
 
-                            <div v-if="edit_ai_content === false">
-                                {{ form.ai_content }}
+                    <div v-if="edit_ai_content === false">
+                        {{ form.ai_content }}
 
-                                <br>
-                                <button class="btn btn-sm btn-primary mt-2 w-1/2"
-                                        @click="edit_ai_content = true">
-                                    Modifica
-                                </button>
-                            </div>
-                            <div v-if="edit_ai_content === true">
+                        <br>
+                        <button class="btn btn-sm btn-primary mt-2 w-1/2"
+                                @click="edit_ai_content = true">
+                            Modifica
+                        </button>
+                    </div>
+                    <div v-if="edit_ai_content === true">
                                 <textarea class="form-control h-[216px]"
-                                  v-model="form.ai_content"></textarea>
-                                <button class="btn btn-sm btn-success mt-2 w-1/2"
-                                        @click="edit_ai_content = false; submit(true)">
-                                    Salve
-                                </button>
-                            </div>
+                                          v-model="form.ai_content"></textarea>
+                        <button class="btn btn-sm btn-success mt-2 w-1/2"
+                                @click="edit_ai_content = false; submit(true)">
+                            Salve
+                        </button>
+                    </div>
 
-                            <small class="text-[11px] text-gray-500">
-                                {{ __date(data.published_at) }}
-                                -
-                                <span v-if="data.token.tokens_used">
+                    <small class="text-[11px] text-gray-500">
+                        {{ __date(data.published_at) }}
+                        -
+                        <span v-if="data.token.tokens_used">
                                      {{ data.token.tokens_used }} token
                                 </span>
-                                <span v-else
-                                      class="text-red-500">
+                        <span v-else
+                              class="text-red-500">
                                     Error: token non disponibile
                                 </span>
-                            </small>
-
-                        </div>
-                    </div>
+                    </small>
 
                 </div>
-                <div class="col-lg text-center">
+            </div>
 
-                    <h2 class="text-xl font-bold text-center mt-6 lg:mt-0">Commenti</h2>
+            <div v-if="data.comments.length > 0">
 
-                    <br>
+                <hr class="my-6">
 
-                    <div v-for="comment in data.comments">
-                        <div class="card text-left mb-2">
-                            <div class="card-body whitespace-pre-line">
+                <h2 class="text-xl font-bold  mb-3 max-sm:mt-6">Commenti</h2>
+
+                <div v-for="comment in data.comments">
+                    <div class="card text-left mb-2">
+                        <div class="card-body whitespace-pre-line">
+                            <label class="form-label">
+                                <li v-if="comment.channel === 'facebook'"
+                                    class="fa-brands fa-facebook"></li>
+                                <li v-if="comment.channel === 'instagram'"
+                                    class="fa-brands fa-instagram"></li>
+                                <li v-if="comment.channel === 'wordpress'"
+                                    class="fa-brands fa-wordpress"></li>
+                                &nbsp;{{ comment.from_name }} ha scritto:
+                            </label>
+                            {{ comment.message }}
+                            <br>
+                            <small class="text-[11px] text-gray-500">{{ __date(comment.message_created_time) }}</small>
+
+                            <div v-if="comment.reply" class="mt-5">
                                 <label class="form-label">
-                                    <li v-if="comment.channel === 'facebook'"
-                                        class="fa-brands fa-facebook"></li>
-                                    <li v-if="comment.channel === 'instagram'"
-                                        class="fa-brands fa-instagram"></li>
-                                    <li v-if="comment.channel === 'wordpress'"
-                                        class="fa-brands fa-wordpress"></li>
-                                    &nbsp;{{ comment.from_name }} ha scritto:
+                                    Risposta:
                                 </label>
-                                {{ comment.message }}
+                                {{ comment.reply }}
                                 <br>
-                                <small class="text-[11px] text-gray-500">{{ __date(comment.message_created_time) }}</small>
-
-                                <div v-if="comment.reply" class="mt-5">
-                                    <label class="form-label">
-                                        Risposta:
-                                    </label>
-                                    {{ comment.reply }}
-                                    <br>
-                                    <small class="text-[11px] text-gray-500">
-                                        {{ __date(comment.reply_created_time) }}
-                                        -
-                                        <span v-if="comment.token">
+                                <small class="text-[11px] text-gray-500">
+                                    {{ __date(comment.reply_created_time) }}
+                                    -
+                                    <span v-if="comment.token">
                                             {{ comment.token.tokens_used }} token
                                         </span>
-                                        <span v-else
-                                              class="text-red-500">
+                                    <span v-else
+                                          class="text-red-500">
                                             Error: token non disponibile
                                         </span>
-                                    </small>
-                                </div>
+                                </small>
                             </div>
                         </div>
                     </div>
-
                 </div>
+
             </div>
 
             <div class="max-sm:text-center mt-10">
