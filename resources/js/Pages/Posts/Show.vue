@@ -54,7 +54,8 @@ let edit_ai_content = ref(false);
             <h2 class="text-xl font-bold mb-3">Istruzioni inviate all'AI</h2>
 
             <div class="row">
-                <div class="col-lg-4">
+                <div v-if="data.img"
+                     class="col-lg-4">
 
                     <img :src="data.img"
                          class="rounded" >
@@ -155,10 +156,14 @@ let edit_ai_content = ref(false);
                         {{ form.ai_content }}
 
                         <br>
-                        <button class="btn btn-sm btn-primary mt-2 w-1/2"
-                                @click="edit_ai_content = true">
-                            Modifica
-                        </button>
+                        <div v-for="(channel, index) in channels = JSON.parse(data.channels)">
+                            <div v-if="channel.name === 'WordPress' && channel.on === '1'">
+                                <button class="btn btn-sm btn-primary mt-2 w-1/2"
+                                        @click="edit_ai_content = true">
+                                    Modifica
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div v-if="edit_ai_content === true">
                                 <textarea class="form-control h-[216px]"
