@@ -20,19 +20,24 @@ class WordPressPost(BasePost):
 
         return prompt
 
+    def get_data(self, markdown_content):
+        # Separare il titolo dal resto del contenuto
+        lines = markdown_content.strip().split("\n", 1)
+        title = lines[0].replace("#", "").strip()  # Prende solo il testo dopo `#`
+        body = lines[1].strip() if len(lines) > 1 else ""  # Il resto del contenuto
+        body_html = markdown.markdown(body)
+
+        return title, body_html
+
     def send(self, content):
         if self.data['wordpress_url'] is not None:
             auth = HTTPBasicAuth(self.data['wordpress_username'], self.data['wordpress_password'])
 
-            # Separare il titolo dal resto del contenuto
-            lines = content.strip().split("\n", 1)
-            title = lines[0].replace("#", "").strip()  # Prende solo il testo dopo `#`
-            body = lines[1].strip() if len(lines) > 1 else ""  # Il resto del contenuto
-            body_html = markdown.markdown(body)
+            title, body = self.get_data(content)
 
             data = {
                 "title": title,
-                "content": body_html,
+                "content": body,
                 "status": "publish"
             }
 
@@ -75,6 +80,26 @@ class WordPressPost(BasePost):
                 print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "WordPress - post ID:", response.json().get("id"))
 
             return post_id, post_url
+
+    def update(self, post_id, content):
+        if self.data['wordpress_url'] is not None:
+            auth = HTTPBasicAuth(self.data['wordpress_username'], self.data['wordpress_password'])
+
+            title, body = self.get_data(content)
+
+            data = {
+                "title": title,
+                "content": body,
+                "status": "publish"
+            }
+
+            response = requests.patch(
+                f"{self.data['wordpress_url']}/wp-json/wp/v2/posts/{post_id}",
+                auth=auth,
+                json=data
+            )
+
+            return response.json().get("id")
 
     def delete(self, post_id):
         if self.data['wordpress_url'] is not None:
