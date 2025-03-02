@@ -18,7 +18,12 @@ const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
 
 const form = useForm(dataForm);
 
-function submit() {
+function submit(update_on_channels = false) {
+
+    if (update_on_channels === true) {
+        form['updated'] = 2;
+    }
+
     form.post(route('post.update_no_redirect', form.id), {
         preserveScroll: true
     })
@@ -148,14 +153,24 @@ let edit_ai_content = ref(false);
 
                     <div class="card">
                         <div class="card-body whitespace-pre-line">
-                            {{ data.ai_content }}
 
-                            <br>
-                            <button class="btn btn-sm btn-primary mt-2 w-1/2"
-                                    @click="edit_ai_content = true">
-                                Modifica
-                            </button>
-                            <br>
+                            <div v-if="edit_ai_content === false">
+                                {{ form.ai_content }}
+
+                                <br>
+                                <button class="btn btn-sm btn-primary mt-2 w-1/2"
+                                        @click="edit_ai_content = true">
+                                    Modifica
+                                </button>
+                            </div>
+                            <div v-if="edit_ai_content === true">
+                                <textarea class="form-control h-[216px]"
+                                  v-model="form.ai_content"></textarea>
+                                <button class="btn btn-sm btn-success mt-2 w-1/2"
+                                        @click="edit_ai_content = false; submit(true)">
+                                    Salve
+                                </button>
+                            </div>
 
                             <small class="text-[11px] text-gray-500">
                                 {{ __date(data.published_at) }}
@@ -168,6 +183,7 @@ let edit_ai_content = ref(false);
                                     Error: token non disponibile
                                 </span>
                             </small>
+
                         </div>
                     </div>
 
