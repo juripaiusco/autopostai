@@ -3,13 +3,29 @@
 import ApplicationContainer from "@/Components/ApplicationContainer.vue";
 import ApplicationHeader from "@/Components/ApplicationHeader.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import {Head, Link} from "@inertiajs/vue3";
+import {Head, Link, useForm} from "@inertiajs/vue3";
 import {__date} from "../../ComponentsExt/Date.js";
+import {ref} from "vue";
 
 const props = defineProps({
     data: Object,
     filters: Object,
 })
+
+const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
+    return props.data ? v : '';
+}));
+
+const form = useForm(dataForm);
+
+function submit() {
+    form.post(route('post.update_no_redirect', form.id), {
+        preserveScroll: true
+    })
+}
+
+let edit_ai_prompt_comment = ref(false);
+let edit_ai_content = ref(false);
 
 </script>
 
@@ -30,14 +46,14 @@ const props = defineProps({
 
         <ApplicationContainer>
 
-            <div class="max-sm:text-center mb-10">
+            <!-- <div class="max-sm:text-center mb-10">
 
                 <Link class="btn btn-secondary w-[120px]"
                       :href="data.saveRedirect">
                     Indietro
                 </Link>
 
-            </div>
+            </div> -->
 
             <div class="row">
                 <div class="col-lg whitespace-pre-line">
@@ -82,9 +98,24 @@ const props = defineProps({
                     <label class="form-label">
                         Prompt commenti
                     </label>
-                    {{ data.ai_prompt_comment }}
+                    <div v-if="edit_ai_prompt_comment === false">
+                        {{ form.ai_prompt_comment }}
+                        <br>
+                        <button class="btn btn-sm btn-primary mt-2 w-1/2"
+                                @click="edit_ai_prompt_comment = true">
+                            Modifica
+                        </button>
+                    </div>
+                    <div v-if="edit_ai_prompt_comment === true">
+                        <textarea class="form-control h-[216px]"
+                                  v-model="form.ai_prompt_comment"></textarea>
+                        <button class="btn btn-sm btn-success mt-2 w-1/2"
+                                @click="edit_ai_prompt_comment = false; submit()">
+                            Salve
+                        </button>
+                    </div>
 
-                    <br><br>
+                    <br>
 
                     <label class="form-label">
                         Pubblicato su:
@@ -119,6 +150,11 @@ const props = defineProps({
                         <div class="card-body whitespace-pre-line">
                             {{ data.ai_content }}
 
+                            <br>
+                            <button class="btn btn-sm btn-primary mt-2 w-1/2"
+                                    @click="edit_ai_content = true">
+                                Modifica
+                            </button>
                             <br>
 
                             <small class="text-[11px] text-gray-500">

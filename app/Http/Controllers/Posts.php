@@ -347,6 +347,14 @@ class Posts extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $saveRedirect = $request['saveRedirect'];
+        $this->update_no_redirect($request, $id);
+
+        return Redirect::to($saveRedirect);
+    }
+
+    public function update_no_redirect(Request $request, string $id)
+    {
         $request->validate([
             'title' => 'required',
             'ai_prompt_post' => 'required',
@@ -355,7 +363,6 @@ class Posts extends Controller
         if ($request['img_selected'])
             $request['img'] = $request['img_selected'];
 
-        $saveRedirect = $request['saveRedirect'];
         unset($request['saveRedirect']);
         unset($request['created_at']);
         unset($request['updated_at']);
@@ -363,6 +370,8 @@ class Posts extends Controller
         unset($request['files']);
         unset($request['ai_prompt_img']);
         unset($request['img_selected']);
+        unset($request['comments']);
+        unset($request['token']);
 
         $post = Post::find($id);
 
@@ -373,8 +382,6 @@ class Posts extends Controller
         $post->fill($request->all());
         $post->save();
         $this->save_img('posts', $post, $request);
-
-        return Redirect::to($saveRedirect);
     }
 
     private function save_img($path, $data, Request $request)
