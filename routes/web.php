@@ -59,6 +59,8 @@ Route::middleware('auth')->group(function () {
         ->name('post.destroy');
     Route::get('/posts/destroy_image/{img}', [Posts::class, 'destroy_image'])
         ->name('post.destroy_image');
+    Route::post('/posts/preview', [Posts::class, 'preview'])
+        ->name('post.preview');
 
     Route::get('/settings', [Settings::class, 'index'])
         ->name('settings.index');

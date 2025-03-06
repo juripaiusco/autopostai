@@ -1,6 +1,6 @@
 <script setup>
 
-import {Head, Link} from "@inertiajs/vue3";
+import {Head, Link, usePage} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import ApplicationHeader from "@/Components/ApplicationHeader.vue";
 import ApplicationContainer from "@/Components/ApplicationContainer.vue";
@@ -43,6 +43,8 @@ dataForm['ai_prompt_img'] = '';
 
 const form = useForm(dataForm);
 
+const app_url = import.meta.env.VITE_APP_URL;
+
 /**
  * Genero l'immagine in base al prompt inserito
  * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
@@ -56,7 +58,6 @@ let images_used = ref(props.auth.images_used);
 const startJob = async () => {
     ai_prompt_img_loading.value = true;
     ai_prompt_img_path.value = null;
-    const app_url = import.meta.env.VITE_APP_URL;
 
     try {
         // Avvia il job tramite API
@@ -126,6 +127,22 @@ let selectedImage = ref(null);
 
 function selectImage(index) {
     selectedImage = index; // Imposta l'immagine selezionata
+}
+
+const ai_prompt_post_loading = ref(false);
+
+function previewAIContent() {
+    ai_prompt_post_loading.value = true;
+
+    form.post(route('post.preview'), {
+        preserveScroll: true,
+        preserveUrl: true,
+        onSuccess: () => {
+            ai_prompt_post_loading.value = false;
+            form.ai_content = usePage().props.data.ai_content;
+            form.user = usePage().props.data.user;
+        },
+    })
 }
 
 </script>
@@ -446,18 +463,45 @@ function selectImage(index) {
                     </div>
                 </div>
 
+                <div class="hidden"
+                     :class="{'!block': form.ai_content}">
+
+                    <br>
+
+                    <label class="form-label">
+                        Anteprima del post
+                        <br>
+                        <small>
+                            Questo è il post che sarà pubblicato, se vuoi lo puoi modificare.
+                        </small>
+                    </label>
+                    <textarea class="form-control h-[216px]"
+                              :class="{'!border !border-red-500' : form.errors.ai_content}"
+                              v-model="form.ai_content"></textarea>
+                    <div class="text-red-500 text-center text-xs"
+                         v-if="form.errors.ai_content">{{ __(form.errors.ai_content) }}</div>
+
+                </div>
+
                 <div class="text-right mt-10 flex flex-wrap justify-center md:justify-end">
 
-                    <div class="w-1/2 text-center md:w-auto">
+                    <div class="w-1/3 text-center md:w-auto pr-2">
                         <Link class="btn btn-secondary w-[100%] md:w-[120px]"
                               :href="data.saveRedirect">
                             Annulla
                         </Link>
                     </div>
 
-                    <div class="w-1/2 text-center md:w-auto">
+                    <div class="w-1/3 text-center md:w-auto pr-2">
+                        <button :disabled="!form.id && !form.user_id"
+                                type="button"
+                                class="btn btn-primary w-[100%] md:w-[120px]"
+                                @click="previewAIContent">Anteprima</button>
+                    </div>
+
+                    <div class="w-1/3 text-center md:w-auto">
                         <button type="submit"
-                                class="btn btn-success ml-2 w-[100%] md:w-[120px]">Salva</button>
+                                class="btn btn-success w-[100%] md:w-[120px]">Salva</button>
                     </div>
 
                 </div>

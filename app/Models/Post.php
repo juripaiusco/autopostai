@@ -10,7 +10,31 @@ class Post extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $guarded = [];
+//    protected $guarded = [];
+    protected $fillable = [
+        'id',
+        'user_id',
+        'title',
+        'ai_prompt_post',
+        'ai_content',
+        'ai_prompt_comment',
+        'img',
+        'img_ai_check_on',
+        'channels',
+        'preview',
+        'published_at',
+        'published',
+        'task_complete',
+        'check_attempts',
+        'on_hold_until',
+        'updated',
+        'deleted',
+        'deleted_at',
+        'created_at',
+        'updated_at',
+    ];
+
+
     protected $dates = ['deleted_at'];
 
     public function user()

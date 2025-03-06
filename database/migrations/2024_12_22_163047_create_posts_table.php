@@ -43,6 +43,9 @@ return new class extends Migration
             // un altro post ha le risposte chiuse.
             $table->json('channels');
 
+            // Flag se il post è un'anteprima
+            $table->string('preview', 1)->default(0);
+
             // Data pubblicazione del post
             $table->timestamp('published_at')->nullable();
 

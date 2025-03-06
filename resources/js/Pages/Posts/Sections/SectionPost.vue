@@ -100,7 +100,7 @@ function setChannels(user_channels, user_channels_value = null) {
                type="text"
                class="form-control"
                disabled
-               :value="(form.user.name + ' - ' + form.user.email)" />
+               :value="(form.user?.name + ' - ' + form.user?.email)" />
 
         <br>
 
@@ -147,7 +147,11 @@ function setChannels(user_channels, user_channels_value = null) {
     <label class="form-label">
         Prompt
         <br>
-        <small>L'AI genera un contenuto in base alle tue indicazioni</small>
+        <small>
+            L'AI genera un contenuto in base alle tue indicazioni. Se premi il pulsante "Anteprima" puoi vedere come
+            sarà il testo del post, invece se salvi direttamente senza anteprima, il post sarà creato automaticamente
+            dall'AI.
+        </small>
     </label>
     <textarea class="form-control h-[216px]"
               :class="{'!border !border-red-500' : form.errors.ai_prompt_post}"

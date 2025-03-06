@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ImageJob;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Process\Exceptions\ProcessFailedException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -135,6 +136,8 @@ class Posts extends Controller
             });
         }
 
+        $data->where('preview', 0);
+
         return $data;
     }
 
@@ -231,7 +234,7 @@ class Posts extends Controller
         ]);
     }
 
-    private function storeData(Request $request, $published_at = '')
+    private function storeData(Request $request, $published_at = '', $preview = false)
     {
         $request->validate([
             'title' => 'required',
@@ -261,6 +264,10 @@ class Posts extends Controller
             $post->title = $request['title'] . ' ' . date('d/m/Y H:i', strtotime($published_at));
         }
 
+        if ($preview == true) {
+            $post->preview = 1;
+        }
+
         $post->channels = json_encode($request->input('channels'));
         $post->on_hold_until = date('Y-m-d H:i:s');
 
@@ -268,6 +275,8 @@ class Posts extends Controller
 
         $post->save();
         $this->save_img('posts', $post, $request);
+
+        return $post;
     }
     /**
      * Store a newly created resource in storage.
@@ -382,6 +391,8 @@ class Posts extends Controller
         $post->fill($request->all());
         $post->save();
         $this->save_img('posts', $post, $request);
+
+        return $post;
     }
 
     private function save_img($path, $data, Request $request)
@@ -484,5 +495,40 @@ class Posts extends Controller
     public function destroy_image(string $img)
     {
         return Storage::disk('public')->delete('stable-diffusion/' . Auth::id() . '/' . $img);
+    }
+
+    public function preview(Request $request)
+    {
+        $request['ai_content'] = 'pippo';
+
+        if (!$request->input('id')) {
+            $data = $this->storeData($request, '', true);
+        } else {
+            $data = $this->update_no_redirect($request, $request->input('id'));
+        }
+
+        /*$scriptPath = base_path('docker/autopostai/autopostai.sh');
+
+        // Lancia Docker per generare la preview del post
+        $process = new \Symfony\Component\Process\Process([
+            $scriptPath, // Script Python
+            $request->data['ai_prompt_post'], // Prompt
+            'preview' // Argomento per generare la preview
+        ]);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }*/
+
+        /*$data['saveRedirect'] = Redirect::back()->getTargetUrl();
+
+        return Inertia::render('Posts/Form', [
+            'data' => $data,
+            'filters' => request()->all(['s', 'orderby', 'ordertype']),
+            'token' => $request->user()->createToken('posts')
+        ]);*/
+
+        return Redirect::route('post.edit', ['id' => $data->id]);
     }
 }
