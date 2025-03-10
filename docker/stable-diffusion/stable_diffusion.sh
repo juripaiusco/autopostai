@@ -40,7 +40,8 @@
     docker run \
       --rm \
       --env-file .env \
-      -v $DOCKER_DIR:/app $DOCKER_IMAGE_NAME \
+      -v $DOCKER_DIR:/app \
+      $DOCKER_IMAGE_NAME \
       python \
       main.py \
       --prompt "$PROMPT" \
