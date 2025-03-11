@@ -11,10 +11,9 @@ RUN pip install \
     tqdm \
     tiktoken \
     markdown \
-    pillow
+    pillow \
+    fastapi \
+    uvicorn
 
 # Imposta la directory di lavoro
 WORKDIR /app
-
-# Comando di default per eseguire Python
-CMD ["python", "main.py"]
