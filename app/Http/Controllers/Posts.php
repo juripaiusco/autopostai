@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Process\Exceptions\ProcessFailedException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -499,35 +500,27 @@ class Posts extends Controller
 
     public function preview(Request $request)
     {
-        $request['ai_content'] = 'pippo';
+        $request['preview'] = 1;
 
+        // Salvo i dati del post
         if (!$request->input('id')) {
             $data = $this->storeData($request, '', true);
         } else {
             $data = $this->update_no_redirect($request, $request->input('id'));
         }
 
-        /*$scriptPath = base_path('docker/autopostai/autopostai.sh');
-
-        // Lancia Docker per generare la preview del post
-        $process = new \Symfony\Component\Process\Process([
-            $scriptPath, // Script Python
-            $request->data['ai_prompt_post'], // Prompt
-            'preview' // Argomento per generare la preview
+        $response = Http::post('http://' . env('AUTOPOSTAI_API_URL') . ':8000/generate', [
+            'id' => 1
         ]);
-        $process->run();
 
-        if (!$process->isSuccessful()) {
-            throw new ProcessFailedException($process);
-        }*/
+        $autopostai_api_response = $response->json();
 
-        /*$data['saveRedirect'] = Redirect::back()->getTargetUrl();
+        if ($autopostai_api_response['status'] == 'success') {
+            $request['ai_content'] = $autopostai_api_response['content'];
+        }
 
-        return Inertia::render('Posts/Form', [
-            'data' => $data,
-            'filters' => request()->all(['s', 'orderby', 'ordertype']),
-            'token' => $request->user()->createToken('posts')
-        ]);*/
+        // Salvo il contenuto del post
+        $data = $this->update_no_redirect($request, $data->id);
 
         return Redirect::route('post.edit', ['id' => $data->id]);
     }
