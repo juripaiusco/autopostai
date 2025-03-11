@@ -50,6 +50,7 @@ def posts_send(debug = False):
                     ON {cfg.DB_PREFIX}settings.user_id = {cfg.DB_PREFIX}posts.user_id
 
         WHERE {cfg.DB_PREFIX}posts.published = 0
+            AND {cfg.DB_PREFIX}posts.preview = 0
             AND {cfg.DB_PREFIX}posts.published_at <= "{cfg.CURRENT_TIME}"
             AND {cfg.DB_PREFIX}posts.deleted_at is null
     """)
