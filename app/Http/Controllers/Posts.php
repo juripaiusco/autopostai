@@ -285,6 +285,7 @@ class Posts extends Controller
     public function store(Request $request)
     {
         $saveRedirect = $request['saveRedirect'];
+        $request['preview'] = 0;
 
         $this->storeData($request);
 
@@ -358,6 +359,7 @@ class Posts extends Controller
     public function update(Request $request, string $id)
     {
         $saveRedirect = $request['saveRedirect'];
+        $request['preview'] = 0;
         $this->update_no_redirect($request, $id);
 
         return Redirect::to($saveRedirect);
@@ -509,8 +511,9 @@ class Posts extends Controller
             $data = $this->update_no_redirect($request, $request->input('id'));
         }
 
-        $response = Http::post('http://' . env('AUTOPOSTAI_API_URL') . ':8000/generate', [
-            'id' => 1
+        // Docker Python API Request ------------ //
+        $response = Http::timeout(120)->post('http://' . env('AUTOPOSTAI_API_URL') . ':8000/generate', [
+            'id' => $data->id
         ]);
 
         $autopostai_api_response = $response->json();
@@ -518,6 +521,7 @@ class Posts extends Controller
         if ($autopostai_api_response['status'] == 'success') {
             $request['ai_content'] = $autopostai_api_response['content'];
         }
+        // -------------------------------------- //
 
         // Salvo il contenuto del post
         $data = $this->update_no_redirect($request, $data->id);

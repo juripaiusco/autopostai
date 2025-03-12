@@ -129,11 +129,15 @@ function selectImage(index) {
     selectedImage = index; // Imposta l'immagine selezionata
 }
 
+let edit_ai_content = ref(false);
+let ai_content_preview = ref(false);
 const ai_prompt_post_loading = ref(false);
 
 function previewAIContent() {
+    ai_content_preview.value = true;
     ai_prompt_post_loading.value = true;
 
+    form.ai_content = '';
     form.post(route('post.preview'), {
         preserveScroll: true,
         preserveUrl: true,
@@ -141,6 +145,7 @@ function previewAIContent() {
             ai_prompt_post_loading.value = false;
             form.ai_content = usePage().props.data.ai_content;
             form.user = usePage().props.data.user;
+            form.id = usePage().props.data.id;
         },
     })
 }
@@ -463,8 +468,15 @@ function previewAIContent() {
                     </div>
                 </div>
 
+                <div class="screen-wrapper"
+                     v-if="ai_prompt_post_loading === true">
+                    <div class="loader-overlay">
+                        <div class="loader"></div>
+                    </div>
+                </div>
+
                 <div class="hidden"
-                     :class="{'!block': form.ai_content}">
+                     :class="{'!block': form.ai_content || ai_content_preview}">
 
                     <br>
 
@@ -475,11 +487,32 @@ function previewAIContent() {
                             Questo è il post che sarà pubblicato, se vuoi lo puoi modificare.
                         </small>
                     </label>
-                    <textarea class="form-control h-[216px]"
-                              :class="{'!border !border-red-500' : form.errors.ai_content}"
-                              v-model="form.ai_content"></textarea>
-                    <div class="text-red-500 text-center text-xs"
-                         v-if="form.errors.ai_content">{{ __(form.errors.ai_content) }}</div>
+                    <div v-if="edit_ai_content === false"
+                         class="card whitespace-pre-line">
+                        <div class="card-body">
+                            <span v-if="ai_prompt_post_loading === true"
+                                  class="text-sm">
+                                Sto generando il contenuto...
+                            </span>
+                            {{ form.ai_content }}
+                            <br>
+                            <button class="btn btn-sm btn-primary mt-2 w-1/2"
+                                    @click="edit_ai_content = true">
+                                Modifica
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="edit_ai_content === true">
+                        <textarea class="form-control h-[216px]"
+                                  :class="{'!border !border-red-500' : form.errors.ai_content}"
+                                  v-model="form.ai_content"></textarea>
+                        <div class="text-red-500 text-center text-xs"
+                             v-if="form.errors.ai_content">{{ __(form.errors.ai_content) }}</div>
+                        <button class="btn btn-sm btn-success mt-2 w-1/2"
+                                @click="edit_ai_content = false">
+                            Salva
+                        </button>
+                    </div>
 
                 </div>
 
@@ -496,7 +529,7 @@ function previewAIContent() {
                         <button :disabled="!form.id && !form.user_id"
                                 type="button"
                                 class="btn btn-primary w-[100%] md:w-[120px]"
-                                @click="previewAIContent">Anteprima</button>
+                                @click="previewAIContent">Anteprima AI</button>
                     </div>
 
                     <div class="w-1/3 text-center md:w-auto">
@@ -607,6 +640,16 @@ function previewAIContent() {
     position: relative;
     display: inline-block;
     width: 100%; /* Adatta la larghezza secondo necessità */
+}
+.screen-wrapper {
+    position: fixed;
+    display: block;
+    top: 0;
+    left: 0;
+    width: 100%; /* Adatta la larghezza secondo necessità */
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 100;
 }
 /*.loader {
     width: 30px;
