@@ -500,6 +500,18 @@ function previewAIContent() {
                                     @click="edit_ai_content = true">
                                 Modifica
                             </button>
+
+                            <br>
+
+                            <small class="text-[11px] text-gray-500">
+                                <span v-if="data.tokens">
+                                     {{ data.tokens.reduce((sum, token) => sum + token.tokens_used, 0) }} token
+                                </span>
+                                <span v-else
+                                      class="text-red-500">
+                                    Error: token non disponibile
+                                </span>
+                            </small>
                         </div>
                     </div>
                     <div v-if="edit_ai_content === true">

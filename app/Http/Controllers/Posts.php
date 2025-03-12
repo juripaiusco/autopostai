@@ -122,7 +122,7 @@ class Posts extends Controller
     {
         // Query data
         $data = Post::query();
-        $data = $data->with(['user', 'comments.token', 'token']);
+        $data = $data->with(['user', 'comments.token', 'tokens']);
 
         // Se l'utente è singolo
         if (auth()->user()->parent_id && !auth()->user()->child_on) {
@@ -323,7 +323,7 @@ class Posts extends Controller
      */
     public function edit(Request $request, string $id)
     {
-        $data = Post::with('user')->find($id);
+        $data = Post::with('user', 'tokens')->find($id);
 
         if (!Auth::user()->can('viewAny', $data)) {
             abort(403);

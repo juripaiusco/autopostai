@@ -238,8 +238,10 @@ onUnmounted(() => {
 
                                 let token_used_total = 0
 
-                                if (d.token && d.token.tokens_used) {
-                                    token_used_total += d.token.tokens_used
+                                for (let i in d.tokens) {
+                                    if (d.tokens[i].tokens_used) {
+                                        token_used_total += d.tokens[i].tokens_used
+                                    }
                                 }
 
                                 for (let i in d.comments) {

@@ -53,4 +53,10 @@ class Post extends Model
         return $this->hasOne(Token_log::class, 'reference_id')
             ->where('type', 'post');
     }
+
+    public function tokens()
+    {
+        return $this->hasMany(Token_log::class, 'reference_id')
+            ->where('type', 'post');
+    }
 }
