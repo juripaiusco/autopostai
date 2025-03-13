@@ -21,6 +21,7 @@
     echo "------------------------------------------------------------"
 
     IMAGE_NAME="autopostai"
+    CONTAINER_NAME=$IMAGE_NAME
     NETWORK_NAME="autopostai_network"
     SUBNET="192.168.1.0/24"
     CONTAINER_IP="192.168.1.100"
@@ -47,6 +48,26 @@
         docker build -t $IMAGE_NAME .
         # Aggiorna il timestamp del file di stato
         touch .docker_image_built
+
+        # Se esiste già un container, fermalo ed eliminalo
+        if [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
+            echo "Arresto ed eliminazione del vecchio container $CONTAINER_NAME..."
+            docker stop $CONTAINER_NAME
+            docker rm $CONTAINER_NAME
+        fi
+
+        # Avvia il nuovo container con restart always
+        echo "Avvio del nuovo container $CONTAINER_NAME..."
+        docker run -d \
+            --name $CONTAINER_NAME \
+            --restart always \
+            -p 8000:8000 \
+            --env-file .env \
+            -v "$(pwd)/../../.env":/app/.laravel-env \
+            -v "$(pwd)/../../storage":/app/storage \
+            -v "$(pwd)":/app \
+            $IMAGE_NAME \
+            uvicorn api:app --host 0.0.0.0 --port 8000
     else
         echo "L'immagine Docker $IMAGE_NAME è aggiornata."
     fi
