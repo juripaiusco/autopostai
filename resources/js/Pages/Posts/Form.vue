@@ -507,10 +507,10 @@ function previewAIContent() {
                                 <span v-if="data.tokens">
                                      {{ data.tokens.reduce((sum, token) => sum + token.tokens_used, 0) }} token
                                 </span>
-                                <span v-else
+                                <!-- <span v-else
                                       class="text-red-500">
                                     Error: token non disponibile
-                                </span>
+                                </span> -->
                             </small>
                         </div>
                     </div>
@@ -518,8 +518,8 @@ function previewAIContent() {
                         <textarea class="form-control h-[216px]"
                                   :class="{'!border !border-red-500' : form.errors.ai_content}"
                                   v-model="form.ai_content"></textarea>
-                        <!-- <div class="text-red-500 text-center text-xs"
-                             v-if="form.errors.ai_content">{{ __(form.errors.ai_content) }}</div> -->
+                        <div class="text-red-500 text-center text-xs"
+                             v-if="form.errors.ai_content">{{ __(form.errors.ai_content) }}</div>
                         <button class="btn btn-sm btn-success mt-2 w-1/2"
                                 @click="edit_ai_content = false">
                             Salva
