@@ -518,8 +518,8 @@ function previewAIContent() {
                         <textarea class="form-control h-[216px]"
                                   :class="{'!border !border-red-500' : form.errors.ai_content}"
                                   v-model="form.ai_content"></textarea>
-                        <div class="text-red-500 text-center text-xs"
-                             v-if="form.errors.ai_content">{{ __(form.errors.ai_content) }}</div>
+                        <!-- <div class="text-red-500 text-center text-xs"
+                             v-if="form.errors.ai_content">{{ __(form.errors.ai_content) }}</div> -->
                         <button class="btn btn-sm btn-success mt-2 w-1/2"
                                 @click="edit_ai_content = false">
                             Salva
@@ -530,21 +530,28 @@ function previewAIContent() {
 
                 <div class="text-right mt-10 flex flex-wrap justify-center md:justify-end">
 
-                    <div class="w-1/3 text-center md:w-auto pr-2">
+                    <div class="w-[100%] text-center md:w-auto mb-2 sm:hidden">
+                        <button :disabled="!form.id && !form.user_id"
+                                type="button"
+                                class="btn btn-primary w-[100%] md:w-[120px]"
+                                @click="previewAIContent">Anteprima&nbsp;AI</button>
+                    </div>
+
+                    <div class="w-1/2 text-center md:w-auto pr-2">
                         <Link class="btn btn-secondary w-[100%] md:w-[120px]"
                               :href="data.saveRedirect">
                             Annulla
                         </Link>
                     </div>
 
-                    <div class="w-1/3 text-center md:w-auto pr-2">
+                    <div class="text-center md:w-auto pr-2 hidden sm:block">
                         <button :disabled="!form.id && !form.user_id"
                                 type="button"
                                 class="btn btn-primary w-[100%] md:w-[120px]"
-                                @click="previewAIContent">Anteprima AI</button>
+                                @click="previewAIContent">Anteprima&nbsp;AI</button>
                     </div>
 
-                    <div class="w-1/3 text-center md:w-auto">
+                    <div class="w-1/2 text-center md:w-auto">
                         <button type="submit"
                                 class="btn btn-success w-[100%] md:w-[120px]">Salva</button>
                     </div>
