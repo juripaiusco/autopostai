@@ -3,14 +3,18 @@ import config as cfg
 from services.mysql import Mysql
 from task.ai_content_get import ai_content_get
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 
 
 app = FastAPI()
 
+# Definisci il modello dei dati attesi
+class GenerateRequest(BaseModel):
+    id: int
+
 @app.post("/generate")
-async def generate(request: Request):
-    data = await request.json()
-    id = data.get('id')
+async def generate(request_data: GenerateRequest):
+    id = request_data.id
 
     mysql = Mysql()
     mysql.connect()
