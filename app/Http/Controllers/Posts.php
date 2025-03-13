@@ -518,7 +518,7 @@ class Posts extends Controller
 
         $autopostai_api_response = $response->json();
 
-        if ($autopostai_api_response['status'] == 'success') {
+        if (isset($autopostai_api_response) && $autopostai_api_response['status'] == 'success') {
             $request['ai_content'] = $autopostai_api_response['content'];
         }
         // -------------------------------------- //
