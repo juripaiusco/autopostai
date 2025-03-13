@@ -365,7 +365,7 @@ class Posts extends Controller
         return Redirect::to($saveRedirect);
     }
 
-    public function update_no_redirect(Request $request, string $id)
+    public function updateData(Request $request, string $id)
     {
         $request->validate([
             'title' => 'required',
@@ -396,6 +396,10 @@ class Posts extends Controller
         $this->save_img('posts', $post, $request);
 
         return $post;
+    }
+    public function update_no_redirect(Request $request, string $id)
+    {
+        $this->updateData($request, $id);
     }
 
     private function save_img($path, $data, Request $request)
@@ -508,7 +512,7 @@ class Posts extends Controller
         if (!$request->input('id')) {
             $data = $this->storeData($request, '', true);
         } else {
-            $data = $this->update_no_redirect($request, $request->input('id'));
+            $data = $this->updateData($request, $request->input('id'));
         }
 
         // Docker Python API Request ------------ //
@@ -524,7 +528,7 @@ class Posts extends Controller
         // -------------------------------------- //
 
         // Salvo il contenuto del post
-        $data = $this->update_no_redirect($request, $data->id);
+        $data = $this->updateData($request, $data->id);
 
         return Redirect::route('post.edit', ['id' => $data->id]);
     }
