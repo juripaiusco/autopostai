@@ -531,7 +531,7 @@ function previewAIContent() {
                 <div class="text-right mt-10 mb-2 flex flex-wrap justify-center md:justify-end">
 
                     <div class="text-center w-[100%] md:w-auto">
-                        <button :disabled="!form.id && !form.user_id"
+                        <button :disabled="!form.id && !form.user_id && !data.user?.id"
                                 type="button"
                                 class="btn btn-primary w-[100%] md:w-[248px] !flex items-center justify-center gap-2"
                                 @click="previewAIContent">
