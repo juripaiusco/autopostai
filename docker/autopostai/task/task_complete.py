@@ -143,20 +143,23 @@ def token_limit_exceeded(user_id = None, debug = False):
     # Verifico quanti token sono stati utilizzati, per non superare la soglia
     # dei token disponibili per utente
     rows = mysql.query(f"""
-                SELECT  {cfg.DB_PREFIX}users.id AS id,
-                        {cfg.DB_PREFIX}users.tokens_limit AS tokens_limit,
-                        COALESCE(SUM({cfg.DB_PREFIX}token_logs.tokens_used), 0) as tokens_used_total
+                SELECT  u.id AS id,
+                        u.tokens_limit AS tokens_limit,
+                        COALESCE(SUM(
+                            CASE
+                                WHEN tl.created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                                 AND tl.created_at < DATE_FORMAT(NOW() + INTERVAL 1 MONTH, '%Y-%m-01')
+                                THEN tl.tokens_used
+                                ELSE 0
+                            END
+                        ), 0) as tokens_used_total
 
-                    FROM {cfg.DB_PREFIX}users
-                        LEFT JOIN {cfg.DB_PREFIX}token_logs
-                            ON {cfg.DB_PREFIX}users.id = {cfg.DB_PREFIX}token_logs.user_id
-                            AND ({cfg.DB_PREFIX}token_logs.created_at >= DATE_FORMAT(NOW(), '%%Y-%%m-01'))
-                            AND ({cfg.DB_PREFIX}token_logs.created_at < LAST_DAY(NOW()) + INTERVAL 1 DAY)
+                    FROM {cfg.DB_PREFIX}users u
+                        LEFT JOIN {cfg.DB_PREFIX}token_logs tl ON u.id = tl.user_id
 
-                WHERE {cfg.DB_PREFIX}users.id = {user_id}
+                WHERE u.id = {user_id}
 
-                GROUP BY
-                    {cfg.DB_PREFIX}users.id
+                GROUP BY u.id
             """)
 
     mysql.close()
