@@ -24,7 +24,7 @@ let channel_user_can_set = ref([]);
 if (form.id || (form.user && form.user.id)) {
 
     let user_channels = JSON.parse(form.user.channels);
-    setChannels(user_channels, props.data.channels)
+    setChannels(user_channels, form.id ? props.data.channels : null)
 
 } else {
 
