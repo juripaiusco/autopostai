@@ -106,6 +106,7 @@ class Posts extends Controller
             $data['user'] = $data['user']->where('id', auth()->user()->id);
 
             $data['user'] = $data['user']->first();
+            $data['user_id'] = $data['user']->id;
 
         }
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
