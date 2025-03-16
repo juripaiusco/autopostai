@@ -126,19 +126,14 @@ let edit_ai_content = ref(false);
 
                     <span v-for="(channel, index) in channels = JSON.parse(data.channels)"
                           :key="index"
-                          class="mr-2">
-                        <div v-if="channel.url"
-                             class="inline">
-                            <a :href="channel.url"
-                               target="_blank">
+                          class="mr-4 sm:mr-2">
+                        <div class="inline">
+                            <a :href="channel.url ? channel.url : '#'"
+                               :target="channel.url ? '_blank' : ''">
                                 <i v-if="channel.on === '1'"
+                                   class="text-[2em] sm:text-[1em]"
                                    :class="channel.css_class"></i>
                             </a>
-                        </div>
-                        <div v-else
-                             class="inline">
-                            <i v-if="channel.on === '1'"
-                               :class="channel.css_class"></i>
                         </div>
                     </span>
 

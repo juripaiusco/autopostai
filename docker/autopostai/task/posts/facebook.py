@@ -19,10 +19,12 @@ class FacebookPost(BasePost):
                 # Carico su Facebook il post SENZA l'immagine
                 post_id = meta.fb_generate_post(content)
 
+            post_url = f"https://www.facebook.com/{self.data['meta_page_id']}/posts/{post_id}"
+
             if self.debug:
                 print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Facebook - post ID:", post_id)
 
-            return post_id
+            return post_id, post_url
 
     def delete(self, post_id):
         if self.data['meta_page_id'] is not None:

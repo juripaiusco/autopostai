@@ -77,7 +77,7 @@ def posts_send(debug = False):
                     print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
                           channels[i]['name'], "- post sending")
                 facebook_post = FacebookPost(data=row, debug=debug)
-                channels[i]['id'] = facebook_post.send(ai_content_get(
+                channels[i]['id'], channels[i]['url'] = facebook_post.send(ai_content_get(
                     channelName=channels[i]['name'],
                     data=row,
                     debug=debug
