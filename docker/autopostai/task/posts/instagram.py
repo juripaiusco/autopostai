@@ -13,12 +13,12 @@ class InstagramPost(BasePost):
             meta = Meta(page_id=self.data['meta_page_id'])
 
             # Carico su Instagram il post
-            post_id = meta.ig_generate_post(content, self.img_url_get(make_square=True))
+            post_id, post_url = meta.ig_generate_post(content, self.img_url_get(make_square=True))
 
             if self.debug:
                 print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - post ID:", post_id)
 
-            return post_id
+            return post_id, post_url
 
     def delete(self, post_id):
         if self.data['meta_page_id'] is not None:

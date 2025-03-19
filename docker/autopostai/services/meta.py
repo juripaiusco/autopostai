@@ -138,7 +138,9 @@ class Meta:
         # print("Risposta API:", response.json())
         post_id = response.json().get("id")
         post_id_publish = self.ig_pubblicate_post(post_id)
-        return post_id_publish
+        permalink = self.ig_getDataPost(post_id_publish, "permalink")
+
+        return post_id_publish, permalink
     else:
         print("Errore nel caricamento dell'immagine:", response.json())
 
@@ -159,6 +161,16 @@ class Meta:
         return post_id
     else:
         print("Errore nella pubblicazione:", response.json())
+
+  def ig_getDataPost(self, post_id, fields):
+      url = f"{self.META_API_BASE_URL}/{post_id}"
+      params = {
+          "fields": f"{fields}",
+          "access_token": self.fb_page_access_token(),
+      }
+
+      response = requests.get(url, params=params)
+      return response.json().get(fields)
 
 
   def ig_get_comments(self, post_id):
