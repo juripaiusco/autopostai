@@ -393,6 +393,7 @@ class Posts extends Controller
         }
 
         $post->fill($request->all());
+        $post->on_hold_until = date('Y-m-d H:i:s');
         $post->save();
         $this->save_img('posts', $post, $request);
 
@@ -508,7 +509,6 @@ class Posts extends Controller
     public function preview(Request $request)
     {
         $request['preview'] = 1;
-        $request['on_hold_until'] = date('Y-m-d H:i:s');
 
         // Salvo i dati del post
         if (!$request->input('id')) {
