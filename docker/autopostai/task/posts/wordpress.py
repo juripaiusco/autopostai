@@ -38,7 +38,8 @@ class WordPressPost(BasePost):
             data = {
                 "title": title,
                 "content": body,
-                "status": "publish"
+                "status": "publish",
+                "categories": [self.data['wordpress_cat_id']] if self.data['wordpress_cat_id'] else []
             }
 
             response = requests.post(

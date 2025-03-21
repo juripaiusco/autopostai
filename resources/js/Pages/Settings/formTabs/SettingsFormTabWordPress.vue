@@ -33,6 +33,15 @@ const props = defineProps({
     <div class="text-red-500 text-center"
          v-if="form && form.errors && form.errors.wordpress_password">{{ __(form.errors.wordpress_password) }}</div>
 
+    <br>
+
+    <label class="form-label">Categoria ID</label>
+    <input type="text"
+           class="form-control"
+           v-model="form.wordpress_cat_id" />
+    <div class="text-red-500 text-center"
+         v-if="form && form.errors && form.errors.wordpress_cat_id">{{ __(form.errors.wordpress_cat_id) }}</div>
+
 </template>
 
 <style scoped>

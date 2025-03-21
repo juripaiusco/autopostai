@@ -18,5 +18,6 @@ class Settings extends Model
         'wordpress_url',
         'wordpress_username',
         'wordpress_password',
+        'wordpress_cat_id'
     ];
 }

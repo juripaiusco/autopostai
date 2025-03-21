@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('wordpress_url')->default(null)->nullable();
             $table->string('wordpress_username')->default(null)->nullable();
             $table->string('wordpress_password')->default(null)->nullable();
+            $table->bigInteger('wordpress_cat_id')->default(null)->nullable();
 
             $table->timestamps();
         });

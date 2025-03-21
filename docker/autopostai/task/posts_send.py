@@ -43,7 +43,8 @@ def posts_send(debug = False):
                 {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id,
                 {cfg.DB_PREFIX}settings.wordpress_url AS wordpress_url,
                 {cfg.DB_PREFIX}settings.wordpress_username AS wordpress_username,
-                {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password
+                {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password,
+                {cfg.DB_PREFIX}settings.wordpress_cat_id AS wordpress_cat_id
 
             FROM {cfg.DB_PREFIX}posts
                 INNER JOIN {cfg.DB_PREFIX}settings
