@@ -13,7 +13,8 @@ class WordPressPost(BasePost):
     def prompt_get(self):
         # Creo il prompt
         prompt = ("Generami un articolo per wordpress formattato in Markdown, "
-                  "con un titolo (#), sottotitoli (##), elenchi e grassetto (**bold**).")
+                  "con un titolo (#), sottotitoli (##), elenchi e grassetto (**bold**)."
+                  "Non usare ```markdown all'inizio e ``` alla fine.")
 
         if self.data['ai_prompt_post'] is not None:
             prompt = f"{prompt} {self.data['ai_prompt_post']}"
@@ -34,12 +35,18 @@ class WordPressPost(BasePost):
             auth = HTTPBasicAuth(self.data['wordpress_username'], self.data['wordpress_password'])
 
             title, body = self.get_data(content)
+            cat_id = self.data.get('wordpress_cat_id')
+
+            # Assicuriamoci che cat_id sia un numero valido
+            if not isinstance(cat_id, int):
+                print(f"⚠️ Errore: ID categoria non valido ({cat_id})")
+                cat_id = None
 
             data = {
                 "title": title,
                 "content": body,
                 "status": "publish",
-                "categories": [self.data['wordpress_cat_id']] if self.data['wordpress_cat_id'] else []
+                "categories": [cat_id] if cat_id else []
             }
 
             response = requests.post(
