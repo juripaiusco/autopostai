@@ -1,3 +1,4 @@
+import json
 import config as cfg
 from services.mysql import Mysql
 from task.posts.base import BasePost
@@ -5,6 +6,7 @@ from task.posts.facebook import FacebookPost
 from task.posts.instagram import InstagramPost
 from task.posts.wordpress import WordPressPost
 from task.ai_generate import ai_generate
+import re
 
 # Creo il contenuto tramite LLM e poi salvo il contenuto del post,
 # viene passato la tipologia di post e in base alla tipologia viene
@@ -21,7 +23,7 @@ def ai_content_get(channelName, data, debug = False):
         """)
 
     if row[0]['ai_content'] is not None:
-        return row[0]['ai_content']
+        return parse_shortcodes(row[0]['ai_content'], data=data)
 
     base_post = BasePost(data=data)
     prompt = base_post.prompt_get()
@@ -31,13 +33,13 @@ def ai_content_get(channelName, data, debug = False):
         prompt = wordpress_post.prompt_get()
 
     # Mi connetto al LLM
-    content = ai_generate(
+    content = parse_shortcodes(ai_generate(
         data=data,
         prompt=prompt,
         img_path=base_post.img_path_get() if data['img_ai_check_on'] == '1' else None,
         type="post",
         debug=debug
-    )
+    ), data=data)
 
     # Salvo il contenuto generato dall'AI
     mysql.query(
@@ -48,3 +50,48 @@ def ai_content_get(channelName, data, debug = False):
     mysql.close()
 
     return content
+
+
+def get_post_url(post_id, channel, data_type, data):
+    mysql = Mysql()
+    mysql.connect()
+
+    row = mysql.query(f"""
+            SELECT  {cfg.DB_PREFIX}posts.user_id AS user_id,
+                    {cfg.DB_PREFIX}posts.channels AS channels
+                FROM {cfg.DB_PREFIX}posts
+            WHERE {cfg.DB_PREFIX}posts.id = {post_id}
+        """)
+
+    # Verifico che il post sia stato pubblicato dallo stesso utente
+    # che vuole usare lo shortcode, in modo da non pubblicare post
+    # di altri utenti sui canali di altri
+    if row[0].get('user_id') != data.get('user_id'):
+        return "[URL non disponibile]"
+
+    if row[0].get('user_id') == data.get('user_id'):
+        if row[0]['channels'] is not None:
+            channels = json.loads(row[0]['channels'])
+
+            for i in channels:
+                if (channels[i]['name'] == channel
+                    and channels[i]['on'] == '1'
+                    and channels[i]['id'] is not None):
+                    return channels[i].get(data_type, "[URL non ancora disponibile]")
+
+    mysql.close()
+
+
+def parse_shortcodes(text, data=None):
+    pattern = re.compile(r"\[(\w+)\s+(\w+)\s+id=(\d+)\]")
+
+    def replace_match(match):
+        channel, data_type, post_id = match.groups()
+        post_id = int(post_id)
+
+        if data_type.lower() == "url":
+            return get_post_url(post_id, channel, data_type, data)
+
+        return match.group(0)  # Restituisce lo shortcode originale se non è valido
+
+    return pattern.sub(replace_match, text)
