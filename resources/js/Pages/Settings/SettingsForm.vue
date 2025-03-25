@@ -64,14 +64,14 @@ const props = defineProps({
                     aria-controls="nav-wordpress"
                     aria-selected="false">WordPress</button>
 
-            <!-- <button class="nav-link"
+            <button class="nav-link"
                     id="nav-newsletter-tab"
                     data-bs-toggle="tab"
                     data-bs-target="#nav-newsletter"
                     type="button"
                     role="tab"
                     aria-controls="nav-newsletter"
-                    aria-selected="false">Newsletter</button> -->
+                    aria-selected="false">Newsletter</button>
 
         </div>
 

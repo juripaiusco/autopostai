@@ -18,6 +18,9 @@ class Settings extends Model
         'wordpress_url',
         'wordpress_username',
         'wordpress_password',
-        'wordpress_cat_id'
+        'wordpress_cat_id',
+        'mailchimp_api',
+        'mailchimp_datacenter',
+        'mailchimp_list_id',
     ];
 }
