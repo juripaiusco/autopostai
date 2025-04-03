@@ -420,7 +420,7 @@ function previewAIContent() {
                                  aria-labelledby="nav-select-img-tab"
                                  tabindex="0">
 
-                                <div class="row">
+                                <div class="row sm:py-4 sm:max-h-[854px] sm:min-h-[854px] sm:overflow-y-auto">
                                     <div v-for="(file, index) in images_array"
                                          :key="index"
                                          class="col-4 col-lg-3 mb-4 relative">
