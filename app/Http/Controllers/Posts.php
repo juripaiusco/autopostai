@@ -399,23 +399,25 @@ class Posts extends Controller
 
         return $post;
     }
+
     public function update_no_redirect(Request $request, string $id)
     {
         $this->updateData($request, $id);
     }
 
-    private function save_img($path, $data, Request $request)
+    private function save_img($post_path, $data, Request $request)
     {
+        // Se l'immagine è stata caricata
         if ($request->file('img')) {
 
             $data->img = date('mdYHis') . '-' . uniqid() . '-' . $request->file('img')->getClientOriginalName();
 
             if ($request->file('img')->isValid()) {
 
-                Storage::disk('public')->deleteDirectory($path . '/' . $data->id);
+                Storage::disk('public')->deleteDirectory($post_path . '/' . $data->id);
                 Storage::disk('public')
                     ->put(
-                        $path . '/' . $data->id . '/' . $data->img,
+                        $post_path . '/' . $data->id . '/' . $data->img,
                         $request->file('img')->get()
                     );
             }
@@ -423,17 +425,31 @@ class Posts extends Controller
             $data->save();
         }
 
-        if ($request->input('img')) {
+        // Verifico da quale LLM è stata generata l'immagine e correggo la path
+        $ai_ctrl_path = array('stable-diffusion');
+
+        foreach ($ai_ctrl_path as $ai_path) {
+
+            if ($request->input('img') && str_contains($request->input('img'), $ai_path)) {
+                $img_name = basename($request->input('img'));
+                $img_path = Storage::disk('public')->path($ai_path . '/' . Auth::id() . '/' . $img_name);
+
+                Storage::disk('public')->deleteDirectory($post_path . '/' . $data->id);
+                Storage::disk('public')
+                    ->put(
+                        $post_path . '/' . $data->id . '/' . $img_name,
+                        file_get_contents($img_path)
+                    );
+
+                $data->img = $img_name;
+
+                $data->save();
+            }
+        }
+
+        // Se l'immagine è già presente nel DB correggo la path
+        if ($request->input('img') && str_contains($request->input('img'), 'posts')) {
             $img_name = basename($request->input('img'));
-            $path_img = Storage::disk('public')->path('stable-diffusion/' . Auth::id() . '/' . $img_name);
-
-            Storage::disk('public')->deleteDirectory($path . '/' . $data->id);
-            Storage::disk('public')
-                ->put(
-                    $path . '/' . $data->id . '/' . $img_name,
-                    file_get_contents($path_img)
-                );
-
             $data->img = $img_name;
 
             $data->save();
