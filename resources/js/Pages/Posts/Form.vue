@@ -442,7 +442,7 @@ function previewAIContent() {
                                              selectImage(index);">
 
                                         <div v-if="selectedImage === index"
-                                             class="absolute bottom-0 right-4 bg-white text-gray-500 py-1 px-2 rounded">
+                                             class="absolute mt-[-35px] right-4 bg-white text-gray-500 py-1 px-2 rounded">
                                             <button type="button"
                                                     @click="modalShow = true; modalDeleteImg(file, index)">
                                                 <i class="fa-solid fa-trash"></i>
