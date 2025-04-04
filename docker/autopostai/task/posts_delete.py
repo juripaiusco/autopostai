@@ -6,6 +6,7 @@ from task.posts.base import BasePost
 from task.posts.facebook import FacebookPost
 from task.posts.instagram import InstagramPost
 from task.posts.wordpress import WordPressPost
+from task.posts.newsletter import NewsletterPost
 
 
 def posts_delete(debug = False):
@@ -32,7 +33,13 @@ def posts_delete(debug = False):
                     {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id,
                     {cfg.DB_PREFIX}settings.wordpress_url AS wordpress_url,
                     {cfg.DB_PREFIX}settings.wordpress_username AS wordpress_username,
-                    {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password
+                    {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password,
+                    {cfg.DB_PREFIX}settings.mailchimp_api AS mailchimp_api,
+                    {cfg.DB_PREFIX}settings.mailchimp_datacenter AS mailchimp_datacenter,
+                    {cfg.DB_PREFIX}settings.mailchimp_list_id AS mailchimp_list_id,
+                    {cfg.DB_PREFIX}settings.mailchimp_from_name AS mailchimp_from_name,
+                    {cfg.DB_PREFIX}settings.mailchimp_from_email AS mailchimp_from_email,
+                    {cfg.DB_PREFIX}settings.mailchimp_template AS mailchimp_template
 
                 FROM {cfg.DB_PREFIX}posts
                     INNER JOIN {cfg.DB_PREFIX}settings
@@ -72,6 +79,14 @@ def posts_delete(debug = False):
                               channels[i]['name'], "- post deleting - ID:", channels[i]['id'])
                     wordpress_post = WordPressPost(data=row, debug=debug)
                     channels[i]['id_del'] = wordpress_post.delete(channels[i]['id'])
+
+            if channels[i]['name'] == 'Newsletter' and channels[i]['on'] == '1':
+                if channels[i]['id'] != channels[i].get('id_del', None):
+                    if debug:
+                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                              channels[i]['name'], "- post deleting - ID:", channels[i]['id'])
+                    newsletter_post = NewsletterPost(data=row, debug=debug)
+                    channels[i]['id_del'] = newsletter_post.delete(channels[i]['id'])
 
         # Salvo gli ID dei post eliminati nei vari canali
         mysql.query(

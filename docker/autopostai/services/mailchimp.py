@@ -66,3 +66,17 @@ class Mailchimp:
         # END - Invio la campagna ------------------------------------------------
 
         return post_id, post_url
+
+    def delete(self, post_id):
+        headers = {
+            "Authorization": f"apikey {self.api_key}",
+            "Content-Type": "application/json"
+        }
+
+        url = f"{self.base_url}/campaigns/{post_id}"
+        response = requests.delete(url, headers=headers)
+
+        if response.status_code == 204:
+            return post_id
+        else:
+            return None

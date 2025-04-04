@@ -59,7 +59,11 @@ class NewsletterPost(BasePost):
         if data['brevo_api'] is not None:
             return "Brevo"
 
-    # def delete(self, post_id):
-    #     if self.data['meta_page_id'] is not None:
-    #         meta = Meta(page_id=self.data['meta_page_id'])
-    #         return meta.ig_delete(post_id)
+    def delete(self, post_id):
+        if self.data['mailchimp_api'] is not None:
+            mailchimp = Mailchimp(
+                api_key=self.data['mailchimp_api'],
+                datacenter=self.data['mailchimp_datacenter'],
+                list_id=self.data['mailchimp_list_id'],
+            )
+            return mailchimp.delete(post_id)
