@@ -36,7 +36,13 @@ async def generate(request_data: GenerateRequest):
                     {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id,
                     {cfg.DB_PREFIX}settings.wordpress_url AS wordpress_url,
                     {cfg.DB_PREFIX}settings.wordpress_username AS wordpress_username,
-                    {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password
+                    {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password,
+                    {cfg.DB_PREFIX}settings.wordpress_cat_id AS wordpress_cat_id,
+                    {cfg.DB_PREFIX}settings.mailchimp_api AS mailchimp_api,
+                    {cfg.DB_PREFIX}settings.mailchimp_datacenter AS mailchimp_datacenter,
+                    {cfg.DB_PREFIX}settings.mailchimp_list_id AS mailchimp_list_id,
+                    {cfg.DB_PREFIX}settings.mailchimp_from_name AS mailchimp_from_name,
+                    {cfg.DB_PREFIX}settings.mailchimp_from_email AS mailchimp_from_email
 
                 FROM {cfg.DB_PREFIX}posts
                     INNER JOIN {cfg.DB_PREFIX}settings
@@ -67,6 +73,14 @@ async def generate(request_data: GenerateRequest):
                 )
 
             if (channels[i]['name'] == 'WordPress'
+                and channels[i]['on'] == '1'
+                and channels[i]['id'] is None):
+                ai_content = ai_content_get(
+                    channelName=channels[i]['name'],
+                    data=row
+                )
+
+            if (channels[i]['name'] == 'Newsletter'
                 and channels[i]['on'] == '1'
                 and channels[i]['id'] is None):
                 ai_content = ai_content_get(

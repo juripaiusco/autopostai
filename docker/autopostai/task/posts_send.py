@@ -5,6 +5,7 @@ from services.mysql import Mysql
 from task.posts.base import BasePost
 from task.posts.facebook import FacebookPost
 from task.posts.instagram import InstagramPost
+from task.posts.newsletter import NewsletterPost
 from task.posts.wordpress import WordPressPost
 from task.ai_content_get import ai_content_get
 
@@ -44,7 +45,13 @@ def posts_send(debug = False):
                 {cfg.DB_PREFIX}settings.wordpress_url AS wordpress_url,
                 {cfg.DB_PREFIX}settings.wordpress_username AS wordpress_username,
                 {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password,
-                {cfg.DB_PREFIX}settings.wordpress_cat_id AS wordpress_cat_id
+                {cfg.DB_PREFIX}settings.wordpress_cat_id AS wordpress_cat_id,
+                {cfg.DB_PREFIX}settings.mailchimp_api AS mailchimp_api,
+                {cfg.DB_PREFIX}settings.mailchimp_datacenter AS mailchimp_datacenter,
+                {cfg.DB_PREFIX}settings.mailchimp_list_id AS mailchimp_list_id,
+                {cfg.DB_PREFIX}settings.mailchimp_from_name AS mailchimp_from_name,
+                {cfg.DB_PREFIX}settings.mailchimp_from_email AS mailchimp_from_email,
+                {cfg.DB_PREFIX}settings.mailchimp_template AS mailchimp_template
 
             FROM {cfg.DB_PREFIX}posts
                 INNER JOIN {cfg.DB_PREFIX}settings
@@ -105,6 +112,19 @@ def posts_send(debug = False):
                           channels[i]['name'], "- post sending")
                 wordpress_post = WordPressPost(data=row, debug=debug)
                 channels[i]['id'], channels[i]['url'] = wordpress_post.send(ai_content_get(
+                    channelName=channels[i]['name'],
+                    data=row,
+                    debug=debug
+                ))
+
+            if (channels[i]['name'] == 'Newsletter'
+                and channels[i]['on'] == '1'
+                and channels[i]['id'] is None):
+                if debug:
+                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                          channels[i]['name'], "- post sending")
+                newsletter_post = NewsletterPost(data=row, debug=debug)
+                channels[i]['id'], channels[i]['url'] = newsletter_post.send(ai_content_get(
                     channelName=channels[i]['name'],
                     data=row,
                     debug=debug

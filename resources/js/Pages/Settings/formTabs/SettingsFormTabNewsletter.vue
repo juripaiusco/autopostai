@@ -46,6 +46,37 @@ const props = defineProps({
                 </div>
             </div>
 
+            <br>
+
+            <div class="row">
+                <div class="col-lg">
+
+                    <label class="form-label">From Name</label>
+                    <input type="text"
+                           class="form-control"
+                           v-model="form.mailchimp_from_name" />
+                    <div class="text-red-500 text-center"
+                         v-if="form && form.errors && form.errors.mailchimp_from_name">{{ __(form.errors.mailchimp_from_name) }}</div>
+
+                </div>
+                <div class="col-lg">
+
+                    <label class="form-label">From Email</label>
+                    <input type="text"
+                           class="form-control"
+                           v-model="form.mailchimp_from_email" />
+                    <div class="text-red-500 text-center"
+                         v-if="form && form.errors && form.errors.mailchimp_from_email">{{ __(form.errors.mailchimp_from_email) }}</div>
+
+                </div>
+            </div>
+
+            <br>
+
+            <label class="form-label">Template HTML</label>
+            <textarea class="form-control h-[300px]"
+                      v-model="form.mailchimp_template"></textarea>
+
         </div>
     </div>
 

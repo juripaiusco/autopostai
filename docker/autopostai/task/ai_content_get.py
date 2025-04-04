@@ -4,6 +4,7 @@ from services.mysql import Mysql
 from task.posts.base import BasePost
 from task.posts.facebook import FacebookPost
 from task.posts.instagram import InstagramPost
+from task.posts.newsletter import NewsletterPost
 from task.posts.wordpress import WordPressPost
 from task.ai_generate import ai_generate
 import re
@@ -31,6 +32,10 @@ def ai_content_get(channelName, data, debug = False):
     if channelName == 'WordPress':
         wordpress_post = WordPressPost(data=data)
         prompt = wordpress_post.prompt_get()
+
+    if channelName == 'Newsletter':
+        newsletter_post = NewsletterPost(data=data)
+        prompt = newsletter_post.prompt_get()
 
     # Mi connetto al LLM
     content = parse_shortcodes(ai_generate(

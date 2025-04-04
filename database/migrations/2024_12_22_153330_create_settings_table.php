@@ -34,6 +34,9 @@ return new class extends Migration
             $table->string('mailchimp_api')->default(null)->nullable();
             $table->string('mailchimp_datacenter')->default(null)->nullable();
             $table->string('mailchimp_list_id')->default(null)->nullable();
+            $table->string('mailchimp_from_name')->default(null)->nullable();
+            $table->string('mailchimp_from_email')->default(null)->nullable();
+            $table->longText('mailchimp_template')->default(null)->nullable();
 
             $table->timestamps();
         });

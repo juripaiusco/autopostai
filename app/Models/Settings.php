@@ -22,5 +22,8 @@ class Settings extends Model
         'mailchimp_api',
         'mailchimp_datacenter',
         'mailchimp_list_id',
+        'mailchimp_from_name',
+        'mailchimp_from_email',
+        'mailchimp_template',
     ];
 }
