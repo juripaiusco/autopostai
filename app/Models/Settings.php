@@ -25,5 +25,6 @@ class Settings extends Model
         'mailchimp_from_name',
         'mailchimp_from_email',
         'mailchimp_template',
+        'mailchimp_template_cta',
     ];
 }

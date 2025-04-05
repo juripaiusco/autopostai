@@ -37,6 +37,7 @@ return new class extends Migration
             $table->string('mailchimp_from_name')->default(null)->nullable();
             $table->string('mailchimp_from_email')->default(null)->nullable();
             $table->longText('mailchimp_template')->default(null)->nullable();
+            $table->longText('mailchimp_template_cta')->default(null)->nullable();
 
             $table->timestamps();
         });

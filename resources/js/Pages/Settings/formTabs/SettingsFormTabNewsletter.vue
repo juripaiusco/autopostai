@@ -73,9 +73,15 @@ const props = defineProps({
 
             <br>
 
-            <label class="form-label">Template HTML</label>
+            <label class="form-label">Template</label>
             <textarea class="form-control h-[300px]"
                       v-model="form.mailchimp_template"></textarea>
+
+            <br>
+
+            <label class="form-label">CTA Template</label>
+            <textarea class="form-control h-[300px]"
+                      v-model="form.mailchimp_template_cta"></textarea>
 
         </div>
     </div>

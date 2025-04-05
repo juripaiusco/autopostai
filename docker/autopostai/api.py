@@ -42,7 +42,9 @@ async def generate(request_data: GenerateRequest):
                     {cfg.DB_PREFIX}settings.mailchimp_datacenter AS mailchimp_datacenter,
                     {cfg.DB_PREFIX}settings.mailchimp_list_id AS mailchimp_list_id,
                     {cfg.DB_PREFIX}settings.mailchimp_from_name AS mailchimp_from_name,
-                    {cfg.DB_PREFIX}settings.mailchimp_from_email AS mailchimp_from_email
+                    {cfg.DB_PREFIX}settings.mailchimp_from_email AS mailchimp_from_email,
+                    {cfg.DB_PREFIX}settings.mailchimp_template AS mailchimp_template,
+                    {cfg.DB_PREFIX}settings.mailchimp_template_cta AS mailchimp_template_cta
 
                 FROM {cfg.DB_PREFIX}posts
                     INNER JOIN {cfg.DB_PREFIX}settings
