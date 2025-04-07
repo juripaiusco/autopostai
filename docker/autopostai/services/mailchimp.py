@@ -103,6 +103,10 @@ class Mailchimp:
             for flag in flags:
                 attrs[flag] = True
 
+            # Recupera valori dai parametri (con fallback)
+            post_id = attrs.get("id", None)
+            url = attrs.get("url", None)
+            text = attrs.get("text", None)
             data_type = None
             channel = None
 
@@ -119,10 +123,8 @@ class Mailchimp:
             if "Instagram" in attrs:
                 channel = "Instagram"
 
-            # Recupera valori dai parametri (con fallback)
-            post_id = attrs.get("id", None)
-            text = attrs.get("text", None)
-            url = self.get_post_url(post_id, channel, data_type, data)
+            if url is True:
+                url = self.get_post_url(post_id, channel, data_type, data)
 
             html = data['mailchimp_template_cta'].replace('[text]', text).replace('[url]', url)
 
