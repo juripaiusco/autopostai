@@ -52,6 +52,9 @@ class NewsletterPost(BasePost):
 
             return post_id, post_url
 
+        if self.data['brevo_api'] is not None:
+            return None, None
+
     def get_channel_name(self, data):
         if data['mailchimp_api'] is not None:
             return "Mailchimp"
@@ -67,3 +70,6 @@ class NewsletterPost(BasePost):
                 list_id=self.data['mailchimp_list_id'],
             )
             return mailchimp.delete(post_id)
+
+        if self.data['brevo_api'] is not None:
+            return None
