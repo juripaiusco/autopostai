@@ -1,3 +1,4 @@
+from services.brevo import Brevo
 from task.posts.base import BasePost
 import config as cfg
 from typing import List
@@ -30,6 +31,9 @@ class NewsletterPost(BasePost):
         return title, body_html
 
     def send(self, content):
+        # ------------------------------------------------------- #
+        #                         MAILCHIMP                       #
+        # ------------------------------------------------------- #
         if self.data['mailchimp_api'] is not None:
             mailchimp = Mailchimp(
                 api_key=self.data['mailchimp_api'],
@@ -52,14 +56,40 @@ class NewsletterPost(BasePost):
 
             return post_id, post_url
 
+        # -----------------------------------------------------------------------------
+
+        # ------------------------------------------------------- #
+        #                          BREVO                          #
+        # ------------------------------------------------------- #
+
         if self.data['brevo_api'] is not None:
-            return None, None
+            brevo = Brevo(
+                api_key=self.data['brevo_api'],
+                list_id=self.data['brevo_list_id'],
+            )
+
+            subject, body = self.get_data(content)
+
+            # Carico su Brevo il post
+            post_id, post_url = brevo.send(
+                subject,
+                body,
+                self.img_url_get(),
+                self.data
+            )
+
+            if self.debug:
+                print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Brevo - post ID:", post_id)
+
+            return post_id, post_url
+
+        # -----------------------------------------------------------------------------
 
     def get_channel_name(self, data):
-        if data['mailchimp_api'] is not None:
+        if data.get('mailchimp_api', None) is not None:
             return "Mailchimp"
 
-        if data['brevo_api'] is not None:
+        if data.get('brevo_api', None) is not None:
             return "Brevo"
 
     def delete(self, post_id):
@@ -73,3 +103,11 @@ class NewsletterPost(BasePost):
 
         if self.data['brevo_api'] is not None:
             return None
+
+    def save_url(self, post_id):
+        if self.data['brevo_api'] is not None:
+            brevo = Brevo(
+                api_key=self.data['brevo_api'],
+                list_id=None
+            )
+            return brevo.save_url(post_id, self.data)

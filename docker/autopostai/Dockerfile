@@ -13,7 +13,8 @@ RUN pip install \
     markdown \
     pillow \
     fastapi \
-    uvicorn
+    uvicorn \
+    brevo
 
 # Imposta la directory di lavoro
 WORKDIR /app

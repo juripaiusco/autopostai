@@ -52,7 +52,13 @@ def posts_send(debug = False):
                 {cfg.DB_PREFIX}settings.mailchimp_from_name AS mailchimp_from_name,
                 {cfg.DB_PREFIX}settings.mailchimp_from_email AS mailchimp_from_email,
                 {cfg.DB_PREFIX}settings.mailchimp_template AS mailchimp_template,
-                {cfg.DB_PREFIX}settings.mailchimp_template_cta AS mailchimp_template_cta
+                {cfg.DB_PREFIX}settings.mailchimp_template_cta AS mailchimp_template_cta,
+                {cfg.DB_PREFIX}settings.brevo_api AS brevo_api,
+                {cfg.DB_PREFIX}settings.brevo_list_id AS brevo_list_id,
+                {cfg.DB_PREFIX}settings.brevo_from_name AS brevo_from_name,
+                {cfg.DB_PREFIX}settings.brevo_from_email AS brevo_from_email,
+                {cfg.DB_PREFIX}settings.brevo_template AS brevo_template,
+                {cfg.DB_PREFIX}settings.brevo_template_cta AS brevo_template_cta
 
             FROM {cfg.DB_PREFIX}posts
                 INNER JOIN {cfg.DB_PREFIX}settings

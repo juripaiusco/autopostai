@@ -26,5 +26,11 @@ class Settings extends Model
         'mailchimp_from_email',
         'mailchimp_template',
         'mailchimp_template_cta',
+        'brevo_api',
+        'brevo_list_id',
+        'brevo_from_name',
+        'brevo_from_email',
+        'brevo_template',
+        'brevo_template_cta',
     ];
 }

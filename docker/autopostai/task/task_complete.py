@@ -4,6 +4,8 @@ from decimal import Decimal
 from services.mysql import Mysql
 from datetime import datetime, timedelta
 
+from task.posts.newsletter import NewsletterPost
+
 
 def task_complete(debug = False):
 
@@ -25,10 +27,12 @@ def task_complete(debug = False):
                     SUM(CASE WHEN {cfg.DB_PREFIX}comments.channel = 'facebook' THEN 1 ELSE 0 END) AS facebook_comments_count,
                     SUM(CASE WHEN {cfg.DB_PREFIX}comments.channel = 'instagram' THEN 1 ELSE 0 END) AS instagram_comments_count,
                     {cfg.DB_PREFIX}posts.on_hold_until AS on_hold_until,
-                    {cfg.DB_PREFIX}posts.created_at AS created_at
+                    {cfg.DB_PREFIX}posts.created_at AS created_at,
+                    {cfg.DB_PREFIX}settings.brevo_api AS brevo_api
 
                 FROM {cfg.DB_PREFIX}posts
                     LEFT JOIN {cfg.DB_PREFIX}comments ON {cfg.DB_PREFIX}posts.id = {cfg.DB_PREFIX}comments.post_id
+                    INNER JOIN {cfg.DB_PREFIX}settings ON {cfg.DB_PREFIX}settings.user_id = {cfg.DB_PREFIX}posts.user_id
 
             WHERE {cfg.DB_PREFIX}posts.published = 1
                 AND {cfg.DB_PREFIX}posts.task_complete = 0
@@ -70,6 +74,20 @@ def task_complete(debug = False):
                 if (channels[i]['name'] == 'Instagram'
                     and Decimal(row['instagram_comments_count'] or 0) >= Decimal(channels[i]['reply_n'] or 0)):
                     channels[i]['task_complete'] = 1
+
+            # Verifico che il channel Newsletter inviata tramite Brevo abbia l'URL,
+            # in negativo lo recupero e lo salvo, completando il task
+            for i in channels:
+                if (channels[i]['name'] == 'Newsletter'
+                    and row['brevo_api'] is not None):
+
+                    channels[i]['task_complete'] = 0
+
+                    newsletter_post = NewsletterPost(data=row, debug=debug)
+                    channels[i]['url'] = newsletter_post.save_url(channels[i]['id'])
+
+                    if channels[i].get('url', None) is not None:
+                        channels[i]['task_complete'] = 1
 
             # Semplice print per mostrare i task_complete per singolo canale riferito al post
             if debug is True:
@@ -122,6 +140,12 @@ def task_complete(debug = False):
                     task_complete
                 )
                 print(" " * 19, "---")
+
+        # Salvo i channels del post nei vari canali
+        mysql.query(
+            query=f"UPDATE {cfg.DB_PREFIX}posts SET channels = %s WHERE id = %s",
+            parameters=(json.dumps(channels), row['id'])
+        )
 
     mysql.close()
 
