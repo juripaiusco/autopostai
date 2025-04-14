@@ -102,7 +102,7 @@ class NewsletterPost(BasePost):
             return mailchimp.delete(post_id)
 
         if self.data['brevo_api'] is not None:
-            return None
+            return post_id
 
     def save_url(self, post_id):
         if self.data['brevo_api'] is not None:
