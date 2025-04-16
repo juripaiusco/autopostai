@@ -34,7 +34,7 @@ const props = defineProps({
                          v-if="form && form.errors && form.errors.mailchimp_datacenter">{{ __(form.errors.mailchimp_datacenter) }}</div>
 
                 </div>
-                <div class="col-lg">
+                <div class="col-lg !mt-6 sm:!mt-0">
 
                     <label class="form-label">List ID</label>
                     <input type="text"
@@ -51,7 +51,7 @@ const props = defineProps({
             <div class="row">
                 <div class="col-lg">
 
-                    <label class="form-label">From Name</label>
+                    <label class="form-label">From Name (dev'essere un nome valido)</label>
                     <input type="text"
                            class="form-control"
                            v-model="form.mailchimp_from_name" />
@@ -59,9 +59,9 @@ const props = defineProps({
                          v-if="form && form.errors && form.errors.mailchimp_from_name">{{ __(form.errors.mailchimp_from_name) }}</div>
 
                 </div>
-                <div class="col-lg">
+                <div class="col-lg !mt-6 sm:!mt-0">
 
-                    <label class="form-label">From Email</label>
+                    <label class="form-label">From Email (dev'essere un'email valida)</label>
                     <input type="text"
                            class="form-control"
                            v-model="form.mailchimp_from_email" />
@@ -105,7 +105,7 @@ const props = defineProps({
                          v-if="form && form.errors && form.errors.brevo_api">{{ __(form.errors.brevo_api) }}</div>
 
                 </div>
-                <div class="col-lg">
+                <div class="col-lg !mt-6 sm:!mt-0">
 
                     <label class="form-label">List ID</label>
                     <input type="text"
@@ -122,7 +122,7 @@ const props = defineProps({
             <div class="row">
                 <div class="col-lg">
 
-                    <label class="form-label">From Name</label>
+                    <label class="form-label">From Name (dev'essere un nome valido)</label>
                     <input type="text"
                            class="form-control"
                            v-model="form.brevo_from_name" />
@@ -130,9 +130,9 @@ const props = defineProps({
                          v-if="form && form.errors && form.errors.brevo_from_name">{{ __(form.errors.brevo_from_name) }}</div>
 
                 </div>
-                <div class="col-lg">
+                <div class="col-lg !mt-6 sm:!mt-0">
 
-                    <label class="form-label">From Email</label>
+                    <label class="form-label">From Email (dev'essere un'email valida)</label>
                     <input type="text"
                            class="form-control"
                            v-model="form.brevo_from_email" />
