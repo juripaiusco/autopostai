@@ -13,6 +13,7 @@ class Settings extends Model
         'user_id',
         'ai_personality',
         'ai_prompt_prefix',
+        'ai_comment_prefix',
         'openai_api_key',
         'meta_page_id',
         'wordpress_url',

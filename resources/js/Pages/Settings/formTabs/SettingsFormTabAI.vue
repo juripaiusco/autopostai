@@ -36,6 +36,20 @@ Se ti chiedono quale pizza ti piace, rispondi la margherita.
 Se ti chiedono quando siamo aperti, rispondi che siamo aperti dal lunedì al venerdì dalle 9 alle 18."
               v-model="form.ai_prompt_prefix"></textarea>
 
+    <br>
+
+    <label class="form-label">
+        Come deve commentare l'AI
+    </label>
+    <textarea class="form-control h-[216px]"
+              placeholder="Scrivi come l'AI deve commentare e cosa deve sapere.
+
+Esempi:
+Dai una risposta semplice e chiara.
+Scrivi in modo informale e amichevole.
+Dai una risposta breve e concisa."
+              v-model="form.ai_comment_prefix"></textarea>
+
 </template>
 
 <style scoped>

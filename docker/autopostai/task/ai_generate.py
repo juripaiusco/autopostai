@@ -21,13 +21,15 @@ def ai_generate(data, prompt, img_path = None, type = None, debug = False):
     # ---------------------------------------------------------
     # OpenAI
     gpt = GPT(api_key=data['openai_api_key'], debug=debug)
-    gpt.set_role(
-        role="system",
-        content=(data['ai_personality'] if data['ai_personality'] is not None else '') + ' ' +
-                (data['ai_prompt_prefix'] if data['ai_prompt_prefix'] is not None else '') + ' ' +
-                (data['ai_prompt_comment'] if type == 'reply' and data['ai_prompt_comment'] is not None else '') + ' ' +
-                "Rispondi sempre solo con l'output richiesto, senza aggiungere altro."
-    )
+
+    system_prompt = " ".join(filter(None, [
+        data.get('ai_personality'),
+        data.get('ai_prompt_prefix'),
+        data.get('ai_comment_prefix') if type == 'reply' else None,
+        data.get('ai_prompt_comment') if type == 'reply' else None,
+        "Rispondi sempre solo con l'output richiesto, senza aggiungere altro."
+    ]))
+    gpt.set_role(role="system", content=system_prompt)
 
     if type == 'reply':
         if img_path is not None:

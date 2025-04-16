@@ -35,6 +35,7 @@ def comments_get(debug = False):
                 {cfg.DB_PREFIX}posts.published AS published,
                 {cfg.DB_PREFIX}settings.ai_personality AS ai_personality,
                 {cfg.DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
+                {cfg.DB_PREFIX}settings.ai_comment_prefix AS ai_comment_prefix,
                 {cfg.DB_PREFIX}settings.openai_api_key AS openai_api_key,
                 {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id,
                 COUNT({cfg.DB_PREFIX}comments.post_id) AS comments_count,

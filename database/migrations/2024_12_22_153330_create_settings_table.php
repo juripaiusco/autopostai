@@ -21,6 +21,7 @@ return new class extends Migration
 
             $table->longText('ai_personality')->default(null)->nullable();
             $table->longText('ai_prompt_prefix')->default(null)->nullable();
+            $table->longText('ai_comment_prefix')->default(null)->nullable();
 
             $table->string('openai_api_key')->unique()->default(null)->nullable();
 

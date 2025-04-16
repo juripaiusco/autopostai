@@ -35,6 +35,7 @@ def reply_send(debug = False):
                     {cfg.DB_PREFIX}posts.img_ai_check_on AS img_ai_check_on,
                     {cfg.DB_PREFIX}settings.ai_personality AS ai_personality,
                     {cfg.DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
+                    {cfg.DB_PREFIX}settings.ai_comment_prefix AS ai_comment_prefix,
                     {cfg.DB_PREFIX}settings.openai_api_key AS openai_api_key,
                     {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id
 
