@@ -28,31 +28,57 @@ class LinkedIn:
         # author = f"urn:li:person:{self.get_person_urn()}"
         author = f"urn:li:organization:{self.get_company_urn()}"
 
-        payload = {
-            "author": author,
-            "lifecycleState": "PUBLISHED",
-            "specificContent": {
-                "com.linkedin.ugc.ShareContent": {
-                    "shareCommentary": {
-                        "text": f"{content}"
-                    },
-                    "shareMediaCategory": "NONE"
+        if img_path is None:
+            payload = {
+                "author": author,
+                "lifecycleState": "PUBLISHED",
+                "specificContent": {
+                    "com.linkedin.ugc.ShareContent": {
+                        "shareCommentary": {
+                            "text": f"{content}"
+                        },
+                        "shareMediaCategory": "NONE",
+                    }
+                },
+                "visibility": {
+                    "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
                 }
-            },
-            "visibility": {
-                "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
             }
-        }
+        else:
+            payload = {
+                "author": author,
+                "lifecycleState": "PUBLISHED",
+                "specificContent": {
+                    "com.linkedin.ugc.ShareContent": {
+                        "shareCommentary": {
+                            "text": f"{content}"
+                        },
+                        "shareMediaCategory": "IMAGE",
+                        "media": [
+                            {
+                                "status": "READY",
+                                "media": self.upload_img(author=author, img_path=img_path)
+                            }
+                        ]
+                    }
+                },
+                "visibility": {
+                    "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
+                }
+            }
 
         # Effettua la richiesta POST
         response = requests.post(url, headers=headers, data=json.dumps(payload))
 
-        # Mostra il risultato
-        print(f'Status Code: {response.status_code}')
-        print('Response:')
-        print(response.json())
+        if response.status_code != 201:
+            return None, None
 
-        return None, None
+        # Mostra il risultato
+        # print(f'Status Code: {response.status_code}')
+        # print('Response:')
+        # print(response.json())
+
+        return response.json().get('id'), f"https://www.linkedin.com/feed/update/{response.json().get('id')}"
 
     def delete(self, post_id):
         return None
@@ -127,3 +153,51 @@ class LinkedIn:
         mysql.close()
 
         return company_urn
+
+    # Caricamento immagine su LinkedIn
+    # L'immagine deve essere caricata prima di inviare il post su LinkedIn
+    # Per caricare l'immagine, si utilizza l'endpoint /assets?action=registerUpload
+    # Per inviare il post su LinkedIn, si utilizza l'endpoint /ugcPosts
+    # Per caricare l'immagine e inviare il post su LinkedIn, si utilizza l'endpoint /ugcPosts/bulk
+    def upload_img(self, author, img_path):
+        # Registrazione dell'upload
+        url = f"{self.base_url}/assets?action=registerUpload"
+
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+            "X-Restli-Protocol-Version": "2.0.0"
+        }
+
+        register_payload = {
+            "registerUploadRequest": {
+                "owner": author,
+                "recipes": ["urn:li:digitalmediaRecipe:feedshare-image"],
+                "serviceRelationships": [
+                    {
+                        "relationshipType": "OWNER",
+                        "identifier": "urn:li:userGeneratedContent"
+                    }
+                ],
+                "supportedUploadMechanism": ["SYNCHRONOUS_UPLOAD"]
+            }
+        }
+
+        res = requests.post(url, headers=headers, data=json.dumps(register_payload))
+        upload_data = res.json()
+
+        upload_url = upload_data["value"]["uploadMechanism"]["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"]["uploadUrl"]
+        asset = upload_data["value"]["asset"]
+
+        # Carica l'immagine
+        with open(img_path, "rb") as f:
+            image_data = f.read()
+
+        upload_headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/octet-stream"
+        }
+
+        upload_res = requests.put(upload_url, headers=upload_headers, data=image_data)
+
+        return asset
