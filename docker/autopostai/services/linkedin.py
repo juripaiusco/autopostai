@@ -14,6 +14,7 @@ class LinkedIn:
         self.token = token
         self.base_url = os.getenv("LINKEDIN_BASE_URL")
 
+    # Invio del post su LinkedIn
     def send(self, content, img_path):
         # URL dell'endpoint
         url = f"{self.base_url}/ugcPosts"
@@ -56,6 +57,9 @@ class LinkedIn:
     def delete(self, post_id):
         return None
 
+    # Recupero il person URN da MySQL o da LinkedIn
+    # Il person URN è l'ID del profilo privato, quindi se si vuoi pubblicare
+    # su LinkedIn con il proprio profilo, si deve utilizzare questo ID
     def get_person_urn(self):
         mysql = Mysql()
         mysql.connect()
@@ -102,6 +106,8 @@ class LinkedIn:
 
         return person_urn
 
+    # Recupero il company URN da MySQL
+    # il company URN è l'ID della pagina gestita da un amministratore di LinkedIn
     def get_company_urn(self):
         mysql = Mysql()
         mysql.connect()
