@@ -30,6 +30,16 @@ const props = defineProps({
 
     <br>
 
+    <label class="form-label">ID della pagina LinkedIn</label>
+    <input type="text"
+           class="form-control"
+           v-model="form.linkedin_company_urn"
+           :disabled="$page.props.auth.user.parent_id" />
+    <div class="text-red-500 text-center"
+         v-if="form && form.errors && form.errors.linkedin_company_urn">{{ __(form.errors.linkedin_company_urn) }}</div>
+
+    <br>
+
     <a class="btn btn-primary w-[100%] md:w-[120px]"
           target="_blank"
           :href="route('linkedin.redirect', { linkedin_client_id: form.linkedin_client_id })">

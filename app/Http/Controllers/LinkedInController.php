@@ -21,7 +21,22 @@ class LinkedInController extends Controller
         Session::put('linkedin_client_secret', $linkedin_data->linkedin_client_secret);
 
         $redirectUri = route('linkedin.callback');
-        $scope = 'w_member_social w_organization_social r_basicprofile';
+        $scope_array = array(
+            'openid',
+            'profile',
+            'r_ads_reporting',
+            'r_organization_social',
+            'rw_organization_admin',
+            'w_member_social',
+            'r_ads',
+            'w_organization_social',
+            'rw_ads',
+            'r_basicprofile',
+            'r_organization_admin',
+            'email',
+            'r_1st_connections_size',
+        );
+        $scope = implode(' ', $scope_array);
 
         return redirect("https://www.linkedin.com/oauth/v2/authorization?" . http_build_query([
                 'response_type' => 'code',

@@ -24,8 +24,11 @@ class LinkedIn:
             "X-Restli-Protocol-Version": "2.0.0"
         }
 
+        # author = f"urn:li:person:{self.get_person_urn()}"
+        author = f"urn:li:organization:{self.get_company_urn()}"
+
         payload = {
-            "author": f"urn:li:person:{self.get_person_urn()}",
+            "author": author,
             "lifecycleState": "PUBLISHED",
             "specificContent": {
                 "com.linkedin.ugc.ShareContent": {
@@ -98,3 +101,23 @@ class LinkedIn:
         mysql.close()
 
         return person_urn
+
+    def get_company_urn(self):
+        mysql = Mysql()
+        mysql.connect()
+
+        row = mysql.query(f"""
+                        SELECT  {cfg.DB_PREFIX}settings.linkedin_company_urn AS linkedin_company_urn
+                            FROM {cfg.DB_PREFIX}settings
+
+                        WHERE {cfg.DB_PREFIX}settings.linkedin_client_id = "{self.client_id}"
+                        """)
+
+        if row[0]['linkedin_company_urn'] is not None:
+            company_urn = row[0]['linkedin_company_urn']
+        else:
+            return None
+
+        mysql.close()
+
+        return company_urn

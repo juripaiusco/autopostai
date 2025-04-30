@@ -16,6 +16,8 @@ class Settings extends Model
         'ai_comment_prefix',
         'openai_api_key',
         'meta_page_id',
+        'linkedin_person_urn',
+        'linkedin_company_urn',
         'linkedin_client_id',
         'linkedin_client_secret',
         'linkedin_token',
