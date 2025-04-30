@@ -5,6 +5,7 @@ from services.mysql import Mysql
 from task.posts.base import BasePost
 from task.posts.facebook import FacebookPost
 from task.posts.instagram import InstagramPost
+from task.posts.linkedin import LinkedInPost
 from task.posts.newsletter import NewsletterPost
 from task.posts.wordpress import WordPressPost
 from task.ai_content_get import ai_content_get
@@ -42,6 +43,9 @@ def posts_send(debug = False):
                 {cfg.DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
                 {cfg.DB_PREFIX}settings.openai_api_key AS openai_api_key,
                 {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id,
+                {cfg.DB_PREFIX}settings.linkedin_client_id AS linkedin_client_id,
+                {cfg.DB_PREFIX}settings.linkedin_client_secret AS linkedin_client_secret,
+                {cfg.DB_PREFIX}settings.linkedin_token AS linkedin_token,
                 {cfg.DB_PREFIX}settings.wordpress_url AS wordpress_url,
                 {cfg.DB_PREFIX}settings.wordpress_username AS wordpress_username,
                 {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password,
@@ -106,6 +110,19 @@ def posts_send(debug = False):
                           channels[i]['name'], "- post sending")
                 instagram_post = InstagramPost(data=row, debug=debug)
                 channels[i]['id'], channels[i]['url'] = instagram_post.send(ai_content_get(
+                    channelName=channels[i]['name'],
+                    data=row,
+                    debug=debug
+                ))
+
+            if (channels[i]['name'] == 'LinkedIn'
+                and channels[i]['on'] == '1'
+                and channels[i]['id'] is None):
+                if debug:
+                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                          channels[i]['name'], "- post sending")
+                linkedin_post = LinkedInPost(data=row, debug=debug)
+                channels[i]['id'], channels[i]['url'] = linkedin_post.send(ai_content_get(
                     channelName=channels[i]['name'],
                     data=row,
                     debug=debug

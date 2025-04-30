@@ -67,6 +67,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/update_by_user/{id}', [Settings::class, 'update_by_user'])
         ->name('settings.update');
 
+    Route::get('/linkedin/redirect/{linkedin_client_id}', [\App\Http\Controllers\LinkedInController::class, 'redirect'])
+        ->name('linkedin.redirect');
+    Route::get('/linkedin/callback', [\App\Http\Controllers\LinkedInController::class, 'callback'])
+        ->name('linkedin.callback');
+
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])

@@ -99,6 +99,14 @@ class Users extends Controller
                 'reply_on' => null,
                 'reply_n' => null,
             ],
+            'linkedin' => [
+                'name' => 'LinkedIn',
+                'css_class' => 'fa-brands fa-linkedin',
+                'id' => null,
+                'on' => null,
+                'reply_on' => null,
+                'reply_n' => null,
+            ],
             'wordpress' => [
                 'name' => 'WordPress',
                 'css_class' => 'fa-brands fa-wordpress-simple',

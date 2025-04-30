@@ -34,6 +34,8 @@ async def generate(request_data: GenerateRequest):
                     {cfg.DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
                     {cfg.DB_PREFIX}settings.openai_api_key AS openai_api_key,
                     {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id,
+                    {cfg.DB_PREFIX}settings.linkedin_client_id AS linkedin_client_id,
+                    {cfg.DB_PREFIX}settings.linkedin_client_secret AS linkedin_client_secret,
                     {cfg.DB_PREFIX}settings.wordpress_url AS wordpress_url,
                     {cfg.DB_PREFIX}settings.wordpress_username AS wordpress_username,
                     {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password,
@@ -73,6 +75,14 @@ async def generate(request_data: GenerateRequest):
                 )
 
             if (channels[i]['name'] == 'Instagram'
+                and channels[i]['on'] == '1'
+                and channels[i]['id'] is None):
+                ai_content = ai_content_get(
+                    channelName=channels[i]['name'],
+                    data=row
+                )
+
+            if (channels[i]['name'] == 'LinkedIn'
                 and channels[i]['on'] == '1'
                 and channels[i]['id'] is None):
                 ai_content = ai_content_get(

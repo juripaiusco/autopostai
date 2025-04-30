@@ -6,6 +6,7 @@ import SettingsFormTabNewsletter from "@/Pages/Settings/formTabs/SettingsFormTab
 import SettingsFormTabGoogle from "@/Pages/Settings/formTabs/SettingsFormTabGoogle.vue";
 import SettingsFormTabMeta from "@/Pages/Settings/formTabs/SettingsFormTabMeta.vue";
 import SettingsFormTabOpenAI from "@/Pages/Settings/formTabs/SettingsFormTabOpenAI.vue";
+import SettingsFormTabLinkedIn from "@/Pages/Settings/formTabs/SettingsFormTabLinkedIn.vue";
 
 const props = defineProps({
     form: Object,
@@ -54,6 +55,15 @@ const props = defineProps({
                     role="tab"
                     aria-controls="nav-meta"
                     aria-selected="false">Meta</button>
+
+            <button class="nav-link"
+                    id="nav-linkedin-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#nav-linkedin"
+                    type="button"
+                    role="tab"
+                    aria-controls="nav-linkedin"
+                    aria-selected="false">LinkedIn</button>
 
             <button class="nav-link"
                     id="nav-wordpress-tab"
@@ -116,6 +126,16 @@ const props = defineProps({
              tabindex="0">
 
             <SettingsFormTabMeta :form=form />
+
+        </div>
+
+        <div class="tab-pane fade show pt-4"
+             id="nav-linkedin"
+             role="tabpanel"
+             aria-labelledby="nav-linkedin-tab"
+             tabindex="0">
+
+            <SettingsFormTabLinkedIn :form=form />
 
         </div>
 
