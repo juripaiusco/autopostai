@@ -38,9 +38,13 @@ def comments_get(debug = False):
                 {cfg.DB_PREFIX}settings.ai_comment_prefix AS ai_comment_prefix,
                 {cfg.DB_PREFIX}settings.openai_api_key AS openai_api_key,
                 {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id,
+                {cfg.DB_PREFIX}settings.linkedin_client_id AS linkedin_client_id,
+                {cfg.DB_PREFIX}settings.linkedin_client_secret AS linkedin_client_secret,
+                {cfg.DB_PREFIX}settings.linkedin_token AS linkedin_token,
                 COUNT({cfg.DB_PREFIX}comments.post_id) AS comments_count,
                 SUM(CASE WHEN {cfg.DB_PREFIX}comments.channel = 'facebook' THEN 1 ELSE 0 END) AS facebook_comments_count,
-                SUM(CASE WHEN {cfg.DB_PREFIX}comments.channel = 'instagram' THEN 1 ELSE 0 END) AS instagram_comments_count
+                SUM(CASE WHEN {cfg.DB_PREFIX}comments.channel = 'instagram' THEN 1 ELSE 0 END) AS instagram_comments_count,
+                SUM(CASE WHEN {cfg.DB_PREFIX}comments.channel = 'linkedin' THEN 1 ELSE 0 END) AS linkedin_comments_count
 
             FROM {cfg.DB_PREFIX}posts
                 INNER JOIN {cfg.DB_PREFIX}settings ON {cfg.DB_PREFIX}posts.user_id = {cfg.DB_PREFIX}settings.user_id
@@ -82,6 +86,13 @@ def comments_get(debug = False):
                     and Decimal(row['instagram_comments_count'] or 0) < Decimal(channels[i]['reply_n'] or 0)):
                     instagram_comments = InstagramComment(data=row, debug=debug)
                     instagram_comments.get()
+
+                # if (channels[i]['name'] == 'LinkedIn'
+                #     and channels[i]['on'] == '1'
+                #     and channels[i]['reply_on'] == '1'
+                #     and Decimal(row['instagram_comments_count'] or 0) < Decimal(channels[i]['reply_n'] or 0)):
+                #     instagram_comments = InstagramComment(data=row, debug=debug)
+                #     instagram_comments.get()
 
     mysql.close()
 

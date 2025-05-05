@@ -5,6 +5,7 @@ from services.mysql import Mysql
 from task.posts.base import BasePost
 from task.posts.facebook import FacebookPost
 from task.posts.instagram import InstagramPost
+from task.posts.linkedin import LinkedInPost
 from task.posts.wordpress import WordPressPost
 from task.posts.newsletter import NewsletterPost
 
@@ -31,6 +32,9 @@ def posts_delete(debug = False):
                     {cfg.DB_PREFIX}posts.user_id AS user_id,
                     {cfg.DB_PREFIX}posts.channels AS channels,
                     {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id,
+                    {cfg.DB_PREFIX}settings.linkedin_client_id AS linkedin_client_id,
+                    {cfg.DB_PREFIX}settings.linkedin_client_secret AS linkedin_client_secret,
+                    {cfg.DB_PREFIX}settings.linkedin_token AS linkedin_token,
                     {cfg.DB_PREFIX}settings.wordpress_url AS wordpress_url,
                     {cfg.DB_PREFIX}settings.wordpress_username AS wordpress_username,
                     {cfg.DB_PREFIX}settings.wordpress_password AS wordpress_password,
@@ -77,6 +81,14 @@ def posts_delete(debug = False):
                     # instagram_post = InstagramPost(data=row, debug=debug)
                     # channels[i]['id_del'] = instagram_post.delete(channels[i]['id'])
                     channels[i]['id_del'] = channels[i]['id']
+
+            if channels[i]['name'] == 'LinkedIn' and channels[i]['on'] == '1':
+                if channels[i]['id'] != channels[i].get('id_del', None):
+                    if debug:
+                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                              channels[i]['name'], "- post deleting - ID:", channels[i]['id'])
+                    linkedin_post = LinkedInPost(data=row, debug=debug)
+                    channels[i]['id_del'] = linkedin_post.delete(channels[i]['id'])
 
             if channels[i]['name'] == 'WordPress' and channels[i]['on'] == '1':
                 if channels[i]['id'] != channels[i].get('id_del', None):

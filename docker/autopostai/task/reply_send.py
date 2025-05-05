@@ -5,6 +5,7 @@ from task.ai_generate import ai_generate
 from task.reply.base import BaseReply
 from task.reply.facebook import FacebookReply
 from task.reply.instagram import InstagramReply
+from task.reply.linkedin import LinkedInReply
 from services.meta import Meta
 
 
@@ -37,7 +38,10 @@ def reply_send(debug = False):
                     {cfg.DB_PREFIX}settings.ai_prompt_prefix AS ai_prompt_prefix,
                     {cfg.DB_PREFIX}settings.ai_comment_prefix AS ai_comment_prefix,
                     {cfg.DB_PREFIX}settings.openai_api_key AS openai_api_key,
-                    {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id
+                    {cfg.DB_PREFIX}settings.meta_page_id AS meta_page_id,
+                    {cfg.DB_PREFIX}settings.linkedin_client_id AS linkedin_client_id,
+                    {cfg.DB_PREFIX}settings.linkedin_client_secret AS linkedin_client_secret,
+                    {cfg.DB_PREFIX}settings.linkedin_token AS linkedin_token
 
                 FROM {cfg.DB_PREFIX}comments
                     INNER JOIN {cfg.DB_PREFIX}posts ON {cfg.DB_PREFIX}posts.id = {cfg.DB_PREFIX}comments.post_id
@@ -67,6 +71,9 @@ def reply_send(debug = False):
         if row['channel'] == 'instagram':
             prompt = InstagramReply(data=row).prompt_get()
 
+        if row['channel'] == 'linkedin':
+            prompt = LinkedInReply(data=row).prompt_get()
+
         # Recupero la risposta dal LLM
         reply = ai_generate(
             data=row,
@@ -90,6 +97,14 @@ def reply_send(debug = False):
                 reply_id = meta.ig_reply_comments(row['message_id'], reply)
                 if debug is True:
                     print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - reply ID:",
+                          reply_id)
+
+        if reply is not None and row['linkedin_client_id'] is not None:
+            if row['channel'] == "linkedin":
+                # reply_id = meta.ig_reply_comments(row['message_id'], reply)
+                reply_id = None
+                if debug is True:
+                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "LinkedIn - reply ID:",
                           reply_id)
 
         #########################################################

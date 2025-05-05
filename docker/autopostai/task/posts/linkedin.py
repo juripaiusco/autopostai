@@ -29,5 +29,9 @@ class LinkedInPost(BasePost):
             linkedin = LinkedIn(
                 client_id=self.data['linkedin_client_id'],
                 client_secret=self.data['linkedin_client_secret'],
+                token=self.data['linkedin_token'],
             )
-            return linkedin.delete(post_id)
+
+            post_id = linkedin.delete(post_id)
+
+            return post_id

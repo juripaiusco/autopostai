@@ -81,7 +81,30 @@ class LinkedIn:
         return response.json().get('id'), f"https://www.linkedin.com/feed/update/{response.json().get('id')}"
 
     def delete(self, post_id):
-        return None
+        # Endpoint DELETE
+        # url = f"{self.base_url}/ugcPosts/{post_id}"
+        raw_post_id = post_id
+        post_id = raw_post_id.split(":")[-1]
+        url = f"{self.base_url}/shares/{post_id}"
+
+        # Headers
+        headers = {
+            'Authorization': f'Bearer {self.token}',
+            'X-Restli-Protocol-Version': '2.0.0'
+        }
+
+        # Effettua la richiesta DELETE
+        response = requests.delete(url, headers=headers)
+
+        # Verifica risultato
+        if response.status_code in [200, 204]:
+            # Restituisco l'ID raw perché viene fatto un controllo se il post è stato
+            # eliminato, e questo controllo viene fatto sugli ID del post, quindi l'ID
+            # inizialmente salvato è raw, non il codice numerico.
+            return raw_post_id
+        else:
+            print(f"❌ Errore nell'eliminazione: {response.status_code}")
+            print(response.text)
 
     # Recupero il person URN da MySQL o da LinkedIn
     # Il person URN è l'ID del profilo privato, quindi se si vuoi pubblicare
