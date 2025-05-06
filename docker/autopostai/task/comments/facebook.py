@@ -20,7 +20,7 @@ class FacebookComment(BaseComment):
             if comments.get('error') is None:
                 for comment in comments['data']:
 
-                    # Conferto la data di Facebook perché non è corretta
+                    # Converto la data di Facebook perché non è corretta
                     raw_date = comment['created_time']
                     facebook_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
                     original_date = facebook_date + timedelta(hours=1)

@@ -224,3 +224,43 @@ class LinkedIn:
         upload_res = requests.put(upload_url, headers=upload_headers, data=image_data)
 
         return asset
+
+    def get_comments(self, post_id):
+        # Estrai la parte finale per costruire l'URL
+        encoded_urn = post_id.replace(":", "%3A")  # URL encode i due punti
+
+        # URL dell'endpoint
+        url = f"{self.base_url}/socialActions/{encoded_urn}/comments"
+
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "X-Restli-Protocol-Version": "2.0.0"
+        }
+
+        # Effettua la richiesta POST
+        response = requests.get(url, headers=headers)
+
+        return response.json()
+
+    # Recupero i dati della persona tramite URN
+    def get_author(self, actor_urn):
+        # URL dell'endpoint
+        person_id = actor_urn.split(":")[-1]
+        url = f"{self.base_url}/people/(id:{person_id})"
+
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "X-Restli-Protocol-Version": "2.0.0"
+        }
+
+        # Effettua la richiesta POST
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            data = response.json()
+            first_name = data.get("firstName", {}).get("localized", {}).get("it_IT", "")
+            last_name = data.get("lastName", {}).get("localized", {}).get("it_IT", "")
+            return first_name, last_name
+        else:
+            print(f"❌ Errore {response.status_code}: {response.text}")
+            return None, None

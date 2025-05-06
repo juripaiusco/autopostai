@@ -20,7 +20,7 @@ class InstagramComment(BaseComment):
             if comments.get('error') is None:
                 for comment in comments['data']:
 
-                    # Conferto la data di Instagram perché non è corretta
+                    # Converto la data di Instagram perché non è corretta
                     raw_date = comment['timestamp']
                     instagram_date = datetime.strptime(raw_date, '%Y-%m-%dT%H:%M:%S%z')
                     original_date = instagram_date + timedelta(hours=1)

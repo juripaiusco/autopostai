@@ -72,7 +72,8 @@ def reply_send(debug = False):
             prompt = InstagramReply(data=row).prompt_get()
 
         if row['channel'] == 'linkedin':
-            prompt = LinkedInReply(data=row).prompt_get()
+            # prompt = LinkedInReply(data=row).prompt_get()
+            prompt = None
 
         # Recupero la risposta dal LLM
         reply = ai_generate(
