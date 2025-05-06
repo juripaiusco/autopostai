@@ -25,12 +25,12 @@ class LinkedIn:
             "X-Restli-Protocol-Version": "2.0.0"
         }
 
-        # author = f"urn:li:person:{self.get_person_urn()}"
-        author = f"urn:li:organization:{self.get_company_urn()}"
+        # author_urn = f"urn:li:person:{self.get_person_id()}"
+        author_urn = f"urn:li:organization:{self.get_company_id()}"
 
         if img_path is None:
             payload = {
-                "author": author,
+                "author": author_urn,
                 "lifecycleState": "PUBLISHED",
                 "specificContent": {
                     "com.linkedin.ugc.ShareContent": {
@@ -46,7 +46,7 @@ class LinkedIn:
             }
         else:
             payload = {
-                "author": author,
+                "author": author_urn,
                 "lifecycleState": "PUBLISHED",
                 "specificContent": {
                     "com.linkedin.ugc.ShareContent": {
@@ -57,7 +57,7 @@ class LinkedIn:
                         "media": [
                             {
                                 "status": "READY",
-                                "media": self.upload_img(author=author, img_path=img_path)
+                                "media": self.upload_img(author=author_urn, img_path=img_path)
                             }
                         ]
                     }
@@ -109,18 +109,18 @@ class LinkedIn:
     # Recupero il person URN da MySQL o da LinkedIn
     # Il person URN è l'ID del profilo privato, quindi se si vuoi pubblicare
     # su LinkedIn con il proprio profilo, si deve utilizzare questo ID
-    def get_person_urn(self):
+    def get_person_id(self):
         mysql = Mysql()
         mysql.connect()
 
         row = mysql.query(f"""
-                        SELECT  {cfg.DB_PREFIX}settings.linkedin_person_urn AS linkedin_person_urn
+                        SELECT  {cfg.DB_PREFIX}settings.linkedin_person_id AS linkedin_person_id
                             FROM {cfg.DB_PREFIX}settings
 
                         WHERE {cfg.DB_PREFIX}settings.linkedin_client_id = "{self.client_id}"
                         """)
 
-        if row[0]['linkedin_person_urn'] is None:
+        if row[0]['linkedin_person_id'] is None:
             # URL dell'endpoint
             url = f"{self.base_url}/me"
 
@@ -136,11 +136,11 @@ class LinkedIn:
             # Controlla il risultato
             if response.status_code == 200:
                 data = response.json()
-                person_urn = data.get('id')
+                person_id = data.get('id')
 
                 mysql.query(
-                    query=f"UPDATE {cfg.DB_PREFIX}settings SET linkedin_person_urn = %s WHERE linkedin_client_id = %s",
-                    parameters=(person_urn, self.client_id)
+                    query=f"UPDATE {cfg.DB_PREFIX}settings SET linkedin_person_id = %s WHERE linkedin_client_id = %s",
+                    parameters=(person_id, self.client_id)
                 )
             else:
                 print(f'Errore: {response.status_code}')
@@ -149,27 +149,27 @@ class LinkedIn:
                 return None
 
         else:
-            person_urn = row[0]['linkedin_person_urn']
+            person_id = row[0]['linkedin_person_id']
 
         mysql.close()
 
-        return person_urn
+        return person_id
 
     # Recupero il company URN da MySQL
     # il company URN è l'ID della pagina gestita da un amministratore di LinkedIn
-    def get_company_urn(self):
+    def get_company_id(self):
         mysql = Mysql()
         mysql.connect()
 
         row = mysql.query(f"""
-                        SELECT  {cfg.DB_PREFIX}settings.linkedin_company_urn AS linkedin_company_urn
+                        SELECT  {cfg.DB_PREFIX}settings.linkedin_company_id AS linkedin_company_id
                             FROM {cfg.DB_PREFIX}settings
 
                         WHERE {cfg.DB_PREFIX}settings.linkedin_client_id = "{self.client_id}"
                         """)
 
-        if row[0]['linkedin_company_urn'] is not None:
-            company_urn = row[0]['linkedin_company_urn']
+        if row[0]['linkedin_company_id'] is not None:
+            company_urn = row[0]['linkedin_company_id']
         else:
             return None
 

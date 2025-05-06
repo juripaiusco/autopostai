@@ -27,8 +27,8 @@ return new class extends Migration
 
             $table->string('meta_page_id')->unique()->default(null)->nullable();
 
-            $table->string('linkedin_person_urn')->default(null)->nullable();
-            $table->string('linkedin_company_urn')->default(null)->nullable();
+            $table->string('linkedin_person_id')->default(null)->nullable();
+            $table->string('linkedin_company_id')->default(null)->nullable();
             $table->string('linkedin_client_id')->unique()->default(null)->nullable();
             $table->string('linkedin_client_secret')->unique()->default(null)->nullable();
             $table->longText('linkedin_token')->default(null)->nullable();
