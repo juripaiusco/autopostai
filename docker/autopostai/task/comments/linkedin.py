@@ -24,8 +24,6 @@ class LinkedInComment(BaseComment):
             if comments.get('elements') is not None:
                 for comment in comments['elements']:
 
-                    print(comment)
-
                     # 1. Converti in secondi
                     timestamp_in_seconds = comment['created']['time'] / 1000
                     # 2. Crea un datetime UTC timezone-aware
