@@ -13,11 +13,15 @@ class LinkedInReply(BaseReply):
         if self.data['channel']:
             prompt = prompt + f"Il post è stato creato su {self.data['channel']} "
 
-        if self.data['from_name'] is not None:
-            prompt = prompt + f"e @{self.data['from_name']} ha risposto con questo commento: "
-        else:
-            prompt = prompt + f"ed è stato risposto con questo commento: "
+        # if self.data['from_name'] is not None:
+        #     prompt = prompt + f"""e {self.data['from_name']} ha risposto con questo commento: """
+        # else:
+        #     prompt = prompt + f"ed è stato risposto con questo commento: "
 
+        prompt = prompt + f"ed è stato risposto con questo commento: "
         prompt = prompt + self.data['message']
+
+        # if self.data['from_name'] is not None:
+        #     prompt = prompt + f""" quando rispondi al commento, non inserire il nome {self.data['from_name']} """
 
         return prompt

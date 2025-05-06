@@ -7,6 +7,7 @@ from task.reply.facebook import FacebookReply
 from task.reply.instagram import InstagramReply
 from task.reply.linkedin import LinkedInReply
 from services.meta import Meta
+from services.linkedin import LinkedIn
 
 
 def reply_send(debug = False):
@@ -25,6 +26,7 @@ def reply_send(debug = False):
                     {cfg.DB_PREFIX}comments.post_id AS post_id,
                     {cfg.DB_PREFIX}users.id AS user_id,
                     {cfg.DB_PREFIX}comments.channel AS channel,
+                    {cfg.DB_PREFIX}comments.from_id AS from_id,
                     {cfg.DB_PREFIX}comments.from_name AS from_name,
                     {cfg.DB_PREFIX}comments.message_id AS message_id,
                     {cfg.DB_PREFIX}comments.message AS message,
@@ -72,8 +74,7 @@ def reply_send(debug = False):
             prompt = InstagramReply(data=row).prompt_get()
 
         if row['channel'] == 'linkedin':
-            # prompt = LinkedInReply(data=row).prompt_get()
-            prompt = None
+            prompt = LinkedInReply(data=row).prompt_get()
 
         # Recupero la risposta dal LLM
         reply = ai_generate(
@@ -83,6 +84,7 @@ def reply_send(debug = False):
             type="reply",
             debug=debug
         )
+        reply_id = None
 
         # Invio la risposta ai commenti Meta
         if reply is not None and row['meta_page_id'] is not None:
@@ -100,10 +102,20 @@ def reply_send(debug = False):
                     print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - reply ID:",
                           reply_id)
 
+        # Invio risposta ai commenti LinkedIn
         if reply is not None and row['linkedin_client_id'] is not None:
             if row['channel'] == "linkedin":
-                # reply_id = meta.ig_reply_comments(row['message_id'], reply)
-                reply_id = None
+                linkedin = LinkedIn(
+                    client_id=row['linkedin_client_id'],
+                    client_secret=row['linkedin_client_secret'],
+                    token=row['linkedin_token']
+                )
+                reply_id = linkedin.reply_comments(
+                    comment_urn=row['message_id'],
+                    actor_urn=row['from_id'],
+                    actor_name=row['from_name'],
+                    reply_message=reply
+                )
                 if debug is True:
                     print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "LinkedIn - reply ID:",
                           reply_id)

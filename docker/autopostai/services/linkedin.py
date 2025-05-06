@@ -4,6 +4,7 @@ import config as cfg
 import requests
 import json
 import os
+from urllib.parse import quote
 
 load_dotenv()
 
@@ -264,3 +265,54 @@ class LinkedIn:
         else:
             print(f"❌ Errore {response.status_code}: {response.text}")
             return None, None
+
+    def reply_comments(self, comment_urn, actor_urn, actor_name, reply_message):
+        encoded_comment_urn = quote(comment_urn, safe='')
+        # base_url = self.base_url.replace("/v2", "")
+        # url = f"{base_url}/rest/socialActions/{encoded_comment_urn}/comments"
+        url = f"{self.base_url}/socialActions/{encoded_comment_urn}/comments"
+
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+            "X-Restli-Protocol-Version": "2.0.0",
+            # "LinkedIn-Version": "202504"
+        }
+
+        author_urn = f"urn:li:organization:{self.get_company_id()}"
+
+        if not f"{actor_name}" in reply_message:
+            reply_message = reply_message[0].lower() + reply_message[1:]
+            reply_message = f"{actor_name} {reply_message}"
+
+        payload = {
+            "actor": author_urn,
+            "message": {
+                "text": reply_message,
+                    "attributes": [
+                        {
+                            "start": 0,
+                            "length": len(actor_name),
+                            "value": {
+                                "com.linkedin.common.MemberAttributedEntity": {
+                                    "member": actor_urn
+                                }
+                            }
+                        }
+                    ]
+            }
+        }
+
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code in [200, 201, 204]:
+            return response.json().get("id")
+        else:
+            print(f"❌ Errore commento: {response.status_code}")
+
+            print("Messaggio:", reply_message)
+            print("Mention URN:", actor_urn)
+            print("Length mention:", len(actor_name) + 1)
+            print("Payload:", json.dumps(payload, indent=2))
+
+            print(response.json())
