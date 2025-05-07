@@ -268,15 +268,17 @@ class LinkedIn:
 
     def reply_comments(self, comment_urn, actor_urn, actor_name, reply_message):
         encoded_comment_urn = quote(comment_urn, safe='')
-        # base_url = self.base_url.replace("/v2", "")
-        # url = f"{base_url}/rest/socialActions/{encoded_comment_urn}/comments"
-        url = f"{self.base_url}/socialActions/{encoded_comment_urn}/comments"
+        base_url = self.base_url.replace("/v2", "")
+        url = f"{base_url}/rest/socialActions/{encoded_comment_urn}/comments"
+        # url = f"{self.base_url}/socialActions/{encoded_comment_urn}/comments"
 
         headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json",
             "X-Restli-Protocol-Version": "2.0.0",
+            "LinkedIn-Version": "202306"
             # "LinkedIn-Version": "202504"
+            # "LinkedIn-Version": "202405"
         }
 
         author_urn = f"urn:li:organization:{self.get_company_id()}"
@@ -300,7 +302,8 @@ class LinkedIn:
                             }
                         }
                     ]
-            }
+            },
+            "parentComment": comment_urn
         }
 
         response = requests.post(url, headers=headers, json=payload)
