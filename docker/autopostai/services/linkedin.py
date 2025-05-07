@@ -4,6 +4,7 @@ import config as cfg
 import requests
 import json
 import os
+import re
 from urllib.parse import quote
 
 load_dotenv()
@@ -277,15 +278,33 @@ class LinkedIn:
             "Content-Type": "application/json",
             "X-Restli-Protocol-Version": "2.0.0",
             "LinkedIn-Version": "202306"
-            # "LinkedIn-Version": "202504"
-            # "LinkedIn-Version": "202405"
         }
 
         author_urn = f"urn:li:organization:{self.get_company_id()}"
 
-        if not f"{actor_name}" in reply_message:
-            reply_message = reply_message[0].lower() + reply_message[1:]
-            reply_message = f"{actor_name} {reply_message}"
+        # Trova posizione esatta (case insensitive, parola intera)
+        match = re.search(rf'\b{re.escape(actor_name)}\b', reply_message, re.IGNORECASE)
+
+        # Verifico che ci sia il nome completo da taggare
+        if match:
+            start_actor_name = match.start()
+            length_actor_name = len(actor_name)
+        else:
+            # Se non c'è il nome completo, verifico che ci sia soltanto il nome
+            actor_n = actor_name.split(" ")[0]
+            match = re.search(rf'\b{re.escape(actor_n)}\b', reply_message, re.IGNORECASE)
+
+            if match:
+                start_actor_name = match.start()
+                length_actor_name = len(actor_n)
+
+            # Se non trovo né il nome completo, né il nome, allora lo inserisco
+            # manualmente a inizio testo
+            else:
+                reply_message = reply_message[0].lower() + reply_message[1:]
+                reply_message = f"{actor_name} {reply_message}"
+                start_actor_name = 0
+                length_actor_name = len(actor_name)
 
         payload = {
             "actor": author_urn,
@@ -293,8 +312,8 @@ class LinkedIn:
                 "text": reply_message,
                     "attributes": [
                         {
-                            "start": 0,
-                            "length": len(actor_name),
+                            "start": start_actor_name,
+                            "length": length_actor_name,
                             "value": {
                                 "com.linkedin.common.MemberAttributedEntity": {
                                     "member": actor_urn

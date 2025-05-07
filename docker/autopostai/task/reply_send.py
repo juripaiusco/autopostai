@@ -86,7 +86,7 @@ def reply_send(debug = False):
         )
         reply_id = None
 
-        # Invio la risposta ai commenti Meta
+        # Invio la risposta ai commenti Meta ----------------------------------- |
         if reply is not None and row['meta_page_id'] is not None:
             meta = Meta(page_id=row['meta_page_id'])
 
@@ -102,7 +102,7 @@ def reply_send(debug = False):
                     print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - reply ID:",
                           reply_id)
 
-        # Invio risposta ai commenti LinkedIn
+        # Invio risposta ai commenti LinkedIn --------------------------------- |
         if reply is not None and row['linkedin_client_id'] is not None:
             if row['channel'] == "linkedin":
                 linkedin = LinkedIn(
