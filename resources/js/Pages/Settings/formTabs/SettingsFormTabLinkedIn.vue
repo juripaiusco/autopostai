@@ -40,6 +40,16 @@ const props = defineProps({
 
     <br>
 
+    <label class="form-label">Token LinkedIn</label>
+    <input type="text"
+           class="form-control"
+           disabled readonly
+           v-model="form.linkedin_token" />
+    <div class="text-red-500 text-center"
+         v-if="form && form.errors && form.errors.linkedin_token">{{ __(form.errors.linkedin_token) }}</div>
+
+    <br>
+
     <a class="btn btn-primary w-[100%] md:w-[120px]"
        :class="{'disabled': !form.linkedin_client_id}"
        target="_blank"
