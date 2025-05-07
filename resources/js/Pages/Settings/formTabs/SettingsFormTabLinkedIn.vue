@@ -33,10 +33,10 @@ const props = defineProps({
     <label class="form-label">ID della pagina LinkedIn</label>
     <input type="text"
            class="form-control"
-           v-model="form.linkedin_company_urn"
+           v-model="form.linkedin_company_id"
            :disabled="$page.props.auth.user.parent_id" />
     <div class="text-red-500 text-center"
-         v-if="form && form.errors && form.errors.linkedin_company_urn">{{ __(form.errors.linkedin_company_urn) }}</div>
+         v-if="form && form.errors && form.errors.linkedin_company_id">{{ __(form.errors.linkedin_company_id) }}</div>
 
     <br>
 
