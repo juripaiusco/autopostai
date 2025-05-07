@@ -194,12 +194,7 @@ let edit_ai_content = ref(false);
                     <div class="card text-left mb-2">
                         <div class="card-body whitespace-pre-line">
                             <label class="form-label">
-                                <li v-if="comment.channel === 'facebook'"
-                                    class="fa-brands fa-facebook"></li>
-                                <li v-if="comment.channel === 'instagram'"
-                                    class="fa-brands fa-instagram"></li>
-                                <li v-if="comment.channel === 'wordpress'"
-                                    class="fa-brands fa-wordpress"></li>
+                                <li :class="'fa-brands fa-' + comment.channel"></li>
                                 &nbsp;{{ comment.from_name }} ha scritto:
                             </label>
                             {{ comment.message }}
