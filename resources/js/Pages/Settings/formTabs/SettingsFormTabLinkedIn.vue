@@ -41,10 +41,15 @@ const props = defineProps({
     <br>
 
     <a class="btn btn-primary w-[100%] md:w-[120px]"
-          target="_blank"
-          :href="route('linkedin.redirect', { linkedin_client_id: form.linkedin_client_id })">
-        Token
+       :class="{'disabled': !form.linkedin_client_id}"
+       target="_blank"
+       :href="route('linkedin.redirect', { linkedin_client_id: form.linkedin_client_id ? form.linkedin_client_id : '' })">
+        Get Token
     </a>
+    <br>
+    <small class="text-gray-500">
+        Prima salva i dati (Client ID, ...), poi recupera il token, e poi il tuo account LinkedIn è connesso
+    </small>
 
 </template>
 
