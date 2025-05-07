@@ -328,7 +328,7 @@ class LinkedIn:
         response = requests.post(url, headers=headers, json=payload)
 
         if response.status_code in [200, 201, 204]:
-            return response.json().get("id")
+            return response.json().get("id"), reply_message
         else:
             print(f"❌ Errore commento: {response.status_code}")
 

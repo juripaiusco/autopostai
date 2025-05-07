@@ -110,7 +110,7 @@ def reply_send(debug = False):
                     client_secret=row['linkedin_client_secret'],
                     token=row['linkedin_token']
                 )
-                reply_id = linkedin.reply_comments(
+                reply_id, reply = linkedin.reply_comments(
                     comment_urn=row['message_id'],
                     actor_urn=row['from_id'],
                     actor_name=row['from_name'],
