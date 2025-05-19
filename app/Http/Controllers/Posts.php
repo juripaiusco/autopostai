@@ -426,7 +426,10 @@ class Posts extends Controller
         }
 
         // Verifico da quale LLM è stata generata l'immagine e correggo la path
-        $ai_ctrl_path = array('stable-diffusion');
+        $ai_ctrl_path = array(
+            'stable-diffusion',
+            'dall-e'
+        );
 
         foreach ($ai_ctrl_path as $ai_path) {
 
@@ -522,7 +525,12 @@ class Posts extends Controller
      */
     public function destroy_image(string $img)
     {
-        return Storage::disk('public')->delete('stable-diffusion/' . Auth::id() . '/' . $img);
+        $array_delete = array(
+            Storage::disk('public')->delete('stable-diffusion/' . Auth::id() . '/' . $img),
+            Storage::disk('public')->delete('dall-e/' . Auth::id() . '/' . $img),
+        );
+
+        return $array_delete;
     }
 
     public function preview(Request $request)
