@@ -63,7 +63,10 @@ const startJob = async () => {
         // Avvia il job tramite API
         const { data } = await axios.post(
             app_url + "/index.php/api/start-job",
-            { prompt: form.ai_prompt_img },
+            {
+                user_id: form.user_id,
+                prompt: form.ai_prompt_img,
+            },
             {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -403,7 +406,8 @@ function previewAIContent() {
                                                     :disabled="
                                                     ai_prompt_img_loading ||
                                                     (images_used >= $page.props.auth.user.image_model_limit &&
-                                                    $page.props.auth.user.parent_id)
+                                                    $page.props.auth.user.parent_id) ||
+                                                    !form.user_id
                                                     "
                                                     type="button"
                                                     class="btn btn-primary">Genera immagine</button>
@@ -420,7 +424,7 @@ function previewAIContent() {
                                  aria-labelledby="nav-select-img-tab"
                                  tabindex="0">
 
-                                <div class="row sm:py-4 sm:max-h-[854px] sm:min-h-[854px] sm:overflow-y-auto">
+                                <div class="row sm:py-4 sm:max-h-[854px] sm:overflow-y-auto">
                                     <div v-for="(file, index) in images_array"
                                          :key="index"
                                          class="col-4 col-lg-3 mb-4 relative">

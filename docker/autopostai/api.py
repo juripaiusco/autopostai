@@ -2,8 +2,9 @@ import json
 import config as cfg
 from services.mysql import Mysql
 from task.ai_content_get import ai_content_get
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel
+from openai import OpenAI
 
 
 app = FastAPI()
@@ -109,3 +110,43 @@ async def generate(request_data: GenerateRequest):
     mysql.close()
 
     return {"status": "success", "content": f"{ai_content}"}
+
+
+# Definisci il modello dei dati attesi
+class GenerateImageRequest(BaseModel):
+    user_id: int
+    prompt: str
+
+@app.post("/generate-image")
+async def generate_image(data: GenerateImageRequest):
+    try:
+        mysql = Mysql()
+        mysql.connect()
+
+        rows = mysql.query(f"""
+                    SELECT  {cfg.DB_PREFIX}settings.openai_api_key AS openai_api_key
+
+                        FROM {cfg.DB_PREFIX}settings
+
+                    WHERE {cfg.DB_PREFIX}settings.user_id = {data.user_id}
+                """)
+        mysql.close()
+
+        api_key = rows[0]['openai_api_key']
+
+        client = OpenAI(api_key=api_key)
+
+        # ✅ Nuova sintassi per generare immagine
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=data.prompt,
+            quality="standard",
+            n=1,
+            size="1024x1024",
+        )
+
+        image_url = response.data[0].url
+
+        return {"image_url": image_url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

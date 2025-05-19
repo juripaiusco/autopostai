@@ -498,18 +498,21 @@ class Posts extends Controller
      */
     public function get_image_list()
     {
-        $files = Storage::disk('public')->files('stable-diffusion/' . Auth::id() . '/');
+        $files = array_merge(
+            Storage::disk('public')->files('stable-diffusion/' . Auth::id() . '/'),
+            Storage::disk('public')->files('dall-e/' . Auth::id() . '/'),
+        );
         $files_url = [];
 
         foreach ($files as $file) {
             if (substr(basename($file), 0, 1) != '.') {
-                $files_url[] = Storage::disk('public')->url($file);
+                $files_url[]['image_url'] = Storage::disk('public')->url($file);
             }
         }
 
         $imageJobs = ImageJob::whereIn('image_url', $files_url)->orderBy('created_at', 'desc')->get();
-
         return $imageJobs;
+//        return $files_url;
     }
 
     /**

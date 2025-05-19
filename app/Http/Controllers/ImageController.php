@@ -12,7 +12,9 @@ class ImageController extends Controller
 {
     public function startJob(Request $request)
     {
+        $user_id = $request->input('user_id');
         $prompt = $request->input('prompt');
+        $model = 'dall-e'; // Modello predefinito
 
         // Crea un record nel database per tracciare il job
         $jobId = DB::table('image_jobs')->insertGetId([
@@ -22,7 +24,7 @@ class ImageController extends Controller
         ]);
 
         // Avvia il job
-        GenerateImageJob::dispatch(Auth::id(), $prompt, $jobId);
+        GenerateImageJob::dispatch(Auth::id(), $user_id, $prompt, $jobId, $model);
 
         return response()->json(['job_id' => $jobId]);
     }

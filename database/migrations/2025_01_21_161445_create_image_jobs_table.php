@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
             $table->string('status')->default('pending'); // pending, running, completed, failed
-            $table->string('image_url')->nullable();     // URL immagine generata
+            $table->longText('image_url')->nullable();     // URL immagine generata
             $table->longText('prompt')->nullable();
             $table->string('model')->nullable();
             $table->timestamps();
