@@ -70,7 +70,7 @@ def ai_generate(data, prompt, img_path = None, type = None, debug = False):
         type,
         data['id'],
         tokens_used,
-        cfg.CURRENT_TIME
+        cfg.get_current_time()
     ))
 
     mysql.close()

@@ -12,6 +12,9 @@ LOCAL_TIMEZONE = pytz.timezone('Europe/Rome')
 # Ottieni la data attuale
 CURRENT_TIME = datetime.now(LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
 
+def get_current_time():
+    return datetime.now(LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
+
 # Prefisso del database
 DB_PREFIX = os.getenv('DB_PREFIX')
 
