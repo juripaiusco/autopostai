@@ -102,7 +102,7 @@ def task_complete(debug = False):
                     task_complete = 0
 
             # Verifico che siano trascorse due settimane, in caso marchio il post come task_complete
-            time_diff = (row['on_hold_until'] - row['created_at'])
+            time_diff = (row['on_hold_until'] - row['published_at'])
             if debug is True:
                 print("\n", " " * 18, "Waiting days:", time_diff.days, "\n")
 
