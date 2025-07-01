@@ -27,6 +27,7 @@ def task_complete(debug = False):
                     SUM(CASE WHEN {cfg.DB_PREFIX}comments.channel = 'facebook' THEN 1 ELSE 0 END) AS facebook_comments_count,
                     SUM(CASE WHEN {cfg.DB_PREFIX}comments.channel = 'instagram' THEN 1 ELSE 0 END) AS instagram_comments_count,
                     {cfg.DB_PREFIX}posts.on_hold_until AS on_hold_until,
+                    {cfg.DB_PREFIX}posts.published_at AS published_at,
                     {cfg.DB_PREFIX}posts.created_at AS created_at,
                     {cfg.DB_PREFIX}settings.brevo_api AS brevo_api
 
