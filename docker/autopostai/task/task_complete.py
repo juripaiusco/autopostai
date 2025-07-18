@@ -76,8 +76,8 @@ def task_complete(debug = False):
                     and Decimal(row['instagram_comments_count'] or 0) >= Decimal(channels[i]['reply_n'] or 0)):
                     channels[i]['task_complete'] = 1
 
-            # Verifico che il channel Newsletter inviata tramite Brevo abbia l'URL,
-            # in negativo lo recupero e lo salvo, completando il task
+            # Verifico che la Newsletter inviata tramite Brevo abbia l'URL,
+            # in caso negativo lo recupero e lo salvo, completando il task
             for i in channels:
                 if (channels[i]['name'] == 'Newsletter'
                     and channels[i]['on'] == 1
