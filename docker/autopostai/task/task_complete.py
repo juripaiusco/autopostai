@@ -80,6 +80,7 @@ def task_complete(debug = False):
             # in negativo lo recupero e lo salvo, completando il task
             for i in channels:
                 if (channels[i]['name'] == 'Newsletter'
+                    and channels[i]['on'] == 1
                     and row['brevo_api'] is not None):
 
                     channels[i]['task_complete'] = 0
