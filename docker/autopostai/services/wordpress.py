@@ -11,6 +11,19 @@ class Wordpress:
         if self.wordpress_url is not None:
             return HTTPBasicAuth(self.wordpress_username, self.wordpress_password)
 
+    def headers(self, headers_img=None):
+        headers = {}
+
+        if headers_img is None:
+            headers['Content-Type'] = "application/json"
+
+        if headers_img is not None:
+            headers.update(headers_img)
+
+        headers['User-Agent'] = "FaPer3 (AutoPostAI)"
+
+        return headers
+
     def send(self, title, content, img_path, cat_id):
         data = {
             "title": title,
@@ -21,6 +34,7 @@ class Wordpress:
 
         response = requests.post(
             f"{self.wordpress_url}/wp-json/wp/v2/posts",
+            headers=self.headers(),
             auth=self.auth(),
             json=data
         )
@@ -30,26 +44,32 @@ class Wordpress:
 
         # Upload immagine
         if img_path:
-            # URL API per caricare l'immagine
-            url = f"{self.wordpress_url}/wp-json/wp/v2/media"
-
             # Aprire il file e inviare la richiesta
             with open(img_path, "rb") as img:
                 files = {"file": img}
-                headers = {"Content-Disposition": f"attachment; filename={img_path}"}
-                response = requests.post(url, auth=self.auth(), files=files, headers=headers)
+                response = requests.post(
+                    f"{self.wordpress_url}/wp-json/wp/v2/media",
+                    headers={
+                        "Content-Disposition": f"attachment; filename={img_path}",
+                        "User-Agent": "Mozilla/5.0 (AutoPostAI)"
+                    },
+                    auth=self.auth(),
+                    files=files
+                )
 
             # Ottenere l'ID dell'immagine caricata
             image_id = response.json().get("id")
-
-            # URL per aggiornare il post
-            url = f"{self.wordpress_url}/wp-json/wp/v2/posts/{post_id}"
 
             # Dati per assegnare l'immagine come immagine in evidenza
             data = {"featured_media": image_id}
 
             # Invia la richiesta PATCH per aggiornare il post
-            response = requests.post(url, auth=self.auth(), json=data)
+            response = requests.post(
+                f"{self.wordpress_url}/wp-json/wp/v2/posts/{post_id}",
+                headers=self.headers(),
+                auth=self.auth(),
+                json=data
+            )
 
         return post_id, post_url
 
@@ -62,6 +82,7 @@ class Wordpress:
 
         response = requests.post(
             f"{self.wordpress_url}/wp-json/wp/v2/posts/{post_id}",
+            headers=self.headers(),
             auth=self.auth(),
             json=data
         )
@@ -71,6 +92,7 @@ class Wordpress:
     def delete(self, post_id):
         response = requests.delete(
             f"{self.wordpress_url}/wp-json/wp/v2/posts/{post_id}",
+            headers=self.headers(),
             auth=self.auth()
         )
 
