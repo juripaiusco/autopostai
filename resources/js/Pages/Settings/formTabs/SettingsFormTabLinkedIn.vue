@@ -58,7 +58,9 @@ const props = defineProps({
     </a>
     <br>
     <small class="text-gray-500">
-        Prima salva i dati (Client ID, ...), poi recupera il token, e poi il tuo account LinkedIn è connesso
+        Prima salva i dati (Client ID, ...), poi recupera il token, e poi il tuo account LinkedIn è connesso.
+        <br>
+        UNA VOLTA CLICCATO SU "Get Token" NON SALVARE L'UTENTE, PERCHÉ IL TOKEN VIENE SALVATO AUTOMATICAMENTE.
     </small>
 
 </template>
