@@ -114,6 +114,7 @@ class Users extends Controller
                 'on' => null,
                 'reply_on' => null,
                 'reply_n' => null,
+                'options' => []
             ],
             'newsletter' => [
                 'name' => 'Newsletter',

@@ -111,6 +111,18 @@ class Posts extends Controller
         }
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+        // Imposto le opzioni per l'utente in base al canale ---------
+        foreach ($data['users'] as $user) {
+
+            $settings = \App\Models\Settings::query()->where('user_id', $user->id)->first();
+
+            $channels_array = json_decode($user->channels, true);
+            $channels_array['wordpress']['options'] = json_decode($settings->wordpress_options, true);
+
+            $user->channels = json_encode($channels_array);
+        }
+        // -----------------------------------------------------------
+
         $data['files'] = $this->get_image_list();
         $data['img_selected'] = null;
 

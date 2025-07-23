@@ -185,6 +185,7 @@ function previewAIContent() {
                         <SectionPost :data="data"
                                      :form="form"
                                      :filters="filters"
+                                     :token="token"
                                      :auth="auth" />
 
                     </div>

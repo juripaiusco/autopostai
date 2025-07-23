@@ -37,6 +37,7 @@ return new class extends Migration
             $table->string('wordpress_username')->default(null)->nullable();
             $table->string('wordpress_password')->default(null)->nullable();
             $table->bigInteger('wordpress_cat_id')->default(null)->nullable();
+            $table->longText('wordpress_options')->default(null)->nullable();
 
             $table->string('mailchimp_api')->default(null)->nullable();
             $table->string('mailchimp_datacenter')->default(null)->nullable();
