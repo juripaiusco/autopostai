@@ -26,6 +26,11 @@ class WordPressController extends Controller
         }
 
         if ($categories) {
+
+            foreach ($categories as $k => $category) {
+                $categories[$k]['on'] = 0;
+            }
+            
             $settings->wordpress_options = array_merge(
                 json_decode($settings->wordpress_options, true) ?? [],
                 array('categories' => $categories)

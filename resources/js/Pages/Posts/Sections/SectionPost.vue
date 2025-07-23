@@ -242,8 +242,8 @@ Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è be
             <div class="card-header">
 
                 <div class="flex flex-row items-center">
-                    <div class="w-1/2">
-                        Opzioni WordPress
+                    <div class="w-1/2 text-gray-500">
+                        <span class="font-bold">WordPress</span> Opzioni
                     </div>
                     <div class="w-1/2 text-right">
 
@@ -269,7 +269,10 @@ Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è be
                 </label>
 
                 <div class="row !mt-2">
-                    <div v-if="form.channels['wordpress']['options']['categories']"
+                    <div v-if="
+                                form.channels['wordpress'] &&
+                                form.channels['wordpress']['options'] &&
+                                form.channels['wordpress']['options']['categories']"
                          v-for="(category, index) in form.channels['wordpress']['options']['categories']"
                          :key="index"
                          class="col-6 col-lg-4">
@@ -281,6 +284,7 @@ Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è be
                                    :id="category.id"
                                    true-value="1"
                                    false-value="0"
+                                   v-model="form.channels['wordpress']['options']['categories'][index]['on']"
                                    checked />
 
                             <label class="form-check-label"
