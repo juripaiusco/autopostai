@@ -1,9 +1,8 @@
+import json
 from task.posts.base import BasePost
 import config as cfg
 from datetime import datetime
 from typing import List
-import requests
-from requests.auth import HTTPBasicAuth
 import markdown
 from services.wordpress import Wordpress
 
@@ -22,7 +21,7 @@ class WordPressPost(BasePost):
 
         return prompt
 
-    def get_data(self, markdown_content):
+    def data_get(self, markdown_content):
         # Separare il titolo dal resto del contenuto
         lines = markdown_content.strip().split("\n", 1)
         title = lines[0].replace("#", "").strip()  # Prende solo il testo dopo `#`
@@ -39,15 +38,26 @@ class WordPressPost(BasePost):
             wordpress_password=self.data['wordpress_password']
         )
 
+    def categories_get(self, categories):
+        return [cat['id'] for cat in categories if str(cat.get('on')) == '1']
+
     # Invio Post su WordPress
     def send(self, content):
-        title, body = self.get_data(content)
+        title, body = self.data_get(content)
         cat_id = self.data.get('wordpress_cat_id')
 
         # Assicuriamoci che cat_id sia un numero valido
         if not isinstance(cat_id, int):
             print(f"⚠️ Errore: ID categoria non valido ({cat_id})")
             cat_id = None
+        else:
+            cat_id = [cat_id]
+
+        channels = json.loads(self.data.get('channels'))
+        selected_categories = self.categories_get(channels.get('wordpress').get('options').get('categories'))
+
+        if selected_categories:
+            cat_id = self.categories_get(channels.get('wordpress').get('options').get('categories'))
 
         post_id, post_url = self.wordpress_init().send(
             title=title,
@@ -64,7 +74,7 @@ class WordPressPost(BasePost):
 
     # Aggiorno il post su WordPress
     def update(self, post_id, content):
-        title, body = self.get_data(content)
+        title, body = self.data_get(content)
 
         return self.wordpress_init().update(
             post_id=post_id,

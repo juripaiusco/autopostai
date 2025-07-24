@@ -29,7 +29,7 @@ class Wordpress:
             "title": title,
             "content": content,
             "status": "publish",
-            "categories": [cat_id] if cat_id else []
+            "categories": cat_id if cat_id else []
         }
 
         response = requests.post(
