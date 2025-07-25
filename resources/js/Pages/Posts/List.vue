@@ -131,7 +131,8 @@ onUnmounted(() => {
                                 let html = ''
 
                                 if (d.img) {
-                                    html += '<img src=\'' + app_url + '/storage/posts/' + d.id + '/' + d.img + '\' class=\'w-12 h-12 m-auto object-cover rounded-lg\' />'
+                                    img_array = JSON.parse(d.img);
+                                    html += '<img src=\'' + app_url + '/storage/posts/' + d.id + '/' + img_array[0] + '\' class=\'w-12 h-12 m-auto object-cover rounded-lg\' />'
                                 }
 
                                 return html

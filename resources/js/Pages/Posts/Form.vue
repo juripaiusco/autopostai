@@ -45,6 +45,41 @@ const form = useForm(dataForm);
 
 const app_url = import.meta.env.VITE_APP_URL;
 
+// ----------------------------------------------------------
+
+/**
+ * Gestione dell'input file per l'immagine
+ * @type {Ref<UnwrapRef<*[]>, UnwrapRef<*[]> | *[]>}
+ */
+const previewUrls = ref([])
+const fileInput = ref(null)
+
+function triggerFileInput() {
+    fileInput.value.click()
+}
+
+function onFileChange(event) {
+    const files = Array.from(event.target.files)
+    form.img_selected = selectedImage = []
+    previewUrls.value = []
+    form.img = files
+
+    // Verifico se l'AI deve interpretare l'immagine
+    if (files.length > 1) {
+        form.img_ai_check_on = 0
+    }
+
+    files.forEach(file => {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            previewUrls.value.push(e.target.result)
+        }
+        reader.readAsDataURL(file)
+    })
+}
+
+// ----------------------------------------------------------
+
 /**
  * Genero l'immagine in base al prompt inserito
  * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
@@ -243,30 +278,38 @@ function previewAIContent() {
                                  tabindex="0">
 
                                 <!-- Mostra l'anteprima -->
-                                <div v-if="previewUrl"
+                                <div v-if="previewUrls.length"
                                      @click="triggerFileInput"
                                      class="
+                                     flex flex-wrap gap-4
                                      cursor-pointer
                                      hover:opacity-60">
-                                    <img :src="previewUrl"
-                                         alt="Anteprima immagine"
-                                         class="rounded"
-                                    />
-                                </div>
-                                <!-- Mostra l'immagine caricata se esiste -->
-                                <div v-else
-                                     @click="triggerFileInput"
-                                     class="
-                                     cursor-pointer
-                                     hover:opacity-60">
-                                    <img v-if="form.img"
-                                         :src="form.img"
-                                         :alt="form.title"
-                                         class="rounded" >
+                                    <img v-for="(url, index) in previewUrls"
+                                         :key="'preview-' + index"
+                                         :src="url"
+                                         :alt="'Anteprima immagine ' + (index + 1)"
+                                         :class="{'w-24 h-24': index > 0}"
+                                         class="rounded" />
                                 </div>
 
+                                <!-- Mostra l'immagine caricata se esiste -->
+                                <div v-else-if="form.img && typeof form.img[0] === 'string'"
+                                     @click="triggerFileInput"
+                                     class="
+                                     flex flex-wrap gap-4
+                                     cursor-pointer
+                                     hover:opacity-60">
+                                    <img v-for="(url, index) in form.img"
+                                         :key="'backend-' + index"
+                                         :src="url"
+                                         :alt="form.title + ' ' + (index + 1)"
+                                         :class="{'w-24 h-24': index > 0}"
+                                         class="rounded" />
+                                </div>
+
+                                <!-- Mostra un'immagine placeholder -->
                                 <div
-                                    v-if="!form.img && !previewUrl"
+                                    v-if="!form.img && !previewUrls.length"
                                     @click="triggerFileInput"
                                     class="
                                      border
@@ -290,7 +333,8 @@ function previewAIContent() {
                                      style="display: none;" >
                                     <input type="file"
                                            class="form-control"
-                                           @input="form.img = $event.target.files[0]"
+                                           multiple
+                                           accept="image/*"
                                            @change="onFileChange"
                                            ref="fileInput"
                                            id="img">
@@ -309,6 +353,7 @@ function previewAIContent() {
                                            id="img_ai_check_on"
                                            true-value="1"
                                            false-value="0"
+                                           :disabled="form.img && form.img.length > 1"
                                            v-model="form.img_ai_check_on"
                                            checked />
 
@@ -319,7 +364,9 @@ function previewAIContent() {
                                     <br>
                                     <small>
                                         Se nel testo del prompt chiedi all'AI di interpretare l'immagine questa
-                                        spunta dev'essere attiva
+                                        spunta dev'essere attiva.
+                                        <br>
+                                        FUNZIONA SOLO CON UNA IMMAGINE.
                                     </small>
                                 </span>
                                     </label>
@@ -441,8 +488,8 @@ function previewAIContent() {
                                              :src="file.image_url"
                                              :alt="file.image_url"
                                              @click="
-                                             previewUrl = null;
-                                             form.img = form.img_selected = file.image_url;
+                                             previewUrls = [];
+                                             form.img = form.img_selected = [file.image_url];
                                              form.ai_prompt_img = file.prompt;
                                              selectImage(index);">
 
@@ -698,31 +745,3 @@ function previewAIContent() {
     pointer-events: none; /* Non blocca l'interazione con il textarea */
 }
 </style>
-
-<script>
-export default {
-    data: function () {
-        return {
-            previewUrl: null, // URL per l'anteprima dell'immagine
-        };
-    },
-    methods: {
-        triggerFileInput() {
-            this.$refs.fileInput.click(); // Simula il click sull'input file
-        },
-        onFileChange(event) {
-            const file = event.target.files[0]; // Ottieni il file selezionato
-            if (file) {
-                // Usa FileReader per generare l'anteprima
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.previewUrl = e.target.result; // Imposta l'URL dell'anteprima
-                };
-                reader.readAsDataURL(file); // Leggi il file come Data URL
-            } else {
-                this.previewUrl = null; // Se nessun file selezionato, resetta
-            }
-        },
-    },
-};
-</script>

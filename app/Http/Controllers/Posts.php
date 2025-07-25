@@ -287,6 +287,7 @@ class Posts extends Controller
 
         $post->user_id = $request->input('user_id') ? $request->input('user_id') : auth()->user()->id;
 
+        $post->img = null;
         $post->save();
         $this->save_img('posts', $post, $request);
 
@@ -342,8 +343,17 @@ class Posts extends Controller
             abort(403);
         }
 
-        if ($data->img)
-            $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
+        if ($data->img) {
+            $img_array = json_decode($data->img, true);
+            $img_url_array = [];
+
+            foreach ($img_array as $img) {
+                $img_url_array[] = Storage::disk('public')->url('posts/' . $id . '/' . $img);
+            }
+
+            $data->img = $img_url_array;
+//            $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
+        }
 
         if (!$request->session()->get('saveRedirectPosts')) {
             $request->session()->put('saveRedirectPosts', Redirect::back()->getTargetUrl());
@@ -420,20 +430,30 @@ class Posts extends Controller
     private function save_img($post_path, $data, Request $request)
     {
         // Se l'immagine è stata caricata
-        if ($request->file('img')) {
+        if ($request->hasFile('img')) {
 
-            $data->img = date('mdYHis') . '-' . uniqid() . '-' . $request->file('img')->getClientOriginalName();
+            // Cancella la cartella esistente per questo post
+            Storage::disk('public')->deleteDirectory($post_path . '/' . $data->id);
 
-            if ($request->file('img')->isValid()) {
+            $storedImages = [];
+            $storedImagesName = [];
 
-                Storage::disk('public')->deleteDirectory($post_path . '/' . $data->id);
-                Storage::disk('public')
-                    ->put(
-                        $post_path . '/' . $data->id . '/' . $data->img,
-                        $request->file('img')->get()
+            foreach ($request->file('img') as $file) {
+                if ($file->isValid()) {
+                    $filename = date('mdYHis') . '-' . uniqid() . '-' . $file->getClientOriginalName();
+
+                    Storage::disk('public')->put(
+                        $post_path . '/' . $data->id . '/' . $filename,
+                        $file->get()
                     );
+
+                    $storedImages[] = Storage::url($post_path . '/' . $data->id . '/' . $filename);
+                    $storedImagesName[] = $filename;
+                }
             }
 
+            // Salva gli URL in formato JSON nel campo img (assumendo che sia TEXT o JSON nel DB)
+            $data->img = json_encode($storedImagesName);
             $data->save();
         }
 
@@ -445,8 +465,8 @@ class Posts extends Controller
 
         foreach ($ai_ctrl_path as $ai_path) {
 
-            if ($request->input('img') && str_contains($request->input('img'), $ai_path)) {
-                $img_name = basename($request->input('img'));
+            if (isset($request->input('img')[0]) && str_contains($request->input('img')[0], $ai_path)) {
+                $img_name = basename($request->input('img')[0]);
                 $img_path = Storage::disk('public')->path($ai_path . '/' . Auth::id() . '/' . $img_name);
 
                 Storage::disk('public')->deleteDirectory($post_path . '/' . $data->id);
@@ -456,17 +476,19 @@ class Posts extends Controller
                         file_get_contents($img_path)
                     );
 
-                $data->img = $img_name;
+                $data->img = array($img_name);
 
                 $data->save();
             }
         }
 
         // Se l'immagine è già presente nel DB correggo la path
-        if ($request->input('img') && str_contains($request->input('img'), 'posts')) {
-            $img_name = basename($request->input('img'));
-            $data->img = $img_name;
+        if ($request->filled('img') && is_array($request->input('img'))) {
+            $img_names = array_map(function ($url) {
+                return basename($url); // estrae solo il nome file da ciascun URL
+            }, $request->input('img'));
 
+            $data->img = json_encode($img_names);
             $data->save();
         }
 
