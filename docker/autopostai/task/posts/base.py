@@ -1,3 +1,4 @@
+import json
 import config as cfg
 from typing import List
 from PIL import Image
@@ -19,9 +20,18 @@ class BasePost:
 
         return prompt
 
-    def img_path_get(self):
+    def img_path_get(self, get_all_img: bool = False):
         if self.data['img'] is not None:
-            return f"./storage/app/public/posts/{self.data['id']}/{self.data['img']}"
+            img_list = json.loads(self.data['img'])
+
+            if not get_all_img:
+                return f"./storage/app/public/posts/{self.data['id']}/{img_list[0]}"
+
+            return [f"./storage/app/public/posts/{self.data['id']}/{img}" for img in img_list]
+
+    # def img_path_get(self):
+    #     if self.data['img'] is not None:
+    #         return f"./storage/app/public/posts/{self.data['id']}/{self.data['img']}"
 
     def img_url_get(self, make_square: bool = False):
         if self.data['img'] is not None:
