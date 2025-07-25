@@ -59,9 +59,7 @@ let edit_ai_content = ref(false);
 
                     <div v-if="data.img && typeof data.img[0] === 'string'"
                          class="
-                         flex flex-wrap gap-4
-                         cursor-pointer
-                         hover:opacity-60">
+                         flex flex-wrap gap-4">
                         <img v-for="(url, index) in data.img"
                              :key="'backend-' + index"
                              :src="url"
