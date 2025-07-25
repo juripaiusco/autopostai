@@ -20,12 +20,12 @@ class BasePost:
 
         return prompt
 
-    def img_path_get(self, get_all_img: bool = False):
+    def img_path_get(self, index = 0, get_all_img: bool = False):
         if self.data['img'] is not None:
             img_list = json.loads(self.data['img'])
 
             if not get_all_img:
-                return f"./storage/app/public/posts/{self.data['id']}/{img_list[0]}"
+                return f"./storage/app/public/posts/{self.data['id']}/{img_list[index]}"
 
             return [f"./storage/app/public/posts/{self.data['id']}/{img}" for img in img_list]
 
@@ -33,18 +33,42 @@ class BasePost:
     #     if self.data['img'] is not None:
     #         return f"./storage/app/public/posts/{self.data['id']}/{self.data['img']}"
 
-    def img_url_get(self, make_square: bool = False):
+    def img_url_get(self, make_square: bool = False, get_all_img: bool = False):
         if self.data['img'] is not None:
+            img_list = json.loads(self.data['img'])
 
             if make_square is True:
-                img_square_name = f"square-{self.data['img']}"
-                self.make_square(
-                    self.img_path_get(),
-                    f"./storage/app/public/posts/{self.data['id']}/{img_square_name}"
-                )
-                return f"{cfg.URL}/storage/posts/{self.data['id']}/{img_square_name}"
+                img_square_names = []
+                for index, img in img_list:
+                    img_square_name = f"square-{img}"
+                    self.make_square(
+                        self.img_path_get(index=index),
+                        f"./storage/app/public/posts/{self.data['id']}/{img_square_name}"
+                    )
+                    img_square_names.append(img_square_name)
 
-            return f"{cfg.URL}/storage/posts/{self.data['id']}/{self.data['img']}"
+                if not get_all_img:
+                    return f"{cfg.URL}/storage/posts/{self.data['id']}/{img_square_names[0]}"
+
+                return [f"{cfg.URL}/storage/posts/{self.data['id']}/{img}" for img in img_square_names]
+
+            if not get_all_img:
+                return f"{cfg.URL}/storage/posts/{self.data['id']}/{img_list[0]}"
+
+            return [f"{cfg.URL}/storage/posts/{self.data['id']}/{img}" for img in img_list]
+
+    # def img_url_get(self, make_square: bool = False):
+    #     if self.data['img'] is not None:
+    #
+    #         if make_square is True:
+    #             img_square_name = f"square-{self.data['img']}"
+    #             self.make_square(
+    #                 self.img_path_get(),
+    #                 f"./storage/app/public/posts/{self.data['id']}/{img_square_name}"
+    #             )
+    #             return f"{cfg.URL}/storage/posts/{self.data['id']}/{img_square_name}"
+    #
+    #         return f"{cfg.URL}/storage/posts/{self.data['id']}/{self.data['img']}"
 
     def make_square(self, image_path, output_path):
         image = Image.open(image_path)
