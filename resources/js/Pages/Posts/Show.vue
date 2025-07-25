@@ -54,11 +54,21 @@ let edit_ai_content = ref(false);
             <h2 class="text-xl font-bold mb-3">Istruzioni inviate all'AI</h2>
 
             <div class="row">
-                <div v-if="data.img"
+                <div v-if="data.img.length > 0"
                      class="col-lg-4">
 
-                    <img :src="data.img"
-                         class="rounded" >
+                    <div v-if="data.img && typeof data.img[0] === 'string'"
+                         class="
+                         flex flex-wrap gap-4
+                         cursor-pointer
+                         hover:opacity-60">
+                        <img v-for="(url, index) in data.img"
+                             :key="'backend-' + index"
+                             :src="url"
+                             :alt="data.title + ' ' + (index + 1)"
+                             :class="{'w-24 h-24': index > 0}"
+                             class="rounded" />
+                    </div>
 
                 </div>
                 <div class="col-lg whitespace-pre-line">

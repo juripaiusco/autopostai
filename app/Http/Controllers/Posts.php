@@ -317,8 +317,19 @@ class Posts extends Controller
             abort(403);
         }
 
-        if ($data->img)
-            $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
+        if ($data->img) {
+            $img_array = json_decode($data->img, true);
+            $img_url_array = [];
+
+            foreach ($img_array as $img) {
+                $img_url_array[] = Storage::disk('public')->url('posts/' . $id . '/' . $img);
+            }
+
+            $data->img = $img_url_array;
+        }
+
+        /*if ($data->img)
+            $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);*/
 
         if (!$request->session()->get('saveRedirectPosts')) {
             $request->session()->put('saveRedirectPosts', Redirect::back()->getTargetUrl());
@@ -352,7 +363,6 @@ class Posts extends Controller
             }
 
             $data->img = $img_url_array;
-//            $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);
         }
 
         if (!$request->session()->get('saveRedirectPosts')) {
