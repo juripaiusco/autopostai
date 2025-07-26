@@ -234,7 +234,7 @@ Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è be
     </div>
 
     <!-- Channels Options - START -->
-    <div class="hidden"
+    <div class="hidden !mb-3"
          :class="{'!block' : form.channels['wordpress']['on'] === '1'}"
          id="wordpress-options">
 
