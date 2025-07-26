@@ -32,7 +32,7 @@ return new class extends Migration
             $table->longText('ai_prompt_comment')->default(null)->nullable();
 
             // Immagine del post
-            $table->string('img')->default(null)->nullable();
+            $table->longText('img')->default(null)->nullable();
 
             // Check per dire al LLM se leggere o meno l'immagine
             $table->string('img_ai_check_on', 1)->default(0);
