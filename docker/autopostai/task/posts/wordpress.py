@@ -62,7 +62,7 @@ class WordPressPost(BasePost):
         post_id, post_url = self.wordpress_init().send(
             title=title,
             content=body,
-            img_path=self.img_path_get() if self.data['img'] else None,
+            img_path=self.img_path_get(get_all_img=True) if self.data['img'] else None,
             cat_id=cat_id,
         )
 
