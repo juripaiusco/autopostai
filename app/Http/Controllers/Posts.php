@@ -54,6 +54,7 @@ class Posts extends Controller
         $columns = Schema::getColumnListing($table);
 
         $data = [];
+
         foreach ($columns as $field) {
             // Recupera i dettagli della colonna dal database
             $columnDetails = DB::selectOne("SHOW COLUMNS FROM " . env('DB_PREFIX') . $table . " WHERE Field = ?", [$field]);
@@ -101,6 +102,18 @@ class Posts extends Controller
 
             $data['users'] = $data['users']->get();
 
+            // Imposto le opzioni per l'utente in base al canale ---------
+            foreach ($data['users'] as $user) {
+
+                $settings = \App\Models\Settings::query()->where('user_id', $user->id)->first();
+
+                $channels_array = json_decode($user->channels, true);
+                $channels_array['wordpress']['options'] = json_decode($settings->wordpress_options, true);
+
+                $user->channels = json_encode($channels_array);
+            }
+            // -----------------------------------------------------------
+
         } else if (auth()->user()->parent_id) {
 
             $data['user'] = \App\Models\User::query();
@@ -109,20 +122,16 @@ class Posts extends Controller
             $data['user'] = $data['user']->first();
             $data['user_id'] = $data['user']->id;
 
-        }
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            // Imposto le opzioni per l'utente in base al canale ---------
+            $settings = \App\Models\Settings::query()->where('user_id', $data['user']->id)->first();
 
-        // Imposto le opzioni per l'utente in base al canale ---------
-        foreach ($data['users'] as $user) {
-
-            $settings = \App\Models\Settings::query()->where('user_id', $user->id)->first();
-
-            $channels_array = json_decode($user->channels, true);
+            $channels_array = json_decode($data['user']->channels, true);
             $channels_array['wordpress']['options'] = json_decode($settings->wordpress_options, true);
 
-            $user->channels = json_encode($channels_array);
+            $data['user']->channels = json_encode($channels_array);
+            // -----------------------------------------------------------
         }
-        // -----------------------------------------------------------
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
         $data['files'] = $this->get_image_list();
         $data['img_selected'] = null;
