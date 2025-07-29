@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ImageJob;
 use App\Models\Post;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Process\Exceptions\ProcessFailedException;
 use Illuminate\Support\Facades\Auth;
@@ -349,6 +350,10 @@ class Posts extends Controller
         }
 
         $data->saveRedirect = $request->session()->get('saveRedirectPosts');
+
+        $data['channels_user'] = User::query()->select('channels')
+            ->where('id', $data->user_id)
+            ->first()['channels'];
 
         $data['channels'] = json_decode($data->channels, true);
         $data['files'] = $this->get_image_list();
