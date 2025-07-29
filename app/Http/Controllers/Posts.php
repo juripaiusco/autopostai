@@ -564,10 +564,17 @@ class Posts extends Controller
 
             if ($img_array) {
                 foreach ($img_array as $img) {
-                    $img_url_array[] = Storage::disk('public')->url('posts/' . $id . '/' . $img);
+                    if ($img) {
+                        $img_url_array[] = Storage::disk('public')->url('posts/' . $id . '/' . $img);
+                    }
                 }
 
-                $img = $img_url_array;
+                if (count($img_url_array) > 0) {
+                    $img = $img_url_array;
+                } else {
+                    $img = null;
+                }
+
             } else {
                 $img = [Storage::disk('public')->url('posts/' . $id . '/' . $img)];
             }
