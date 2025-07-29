@@ -26,7 +26,14 @@ const props = defineProps({
                     type="button"
                     role="tab"
                     aria-controls="nav-ai"
-                    aria-selected="true">AI</button>
+                    aria-selected="true">
+                    <span v-if="!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on">
+                        AI
+                    </span>
+                    <span v-else>
+                        Intelligenza Artificiale
+                    </span>
+            </button>
 
             <!-- <button class="nav-link"
                     id="nav-google-tab"
@@ -47,7 +54,8 @@ const props = defineProps({
                     aria-controls="nav-openai"
                     aria-selected="false">OpenAI</button>
 
-            <button class="nav-link"
+            <button v-if="!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
+                    class="nav-link"
                     id="nav-meta-tab"
                     data-bs-toggle="tab"
                     data-bs-target="#nav-meta"
@@ -56,7 +64,8 @@ const props = defineProps({
                     aria-controls="nav-meta"
                     aria-selected="false">Meta</button>
 
-            <button class="nav-link"
+            <button v-if="!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
+                    class="nav-link"
                     id="nav-linkedin-tab"
                     data-bs-toggle="tab"
                     data-bs-target="#nav-linkedin"
@@ -65,7 +74,8 @@ const props = defineProps({
                     aria-controls="nav-linkedin"
                     aria-selected="false">LinkedIn</button>
 
-            <button class="nav-link"
+            <button v-if="!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
+                    class="nav-link"
                     id="nav-wordpress-tab"
                     data-bs-toggle="tab"
                     data-bs-target="#nav-wordpress"
@@ -74,7 +84,8 @@ const props = defineProps({
                     aria-controls="nav-wordpress"
                     aria-selected="false">WordPress</button>
 
-            <button class="nav-link"
+            <button v-if="!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
+                    class="nav-link"
                     id="nav-newsletter-tab"
                     data-bs-toggle="tab"
                     data-bs-target="#nav-newsletter"
