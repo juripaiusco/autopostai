@@ -317,19 +317,7 @@ class Posts extends Controller
             abort(403);
         }
 
-        if ($data->img) {
-            $img_array = json_decode($data->img, true);
-            $img_url_array = [];
-
-            foreach ($img_array as $img) {
-                $img_url_array[] = Storage::disk('public')->url('posts/' . $id . '/' . $img);
-            }
-
-            $data->img = $img_url_array;
-        }
-
-        /*if ($data->img)
-            $data->img = Storage::disk('public')->url('posts/' . $id . '/' . $data->img);*/
+        $data->img = $this->img_get($data->img, $id);
 
         if (!$request->session()->get('saveRedirectPosts')) {
             $request->session()->put('saveRedirectPosts', Redirect::back()->getTargetUrl());
@@ -354,16 +342,7 @@ class Posts extends Controller
             abort(403);
         }
 
-        if ($data->img) {
-            $img_array = json_decode($data->img, true);
-            $img_url_array = [];
-
-            foreach ($img_array as $img) {
-                $img_url_array[] = Storage::disk('public')->url('posts/' . $id . '/' . $img);
-            }
-
-            $data->img = $img_url_array;
-        }
+        $data->img = $this->img_get($data->img, $id);
 
         if (!$request->session()->get('saveRedirectPosts')) {
             $request->session()->put('saveRedirectPosts', Redirect::back()->getTargetUrl());
@@ -575,6 +554,26 @@ class Posts extends Controller
         );
 
         return $array_delete;
+    }
+
+    public function img_get($img, $id)
+    {
+        if ($img) {
+            $img_array = json_decode($img, true);
+            $img_url_array = [];
+
+            if ($img_array) {
+                foreach ($img_array as $img) {
+                    $img_url_array[] = Storage::disk('public')->url('posts/' . $id . '/' . $img);
+                }
+
+                $img = $img_url_array;
+            } else {
+                $img = [Storage::disk('public')->url('posts/' . $id . '/' . $img)];
+            }
+        }
+
+        return $img;
     }
 
     public function preview(Request $request)
