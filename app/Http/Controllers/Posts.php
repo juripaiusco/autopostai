@@ -129,6 +129,7 @@ class Posts extends Controller
             $channels_array['wordpress']['options'] = json_decode($settings->wordpress_options, true);
 
             $data['user']->channels = json_encode($channels_array);
+            $data['channels_user'] = $data['user']->channels;
             // -----------------------------------------------------------
         }
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -18,7 +18,7 @@ const selectedUserChannels = computed(() => {
             console.error('Errore nel parsing di channels_user:', e);
             return {};
         }
-    } else {
+    } else if (props.data.users) {
         const user = props.data.users.find(user => user.id === props.form.user_id);
         if (!user) return {};
 
@@ -37,8 +37,7 @@ const selectedUserChannels = computed(() => {
 
 <template>
 
-    <div v-if="selectedUserChannels?.instagram?.reply_on === '1'"
-         class="card">
+    <div class="card">
         <div class="card-header !text-gray-500">
 
             <span class="font-bold">{{ selectedUserChannels?.instagram?.name }}</span> Opzioni
@@ -51,6 +50,7 @@ const selectedUserChannels = computed(() => {
                 <input class="form-check-input"
                        type="checkbox"
                        id="instagram-comments"
+                       :disabled="selectedUserChannels?.instagram?.reply_on !== '1'"
                        true-value="1"
                        :false-value=null
                        v-model="form.channels['instagram']['reply_on']"

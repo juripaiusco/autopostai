@@ -200,29 +200,29 @@ Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è be
     </div>
 
     <!-- Channels Options - START -->
-    <div class="hidden !mb-3"
-         :class="{'!block' : form.channels['facebook']['on'] === '1'}"
+    <div v-if="form.channels['facebook']['on'] === '1'"
+         class="!mb-3"
          id="facebook-options">
 
         <FacebookOptions :data="data" :form="form" :token="token" />
 
     </div>
-    <div class="hidden !mb-3"
-         :class="{'!block' : form.channels['instagram']['on'] === '1'}"
+    <div v-if="form.channels['instagram']['on'] === '1'"
+         class="!mb-3"
          id="instagram-options">
 
         <InstagramOptions :data="data" :form="form" :token="token" />
 
     </div>
-    <div class="hidden !mb-3"
-         :class="{'!block' : form.channels['linkedin']['on'] === '1'}"
+    <div v-if="form.channels['linkedin']['on'] === '1'"
+         class="!mb-3"
          id="linkedin-options">
 
         <LinkedInOptions :data="data" :form="form" :token="token" />
 
     </div>
-    <div class="hidden !mb-3"
-         :class="{'!block' : form.channels['wordpress']['on'] === '1'}"
+    <div v-if="form.channels['wordpress']['on'] === '1'"
+         class="!mb-3"
          id="wordpress-options">
 
         <WordPressOptions :data="data" :form="form" :token="token" />

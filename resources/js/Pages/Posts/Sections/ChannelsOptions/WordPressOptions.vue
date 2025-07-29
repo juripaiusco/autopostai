@@ -19,7 +19,7 @@ const selectedUserChannels = computed(() => {
             console.error('Errore nel parsing di channels_user:', e);
             return {};
         }
-    } else {
+    } else if (props.data.users) {
         const user = props.data.users.find(user => user.id === props.form.user_id);
         if (!user) return {};
 
