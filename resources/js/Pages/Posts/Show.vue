@@ -5,7 +5,7 @@ import ApplicationHeader from "@/Components/ApplicationHeader.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import {Head, Link, useForm} from "@inertiajs/vue3";
 import {__date} from "../../ComponentsExt/Date.js";
-import {ref} from "vue";
+import {nextTick, onMounted, ref} from "vue";
 
 const props = defineProps({
     data: Object,
@@ -31,6 +31,15 @@ function submit(update_on_channels = false) {
 
 let edit_ai_prompt_comment = ref(false);
 let edit_ai_content = ref(false);
+
+onMounted(async () => {
+    await nextTick()
+    GLightbox({
+        selector: '[data-glightbox]',
+        touchNavigation: true,
+        loop: true,
+    })
+})
 
 </script>
 
@@ -60,17 +69,27 @@ let edit_ai_content = ref(false);
                     <div v-if="data.img && typeof data.img[0] === 'string'"
                          class="flex flex-col gap-4">
                         <!-- Prima immagine grande -->
-                        <img :src="data.img[0]"
-                             :alt="data.title + ' 1'"
-                             class="rounded w-full object-cover" />
+                        <a :href="data.img[0]"
+                           class="block"
+                           data-glightbox
+                           :data-title="data.title + ' 1'">
+                            <img :src="data.img[0]"
+                                 :alt="data.title + ' 1'"
+                                 class="rounded w-full object-cover" />
+                        </a>
 
                         <!-- Seconda immagine in poi: griglia -->
                         <div class="grid grid-cols-3 md:grid-cols-4 gap-4">
-                            <img v-for="(url, index) in data.img.slice(1)"
-                                 :key="'backend-' + index"
-                                 :src="url"
-                                 :alt="data.title + ' ' + (index + 2)"
-                                 class="rounded w-full object-cover aspect-square" />
+                            <a v-for="(url, index) in data.img.slice(1)"
+                               :key="'glightbox-' + index"
+                               :href="url"
+                               class="block"
+                               data-glightbox
+                               :data-title="data.title + ' ' + (index + 2)">
+                                <img :src="url"
+                                     :alt="data.title + ' ' + (index + 2)"
+                                     class="rounded w-full object-cover aspect-square" />
+                            </a>
                         </div>
                     </div>
 
