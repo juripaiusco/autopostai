@@ -63,7 +63,7 @@
         <meta name="mobile-web-app-capable" content="yes">
 
         <!-- Nome della tua web app su iOS -->
-        <meta name="apple-mobile-web-app-title" content="AutoPostAI">
+        <meta name="apple-mobile-web-app-title" content="{{ config('app.name', 'Laravel') }}">
 
         <!-- Icone specifiche per iOS -->
         <link rel="apple-touch-icon" href="{{ URL::asset('apple-touch-icon.png') }}">
