@@ -5,14 +5,13 @@ import { Link } from '@inertiajs/vue3';
 
 <template>
     <div
-        class="min-h-screen flex flex-col items-center pt-[50px] sm:bg-gray-100 dark:bg-gray-900"
+        class="min-h-screen flex flex-col items-center pt-[80px] sm:bg-gray-100 dark:bg-gray-900"
     >
         <div>
             <Link href="/">
                 <ApplicationLogo class="w-20 h-20 fill-current text-gray-500 m-auto" />
-                <br>
-                <h1 class="text-3xl mb-[20px] dark:text-white">
-                    AutoPost<span class="font-bold">AI</span> <small class="text-sm">v.1.0.0</small>
+                <h1 class="text-3xl mb-[20px] dark:text-white text-center">
+                    <small class="text-sm">v.1.0.1</small>
                 </h1>
             </Link>
         </div>
