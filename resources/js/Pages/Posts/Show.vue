@@ -58,14 +58,20 @@ let edit_ai_content = ref(false);
                      class="col-lg-4">
 
                     <div v-if="data.img && typeof data.img[0] === 'string'"
-                         class="
-                         flex flex-wrap gap-4">
-                        <img v-for="(url, index) in data.img"
-                             :key="'backend-' + index"
-                             :src="url"
-                             :alt="data.title + ' ' + (index + 1)"
-                             :class="{'w-24 h-24': index > 0}"
-                             class="rounded" />
+                         class="flex flex-col gap-4">
+                        <!-- Prima immagine grande -->
+                        <img :src="data.img[0]"
+                             :alt="data.title + ' 1'"
+                             class="rounded w-full object-cover" />
+
+                        <!-- Seconda immagine in poi: griglia -->
+                        <div class="grid grid-cols-3 md:grid-cols-4 gap-4">
+                            <img v-for="(url, index) in data.img.slice(1)"
+                                 :key="'backend-' + index"
+                                 :src="url"
+                                 :alt="data.title + ' ' + (index + 2)"
+                                 class="rounded w-full object-cover aspect-square" />
+                        </div>
                     </div>
 
                 </div>
