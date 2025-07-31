@@ -580,15 +580,15 @@ function previewAIContent() {
 
                 </div>
 
-                <div class="text-right mt-10 mb-2 flex flex-wrap justify-center md:justify-end">
+                <div class="text-right mt-10 mb-6 sm:mb-3 flex flex-wrap justify-center md:justify-end">
 
                     <div class="text-center w-[100%] md:w-auto">
                         <button :disabled="!form.id && !form.user_id && !data.user?.id"
                                 type="button"
-                                class="btn btn-primary w-[100%] md:w-[248px] !flex items-center justify-center gap-2"
+                                class="btn btn-primary !text-2xl sm:!text-lg w-[100%] md:w-[248px] !flex items-center justify-center gap-2"
                                 @click="previewAIContent">
                             <span class="inline-flex">
-                                Anteprima
+                                Anteprima AI
                             </span>
                             <span class="inline-flex shrink-0">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
