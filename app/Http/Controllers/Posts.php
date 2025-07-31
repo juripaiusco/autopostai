@@ -397,6 +397,7 @@ class Posts extends Controller
     {
         $request->validate([
             'title' => 'required',
+            'published_at' => 'required',
             'ai_prompt_post' => 'required',
         ]);
 
