@@ -135,12 +135,18 @@ function setChannels(user_channels, user_channels_value = null) {
             <label class="form-label">
                 Data e Ora pubblicazione
                 <br>
-                <small>Scegli quando pubblicare il post</small>
+                <small>
+                    Scegli quando pubblicare il post.
+                    <span class="font-bold">
+                        Una volta salvato il post verrà pubblicato in automatico alla data e ora scelta.
+                    </span>
+                </small>
             </label>
             <input type="datetime-local"
                    class="form-control"
+                   :class="{'!border !border-red-500' : form.errors.title}"
                    v-model="form.published_at" />
-            <div class="text-red-500 text-center"
+            <div class="text-red-500 text-center text-xs"
                  v-if="form.errors.published_at">{{ __(form.errors.published_at) }}</div>
 
         </div>

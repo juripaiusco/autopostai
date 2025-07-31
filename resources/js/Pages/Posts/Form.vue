@@ -35,9 +35,9 @@ const dataForm = Object.fromEntries(Object.entries(props.data).map((v) => {
 /**
  * Se nuovo post la data viene impostata come attuale
  */
-if (dataForm['published_at'] === '') {
+/*if (dataForm['published_at'] === '') {
     dataForm['published_at'] = __date(new Date(), 'date') + ' ' + __date(new Date(), 'hour');
-}
+}*/
 
 dataForm['ai_prompt_img'] = '';
 
