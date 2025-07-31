@@ -179,7 +179,8 @@ Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è be
         </span>
     </label>
 
-    <div class="row !mt-2">
+    <div class="row !mt-2"
+         :class="{'!border !border-red-500 !rounded-lg pt-2' : form.errors.channels}">
         <div v-for="(channel, index) in data.channels"
              :key="index"
              class="col-6 col-lg-3">
@@ -188,6 +189,7 @@ Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è be
 
                 <input :disabled="channel_user_can_set[index] === '0' || channel_user_can_set[index] === null"
                        class="form-check-input"
+                       :class="{'!border !border-red-500' : form.errors.channels}"
                        type="checkbox"
                        :id="index"
                        true-value="1"
@@ -204,6 +206,8 @@ Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è be
 
         </div>
     </div>
+    <div class="text-red-500 text-center text-xs mb-4"
+         v-if="form.errors.channels">{{ __(form.errors.channels) }}</div>
 
     <!-- Channels Options - START -->
     <div v-if="form.channels['facebook']['on'] === '1'"

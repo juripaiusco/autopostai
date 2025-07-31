@@ -261,11 +261,7 @@ class Posts extends Controller
 
     private function storeData(Request $request, $published_at = '', $preview = false)
     {
-        $request->validate([
-            'title' => 'required',
-            'published_at' => 'required',
-            'ai_prompt_post' => 'required',
-        ]);
+        $this->validateRequest($request);
 
         if ($request['img_selected'])
             $request['img'] = $request['img_selected'];
@@ -395,11 +391,7 @@ class Posts extends Controller
 
     public function updateData(Request $request, string $id)
     {
-        $request->validate([
-            'title' => 'required',
-            'published_at' => 'required',
-            'ai_prompt_post' => 'required',
-        ]);
+        $this->validateRequest($request);
 
         if ($request['img_selected'])
             $request['img'] = $request['img_selected'];
@@ -533,6 +525,24 @@ class Posts extends Controller
         Post::destroy($id);
 
         return \redirect()->back();
+    }
+
+    public function validateRequest(Request $request)
+    {
+        $request->validate([
+            'title' => 'required',
+            'published_at' => 'required',
+            'ai_prompt_post' => 'required',
+            'channels' => [
+                function ($attribute, $value, $fail) {
+                    $hasActive = collect($value)->contains(fn ($channel) => $channel['on'] === '1');
+
+                    if (! $hasActive) {
+                        $fail('Devi selezionare almeno un canale');
+                    }
+                },
+            ],
+        ]);
     }
 
     /**
