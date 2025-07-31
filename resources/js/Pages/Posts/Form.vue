@@ -276,35 +276,29 @@ function previewAIContent() {
                                  role="tabpanel"
                                  aria-labelledby="nav-upload-img-tab"
                                  tabindex="0">
-
-                                <!-- Mostra l'anteprima -->
-                                <div v-if="previewUrls.length"
+                                
+                                <div v-if="previewUrls.length || (form.img && typeof form.img[0] === 'string')"
                                      @click="triggerFileInput"
-                                     class="
-                                     flex flex-wrap gap-4
-                                     cursor-pointer
-                                     hover:opacity-60">
-                                    <img v-for="(url, index) in previewUrls"
-                                         :key="'preview-' + index"
-                                         :src="url"
-                                         :alt="'Anteprima immagine ' + (index + 1)"
-                                         :class="{'w-24 h-24': index > 0}"
-                                         class="rounded" />
-                                </div>
+                                     class="flex flex-col gap-4 cursor-pointer hover:opacity-60">
 
-                                <!-- Mostra l'immagine caricata se esiste -->
-                                <div v-else-if="form.img && typeof form.img[0] === 'string'"
-                                     @click="triggerFileInput"
-                                     class="
-                                     flex flex-wrap gap-4
-                                     cursor-pointer
-                                     hover:opacity-60">
-                                    <img v-for="(url, index) in form.img"
-                                         :key="'backend-' + index"
-                                         :src="url"
-                                         :alt="form.title + ' ' + (index + 1)"
-                                         :class="{'w-24 h-24': index > 0}"
-                                         class="rounded" />
+                                    <!-- Prima immagine -->
+                                    <img
+                                        :src="(previewUrls.length ? previewUrls : form.img)[0]"
+                                        :alt="form.title + ' 1'"
+                                        class="rounded w-full object-cover"
+                                    />
+
+                                    <!-- Le altre immagini in griglia -->
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <img
+                                            v-for="(url, index) in (previewUrls.length ? previewUrls.slice(1) : form.img.slice(1))"
+                                            :key="'preview-' + (index + 1)"
+                                            :src="url"
+                                            :alt="form.title + ' ' + (index + 2)"
+                                            class="rounded w-full object-cover aspect-square"
+                                        />
+                                    </div>
+
                                 </div>
 
                                 <!-- Mostra un'immagine placeholder -->
