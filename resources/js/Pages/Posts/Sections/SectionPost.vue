@@ -137,9 +137,9 @@ function setChannels(user_channels, user_channels_value = null) {
                 <br>
                 <small>
                     Scegli quando pubblicare il post.
-                    <span class="font-bold">
+                    <!-- <span class="font-bold">
                         Una volta salvato il post verrà pubblicato in automatico alla data e ora scelta.
-                    </span>
+                    </span> -->
                 </small>
             </label>
             <input type="datetime-local"
