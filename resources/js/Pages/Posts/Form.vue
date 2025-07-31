@@ -276,7 +276,7 @@ function previewAIContent() {
                                  role="tabpanel"
                                  aria-labelledby="nav-upload-img-tab"
                                  tabindex="0">
-                                
+
                                 <div v-if="previewUrls.length || (form.img && typeof form.img[0] === 'string')"
                                      @click="triggerFileInput"
                                      class="flex flex-col gap-4 cursor-pointer hover:opacity-60">
@@ -289,7 +289,7 @@ function previewAIContent() {
                                     />
 
                                     <!-- Le altre immagini in griglia -->
-                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div class="grid grid-cols-3 md:grid-cols-4 gap-4">
                                         <img
                                             v-for="(url, index) in (previewUrls.length ? previewUrls.slice(1) : form.img.slice(1))"
                                             :key="'preview-' + (index + 1)"
