@@ -144,7 +144,7 @@ function setChannels(user_channels, user_channels_value = null) {
             </label>
             <input type="datetime-local"
                    class="form-control"
-                   :class="{'!border !border-red-500' : form.errors.title}"
+                   :class="{'!border !border-red-500' : form.errors.published_at}"
                    v-model="form.published_at" />
             <div class="text-red-500 text-center text-xs"
                  v-if="form.errors.published_at">{{ __(form.errors.published_at) }}</div>
