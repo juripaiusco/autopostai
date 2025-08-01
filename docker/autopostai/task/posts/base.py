@@ -39,7 +39,7 @@ class BasePost:
 
             if make_square is True:
                 img_square_names = []
-                for index, img in img_list:
+                for index, img in enumerate(img_list):
                     img_square_name = f"square-{img}"
                     self.make_square(
                         self.img_path_get(index=index),
