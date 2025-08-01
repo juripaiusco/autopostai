@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 /**
@@ -438,7 +439,11 @@ class Posts extends Controller
 
             foreach ($request->file('img') as $file) {
                 if ($file->isValid()) {
-                    $filename = date('mdYHis') . '-' . uniqid() . '-' . $file->getClientOriginalName();
+                    $ext = $file->getClientOriginalExtension(); // Estensione del file
+                    $safename = Str::ascii(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)); // Rimuove accenti
+                    $safename = preg_replace('/[^A-Za-z0-9_\-]/', '_', $safename); // Pulisce caratteri
+
+                    $filename = date('mdYHis') . '-' . uniqid() . '-' . $safename . '.' . $ext;
 
                     Storage::disk('public')->put(
                         $post_path . '/' . $data->id . '/' . $filename,
