@@ -167,7 +167,7 @@ class Meta:
             else:
                 # payload per carosello
                 container_ids = []
-                for img_url in img_url_array:
+                for img_url in img_url_array[:10]:
                     img_upload_response = requests.post(
                         url,
                         data={
