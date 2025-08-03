@@ -13,7 +13,7 @@ class InstagramPost(BasePost):
             meta = Meta(page_id=self.data['meta_page_id'])
 
             # Carico su Instagram il post
-            post_id, post_url = meta.ig_generate_post(content, self.img_url_get(make_square=True))
+            post_id, post_url = meta.ig_generate_post(content, self.img_url_get(make_square=True, get_all_img=True))
 
             if self.debug:
                 print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "Instagram - post ID:", post_id)

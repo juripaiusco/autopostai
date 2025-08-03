@@ -148,23 +148,57 @@ class Meta:
     def ig_generate_post(self, msg, img_url=""):
 
         url = f"{self.META_API_BASE_URL}/{self.ig_get_instagram_account_id()}/media"
-        payload = {
-            "image_url": img_url,
-            "caption": msg,
-            "access_token": self.fb_page_access_token(),
-        }
+        token = self.fb_page_access_token()
 
-        response = requests.post(url, data=payload)
-        if response.status_code == 200:
-            # print("Post Instagram caricato con successo!")
-            # print("Risposta API:", response.json())
-            post_id = response.json().get("id")
-            post_id_publish = self.ig_pubblicate_post(post_id)
-            permalink = self.ig_getDataPost(post_id_publish, "permalink")
+        if isinstance(img_url, list):
+            img_url_array = img_url
 
-            return post_id_publish, permalink
-        else:
-            print("Errore nel caricamento dell'immagine:", response.json())
+            if len(img_url_array) == 1:
+                # payload per immagine singola
+                response = requests.post(
+                    url,
+                    data={
+                        "image_url": img_url_array[0],
+                        "caption": msg,
+                        "access_token": token,
+                    }
+                )
+                creation_id = response.json()["id"]
+            else:
+                # payload per carosello
+                container_ids = []
+                for img_url in img_url_array:
+                    img_upload_response = requests.post(
+                        url,
+                        data={
+                            "image_url": img_url,
+                            "is_carousel_item": "true",
+                            "access_token": token
+                        }
+                    )
+                    container_ids.append(img_upload_response.json()["id"])
+
+                # Crea container del carosello
+                response = requests.post(
+                    url,
+                    data={
+                        "media_type": "CAROUSEL",
+                        "children": json.dumps(container_ids),
+                        "caption": msg,
+                        "access_token": token
+                    }
+                )
+                creation_id = response.json()["id"]
+
+            if response.status_code == 200:
+                # print("Post Instagram caricato con successo!")
+                # print("Risposta API:", response.json())
+                post_id_publish = self.ig_pubblicate_post(creation_id)
+                permalink = self.ig_getDataPost(post_id_publish, "permalink")
+
+                return post_id_publish, permalink
+            else:
+                print("Errore nel caricamento dell'immagine:", response.json())
 
     # Pubblicazione del post
     def ig_pubblicate_post(self, id):
