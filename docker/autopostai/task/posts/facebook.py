@@ -14,7 +14,7 @@ class FacebookPost(BasePost):
 
             if self.data['img']:
                 # Carico su Facebook il post CON l'immagine
-                post_id = meta.fb_generate_post(content, self.img_path_get())
+                post_id = meta.fb_generate_post(content, self.img_url_get(get_all_img=True))
             else:
                 # Carico su Facebook il post SENZA l'immagine
                 post_id = meta.fb_generate_post(content)
