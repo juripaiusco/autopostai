@@ -28,6 +28,8 @@ class BasePost:
                 return f"./storage/app/public/posts/{self.data['id']}/{img_list[index]}"
 
             return [f"./storage/app/public/posts/{self.data['id']}/{img}" for img in img_list]
+        else:
+            return None
 
     # def img_path_get(self):
     #     if self.data['img'] is not None:
