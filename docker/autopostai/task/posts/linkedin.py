@@ -17,7 +17,7 @@ class LinkedInPost(BasePost):
             )
 
             # Carico su LinkedIn il post CON l'immagine
-            post_id, post_url = linkedin.send(content, self.img_path_get())
+            post_id, post_url = linkedin.send(content, self.img_path_get(get_all_img=True))
 
             if self.debug:
                 print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "LinkedIn - post ID:", post_id)

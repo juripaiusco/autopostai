@@ -30,44 +30,36 @@ class LinkedIn:
         # author_urn = f"urn:li:person:{self.get_person_id()}"
         author_urn = f"urn:li:organization:{self.get_company_id()}"
 
-        if img_path is None:
-            payload = {
-                "author": author_urn,
-                "lifecycleState": "PUBLISHED",
-                "specificContent": {
-                    "com.linkedin.ugc.ShareContent": {
-                        "shareCommentary": {
-                            "text": f"{content}"
-                        },
-                        "shareMediaCategory": "NONE",
-                    }
-                },
-                "visibility": {
-                    "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
+        shareMediaCategory = "NONE"
+        media_list = []
+
+        if isinstance(img_path, list):
+            shareMediaCategory = "IMAGE"
+            for i, path in enumerate(img_path[:9]):  # LinkedIn consente massimo 9 immagini
+                asset_urn = self.upload_img(author=author_urn, img_path=path)
+                if asset_urn:
+                    media_list.append({
+                        "status": "READY",
+                        "media": asset_urn,
+                        "title": {"text": f"Immagine {i + 1}"}
+                    })
+
+        payload = {
+            "author": author_urn,
+            "lifecycleState": "PUBLISHED",
+            "specificContent": {
+                "com.linkedin.ugc.ShareContent": {
+                    "shareCommentary": {
+                        "text": f"{content}"
+                    },
+                    "shareMediaCategory": f"{shareMediaCategory}",
+                    "media": media_list
                 }
+            },
+            "visibility": {
+                "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
             }
-        else:
-            payload = {
-                "author": author_urn,
-                "lifecycleState": "PUBLISHED",
-                "specificContent": {
-                    "com.linkedin.ugc.ShareContent": {
-                        "shareCommentary": {
-                            "text": f"{content}"
-                        },
-                        "shareMediaCategory": "IMAGE",
-                        "media": [
-                            {
-                                "status": "READY",
-                                "media": self.upload_img(author=author_urn, img_path=img_path)
-                            }
-                        ]
-                    }
-                },
-                "visibility": {
-                    "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
-                }
-            }
+        }
 
         # Effettua la richiesta POST
         response = requests.post(url, headers=headers, data=json.dumps(payload))
