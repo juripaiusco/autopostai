@@ -81,8 +81,8 @@ function routeRow(route_row, route_emit, data, struct) {
                     <!-- Button Custom -->
                     <template v-if="struct.btnCustom === true">
 
-                        <Link class="btn btn-sm !m-0 !p-0"
-                              v-if="struct.emit === undefined"
+                        <Link v-if="struct.emit === undefined"
+                              class="btn btn-sm !m-0 !p-0"
                               :href="struct.route.includes('/') === true ? struct.route : route(struct.route, d.id)"
                               :data="struct.filters ? struct.filters : data.filters"
                               :preserveState="data.preserveState">
@@ -97,8 +97,8 @@ function routeRow(route_row, route_emit, data, struct) {
 
                         <!-- IF il pulsante Custom presenta un emit -->
                         <button v-if="struct.emit !== undefined"
-                                type="button"
                                 class="btn btn-sm !m-0 !p-0"
+                                type="button"
                                 @click="$emit(
                                     struct.emit,
                                     d,
