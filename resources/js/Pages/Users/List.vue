@@ -139,6 +139,27 @@ let modalData = ref(props.data);
                                 return html
                             }
                         }, {
+                            class: 'text-center w-[15%] hidden sm:table-cell',
+                            label: 'Media',
+                            field: 'channels',
+                            fnc: function (d) {
+
+                                let channels = JSON.parse(d.channels);
+                                let channelsArray = [];
+
+                                for (let index in channels) {
+                                    if (channels[index]['on'] === '1') {
+                                        channelsArray.push('<i class=\'text-sm ' + channels[index]['css_class'] + '\'></i>')
+                                    }
+                                }
+
+                                let html = ''
+                                html += channelsArray.join('&nbsp;&nbsp;&nbsp;');
+
+                                return html
+
+                            }
+                        }, {
                             class: 'text-center w-[5%] hidden md:table-cell',
                             label: 'Post',
                             field: 'post_count'

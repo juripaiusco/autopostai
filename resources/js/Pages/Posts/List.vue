@@ -206,7 +206,7 @@ onUnmounted(() => {
 
                                 for (let index in channels) {
                                     if (channels[index]['on'] === '1') {
-                                        channelsArray.push('<i class=\'' + channels[index]['css_class'] + '\'></i>')
+                                        channelsArray.push('<i class=\'text-sm ' + channels[index]['css_class'] + '\'></i>')
                                     }
                                 }
 
