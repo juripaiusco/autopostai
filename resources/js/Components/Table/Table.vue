@@ -13,7 +13,8 @@ function routeRow(route_row, route_emit, data, struct) {
 
     if (struct.btnShow !== true &&
         struct.btnEdit !== true &&
-        struct.btnDel !== true) {
+        struct.btnDel !== true &&
+        struct.btnCustom !== true) {
 
         if (route_emit !== undefined) {
             emit(route_emit, data);
