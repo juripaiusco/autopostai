@@ -75,10 +75,12 @@ class LinkedInController extends Controller
         $token = $response->json()['access_token'];
 
         // Salva il token nel database
-        $linkedin_data = \App\Models\Settings::where('linkedin_client_id', Session::get('linkedin_client_id'))
+        \App\Models\Settings::where('linkedin_client_id', Session::get('linkedin_client_id'))
+            ->update(['linkedin_token' => $token]);
+        /*$linkedin_data = \App\Models\Settings::where('linkedin_client_id', Session::get('linkedin_client_id'))
             ->first();
         $linkedin_data->linkedin_token = $token;
-        $linkedin_data->save();
+        $linkedin_data->save();*/
 
         Session::forget('linkedin_client_id');
         Session::forget('linkedin_client_secret');
