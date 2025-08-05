@@ -7,6 +7,7 @@ use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Process\Exceptions\ProcessFailedException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -388,6 +389,13 @@ class Posts extends Controller
         $request['preview'] = 0;
         $this->update_no_redirect($request, $id);
 
+        if ($request->input('duplicate')) {
+            $published_at = Carbon::parse($request->input('published_at'))->addMinute()->toDateTimeString();
+            $post = $this->duplicate_no_redirect($id, $published_at);
+
+            return Inertia::location(route('post.edit', ['id' => $post->id]));
+        }
+
         return Redirect::to($saveRedirect);
     }
 
@@ -653,13 +661,12 @@ class Posts extends Controller
             ->with('success', 'Post duplicato con successo!');
     }
 
-    public function duplicate_no_redirect($id)
+    public function duplicate_no_redirect($id, $published_at = null)
     {
         // Campi da escludere dalla duplicazione
         $exclude = [
             'ai_content',
             'preview',
-            'published_at',
             'published',
             'task_complete',
             'check_attempts',
@@ -672,6 +679,12 @@ class Posts extends Controller
         // Recupera il post originale e crea una copia
         $post = Post::find($id);
         $post_duplicate = $post->replicate();
+
+        if (!$published_at) {
+            $exclude[] = 'published_at';
+        } else {
+            $post_duplicate->published_at = $published_at;
+        }
 
         foreach ($exclude as $field) {
             unset($post_duplicate->{$field});
