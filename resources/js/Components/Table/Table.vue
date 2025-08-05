@@ -98,7 +98,7 @@ function routeRow(route_row, route_emit, data, struct) {
                         <!-- IF il pulsante Custom presenta un emit -->
                         <button v-if="struct.emit !== undefined"
                                 type="button"
-                                class="btn btn-sm"
+                                class="btn btn-sm !m-0 !p-0"
                                 @click="$emit(
                                     struct.emit,
                                     d,
