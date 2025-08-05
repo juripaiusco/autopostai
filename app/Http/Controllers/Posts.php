@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Process\Exceptions\ProcessFailedException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
@@ -642,5 +643,54 @@ class Posts extends Controller
         $data = $this->updateData($request, $data->id);
 
         return Redirect::route('post.edit', ['id' => $data->id]);
+    }
+
+    public function duplicate($id)
+    {
+        $post = $this->duplicate_no_redirect($id);
+
+        return Redirect::route('post.edit', ['id' => $post->id])
+            ->with('success', 'Post duplicato con successo!');
+    }
+
+    public function duplicate_no_redirect($id)
+    {
+        // Campi da escludere dalla duplicazione
+        $exclude = [
+            'ai_content',
+            'preview',
+            'published_at',
+            'published',
+            'task_complete',
+            'check_attempts',
+            'on_hold_until',
+            'updated',
+            'deleted',
+            'deleted_at',
+        ];
+
+        // Recupera il post originale e crea una copia
+        $post = Post::find($id);
+        $post_duplicate = $post->replicate();
+
+        foreach ($exclude as $field) {
+            unset($post_duplicate->{$field});
+        }
+
+        $post_duplicate->save();
+
+        // Copia l'immagine associata al post duplicato ---------------------------------
+        $post_path = 'posts';
+        $dir_img_path_from = Storage::disk('public')->path($post_path . '/' . $id);
+        $dir_img_path_to = Storage::disk('public')->path($post_path . '/' . $post_duplicate->id);
+
+        if (!Storage::disk('public')->exists($post_path . '/' . $post_duplicate->id)) {
+            Storage::disk('public')->makeDirectory($post_path . '/' . $post_duplicate->id);
+        }
+
+        File::copyDirectory($dir_img_path_from, $dir_img_path_to);
+        // ------------------------------------------------------------------------------
+
+        return $post_duplicate;
     }
 }

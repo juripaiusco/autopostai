@@ -61,6 +61,8 @@ Route::middleware('auth')->group(function () {
         ->name('post.destroy_image');
     Route::post('/posts/preview', [Posts::class, 'preview'])
         ->name('post.preview');
+    Route::get('/posts/duplicate/{id}', [Posts::class, 'duplicate'])
+        ->name('post.duplicate');
 
     Route::get('/settings', [Settings::class, 'index'])
         ->name('settings.index');
