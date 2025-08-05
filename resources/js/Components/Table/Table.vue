@@ -81,7 +81,7 @@ function routeRow(route_row, route_emit, data, struct) {
                     <!-- Button Custom -->
                     <template v-if="struct.btnCustom === true">
 
-                        <Link class="btn btn-sm"
+                        <Link class="btn btn-sm !m-0 !p-0"
                               v-if="struct.emit === undefined"
                               :href="struct.route.includes('/') === true ? struct.route : route(struct.route, d.id)"
                               :data="struct.filters ? struct.filters : data.filters"
