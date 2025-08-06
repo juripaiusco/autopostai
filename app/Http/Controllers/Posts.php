@@ -204,7 +204,17 @@ class Posts extends Controller
 
         // Filtro ORDINAMENTO
         if (request('orderby') && request('ordertype')) {
-            $data->orderby(request('orderby'), strtoupper(request('ordertype')));
+//            $data->orderby(request('orderby'), strtoupper(request('ordertype')));
+
+            $orderby = request('orderby');
+            $ordertype = strtoupper(request('ordertype'));
+
+            if ($orderby === 'published_at') {
+                // Metti i null prima
+                $data->orderByRaw("ISNULL(published_at) DESC")->orderBy('published_at', $ordertype);
+            } else {
+                $data->orderBy($orderby, $ordertype);
+            }
         }
 
         /*$data = $data->select([
@@ -679,6 +689,19 @@ class Posts extends Controller
         // Recupera il post originale e crea una copia
         $post = Post::find($id);
         $post_duplicate = $post->replicate();
+
+        /*if (isset($this->getDataNewPost()['users'])) {
+
+            $channels = array_values(array_filter($this->getDataNewPost()['users'], function ($data) use ($post) {
+                return $data['id'] == $post->user_id;
+            }))[0]['channels'] ?? [];
+
+        } else if (isset($this->getDataNewPost()['user'])) {
+
+            $channels = $this->getDataNewPost()['user']['channels'] ?? [];
+        }
+
+        $post_duplicate->channels = $channels;*/
 
         if (!$published_at) {
             $exclude[] = 'published_at';
