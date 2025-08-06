@@ -359,7 +359,7 @@ onUnmounted(() => {
                           class="mx-[2px]">
                         <div class="inline">
                             <i v-if="channel.on === '1'"
-                               class="text-sm text-gray-600"
+                               class="text-sm"
                                :class="channel.css_class"></i>
                         </div>
                     </span>
