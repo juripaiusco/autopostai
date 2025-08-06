@@ -353,6 +353,17 @@ onUnmounted(() => {
                     </span>
                     ?
 
+                    <br>
+                    <span v-for="(channel, index) in channels = JSON.parse(modalData.channels)"
+                          :key="index"
+                          class="mx-[2px]">
+                        <div class="inline">
+                            <i v-if="channel.on === '1'"
+                               class="text-sm text-gray-600"
+                               :class="channel.css_class"></i>
+                        </div>
+                    </span>
+
                     <div v-if="modalData.published == 1">
                         <br>
 
