@@ -690,7 +690,8 @@ class Posts extends Controller
         $post = Post::find($id);
         $post_duplicate = $post->replicate();
 
-        /*if (isset($this->getDataNewPost()['users'])) {
+        // Imposto i canali del post duplicato ---------------------------------
+        if (isset($this->getDataNewPost()['users'])) {
 
             $channels = array_values(array_filter($this->getDataNewPost()['users'], function ($data) use ($post) {
                 return $data['id'] == $post->user_id;
@@ -701,8 +702,21 @@ class Posts extends Controller
             $channels = $this->getDataNewPost()['user']['channels'] ?? [];
         }
 
-        $post_duplicate->channels = $channels;*/
+        $channels_original = json_decode($post->channels, true);
+        $channels_new = json_decode($channels, true);
 
+        foreach ($channels_new as $channel => $d) {
+            $channels_new[$channel]['on'] = 0;
+
+            if (isset($channels_original[$channel])) {
+                $channels_new[$channel]['on'] = $channels_original[$channel]['on'];
+            }
+        }
+
+        $post_duplicate->channels = json_encode($channels_new);
+        // ---------------------------------------------------------------------
+
+        // Imposto la data di pubblicazione del post duplicato ----------------
         if (!$published_at) {
             $exclude[] = 'published_at';
         } else {
