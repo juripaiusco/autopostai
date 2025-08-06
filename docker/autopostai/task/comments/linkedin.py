@@ -15,6 +15,7 @@ class LinkedInComment(BaseComment):
             channels = json.loads(self.data['channels'])
 
             linkedin = LinkedIn(
+                user_id=self.data['user_id'],
                 client_id=self.data['linkedin_client_id'],
                 client_secret=self.data['linkedin_client_secret'],
                 token=self.data['linkedin_token'],
@@ -33,6 +34,7 @@ class LinkedInComment(BaseComment):
 
                     # Recupero il nome dell'autore del commento
                     linkedin = LinkedIn(
+                        user_id=self.data['user_id'],
                         client_id=self.data['linkedin_client_id'],
                         client_secret=self.data['linkedin_client_secret'],
                         token=self.data['linkedin_token'],

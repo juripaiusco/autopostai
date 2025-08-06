@@ -10,7 +10,8 @@ from urllib.parse import quote
 load_dotenv()
 
 class LinkedIn:
-    def __init__(self, client_id, client_secret, token):
+    def __init__(self, user_id = None, client_id = None, client_secret = None, token = None):
+        self.user_id = user_id
         self.client_id = client_id
         self.client_secret = client_secret
         self.token = token
@@ -159,7 +160,7 @@ class LinkedIn:
                         SELECT  {cfg.DB_PREFIX}settings.linkedin_company_id AS linkedin_company_id
                             FROM {cfg.DB_PREFIX}settings
 
-                        WHERE {cfg.DB_PREFIX}settings.linkedin_client_id = "{self.client_id}"
+                        WHERE {cfg.DB_PREFIX}settings.user_id = "{self.user_id}"
                         """)
 
         if row[0]['linkedin_company_id'] is not None:

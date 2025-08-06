@@ -106,6 +106,7 @@ def reply_send(debug = False):
         if reply is not None and row['linkedin_client_id'] is not None:
             if row['channel'] == "linkedin":
                 linkedin = LinkedIn(
+                    user_id=row['user_id'],
                     client_id=row['linkedin_client_id'],
                     client_secret=row['linkedin_client_secret'],
                     token=row['linkedin_token']
