@@ -107,7 +107,7 @@ function channelOptionsGET(userId, channel, getType) {
                         form.channels['newsletter']['options'] &&
                         form.channels['newsletter']['options']['lists'] &&
                         form.channels['newsletter']['options']['lists']['lists']"
-                     v-for="(category, index) in form.channels['newsletter']['options']['lists']['lists']"
+                     v-for="(list, index) in form.channels['newsletter']['options']['lists']['lists']"
                      :key="index"
                      class="col-lg-6">
 
@@ -115,18 +115,23 @@ function channelOptionsGET(userId, channel, getType) {
 
                         <input class="form-check-input"
                                type="checkbox"
-                               :id="category.id"
+                               :id="list.id"
                                true-value="1"
                                false-value="0"
                                v-model="form.channels['newsletter']['options']['lists']['lists'][index]['on']"
                                checked />
 
                         <label class="form-check-label"
-                               :for="category.id">
+                               :for="list.id">
                             <span class="text-gray-500 text-[0.9em]">
-                                {{ category.name }}
+                                {{ list.name }}
                                 <span class="text-[0.7em]">
-                                    ({{ category.uniqueSubscribers }})
+                                    (<span v-if="form.channels['newsletter']['options']['lists']['channel'] === 'mailchimp'">
+                                        {{ list.stats.member_count }}
+                                    </span>
+                                    <span v-else-if="form.channels['newsletter']['options']['lists']['channel'] === 'brevo'">
+                                        {{ list.uniqueSubscribers }}
+                                    </span>)
                                 </span>
                             </span>
                         </label>
