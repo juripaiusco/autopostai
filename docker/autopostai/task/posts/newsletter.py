@@ -1,3 +1,4 @@
+import json
 from services.brevo import Brevo
 from task.posts.base import BasePost
 import config as cfg
@@ -5,6 +6,7 @@ from typing import List
 from services.mailchimp import Mailchimp
 from datetime import datetime
 import markdown
+
 
 class NewsletterPost(BasePost):
     def __init__(self, data: List[any] = None, debug=False):
@@ -63,11 +65,9 @@ class NewsletterPost(BasePost):
         # ------------------------------------------------------- #
 
         if self.data['brevo_api'] is not None:
-            print(self.data['brevo_list_id'])
-            quit()
             brevo = Brevo(
                 api_key=self.data['brevo_api'],
-                list_id=self.data['brevo_list_id'],
+                list_id=self.lists_get(),
             )
 
             subject, body = self.get_data(content)
@@ -95,7 +95,25 @@ class NewsletterPost(BasePost):
             return "Brevo"
 
     def lists_get(self):
-        return None
+        lists_id = []
+
+        if self.data['brevo_api'] is not None:
+            if self.data['brevo_list_id'] is not None:
+                lists_id = [int(self.data['brevo_list_id'])]
+
+            if self.data['channels'] is not None:
+                channels = json.loads(self.data['channels'])
+                lists = channels.get('newsletter', {}).get('options', {}).get('lists', {}).get('lists', [])
+                lists_id_new = []
+
+                for list in lists:
+                    if list['on'] == '1':
+                        lists_id_new.append(list['id'])
+
+                if lists_id_new:
+                    lists_id = lists_id_new
+
+        return lists_id
 
     def delete(self, post_id):
         if self.data['mailchimp_api'] is not None:

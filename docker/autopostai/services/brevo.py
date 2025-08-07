@@ -42,7 +42,7 @@ class Brevo:
             "subject": subject,
             "htmlContent": html_content,
             "recipients": {
-                "listIds": [int(self.list_id)]
+                "listIds": self.list_id
             },
             "inlineImageActivation": False,
             "mirrorActive": True,
