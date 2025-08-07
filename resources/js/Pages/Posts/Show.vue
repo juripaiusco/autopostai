@@ -229,7 +229,7 @@ onMounted(async () => {
                         <div class="card-body whitespace-pre-line">
                             <label class="form-label">
                                 <li :class="'fa-brands fa-' + comment.channel"></li>
-                                &nbsp;{{ comment.from_name }} ha scritto:
+                                &nbsp;{{ comment.from_name || 'Qualcuno' }} ha scritto:
                             </label>
                             {{ comment.message }}
                             <br>
