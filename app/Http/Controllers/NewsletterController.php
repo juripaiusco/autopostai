@@ -19,12 +19,55 @@ class NewsletterController extends Controller
         $settings = \App\Models\Settings::where('user_id', $userId)->first();
 
         if ($settings->mailchimp_api) {
-
+            return $this->mailchimp_lists_get($settings);
         }
 
         if ($settings->brevo_api) {
             return $this->brevo_lists_get($settings);
         }
+    }
+
+    public function mailchimp_lists_get($settings)
+    {
+        $this->loadCustomEnv(base_path('./docker/autopostai/.env'));
+
+        $response = Http::withBasicAuth(
+            'anystring',
+            $settings->mailchimp_api,
+        )->get(
+            str_replace(
+                '[DATACENTER]',
+                $settings->mailchimp_datacenter,
+                env('MAILCHIMP_BASE_URL')
+            ) . '/lists'
+        );
+
+        if ($response->successful()) {
+            $lists = $response->json();
+        } else {
+            $lists = false; // fallback o gestione errore
+        }
+
+        if ($lists) {
+            $lists['channel'] = 'mailchimp';
+
+            foreach ($lists['lists'] as $k => $list) {
+                $lists['lists'][$k]['on'] = 0;
+            }
+
+            usort($lists['lists'], function ($a, $b) {
+                return strcmp(strtolower($a['name']), strtolower($b['name']));
+            });
+
+            $settings->mailchimp_options = array_merge(
+                json_decode($settings->mailchimp_options, true) ?? [],
+                array('lists' => $lists)
+            );
+
+            $settings->save();
+        }
+
+        return $settings->mailchimp_options;
     }
 
     public function brevo_lists_get($settings)
