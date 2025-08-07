@@ -112,15 +112,24 @@ class Posts extends Controller
                 $settings = \App\Models\Settings::query()->where('user_id', $user->id)->first();
 
                 $channels_array = json_decode($user->channels, true);
-                $channels_array['wordpress']['options'] = json_decode($settings->wordpress_options, true);
 
-                if ($settings->mailchimp_api) {
+                // Imposto le opzioni per il canale WordPress - - -
+                $channels_array['wordpress']['options']['categories'] = [];
+                if ($settings->wordpress_options) {
+                    $channels_array['wordpress']['options'] = json_decode($settings->wordpress_options, true);
+                }
+                // END - Imposto le opzioni per il canale WordPress - - -
+
+                // Imposto le opzioni per la newsletter - - -
+                $channels_array['newsletter']['options']['lists'] = [];
+                if ($settings->mailchimp_api && $settings->mailchimp_options) {
                     $channels_array['newsletter']['options'] = json_decode($settings->mailchimp_options, true);
                 }
 
-                if ($settings->brevo_api) {
+                if ($settings->brevo_api && $settings->brevo_options) {
                     $channels_array['newsletter']['options'] = json_decode($settings->brevo_options, true);
                 }
+                // END - Imposto le opzioni per la newsletter - - -
 
                 $user->channels = json_encode($channels_array);
             }
