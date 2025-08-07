@@ -94,13 +94,33 @@ class NewsletterPost(BasePost):
         if data.get('brevo_api', None) is not None:
             return "Brevo"
 
+    # Recupero l'ID o gli ID delle lista a cui inviare la newsletter
     def lists_get(self):
-        lists_id = []
-
+        # MailChimp può inviare ad una singola lista per volta,
+        # quindi lists_id non è un array
         if self.data['mailchimp_api'] is not None:
-            lists_id = self.data['mailchimp_list_id']
+            lists_id = ""
 
+            if self.data['mailchimp_list_id'] is not None:
+                lists_id = self.data['mailchimp_list_id']
+
+            if self.data['channels'] is not None:
+                channels = json.loads(self.data['channels'])
+                lists = channels.get('newsletter', {}).get('options', {}).get('lists', {}).get('lists', [])
+                lists_id_new = ""
+
+                for list in lists:
+                    if list['on'] == '1':
+                        lists_id_new = list['id']
+
+                if lists_id_new:
+                    lists_id = lists_id_new
+
+        # Brevo può inviare a più liste contemporaneamente,
+        # quindi lists_id sarà un array
         if self.data['brevo_api'] is not None:
+            lists_id = []
+
             if self.data['brevo_list_id'] is not None:
                 lists_id = [int(self.data['brevo_list_id'])]
 
