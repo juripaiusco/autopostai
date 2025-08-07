@@ -114,14 +114,14 @@ function channelOptionsGET(userId, channel, getType) {
 
                         <input class="form-check-input"
                                type="checkbox"
-                               :id="category.id"
+                               :id="'category-' + category.id"
                                true-value="1"
                                false-value="0"
                                v-model="form.channels['wordpress']['options']['categories'][index]['on']"
                                checked />
 
                         <label class="form-check-label"
-                               :for="category.id">
+                               :for="'category-' + category.id">
                             <span class="text-gray-500 text-[0.9em]">{{ category.name }}</span>
                         </label>
 

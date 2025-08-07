@@ -129,7 +129,7 @@ function listsSet(channel, id) {
 
                         <input class="form-check-input"
                                type="checkbox"
-                               :id="list.id"
+                               :id="'newsletter_list-' + list.id"
                                true-value="1"
                                false-value="0"
                                @click="listsSet(
@@ -140,7 +140,7 @@ function listsSet(channel, id) {
                                checked />
 
                         <label class="form-check-label"
-                               :for="list.id">
+                               :for="'newsletter_list-' + list.id">
                             <span class="text-gray-500 text-[0.9em]">
                                 {{ list.name }}
                                 <span class="text-[0.7em]">
