@@ -8,7 +8,7 @@ import markdown
 
 class NewsletterPost(BasePost):
     def __init__(self, data: List[any] = None, debug=False):
-        super().__init__(channel_name=self.get_channel_name(data), data=data, debug=debug)
+        super().__init__(channel_name=self.channel_name_get(data), data=data, debug=debug)
 
     def prompt_get(self):
         # Creo il prompt
@@ -56,13 +56,15 @@ class NewsletterPost(BasePost):
 
             return post_id, post_url
 
-        # -----------------------------------------------------------------------------
+        # - END -----------------------------------------------------------------------------
 
         # ------------------------------------------------------- #
         #                          BREVO                          #
         # ------------------------------------------------------- #
 
         if self.data['brevo_api'] is not None:
+            print(self.data['brevo_list_id'])
+            quit()
             brevo = Brevo(
                 api_key=self.data['brevo_api'],
                 list_id=self.data['brevo_list_id'],
@@ -83,14 +85,17 @@ class NewsletterPost(BasePost):
 
             return post_id, post_url
 
-        # -----------------------------------------------------------------------------
+        # - END -----------------------------------------------------------------------------
 
-    def get_channel_name(self, data):
+    def channel_name_get(self, data):
         if data.get('mailchimp_api', None) is not None:
             return "Mailchimp"
 
         if data.get('brevo_api', None) is not None:
             return "Brevo"
+
+    def lists_get(self):
+        return None
 
     def delete(self, post_id):
         if self.data['mailchimp_api'] is not None:
