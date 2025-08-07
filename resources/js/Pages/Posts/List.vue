@@ -1,6 +1,6 @@
 <script setup>
 
-import { Head } from '@inertiajs/vue3';
+import {Head, usePage} from '@inertiajs/vue3';
 import {Link, router} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import ApplicationHeader from "@/Components/ApplicationHeader.vue";
@@ -253,7 +253,7 @@ onUnmounted(() => {
                             }
                         }, {
                             class: 'text-right w-[5%] hidden sm:table-cell',
-                            label: 'Token',
+                            label: usePage().props.auth.user.parent_id ? 'Crediti' : ' Token',
                             field: 'token.tokens_used',
                             fnc: function (d) {
 

@@ -3,7 +3,7 @@
 import ApplicationContainer from "@/Components/ApplicationContainer.vue";
 import ApplicationHeader from "@/Components/ApplicationHeader.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import {Head, Link, useForm} from "@inertiajs/vue3";
+import {Head, Link, useForm, usePage} from "@inertiajs/vue3";
 import {__date} from "../../ComponentsExt/Date.js";
 import {nextTick, onMounted, ref} from "vue";
 
@@ -206,8 +206,9 @@ onMounted(async () => {
                         {{ __date(data.published_at) }}
                         -
                         <span v-if="data.token.tokens_used">
-                                     {{ data.token.tokens_used }} token
-                                </span>
+                            {{ data.token.tokens_used }}
+                            {{ usePage().props.auth.user.parent_id ? 'crediti' : ' token' }}
+                        </span>
                         <span v-else
                               class="text-red-500">
                                     Error: token non disponibile
@@ -244,8 +245,9 @@ onMounted(async () => {
                                     {{ __date(comment.reply_created_time) }}
                                     -
                                     <span v-if="comment.token">
-                                            {{ comment.token.tokens_used }} token
-                                        </span>
+                                        {{ comment.token.tokens_used }}
+                                        {{ usePage().props.auth.user.parent_id ? 'crediti' : ' token' }}
+                                    </span>
                                     <span v-else
                                           class="text-red-500">
                                             Error: token non disponibile
