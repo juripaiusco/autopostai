@@ -271,6 +271,10 @@ onUnmounted(() => {
                                     }
                                 }
 
+                                if (usePage().props.auth.user.parent_id) {
+                                    token_used_total = token_used_total / 1000;
+                                }
+
                                 return token_used_total
 
                             }

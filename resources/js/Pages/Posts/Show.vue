@@ -206,7 +206,7 @@ onMounted(async () => {
                         {{ __date(data.published_at) }}
                         -
                         <span v-if="data.token.tokens_used">
-                            {{ data.token.tokens_used }}
+                            {{ usePage().props.auth.user.parent_id ? data.token.tokens_used / 1000 : data.token.tokens_used }}
                             {{ usePage().props.auth.user.parent_id ? 'crediti' : ' token' }}
                         </span>
                         <span v-else
@@ -245,7 +245,7 @@ onMounted(async () => {
                                     {{ __date(comment.reply_created_time) }}
                                     -
                                     <span v-if="comment.token">
-                                        {{ comment.token.tokens_used }}
+                                        {{ usePage().props.auth.user.parent_id ? comment.token.tokens_used / 1000 : comment.token.tokens_used }}
                                         {{ usePage().props.auth.user.parent_id ? 'crediti' : ' token' }}
                                     </span>
                                     <span v-else

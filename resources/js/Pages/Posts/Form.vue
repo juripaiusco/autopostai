@@ -553,7 +553,10 @@ function previewAIContent() {
 
                             <small class="text-[11px] text-gray-500">
                                 <span v-if="data.tokens">
-                                     {{ data.tokens.reduce((sum, token) => sum + token.tokens_used, 0) }} token
+                                    {{ usePage().props.auth.user.parent_id ?
+                                        data.tokens.reduce((sum, token) => sum + token.tokens_used, 0) / 1000 :
+                                        data.tokens.reduce((sum, token) => sum + token.tokens_used, 0) }}
+                                    {{ usePage().props.auth.user.parent_id ? 'crediti' : ' token' }}
                                 </span>
                                 <!-- <span v-else
                                       class="text-red-500">
