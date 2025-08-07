@@ -13,7 +13,7 @@ class WordPressController extends Controller
      * @param int $userId
      * @return array|bool
      */
-    function category_get($userId)
+    function categories_get($userId)
     {
         $settings = \App\Models\Settings::where('user_id', $userId)->first();
 
@@ -30,7 +30,7 @@ class WordPressController extends Controller
             foreach ($categories as $k => $category) {
                 $categories[$k]['on'] = 0;
             }
-            
+
             $settings->wordpress_options = array_merge(
                 json_decode($settings->wordpress_options, true) ?? [],
                 array('categories' => $categories)

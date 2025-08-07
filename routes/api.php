@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\ImageController;
 use \App\Http\Controllers\WordPressController;
+use \App\Http\Controllers\NewsletterController;
 
 /*Route::get('/user', function (Request $request) {
     return $request->user();
@@ -26,5 +27,9 @@ Route::get('/check-job-status/{jobId}', [ImageController::class, 'checkJobStatus
     ->middleware('auth:sanctum');
 
 // Esecuzione WordPressController
-Route::get('/wordpress-categories/{userId}', [WordPressController::class, 'category_get'])
+Route::get('/wordpress-categories/{userId}', [WordPressController::class, 'categories_get'])
     ->middleware('auth:sanctum');
+
+// Esecuzione NewsletterController
+/*Route::get('/newsletter-lists/{userId}', [NewsletterController::class, 'lists_get'])
+    ->middleware('auth:sanctum');*/
