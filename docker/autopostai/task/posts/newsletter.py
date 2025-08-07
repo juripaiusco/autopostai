@@ -40,7 +40,7 @@ class NewsletterPost(BasePost):
             mailchimp = Mailchimp(
                 api_key=self.data['mailchimp_api'],
                 datacenter=self.data['mailchimp_datacenter'],
-                list_id=self.data['mailchimp_list_id'],
+                list_id=self.lists_get(),
             )
 
             subject, body = self.get_data(content)
@@ -96,6 +96,9 @@ class NewsletterPost(BasePost):
 
     def lists_get(self):
         lists_id = []
+
+        if self.data['mailchimp_api'] is not None:
+            lists_id = self.data['mailchimp_list_id']
 
         if self.data['brevo_api'] is not None:
             if self.data['brevo_list_id'] is not None:
