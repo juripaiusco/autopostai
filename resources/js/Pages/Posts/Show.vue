@@ -63,7 +63,7 @@ onMounted(async () => {
             <h2 class="text-xl font-bold mb-3">Istruzioni inviate all'AI</h2>
 
             <div class="row">
-                <div v-if="data.img.length > 0"
+                <div v-if="data.img && data.img.length > 0"
                      class="col-lg-4">
 
                     <div v-if="data.img && typeof data.img[0] === 'string'"
