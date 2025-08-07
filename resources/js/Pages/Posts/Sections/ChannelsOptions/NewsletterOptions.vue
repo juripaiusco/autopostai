@@ -68,6 +68,20 @@ function channelOptionsGET(userId, channel, getType) {
         });
 }
 
+function listsSet(channel, id) {
+
+    if (channel === 'mailchimp') {
+
+        for (let i = 0; i < form.channels['newsletter']['options']['lists']['lists'].length; i++) {
+
+            if (form.channels['newsletter']['options']['lists']['lists'][i]['id'] !== id) {
+                form.channels['newsletter']['options']['lists']['lists'][i]['on'] = 0;
+            }
+
+        }
+    }
+}
+
 </script>
 
 <template>
@@ -118,6 +132,10 @@ function channelOptionsGET(userId, channel, getType) {
                                :id="list.id"
                                true-value="1"
                                false-value="0"
+                               @click="listsSet(
+                                   form.channels['newsletter']['options']['lists']['channel'],
+                                   list.id
+                               )"
                                v-model="form.channels['newsletter']['options']['lists']['lists'][index]['on']"
                                checked />
 
@@ -129,7 +147,7 @@ function channelOptionsGET(userId, channel, getType) {
                                     (<span v-if="form.channels['newsletter']['options']['lists']['channel'] === 'mailchimp'">
                                         {{ list.stats.member_count }}
                                     </span>
-                                    <span v-else-if="form.channels['newsletter']['options']['lists']['channel'] === 'brevo'">
+                                    <span v-if="form.channels['newsletter']['options']['lists']['channel'] === 'brevo'">
                                         {{ list.uniqueSubscribers }}
                                     </span>)
                                 </span>
