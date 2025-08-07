@@ -26,6 +26,7 @@ use Inertia\Inertia;
  * **Canali digitali:**
  * - Facebook;
  * - Instagram;
+ * - LinkedIn;
  * - WordPress (in lavorazione);
  * - Newsletter (in lavorazione).
  *
@@ -113,6 +114,14 @@ class Posts extends Controller
                 $channels_array = json_decode($user->channels, true);
                 $channels_array['wordpress']['options'] = json_decode($settings->wordpress_options, true);
 
+                if ($settings->mailchimp_api) {
+                    $channels_array['newsletter']['options'] = json_decode($settings->mailchimp_options, true);
+                }
+
+                if ($settings->brevo_api) {
+                    $channels_array['newsletter']['options'] = json_decode($settings->brevo_options, true);
+                }
+
                 $user->channels = json_encode($channels_array);
             }
             // -----------------------------------------------------------
@@ -130,6 +139,14 @@ class Posts extends Controller
 
             $channels_array = json_decode($data['user']->channels, true);
             $channels_array['wordpress']['options'] = json_decode($settings->wordpress_options, true);
+
+            if ($settings->mailchimp_api) {
+                $channels_array['newsletter']['options'] = json_decode($settings->mailchimp_options, true);
+            }
+
+            if ($settings->brevo_api) {
+                $channels_array['newsletter']['options'] = json_decode($settings->brevo_options, true);
+            }
 
             $data['user']->channels = json_encode($channels_array);
             $data['channels_user'] = $data['user']->channels;

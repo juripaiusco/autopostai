@@ -46,6 +46,7 @@ return new class extends Migration
             $table->string('mailchimp_from_email')->default(null)->nullable();
             $table->longText('mailchimp_template')->default(null)->nullable();
             $table->longText('mailchimp_template_cta')->default(null)->nullable();
+            $table->longText('mailchimp_options')->default(null)->nullable();
 
             $table->string('brevo_api')->default(null)->nullable();
             $table->string('brevo_list_id')->default(null)->nullable();
@@ -53,6 +54,7 @@ return new class extends Migration
             $table->string('brevo_from_email')->default(null)->nullable();
             $table->longText('brevo_template')->default(null)->nullable();
             $table->longText('brevo_template_cta')->default(null)->nullable();
+            $table->longText('brevo_options')->default(null)->nullable();
 
             $table->timestamps();
         });

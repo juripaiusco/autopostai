@@ -7,6 +7,7 @@ import WordPressOptions from "@/Pages/Posts/Sections/ChannelsOptions/WordPressOp
 import FacebookOptions from "@/Pages/Posts/Sections/ChannelsOptions/FacebookOptions.vue";
 import InstagramOptions from "@/Pages/Posts/Sections/ChannelsOptions/InstagramOptions.vue";
 import LinkedInOptions from "@/Pages/Posts/Sections/ChannelsOptions/LinkedInOptions.vue";
+import NewsletterOptions from "@/Pages/Posts/Sections/ChannelsOptions/NewsletterOptions.vue";
 
 const props = defineProps({
     data: Object,
@@ -236,6 +237,13 @@ Crea un post per Facebook, utilizza massimo 500 caratteri, racconta quanto è be
          id="wordpress-options">
 
         <WordPressOptions :data="data" :form="form" :token="token" />
+
+    </div>
+    <div v-if="form.channels['newsletter']['on'] === '1'"
+         class="!mb-3"
+         id="wordpress-options">
+
+        <NewsletterOptions :data="data" :form="form" :token="token" />
 
     </div>
     <!-- Channels Options - END -->

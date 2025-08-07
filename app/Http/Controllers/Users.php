@@ -90,6 +90,7 @@ class Users extends Controller
                 'on' => null,
                 'reply_on' => null,
                 'reply_n' => null,
+                'options' => []
             ],
             'instagram' => [
                 'name' => 'Instagram',
@@ -98,6 +99,7 @@ class Users extends Controller
                 'on' => null,
                 'reply_on' => null,
                 'reply_n' => null,
+                'options' => []
             ],
             'linkedin' => [
                 'name' => 'LinkedIn',
@@ -106,6 +108,7 @@ class Users extends Controller
                 'on' => null,
                 'reply_on' => null,
                 'reply_n' => null,
+                'options' => []
             ],
             'wordpress' => [
                 'name' => 'WordPress',
@@ -123,6 +126,7 @@ class Users extends Controller
                 'on' => null,
                 'reply_on' => null,
                 'reply_n' => null,
+                'options' => []
             ],
         ];
 

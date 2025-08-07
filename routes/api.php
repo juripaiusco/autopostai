@@ -31,5 +31,5 @@ Route::get('/wordpress-categories/{userId}', [WordPressController::class, 'categ
     ->middleware('auth:sanctum');
 
 // Esecuzione NewsletterController
-/*Route::get('/newsletter-lists/{userId}', [NewsletterController::class, 'lists_get'])
-    ->middleware('auth:sanctum');*/
+Route::get('/newsletter-lists/{userId}', [NewsletterController::class, 'lists_get'])
+    ->middleware('auth:sanctum');
