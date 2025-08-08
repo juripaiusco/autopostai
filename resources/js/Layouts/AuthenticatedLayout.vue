@@ -30,7 +30,7 @@ const showingNavigationDropdown = ref(false);
         </div>
         -->
 
-        <div class="min-h-screen bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-900">
+        <div class="flex flex-col min-h-screen bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-900">
             <nav class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -42,7 +42,7 @@ const showingNavigationDropdown = ref(false);
                                     <ApplicationLogo
                                         class="block h-9 w-9 fill-current text-gray-800 dark:text-gray-200"
                                     />
-                                    <!-- <div class="text-[.6em] font-bold text-sky-400 dark:text-white text-center">
+                                    <!-- <div class="text-[.55em] ps-1 font-bold text-sky-400 dark:text-white sm:hidden">
                                         v.{{ usePage().props.app.version }}
                                     </div> -->
                                 </Link>
@@ -283,9 +283,14 @@ const showingNavigationDropdown = ref(false);
             </header>
 
             <!-- Page Content -->
-            <main class="mb-2 sm:mb-0">
+            <main class="flex-grow sm:mb-0">
                 <slot />
             </main>
+
+            <!-- Footer -->
+            <footer class="container text-gray-400 text-sm !ps-6 pb-2 mb-2">
+                <small>{{ usePage().props.app.name }} - v.{{ usePage().props.app.version }}</small>
+            </footer>
         </div>
 
         <!-- Movile botton Nav -->

@@ -42,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
             $dotenv->load();
         }
 
+        Inertia::share('app.name', env('APP_NAME', 'name'));
         Inertia::share('app.version', env('APP_VERSION', '0.0.0'));
         Inertia::share('app.changelog_url', env('APP_CHANGELOG_URL', '0.0.0'));
     }
