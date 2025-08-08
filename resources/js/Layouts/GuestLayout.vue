@@ -1,6 +1,7 @@
 <script setup>
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import { Link } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
 </script>
 
 <template>
@@ -8,11 +9,11 @@ import { Link } from '@inertiajs/vue3';
         class="min-h-screen flex flex-col items-center pt-[80px] sm:bg-gray-100 dark:bg-gray-900"
     >
         <div>
-            <Link href="/">
-                <ApplicationLogo class="w-20 h-20 fill-current text-gray-500 m-auto" />
-                <h1 class="text-3xl mb-[20px] dark:text-white text-center">
-                    <small class="text-sm">v.1.0.1</small>
-                </h1>
+            <Link :href="usePage().props.app.changelog_url">
+                <ApplicationLogo class="w-20 h-20 fill-current text-gray-500 m-auto mb-8" />
+                <!-- <div class="mt-2 mb-[20px] text-[.8em] font-bold text-sky-400 dark:text-white text-center">
+                    v.{{ usePage().props.app.version }}
+                </div> -->
             </Link>
         </div>
 
