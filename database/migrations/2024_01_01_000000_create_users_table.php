@@ -23,6 +23,7 @@ return new class extends Migration
             $table->json('channels')->nullable();
             $table->integer('tokens_limit')->default(0)->nullable();
             $table->integer('image_model_limit')->default(0)->nullable();
+            $table->string('version')->default(null)->nullable();
 
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();

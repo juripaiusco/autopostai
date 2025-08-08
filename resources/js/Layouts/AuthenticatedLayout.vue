@@ -5,7 +5,7 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import {Link, usePage} from '@inertiajs/vue3';
 import ProgressBar from "@/Components/ProgressBar.vue";
 
 const showingNavigationDropdown = ref(false);
@@ -14,6 +14,7 @@ const showingNavigationDropdown = ref(false);
 <template>
 
     <div>
+
         <div class="min-h-screen bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-900">
             <nav
                 class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800"
@@ -28,6 +29,9 @@ const showingNavigationDropdown = ref(false);
                                     <ApplicationLogo
                                         class="block h-9 w-9 fill-current text-gray-800 dark:text-gray-200"
                                     />
+                                    <!-- <div class="text-[.6em] font-bold text-sky-400 dark:text-white text-center">
+                                        v.{{ usePage().props.app.version }}
+                                    </div> -->
                                 </Link>
                             </div>
 
