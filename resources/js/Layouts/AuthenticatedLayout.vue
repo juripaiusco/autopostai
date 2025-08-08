@@ -15,6 +15,21 @@ const showingNavigationDropdown = ref(false);
 
     <div>
 
+        <!--
+        <div class="toast-container fixed top-0 left-1/2 transform -translate-x-1/2 p-3 sm:left-auto sm:right-0 sm:translate-x-0">
+            <div id="liveToast" class="toast !block" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Bootstrap</strong>
+                    <small>11 mins ago</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    Hello, world! This is a toast message.
+                </div>
+            </div>
+        </div>
+        -->
+
         <div class="min-h-screen bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-900">
             <nav
                 class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800"
