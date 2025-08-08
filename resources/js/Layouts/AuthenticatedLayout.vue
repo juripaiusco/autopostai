@@ -288,8 +288,10 @@ const showingNavigationDropdown = ref(false);
             </main>
 
             <!-- Footer -->
-            <footer class="container text-gray-400 text-sm !ps-6 pb-2 mb-2">
-                <small>{{ usePage().props.app.name }} - v.{{ usePage().props.app.version }}</small>
+            <footer class="w-full">
+                <div class="lg:container lg:m-auto text-gray-400 text-sm ps-2 pb-4">
+                    <small>{{ usePage().props.app.name }} - v.{{ usePage().props.app.version }}</small>
+                </div>
             </footer>
         </div>
 
