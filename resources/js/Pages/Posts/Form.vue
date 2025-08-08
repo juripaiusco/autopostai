@@ -602,7 +602,7 @@ function previewAIContent() {
                 <div class="text-right mb-6 sm:mb-3 flex flex-wrap justify-center md:justify-end">
 
                     <div class="text-center w-[100%] md:w-auto">
-                        <button :disabled="!form.id && !form.user_id && !data.user?.id"
+                        <button :disabled="(!form.id && !form.user_id && !data.user?.id) || form.duplicate"
                                 type="button"
                                 class="btn btn-light !text-2xl sm:!text-lg w-[100%] md:w-[248px] !flex items-center justify-center gap-2"
                                 @click="form.duplicate = true; $refs.postMainForm.requestSubmit();">
@@ -624,8 +624,9 @@ function previewAIContent() {
                     </div>
 
                     <div class="w-1/2 text-center md:w-auto">
-                        <button type="submit"
-                                class="btn btn-success w-[100%] md:w-[120px]">Salva</button>
+                        <button class="btn btn-success w-[100%] md:w-[120px]"
+                                type="submit"
+                                :disabled="form.processing">Salva</button>
                     </div>
 
                 </div>
