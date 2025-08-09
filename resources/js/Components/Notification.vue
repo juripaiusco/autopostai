@@ -1,7 +1,8 @@
-<script setup lang="ts">
+<script setup>
 
-import {ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {usePage} from "@inertiajs/vue3";
+import axios from 'axios'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 
 const notifications = [
@@ -28,12 +29,58 @@ const notifications = [
     },
 ]
 
+const app_url = import.meta.env.VITE_APP_URL;
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+
 // Stato per sapere se la campanella è stata cliccata
 const clicked = ref(false)
+const notificationsEnabled = ref(false)
+const token = usePage().props.auth.token_notification
 
 const handleClick = () => {
     clicked.value = true
 }
+
+async function subscribeUser() {
+    const permission = await Notification.requestPermission()
+    if (permission !== 'granted') return
+
+    // Registra il service worker
+    const registration = await navigator.serviceWorker.register(app_url + '/service-worker.js')
+
+    // Genera la sottoscrizione
+    const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    })
+
+    // Salva sul backend
+    await axios.post(app_url + '/api/push-subscribe', subscription, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+
+    notificationsEnabled.value = true
+}
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4)
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+    const rawData = window.atob(base64)
+    return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)))
+}
+
+onMounted(async () => {
+    // Controlla se l’utente ha già una subscription
+    const registration = await navigator.serviceWorker.getRegistration()
+    if (!registration) {
+        notificationsEnabled.value = false
+        return
+    }
+    const subscription = await registration.pushManager.getSubscription()
+    notificationsEnabled.value = subscription !== null
+})
 
 </script>
 
@@ -77,9 +124,27 @@ const handleClick = () => {
             <PopoverPanel
                 class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-black/5 z-50"
             >
-                <!-- Titolo con sfondo -->
-                <div class="px-4 py-2 bg-gray-50 border-b rounded-t-lg text-center">
-                    <h3 class="text-sm font-semibold text-gray-700">Novità di FaPer3</h3>
+                <div class="flex w-full px-4 py-2 bg-gray-50 border-b rounded-t-lg items-center justify-between">
+
+                    <!-- Titolo -->
+                    <h3 class="text-sm font-semibold text-gray-700">
+                        Novità di FaPer3
+                    </h3>
+
+                    <!-- Pulsante -->
+                    <button @click="subscribeUser"
+                            class="btn btn-sm"
+                            :class="{
+                              'btn-primary': notificationsEnabled,
+                              'btn-secondary': !notificationsEnabled,
+                            }">
+                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                             viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                        </svg>
+                    </button>
+
                 </div>
 
                 <!-- Lista notifiche -->

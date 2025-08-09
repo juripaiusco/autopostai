@@ -33,6 +33,10 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = $request->user();
+        $token = $user->createToken('notification')->plainTextToken;
+        session(['notification_token' => $token]);
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
