@@ -92,7 +92,7 @@ onMounted(async () => {
             <div
                 class="mt-2"
                 :class="[
-                    clicked ? 'text-gray-300' : 'text-sky-500 animate-ring'
+                    clicked ? 'text-gray-300 dark:text-gray-600' : 'text-sky-500 animate-ring'
                 ]"
             >
                 <svg
