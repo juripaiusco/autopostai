@@ -1,5 +1,6 @@
 <script setup lang="ts">
 
+import {ref} from 'vue'
 import {usePage} from "@inertiajs/vue3";
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 
@@ -27,16 +28,28 @@ const notifications = [
     },
 ]
 
+// Stato per sapere se la campanella è stata cliccata
+const clicked = ref(false)
+
+const handleClick = () => {
+    clicked.value = true
+}
+
 </script>
 
 <template>
     <!-- Notification Bell new version -->
     <Popover class="relative">
         <!-- Bottone campanella -->
-        <PopoverButton class="focus:outline-none">
-            <div class="animate-ring">
+        <PopoverButton class="focus:outline-none" @click="handleClick">
+            <div
+                class="mt-2"
+                :class="[
+                    clicked ? 'text-gray-300' : 'text-sky-500 animate-ring'
+                ]"
+            >
                 <svg
-                    class="text-sky-500 size-6"
+                    class="size-6"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -65,8 +78,8 @@ const notifications = [
                 class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-black/5 z-50"
             >
                 <!-- Titolo con sfondo -->
-                <div class="px-4 py-2 bg-gray-50 border-b rounded-t-lg">
-                    <h3 class="text-sm font-semibold text-gray-700">Notifiche</h3>
+                <div class="px-4 py-2 bg-gray-50 border-b rounded-t-lg text-center">
+                    <h3 class="text-sm font-semibold text-gray-700">Novità di FaPer3</h3>
                 </div>
 
                 <!-- Lista notifiche -->
