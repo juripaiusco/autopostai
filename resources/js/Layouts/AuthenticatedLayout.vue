@@ -7,6 +7,7 @@ import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import {Link, usePage} from '@inertiajs/vue3';
 import ProgressBar from "@/Components/ProgressBar.vue";
+import Notification from "@/Components/Notification.vue";
 
 const showingNavigationDropdown = ref(false);
 </script>
@@ -102,6 +103,9 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
+
+                            <Notification />
+
                             <!-- Settings Dropdown -->
                             <div class="relative ms-3">
                                 <Dropdown align="right" width="48">
@@ -164,6 +168,9 @@ const showingNavigationDropdown = ref(false);
 
                         <!-- Hamburger -->
                         <div class="-me-2 flex items-center sm:hidden">
+
+                            <Notification />
+
                             <button
                                 @click="
                                     showingNavigationDropdown =
