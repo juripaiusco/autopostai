@@ -5,19 +5,17 @@ use App\Http\Controllers\Posts;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Settings;
 use App\Http\Controllers\Users;
+use App\Http\Controllers\PushNotifications;
 use Illuminate\Support\Facades\Route;
 
-use App\Models\PushSubscription;
 use App\Notifications\TestPushNotification;
-use NotificationChannels\WebPush\PushSubscription as WebPushSubscription;
-use NotificationChannels\WebPush\WebPushChannel;
-use Illuminate\Support\Facades\Notification;
 
 Route::get('/', function () {
     return redirect('/posts?orderby=published_at&ordertype=desc&s=');
 });
 
 Route::get('/test', function () {
+//    $users = \App\Models\User::all();
     $users = \App\Models\User::with('pushSubscriptions')->get();
 
     foreach ($users as $user) {
@@ -84,6 +82,21 @@ Route::middleware('auth')->group(function () {
         ->name('settings.index');
     Route::post('/settings/update_by_user/{id}', [Settings::class, 'update_by_user'])
         ->name('settings.update');
+
+    Route::get('/notifications', [PushNotifications::class, 'index'])
+        ->name('notification.index');
+    Route::get('/notifications/show/{id}', [PushNotifications::class, 'show'])
+        ->name('notification.show');
+    Route::get('/notifications/create', [PushNotifications::class, 'create'])
+        ->name('notification.create');
+    Route::post('/notifications/store', [PushNotifications::class, 'store'])
+        ->name('notification.store');
+    Route::get('/notifications/edit/{id}', [PushNotifications::class, 'edit'])
+        ->name('notification.edit');
+    Route::post('/notifications/update/{id}', [PushNotifications::class, 'update'])
+        ->name('notification.update');
+    Route::get('/notifications/destroy/{id}', [PushNotifications::class, 'destroy'])
+        ->name('notification.destroy');
 
     Route::get('/linkedin/redirect/{linkedin_client_id}', [\App\Http\Controllers\LinkedInController::class, 'redirect'])
         ->name('linkedin.redirect');
