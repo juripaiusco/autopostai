@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PushNotification;
 use App\Models\PushSubscription;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -53,12 +54,15 @@ class PushSubscriptionController extends Controller
         }
 
         $user = User::find($subscription->subscribable_id);
+        // 'Ciao ' . $user->name . ' dal server! 👋'
+
+        $notification = PushNotification::whereNull('sent')->orderBy('created_at', 'desc')->first();
 
         $data = [
-            'title' => 'Ciao ' . $user->name . ' dal server! 👋',
+            'title' => $notification->title,
             'icon' => '/faper3-logo.png',
-            'body' => 'Questa è una notifica di test inviata da FaPer3.',
-            'url' => '/',    // attenzione: 'data' -> 'url' deve essere in radice oggetto JSON per service worker
+            'body' => $notification->body,
+            'url' => $notification->url,    // attenzione: 'data' -> 'url' deve essere in radice oggetto JSON per service worker
             'actions' => [
                 [
                     'action' => 'view_details',

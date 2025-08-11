@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Settings;
 use App\Http\Controllers\Users;
 use App\Http\Controllers\PushNotifications;
+use App\Models\PushNotification;
 use Illuminate\Support\Facades\Route;
 
 use App\Notifications\TestPushNotification;
@@ -15,12 +16,16 @@ Route::get('/', function () {
 });
 
 Route::get('/test', function () {
-//    $users = \App\Models\User::all();
-    $users = \App\Models\User::with('pushSubscriptions')->get();
+    $users = \App\Models\User::all();
+//    $users = \App\Models\User::with('pushSubscriptions')->get();
 
     foreach ($users as $user) {
         $user->notify(new TestPushNotification());
     }
+
+    /*$notification = PushNotification::orderBy('created_at', 'desc')->first();
+    $notification->title = $notification->title . ' - inviata';
+    $notification->save();*/
 
     return 'Notifica inviata!';
 });

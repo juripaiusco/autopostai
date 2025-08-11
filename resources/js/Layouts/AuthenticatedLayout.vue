@@ -90,6 +90,13 @@ const showingNavigationDropdown = ref(false);
                                     Impostazioni
                                 </NavLink>
 
+                                <NavLink v-if="!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
+                                         class="w-[100px] text-center"
+                                         :href="route('notification.index') + '?orderby=created_at&ordertype=desc&s='"
+                                         :active="route().current().search('notification') === 0 ? true : false">
+                                    Notifiche
+                                </NavLink>
+
                             </div>
                         </div>
 
