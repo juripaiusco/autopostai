@@ -5,13 +5,18 @@ use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\ImageController;
 use \App\Http\Controllers\WordPressController;
 use \App\Http\Controllers\NewsletterController;
-use \App\Http\Controllers\PushController;
+use \App\Http\Controllers\PushSubscriptionController;
 
 /*Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');*/
 
-Route::post('/push-subscribe', [PushController::class, 'subscribe'])
+/**
+ * API PUSH - Routes
+ */
+Route::get('/push-data', [PushSubscriptionController::class, 'show']);
+
+Route::post('/push-subscribe', [PushSubscriptionController::class, 'store'])
     ->middleware('auth:sanctum');
 
 Route::get('/posts', function () {

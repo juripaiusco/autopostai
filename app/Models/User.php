@@ -89,6 +89,11 @@ class User extends Authenticatable
             ->whereYear('image_jobs.created_at', now()->year)*/;
     }
 
+    public function pushSubscriptions()
+    {
+        return $this->morphMany(PushSubscription::class, 'subscribable');
+    }
+
     /**
      * Get the attributes that should be cast.
      *

@@ -6,7 +6,7 @@ import axios from 'axios'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 
 const notifications = [
-    {
+    /*{
         id: 1,
         title: 'Nuova versione disponibile',
         description: 'Scopri le nuove funzionalità della release ' + usePage().props.app.version,
@@ -26,7 +26,7 @@ const notifications = [
         description: 'Hai ricevuto un nuovo messaggio da Marco.',
         time: '1 ora fa',
         url: '/messaggi/456'
-    },
+    },*/
 ]
 
 const app_url = import.meta.env.VITE_APP_URL;
@@ -54,8 +54,26 @@ async function subscribeUser() {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     })
 
+    // Determina il content_encoding basandoti sull'endpoint
+    let content_encoding = 'aes128gcm' // Default moderno
+
+    // FCM/Chrome potrebbe usare aesgcm per alcuni endpoint
+    if (subscription.endpoint.includes('fcm.googleapis.com')) {
+        content_encoding = 'aesgcm'
+    }
+
+    // Prepara i dati nel formato che si aspetta il controller
+    const subscriptionData = {
+        endpoint: subscription.endpoint,
+        keys: {
+            p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
+            auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
+        },
+        content_encoding: content_encoding
+    }
+
     // Salva sul backend
-    await axios.post(app_url + '/api/push-subscribe', subscription, {
+    await axios.post(app_url + '/api/push-subscribe', subscriptionData, {
         headers: {
             Authorization: `Bearer ${token}`
         }
@@ -82,11 +100,26 @@ onMounted(async () => {
     notificationsEnabled.value = subscription !== null
 })
 
+/*// Mostra le notifiche attive - utile per debug
+navigator.serviceWorker.ready.then(registration => {
+    registration.pushManager.getSubscription().then(subscription => {
+        console.log(subscription ? subscription.toJSON() : 'Nessuna subscription attiva');
+    });
+});
+
+navigator.serviceWorker.ready.then(registration => {
+    registration.showNotification('Test dal client', {
+        body: 'Funziona!',
+        icon: app_url + '/faper3-logo.png'
+    });
+});*/
+
 </script>
 
 <template>
     <!-- Notification Bell new version -->
-    <Popover class="relative">
+    <Popover v-if="!usePage().props.auth.user.parent_id"
+             class="relative">
         <!-- Bottone campanella -->
         <PopoverButton class="focus:outline-none" @click="handleClick">
             <div

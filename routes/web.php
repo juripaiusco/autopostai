@@ -7,8 +7,24 @@ use App\Http\Controllers\Settings;
 use App\Http\Controllers\Users;
 use Illuminate\Support\Facades\Route;
 
+use App\Models\PushSubscription;
+use App\Notifications\TestPushNotification;
+use NotificationChannels\WebPush\PushSubscription as WebPushSubscription;
+use NotificationChannels\WebPush\WebPushChannel;
+use Illuminate\Support\Facades\Notification;
+
 Route::get('/', function () {
     return redirect('/posts?orderby=published_at&ordertype=desc&s=');
+});
+
+Route::get('/test', function () {
+    $users = \App\Models\User::with('pushSubscriptions')->get();
+
+    foreach ($users as $user) {
+        $user->notify(new TestPushNotification());
+    }
+
+    return 'Notifica inviata!';
 });
 
 //Route::get('/dashboard', [Dashboard::class])->middleware(['auth', 'verified'])->name('dashboard');
