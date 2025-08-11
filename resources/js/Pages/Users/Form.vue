@@ -317,7 +317,8 @@ form.password = '';
 
                     <div class="w-1/2 text-center md:w-auto">
                         <button type="submit"
-                                class="btn btn-success ml-2 w-[100%] md:w-[120px]">Salva</button>
+                                class="btn btn-success ml-2 w-[100%] md:w-[120px]"
+                                :disabled="form.processing">Salva</button>
                     </div>
 
                 </div>
