@@ -61,12 +61,18 @@ class HandleInertiaRequests extends Middleware
 
     public function notifications($user)
     {
-        return Cache::remember(
+        /*return Cache::remember(
             "notifications_{$user->id}",
             now()->addMinutes(5),
             function () {
                 return PushNotification::query()->take(5)->whereNotNull('sent')->get();
             }
-        );
+        );*/
+
+        return PushNotification::query()
+            ->take(5)
+            ->whereNotNull('sent')
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 }

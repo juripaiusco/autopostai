@@ -192,9 +192,11 @@ class PushNotifications extends Controller
         }
 
         $notification = PushNotification::whereNull('sent')->orderBy('created_at', 'desc')->first();
-        $notification->sent = 1;
-        $notification->save();
+        if ($notification) {
+            $notification->sent = 1;
+            $notification->save();
+        }
 
-        return Redirect::route('notification.index');
+        return Redirect::route('notification.index', 'orderby=created_at&ordertype=desc&s=');
     }
 }
