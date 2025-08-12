@@ -11,5 +11,6 @@ class PushNotification extends Model
         'title',
         'body',
         'url',
+        'url_web',
     ];
 }

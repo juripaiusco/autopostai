@@ -90,6 +90,20 @@ const form = useForm(dataForm);
                 <div class="text-red-500 text-center text-xs"
                      v-if="form.errors.url">{{ __(form.errors.url) }}</div>
 
+                <br>
+
+                <label class="form-label">
+                    URL Web
+                    <br>
+                    <small>Questo URL viene mostrato nella lista web delle notifiche</small>
+                </label>
+                <input type="text"
+                       class="form-control"
+                       :class="{'!border !border-red-500' : form.errors.url_web}"
+                       v-model="form.url_web" />
+                <div class="text-red-500 text-center text-xs"
+                     v-if="form.errors.url_web">{{ __(form.errors.url_web) }}</div>
+
                 <div class="text-right mt-10 flex flex-wrap justify-center md:justify-end">
 
                     <div class="w-1/2 text-center md:w-auto">
