@@ -27,7 +27,7 @@ self.addEventListener('push', function(event) {
                 }
             }
 
-            console.log('url', data.url);
+            // console.log('url', data.url);
 
             const title = data.title || 'Notifica';
             const options = {
