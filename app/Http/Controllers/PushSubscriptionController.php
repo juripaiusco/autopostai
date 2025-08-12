@@ -6,6 +6,7 @@ use App\Models\PushNotification;
 use App\Models\PushSubscription;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 
 class PushSubscriptionController extends Controller
@@ -75,5 +76,12 @@ class PushSubscriptionController extends Controller
         ];
 
         return response()->json($data);
+    }
+
+    public function read_set()
+    {
+        $user = User::find(Auth::user()->id);
+        $user->notify_read_web = 1;
+        $user->save();
     }
 }

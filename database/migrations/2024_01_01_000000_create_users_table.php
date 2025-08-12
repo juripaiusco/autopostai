@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('name');
             $table->integer('child_on')->default(null)->nullable();
             $table->integer('child_max')->default(null)->nullable();
+            $table->integer('notify_read_browser')->default(null)->nullable();  // Notify OS Browser
+            $table->integer('notify_read_web')->default(null)->nullable();
             $table->json('channels')->nullable();
             $table->integer('tokens_limit')->default(0)->nullable();
             $table->integer('image_model_limit')->default(0)->nullable();

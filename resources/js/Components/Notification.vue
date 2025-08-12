@@ -39,6 +39,12 @@ const token = usePage().props.auth.token_notification
 
 const handleClick = () => {
     clicked.value = true
+    
+    axios.get(app_url + '/api/notify-read-web', {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
 }
 
 async function subscribeUser() {
@@ -125,7 +131,9 @@ navigator.serviceWorker.ready.then(registration => {
             <div
                 class="mt-2"
                 :class="[
-                    clicked ? 'text-gray-300 dark:text-gray-600' : 'text-sky-500 animate-ring'
+                    usePage().props.auth.user.notify_read_web === null && clicked === false ?
+                        'text-sky-500 animate-ring' : 'text-gray-300 dark:text-gray-600',
+                    /*clicked ? 'text-gray-300 dark:text-gray-600' : 'text-sky-500 animate-ring'*/
                 ]"
             >
                 <svg

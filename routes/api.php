@@ -19,6 +19,9 @@ Route::get('/push-data', [PushSubscriptionController::class, 'show']);
 Route::post('/push-subscribe', [PushSubscriptionController::class, 'store'])
     ->middleware('auth:sanctum');
 
+Route::get('/notify-read-web', [PushSubscriptionController::class, 'read_set'])
+    ->middleware('auth:sanctum');
+
 Route::get('/posts', function () {
 
     $posts = new \App\Http\Controllers\Posts();
