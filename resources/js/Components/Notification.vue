@@ -184,14 +184,14 @@ navigator.serviceWorker.ready.then(registration => {
                 </ul>
 
                 <!-- Pulsante "Vedi tutte" -->
-                <div class="px-4 py-2 border-t">
+                <!-- <div class="px-4 py-2 border-t">
                     <a
                         href="/notifiche"
                         class="block text-sm text-center text-sky-600 hover:underline"
                     >
                         Vedi tutte
                     </a>
-                </div>
+                </div> -->
             </PopoverPanel>
         </transition>
     </Popover>

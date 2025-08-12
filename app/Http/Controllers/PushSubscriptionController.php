@@ -54,10 +54,16 @@ class PushSubscriptionController extends Controller
             return response()->json(['message' => 'Subscription non trovata'], 404);
         }
 
-        $user = User::find($subscription->subscribable_id);
-        // 'Ciao ' . $user->name . ' dal server! 👋'
+        /*$user = User::find($subscription->subscribable_id);
+        'Ciao ' . $user->name . ' dal server! 👋'*/
 
-        $notification = PushNotification::whereNull('sent')->orderBy('created_at', 'desc')->first();
+        /*$notification = PushNotification::query()
+            ->whereNull('sent')
+            ->orderBy('created_at', 'desc')
+            ->first();*/
+        $notification = PushNotification::query()
+            ->orderBy('created_at', 'desc')
+            ->first();
 
         $data = [
             'title' => $notification->title,

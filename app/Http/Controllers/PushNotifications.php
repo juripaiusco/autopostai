@@ -185,12 +185,14 @@ class PushNotifications extends Controller
         // $users = \App\Models\User::with('pushSubscriptions')->get();
 
         foreach ($users as $user) {
-//            $user->notify(new TestPushNotification());
+            $user->notify(new TestPushNotification());
             $user->notify_read_browser = null;
             $user->notify_read_web = null;
             $user->save();
         }
 
+        // Qui devo impostare la notifica come inviata dopo che tutti gli utenti hanno ricevuto la notifica
+        // Bisogna trovare il modo di leggere il dato anche se asincrono.
         $notification = PushNotification::whereNull('sent')->orderBy('created_at', 'desc')->first();
         if ($notification) {
             $notification->sent = 1;
