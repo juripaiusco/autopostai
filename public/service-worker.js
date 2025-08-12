@@ -27,14 +27,15 @@ self.addEventListener('push', function(event) {
                 }
             }
 
-            // console.log('url', data.url);
+            /*console.log('data:', data);
+            console.log('url', data.url);*/
 
             const title = data.title || 'Notifica';
             const options = {
                 body: data.body || '',
-                icon: data.icon || '/default-icon.png',
-                data: data.url || '/',
-                actions: data.actions || '',
+                icon: data.icon || '/faper3-logo.png',
+                data: { url: data.url ? data.url : '/' },
+                actions: data.actions || [],
             };
 
             await self.registration.showNotification(title, options);
@@ -171,7 +172,25 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
 
-    if (event.action === 'open') {
+    const urlToOpen = event.notification.data?.url || '/';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then(windowClients => {
+                // Se la finestra è già aperta, la metti in focus
+                for (let client of windowClients) {
+                    if (client.url.includes(urlToOpen) && 'focus' in client) {
+                        return client.focus();
+                    }
+                }
+                // Altrimenti apri una nuova finestra
+                if (clients.openWindow) {
+                    return clients.openWindow(urlToOpen);
+                }
+            })
+    );
+
+    /*if (event.action === 'open') {
         event.waitUntil(clients.openWindow(event.notification.url));
     }
 
@@ -188,7 +207,7 @@ self.addEventListener('notificationclick', function(event) {
                 return clients.openWindow(event.notification.url);
             }
         })
-    );
+    );*/
 });
 
 /*self.addEventListener('notificationclick', function(event) {
