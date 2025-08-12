@@ -4,30 +4,9 @@ import {onMounted, ref} from 'vue'
 import {usePage} from "@inertiajs/vue3";
 import axios from 'axios'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
+import {__date} from "@/ComponentsExt/Date.js";
 
-const notifications = [
-    /*{
-        id: 1,
-        title: 'Nuova versione disponibile',
-        description: 'Scopri le nuove funzionalità della release ' + usePage().props.app.version,
-        time: '2 min fa',
-        url: '/versioni/ultima'
-    },
-    {
-        id: 2,
-        title: 'Aggiornamento completato',
-        description: 'Il tuo sistema è stato aggiornato con successo.',
-        time: '10 min fa',
-        url: '/aggiornamenti'
-    },
-    {
-        id: 3,
-        title: 'Messaggio privato',
-        description: 'Hai ricevuto un nuovo messaggio da Marco.',
-        time: '1 ora fa',
-        url: '/messaggi/456'
-    },*/
-]
+const notifications = usePage().props.notifications;
 
 const app_url = import.meta.env.VITE_APP_URL;
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
@@ -39,7 +18,7 @@ const token = usePage().props.auth.token_notification
 
 const handleClick = () => {
     clicked.value = true
-    
+
     axios.get(app_url + '/api/notify-read-web', {
         headers: {
             Authorization: `Bearer ${token}`
@@ -196,8 +175,10 @@ navigator.serviceWorker.ready.then(registration => {
                             class="block px-4 py-3 hover:bg-gray-50 transition"
                         >
                             <p class="font-medium text-sm text-gray-800">{{ n.title }}</p>
-                            <p class="text-gray-600 text-xs mb-1">{{ n.description }}</p>
-                            <p class="text-gray-400 text-xs">{{ n.time }}</p>
+                            <p class="text-gray-600 text-xs mb-1">{{ n.body }}</p>
+                            <p class="text-gray-400 text-xs">
+                                {{ __date(n.created_at, 'day') }} - {{ __date(n.created_at, 'hour') }}
+                            </p>
                         </a>
                     </li>
                 </ul>

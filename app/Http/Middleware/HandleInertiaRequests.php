@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\PushNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
@@ -38,6 +39,7 @@ class HandleInertiaRequests extends Middleware
                 'tokens_used' => $request->user() ? $this->getUserTokens($request->user()) : 0,
                 'images_used' => $request->user() ? $this->getImagesUsed($request->user()) : 0
             ],
+            'notifications' => $this->notifications($request->user()),
         ];
     }
 
@@ -55,5 +57,16 @@ class HandleInertiaRequests extends Middleware
     public function getImagesUsed($user)
     {
         return $user->images_used()->count();
+    }
+
+    public function notifications($user)
+    {
+        return Cache::remember(
+            "notifications_{$user->id}",
+            now()->addMinutes(5),
+            function () {
+                return PushNotification::query()->take(5)->whereNotNull('sent')->get();
+            }
+        );
     }
 }
