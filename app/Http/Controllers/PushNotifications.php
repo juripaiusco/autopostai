@@ -18,10 +18,9 @@ class PushNotifications extends Controller
      */
     public function index()
     {
-        /*$user = Auth::user();
-        if (!Auth::user()->can('viewAny', $user)) {
+        if (!Auth::user()->can('view', Auth::user())) {
             abort(403);
-        }*/
+        }
 
         $request_search_array = [
             'title',
@@ -76,6 +75,10 @@ class PushNotifications extends Controller
      */
     public function create()
     {
+        if (!Auth::user()->can('view', Auth::user())) {
+            abort(403);
+        }
+
         // Creo un oggetto di dati vuoto
         $columns = Schema::getColumnListing('push_notifications');
 
@@ -104,6 +107,10 @@ class PushNotifications extends Controller
      */
     public function store(Request $request)
     {
+        if (!Auth::user()->can('view', Auth::user())) {
+            abort(403);
+        }
+
         $request->validate([
             'title'      => ['required'],
             'body'     => ['required'],
@@ -125,7 +132,9 @@ class PushNotifications extends Controller
      */
     public function show(string $id)
     {
-        //
+        if (!Auth::user()->can('view', Auth::user())) {
+            abort(403);
+        }
     }
 
     /**
@@ -133,6 +142,10 @@ class PushNotifications extends Controller
      */
     public function edit(string $id)
     {
+        if (!Auth::user()->can('view', Auth::user())) {
+            abort(403);
+        }
+
         $data = \App\Models\PushNotification::find($id);
 
         $data['saveRedirect'] = Redirect::back()->getTargetUrl();
@@ -148,6 +161,10 @@ class PushNotifications extends Controller
      */
     public function update(Request $request, string $id)
     {
+        if (!Auth::user()->can('view', Auth::user())) {
+            abort(403);
+        }
+
         $request->validate([
             'title'      => ['required'],
             'body'     => ['required'],
@@ -176,11 +193,11 @@ class PushNotifications extends Controller
      */
     public function destroy(string $id)
     {
-        $notification = \App\Models\PushNotification::find($id);
-
-        /*if (!Auth::user()->can('viewAny', $notification)) {
+        if (!Auth::user()->can('view', Auth::user())) {
             abort(403);
-        }*/
+        }
+
+        $notification = \App\Models\PushNotification::find($id);
 
         if ($notification) {
             $notification->delete();
@@ -191,6 +208,10 @@ class PushNotifications extends Controller
 
     public function send()
     {
+        if (!Auth::user()->can('view', Auth::user())) {
+            abort(403);
+        }
+
         $users = \App\Models\User::all();
         // $users = \App\Models\User::with('pushSubscriptions')->get();
 
