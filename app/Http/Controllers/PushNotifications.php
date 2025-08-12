@@ -176,7 +176,17 @@ class PushNotifications extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $notification = \App\Models\PushNotification::find($id);
+
+        /*if (!Auth::user()->can('viewAny', $notification)) {
+            abort(403);
+        }*/
+
+        if ($notification) {
+            $notification->delete();
+        }
+
+        return Redirect::route('notification.index', 'orderby=created_at&ordertype=desc&s=');
     }
 
     public function send()
