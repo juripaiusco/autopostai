@@ -103,8 +103,7 @@ navigator.serviceWorker.ready.then(registration => {
 
 <template>
     <!-- Notification Bell new version -->
-    <Popover v-if="!usePage().props.auth.user.parent_id"
-             class="relative">
+    <Popover class="relative">
         <!-- Bottone campanella -->
         <PopoverButton class="focus:outline-none" @click="handleClick">
             <div
