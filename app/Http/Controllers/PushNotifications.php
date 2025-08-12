@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PushNotification;
+use App\Notifications\TestPushNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -176,5 +177,24 @@ class PushNotifications extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function send()
+    {
+        $users = \App\Models\User::all();
+        // $users = \App\Models\User::with('pushSubscriptions')->get();
+
+        foreach ($users as $user) {
+//            $user->notify(new TestPushNotification());
+            $user->notify_read_browser = null;
+            $user->notify_read_web = null;
+            $user->save();
+        }
+
+        $notification = PushNotification::whereNull('sent')->orderBy('created_at', 'desc')->first();
+        $notification->sent = 1;
+        $notification->save();
+
+        return Redirect::route('notification.index');
     }
 }
