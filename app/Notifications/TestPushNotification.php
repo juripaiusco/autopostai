@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use NotificationChannels\WebPush\WebPushMessage;
 use NotificationChannels\WebPush\WebPushChannel;
 
-class TestPushNotification extends Notification implements ShouldQueue
+class TestPushNotification extends Notification // implements ShouldQueue
 {
     use Queueable;
 
