@@ -92,6 +92,27 @@ let modalData = ref(props.data);
                             }
                         }, {
                             class: 'text-left hidden sm:table-cell',
+                            label: 'Inviato a',
+                            field: 'user.name',
+                            fnc: function (d) {
+
+                                let html = '';
+
+                                if (d.user) {
+                                    html += '<span class=\'font-semibold\'>' + d.user.name + '</span>';
+                                    html += '<br>';
+                                    html += '<span class=\'text-sm text-gray-500\'>' + d.user.email + '</span>';
+                                } else {
+                                    html += 'Tutti';
+                                    html += '<br>';
+                                    html += '<span class=\'text-sm text-gray-500\'>Notifica generica</span>';
+                                }
+
+                                return html;
+
+                            }
+                        }, {
+                            class: 'text-left hidden sm:table-cell',
                             label: 'Titolo',
                             field: 'title'
                         }, {

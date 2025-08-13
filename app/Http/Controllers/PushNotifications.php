@@ -38,6 +38,7 @@ class PushNotifications extends Controller
 
         // Query data
         $data = PushNotification::query();
+        $data = $data->with('user');
         // $data = $data->whereNull('user_id'); // Solo notifiche generali, non per utente specifico
 
         // Request validate
