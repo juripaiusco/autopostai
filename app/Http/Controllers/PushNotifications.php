@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PushNotification;
 use App\Models\User;
 use App\Notifications\TestPushNotification;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -297,7 +298,7 @@ class PushNotifications extends Controller
         }
 
         $notification = PushNotification::query()
-            ->whereNull('sent')
+            ->whereNull('sent_at')
             ->orderBy('created_at', 'desc')
             ->first();
 
@@ -330,7 +331,7 @@ class PushNotifications extends Controller
             }
 
             if ($notification) {
-                $notification->sent = 1;
+                $notification->sent_at = Carbon::now('Europe/Rome')->toDateTimeString();
                 $notification->save();
             }
 

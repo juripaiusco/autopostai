@@ -85,7 +85,7 @@ let modalData = ref(props.data);
                                 }
 
                                 html += '<div class=\'text-xs text-gray-500 mt-2\'>';
-                                html += __date(d.created_at, 'day') + ' ' + __date(d.created_at, 'hour');
+                                html += __date(d.sent_at, 'day') + ' ' + __date(d.sent_at, 'hour');
                                 html += '</div>';
 
                                 return html;
@@ -104,16 +104,16 @@ let modalData = ref(props.data);
                             field: 'url'
                         }, {
                             class: 'text-center hidden sm:table-cell',
-                            label: 'data',
-                            field: 'created_at',
+                            label: 'Data invio',
+                            field: 'sent_at',
                             fnc: function (d) {
 
                                 let html = '<small>'
 
-                                if (d.created_at !== null) {
-                                    html += __date(d.created_at, 'day')
+                                if (d.sent_at !== null) {
+                                    html += __date(d.sent_at, 'day')
                                     html += ' '
-                                    html += __date(d.created_at, 'hour')
+                                    html += __date(d.sent_at, 'hour')
                                 } else {
                                     html += '<div class=\'flex items-center justify-center\'>';
                                     html += '<svg class=\'text-red-500 size-6\' xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.5\' stroke=\'currentColor\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z\' /></svg>';
@@ -146,7 +146,7 @@ let modalData = ref(props.data);
                                 let html = ''
                                 let className = 'btn-secondary';
 
-                                if (d.sent === null) {
+                                if (d.sent_at === null) {
                                     className = 'btn-dark';
                                 }
 
@@ -162,7 +162,7 @@ let modalData = ref(props.data);
 
                        let url;
 
-                       if (d.sent === '1') {
+                       if (d.sent_at === '1') {
                            url = '#';
                        } else {
                            url = route('notification.send');

@@ -177,7 +177,7 @@ navigator.serviceWorker.ready.then(registration => {
                             <p class="font-medium text-sm text-gray-800">{{ n.title }}</p>
                             <p class="text-gray-600 text-xs mb-1">{{ n.body }}</p>
                             <p class="text-gray-400 text-xs">
-                                {{ __date(n.created_at, 'day') }} - {{ __date(n.created_at, 'hour') }}
+                                {{ __date(n.sent_at, 'day') }} - {{ __date(n.sent_at, 'hour') }}
                             </p>
                         </a>
                     </li>

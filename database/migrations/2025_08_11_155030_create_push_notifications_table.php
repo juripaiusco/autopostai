@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('title');
             $table->string('body');
             $table->string('url')->nullable();
-            $table->string('sent')->nullable();
+            $table->timestamp('sent_at')->nullable();
             $table->timestamps();
         });
     }
