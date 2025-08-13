@@ -13,7 +13,33 @@ class PushSubscriptionController extends Controller
 {
     use HasPushSubscriptions;
 
+    /**
+     * Salva la subscription per le notifiche push
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'endpoint' => 'required|string',
+            'keys.p256dh' => 'required|string',
+            'keys.auth' => 'required|string',
+            'content_encoding' => 'required|string|in:aes128gcm,aesgcm',
+        ]);
+
+        $user = User::query()->find(Auth::user()->id);
+        $user->updatePushSubscription(
+            $validated['endpoint'],
+            $validated['keys']['p256dh'],
+            $validated['keys']['auth'],
+            $validated['content_encoding']
+        );
+
+        return response()->json(['message' => 'Subscription salvata con successo']);
+    }
+
+    /*public function store_(Request $request)
     {
         $user = $request->user();
 
@@ -43,9 +69,17 @@ class PushSubscriptionController extends Controller
         $subscription->save();
 
         return response()->json(['message' => 'Subscription salvata con successo']);
-    }
+    }*/
 
-    public function show(Request $request)
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * Questo metodo era stato creato per mostrare l'ultima notifica
+     * ma non è più utilizzato. Ora le notifiche vengono inviate correttamente
+     * tramite il metodo `toWebPush` della classe `PushNotification`.
+     */
+    /*public function show(Request $request)
     {
         $endpoint = $request->query('endpoint');
         $subscription = PushSubscription::where('endpoint', $endpoint)->first();
@@ -54,13 +88,6 @@ class PushSubscriptionController extends Controller
             return response()->json(['message' => 'Subscription non trovata'], 404);
         }
 
-        /*$user = User::find($subscription->subscribable_id);
-        'Ciao ' . $user->name . ' dal server! 👋'*/
-
-        /*$notification = PushNotification::query()
-            ->whereNull('sent')
-            ->orderBy('created_at', 'desc')
-            ->first();*/
         $notification = PushNotification::query()
             ->orderBy('created_at', 'desc')
             ->first();
@@ -82,8 +109,13 @@ class PushSubscriptionController extends Controller
         ];
 
         return response()->json($data);
-    }
+    }*/
 
+    /**
+     * Imposta come letta la notifica push per il web
+     *
+     * @return void
+     */
     public function read_set()
     {
         $user = User::find(Auth::user()->id);
