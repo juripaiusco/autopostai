@@ -11,17 +11,15 @@ use \App\Http\Controllers\PushSubscriptionController;
     return $request->user();
 })->middleware('auth:sanctum');*/
 
-/**
- * API PUSH - Routes
- */
-Route::get('/push-data', [PushSubscriptionController::class, 'show']);
-
+// PUSH API - Salvataggio della subscription per le notifiche push
 Route::post('/push-subscribe', [PushSubscriptionController::class, 'store'])
     ->middleware('auth:sanctum');
 
+// PUSH API Web - Imposta come letta la notifica push per il web
 Route::get('/notify-read-web', [PushSubscriptionController::class, 'read_set'])
     ->middleware('auth:sanctum');
 
+// Aggiornamento dei posts in background
 Route::get('/posts', function () {
 
     $posts = new \App\Http\Controllers\Posts();
