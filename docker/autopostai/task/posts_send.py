@@ -179,6 +179,9 @@ def ctrl_posts_sent(id, debug = False):
     # Eseguo una query per recuperare i channels
     rows = mysql.query(f"""
             SELECT  {cfg.DB_PREFIX}posts.id AS id,
+                    {cfg.DB_PREFIX}posts.user_id AS user_id,
+                    {cfg.DB_PREFIX}posts.created_by_user_id AS created_by_user_id,
+                    {cfg.DB_PREFIX}posts.title AS title,
                     {cfg.DB_PREFIX}posts.channels AS channels
 
                 FROM {cfg.DB_PREFIX}posts
@@ -212,5 +215,23 @@ def ctrl_posts_sent(id, debug = False):
         query=f"UPDATE {cfg.DB_PREFIX}posts SET published = %s WHERE id = %s",
         parameters=(published, id)
     )
+
+    if published == 1 and rows is not None:
+        # Inserisco la notifica push da inviare all'autore del post
+        print('created_by_user_id ', rows[0]['created_by_user_id'])
+        print('title', rows[0]['title'])
+        mysql.query(f"""
+                                INSERT INTO {cfg.DB_PREFIX}push_notifications (
+                                    user_id,
+                                    title,
+                                    body,
+                                    url
+                                ) VALUES (%s, %s, %s, %s)
+                            """, (
+            rows[0]['created_by_user_id'],
+            rows[0]['title'],
+            'Post inviato',
+            f"{cfg.URL}/posts/show/{rows[0]['id']}",
+        ))
 
     mysql.close()
