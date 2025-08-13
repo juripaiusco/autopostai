@@ -38,6 +38,7 @@ class PushNotifications extends Controller
 
         // Query data
         $data = PushNotification::query();
+        // $data = $data->whereNull('user_id'); // Solo notifiche generali, non per utente specifico
 
         // Request validate
         request()->validate([
@@ -291,13 +292,15 @@ class PushNotifications extends Controller
             ->with($tuttiOk ? 'success' : 'warning', $tuttiOk ? 'Notifica inviata' : 'Alcune notifiche non sono state inviate');
     }*/
 
-    public function send()
+    public function send($id)
     {
         if (!Auth::user()->can('view', Auth::user())) {
             abort(403);
         }
 
         $notification = PushNotification::query()
+            ->where('id', $id)
+            ->whereNull('user_id')
             ->whereNull('sent_at')
             ->orderBy('created_at', 'desc')
             ->first();
@@ -313,7 +316,8 @@ class PushNotifications extends Controller
                     'url' => $notification->url,
                     'icon' => env('APP_URL') . '/faper3-logo.png',
                     'data' => [
-                        'created_at' => $notification->created_at
+                        'created_at' => $notification->created_at,
+                        'sent_at' => $notification->sent_at
                     ],
                     'actions' => [
                         [

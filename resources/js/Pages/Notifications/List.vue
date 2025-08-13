@@ -162,10 +162,10 @@ let modalData = ref(props.data);
 
                        let url;
 
-                       if (d.sent_at === '1') {
+                       if (d.sent_at !== null) {
                            url = '#';
                        } else {
-                           url = route('notification.send');
+                           url = route('notification.send', d.id);
                        }
 
                        router.visit(url)

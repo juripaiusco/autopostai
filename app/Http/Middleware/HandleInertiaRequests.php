@@ -71,8 +71,9 @@ class HandleInertiaRequests extends Middleware
 
         return PushNotification::query()
             ->take(5)
+            ->whereNull('user_id')
             ->whereNotNull('sent_at')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('sent_at', 'desc')
             ->get();
     }
 }
