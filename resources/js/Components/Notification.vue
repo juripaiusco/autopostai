@@ -7,14 +7,13 @@ import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import {__date} from "@/ComponentsExt/Date.js";
 
 const notifications = usePage().props.notifications;
-
 const app_url = import.meta.env.VITE_APP_URL;
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+const token = usePage().props.auth.token_notification
+const notificationsEnabled = ref(false)
 
 // Stato per sapere se la campanella è stata cliccata
 const clicked = ref(false)
-const notificationsEnabled = ref(false)
-const token = usePage().props.auth.token_notification
 
 const handleClick = () => {
     clicked.value = true
@@ -27,69 +26,70 @@ const handleClick = () => {
 }
 
 async function subscribeUser() {
-    const permission = await Notification.requestPermission()
-    if (permission !== 'granted') return
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (reg) {
+        await reg.update(); // forza update
+    }
 
-    // Registra il service worker
-    const registration = await navigator.serviceWorker.register(app_url + '/service-worker.js')
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
 
-    // Genera la sottoscrizione
+    let registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) {
+        registration = await navigator.serviceWorker.register(app_url + '/service-worker.js');
+    }
+
     const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    })
+    });
 
-    // Determina il content_encoding basandoti sull'endpoint
-    let content_encoding = 'aes128gcm' // Default moderno
+    let content_encoding = subscription.endpoint.includes('fcm.googleapis.com')
+        ? 'aesgcm'
+        : 'aes128gcm';
 
-    // FCM/Chrome potrebbe usare aesgcm per alcuni endpoint
-    if (subscription.endpoint.includes('fcm.googleapis.com')) {
-        content_encoding = 'aesgcm'
-    }
-
-    // Prepara i dati nel formato che si aspetta il controller
     const subscriptionData = {
         endpoint: subscription.endpoint,
         keys: {
             p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
             auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
         },
-        content_encoding: content_encoding
+        content_encoding
+    };
+
+    await axios.post(`${app_url}/api/push-subscribe`, subscriptionData, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+
+    notificationsEnabled.value = true;
+}
+
+async function unsubscribeUser() {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (reg) {
+        await reg.update(); // forza update
     }
 
-    if (notificationsEnabled.value) {
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) return;
 
-        const registration = await navigator.serviceWorker.getRegistration()
-        const subscription = await registration.pushManager.getSubscription()
-        const subscriptionData = { endpoint: subscription.endpoint };
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) return;
 
-        const successful = await subscription.unsubscribe();
+    const endpoint = subscription.endpoint;
 
-        if (successful) {
-            // Elimina sul backend
-            await axios.post(app_url + '/api/push-destroy', subscriptionData, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
+    const successful = await subscription.unsubscribe();
+    if (successful) {
+        await axios.post(`${app_url}/api/push-destroy`, { endpoint }, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
 
-            notificationsEnabled.value = false;
-        } else {
-            console.error('Impossibile eliminare la subscription.');
+        const check = await registration.pushManager.getSubscription();
+        if (check) {
+            console.warn("Subscription non rimossa completamente dal browser.");
         }
 
-        notificationsEnabled.value = false
-
-    } else {
-
-        // Salva sul backend
-        await axios.post(app_url + '/api/push-subscribe', subscriptionData, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
-
-        notificationsEnabled.value = true
+        notificationsEnabled.value = false;
     }
 }
 
@@ -110,20 +110,6 @@ onMounted(async () => {
     const subscription = await registration.pushManager.getSubscription()
     notificationsEnabled.value = subscription !== null
 })
-
-/*// Mostra le notifiche attive - utile per debug
-navigator.serviceWorker.ready.then(registration => {
-    registration.pushManager.getSubscription().then(subscription => {
-        console.log(subscription ? subscription.toJSON() : 'Nessuna subscription attiva');
-    });
-});
-
-navigator.serviceWorker.ready.then(registration => {
-    registration.showNotification('Test dal client', {
-        body: 'Funziona!',
-        icon: app_url + '/faper3-logo.png'
-    });
-});*/
 
 </script>
 
@@ -177,21 +163,26 @@ navigator.serviceWorker.ready.then(registration => {
                     </h3>
 
                     <!-- Pulsante -->
-                    <button @click="subscribeUser"
-                            class="btn btn-sm"
-                            :class="{
-                              'btn-primary': notificationsEnabled,
-                              'btn-secondary': !notificationsEnabled,
-                            }">
-                        <svg v-if="notificationsEnabled"
-                             class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <button v-if="!notificationsEnabled"
+                            @click="subscribeUser"
+                            type="button"
+                            class="btn btn-sm btn-secondary">
+
+                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.143 17.082a24.248 24.248 0 0 0 3.844.148m-3.844-.148a23.856 23.856 0 0 1-5.455-1.31 8.964 8.964 0 0 0 2.3-5.542m3.155 6.852a3 3 0 0 0 5.667 1.97m1.965-2.277L21 21m-4.225-4.225a23.81 23.81 0 0 0 3.536-1.003A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6.53 6.53m10.245 10.245L6.53 6.53M3 3l3.53 3.53" />
+                        </svg>
+
+                    </button>
+
+                    <button v-if="notificationsEnabled"
+                            @click="unsubscribeUser"
+                            type="button"
+                            class="btn btn-sm btn-primary">
+
+                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5" />
                         </svg>
 
-                        <svg v-if="!notificationsEnabled"
-                             class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.143 17.082a24.248 24.248 0 0 0 3.844.148m-3.844-.148a23.856 23.856 0 0 1-5.455-1.31 8.964 8.964 0 0 0 2.3-5.542m3.155 6.852a3 3 0 0 0 5.667 1.97m1.965-2.277L21 21m-4.225-4.225a23.81 23.81 0 0 0 3.536-1.003A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6.53 6.53m10.245 10.245L6.53 6.53M3 3l3.53 3.53" />
-                        </svg>
                     </button>
 
                 </div>
