@@ -319,6 +319,7 @@ class Posts extends Controller
 
         $post = new Post();
         $post->fill($request->all());
+        $post->created_by_user_id = auth()->user()->id;
 
         if ($published_at) {
             $post->published_at = $published_at;
@@ -460,6 +461,7 @@ class Posts extends Controller
 
         $post->fill($request->all());
         $post->on_hold_until = date('Y-m-d H:i:s');
+        $post->created_by_user_id = auth()->user()->id;
         $post->save();
         $this->save_img('posts', $post, $request);
 

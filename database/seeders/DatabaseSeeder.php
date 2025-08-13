@@ -51,6 +51,7 @@ class DatabaseSeeder extends Seeder
 
         $posts = Post::factory(2)->create([
             'user_id' => $user->id,
+            'created_by_user_id' => $user->id,
             'channels' => json_encode($channels)
         ]);
 
@@ -146,6 +147,7 @@ class DatabaseSeeder extends Seeder
 
             $posts = Post::factory(5)->create([
                 'user_id' => $user->id,
+                'created_by_user_id' => $user->id,
                 'title' => $user->name . ' - ' . fake()->text(60),
                 'channels' => json_encode($channels)
             ]);

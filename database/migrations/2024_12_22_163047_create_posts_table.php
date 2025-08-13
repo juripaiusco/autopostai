@@ -19,6 +19,11 @@ return new class extends Migration
             // Relazione e comportamento in cascata
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
+            // Campo coerente con l'ID della tabella users
+            // Questo campo è usato per tenere traccia di chi ha creato il post
+            // e non è necessariamente lo stesso utente che ha creato il post.
+            $table->unsignedBigInteger('created_by_user_id');
+
             // Titolo del post - uso interno
             $table->string('title');
 
