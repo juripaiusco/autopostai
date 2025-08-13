@@ -65,19 +65,45 @@ let modalData = ref(props.data);
                         data: data.data,
                         route_row: 'notification.edit',
                         structure: [{
-                            class: 'text-left',
+                            class: 'text-left table-cell sm:hidden',
+                            label: 'Notifiche',
+                            field: 'title',
+                            fnc: function (d) {
+
+                                let html = '<div class=\'flex items-center justify-between\'>';
+                                html += '<span class=\'font-semibold\'>' + d.title + '</span>';
+                                html += '</div>';
+
+                                if (d.body) {
+                                    html += '<div class=\'text-sm text-gray-700 mt-1\'>' + d.body + '</div>';
+                                }
+
+                                if (d.url) {
+                                    html += '<div class=\'text-sm text-gray-500\'>';
+                                    html += d.url;
+                                    html += '</div>';
+                                }
+
+                                html += '<div class=\'text-xs text-gray-500 mt-2\'>';
+                                html += __date(d.created_at, 'day') + ' ' + __date(d.created_at, 'hour');
+                                html += '</div>';
+
+                                return html;
+                            }
+                        }, {
+                            class: 'text-left hidden sm:table-cell',
                             label: 'Titolo',
                             field: 'title'
                         }, {
-                            class: 'text-left',
+                            class: 'text-left hidden sm:table-cell',
                             label: 'Body',
                             field: 'body'
                         }, {
-                            class: 'text-left',
+                            class: 'text-left hidden sm:table-cell',
                             label: 'URL',
                             field: 'url'
                         }, {
-                            class: 'text-center',
+                            class: 'text-center hidden sm:table-cell',
                             label: 'data',
                             field: 'created_at',
                             fnc: function (d) {
@@ -110,7 +136,7 @@ let modalData = ref(props.data);
                             btnDel: true,
                             route: 'notification.destroy'
                         }, {
-                            class: 'w-[1%] hidden sm:table-cell',
+                            class: 'w-[1%]',
                             classBtn: 'btn-dark',
                             btnCustom: true,
                             route: 'notification.send',
