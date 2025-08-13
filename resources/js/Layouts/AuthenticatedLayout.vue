@@ -255,6 +255,11 @@ const showingNavigationDropdown = ref(false);
                                  :active="route().current().search('settings') === 0 ? true : false">
                             Impostazioni
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
+                                 :href="route('notification.index') + '?orderby=created_at&ordertype=desc&s='"
+                                 :active="route().current().search('notification') === 0 ? true : false">
+                            Notifiche
+                        </ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->
