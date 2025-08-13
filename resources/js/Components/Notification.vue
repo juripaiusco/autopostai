@@ -57,14 +57,40 @@ async function subscribeUser() {
         content_encoding: content_encoding
     }
 
-    // Salva sul backend
-    await axios.post(app_url + '/api/push-subscribe', subscriptionData, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    })
+    if (notificationsEnabled.value) {
 
-    notificationsEnabled.value = true
+        const registration = await navigator.serviceWorker.getRegistration()
+        const subscription = await registration.pushManager.getSubscription()
+        const subscriptionData = { endpoint: subscription.endpoint };
+
+        const successful = await subscription.unsubscribe();
+
+        if (successful) {
+            // Elimina sul backend
+            await axios.post(app_url + '/api/push-destroy', subscriptionData, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+
+            notificationsEnabled.value = false;
+        } else {
+            console.error('Impossibile eliminare la subscription.');
+        }
+
+        notificationsEnabled.value = false
+
+    } else {
+
+        // Salva sul backend
+        await axios.post(app_url + '/api/push-subscribe', subscriptionData, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+
+        notificationsEnabled.value = true
+    }
 }
 
 function urlBase64ToUint8Array(base64String) {

@@ -37,6 +37,18 @@ class PushSubscriptionController extends Controller
         return response()->json(['message' => 'Subscription salvata con successo']);
     }
 
+    public function destroy(Request $request)
+    {
+        $validated = $request->validate([
+            'endpoint' => 'required|string',
+        ]);
+
+        $user = User::query()->find(Auth::user()->id);
+        $user->deletePushSubscription($validated['endpoint']);
+
+        return response()->json(['message' => 'Subscription eliminata con successo']);
+    }
+
     /**
      * Imposta come letta la notifica push per il web
      *

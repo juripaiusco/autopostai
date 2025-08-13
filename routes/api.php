@@ -15,6 +15,10 @@ use \App\Http\Controllers\PushSubscriptionController;
 Route::post('/push-subscribe', [PushSubscriptionController::class, 'store'])
     ->middleware('auth:sanctum');
 
+// PUSH API - Eliminazione della subscription per le notifiche push
+Route::post('/push-destroy', [PushSubscriptionController::class, 'destroy'])
+    ->middleware('auth:sanctum');
+
 // PUSH API Web - Imposta come letta la notifica push per il web
 Route::get('/notify-read-web', [PushSubscriptionController::class, 'read_set'])
     ->middleware('auth:sanctum');
