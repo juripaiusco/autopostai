@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\PushNotification;
+use App\Models\User;
 use App\Notifications\TestPushNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
+use Minishlink\WebPush\Subscription;
+use Minishlink\WebPush\WebPush;
 
 class PushNotifications extends Controller
 {
@@ -177,11 +181,6 @@ class PushNotifications extends Controller
 
         // Salvo l'utente
         $notification = \App\Models\PushNotification::find($id);
-
-        /*if (!Auth::user()->can('viewAny', $notification)) {
-            abort(403);
-        }*/
-
         $notification->fill($request->all());
         $notification->save();
 
@@ -206,30 +205,138 @@ class PushNotifications extends Controller
         return Redirect::route('notification.index', 'orderby=created_at&ordertype=desc&s=');
     }
 
+    /*public function send_raw()
+    {
+        // Permessi
+        if (!Auth::user()->can('view', Auth::user())) {
+            abort(403);
+        }
+
+        // Recupera utenti con subscription
+        $users = User::with('pushSubscriptions')->get();
+
+        if ($users->isEmpty()) {
+            return Redirect::route('notification.index')
+                ->with('error', 'Nessun utente con push subscription');
+        }
+
+        // Configurazione WebPush
+        $webPush = new WebPush([
+            'VAPID' => [
+                'subject' => env('VAPID_SUBJECT'),
+                'publicKey' => env('VAPID_PUBLIC_KEY'),
+                'privateKey' => env('VAPID_PRIVATE_KEY'),
+            ],
+        ]);
+
+        // Prepara il payload
+        $payload = json_encode([
+            'title' => 'Test',
+            'body'  => 'Funziona?',
+            'url'   => '/'
+        ]);
+
+        // Invia a tutti
+        Log::info('Inizio invio notifiche');
+
+        foreach ($users as $user) {
+            Log::info("Utente: {$user->id} - subscription count: " . $user->pushSubscriptions->count());
+
+            foreach ($user->pushSubscriptions as $subscription) {
+                Log::info('Subscription endpoint: ' . $subscription->endpoint);
+
+                $subscriptionArray = [
+                    'endpoint' => $subscription->endpoint,
+                    'expirationTime' => null,
+                    'keys' => [
+                        'p256dh' => $subscription->public_key,
+                        'auth'   => $subscription->auth_token,
+                    ],
+                    'content_encoding' => $subscription->content_encoding,
+                ];
+
+                $webPush->sendOneNotification(
+                    Subscription::create($subscriptionArray),
+                    $payload
+                );
+            }
+        }
+
+        Log::info('Chiamo flush()...');
+
+        $tuttiOk = true;
+        foreach ($webPush->flush() as $report) {
+            $endpoint = $report->getRequest()->getUri()->__toString();
+            if ($report->isSuccess()) {
+                Log::info("OK -> {$endpoint}");
+            } else {
+                Log::error("ERRORE -> {$endpoint}: {$report->getReason()}");
+                $tuttiOk = false;
+            }
+        }
+
+        Log::info('Invio notifiche terminato');
+
+        // Segna come inviata solo se tutto ok
+        if ($tuttiOk) {
+            $notification = PushNotification::whereNull('sent')->orderBy('created_at', 'desc')->first();
+            if ($notification) {
+                $notification->sent = 1;
+                $notification->save();
+            }
+        }
+
+        return Redirect::route('notification.index', 'orderby=created_at&ordertype=desc&s=')
+            ->with($tuttiOk ? 'success' : 'warning', $tuttiOk ? 'Notifica inviata' : 'Alcune notifiche non sono state inviate');
+    }*/
+
     public function send()
     {
         if (!Auth::user()->can('view', Auth::user())) {
             abort(403);
         }
 
-        $users = \App\Models\User::all();
-        // $users = \App\Models\User::with('pushSubscriptions')->get();
+        $notification = PushNotification::query()
+            ->whereNull('sent')
+            ->orderBy('created_at', 'desc')
+            ->first();
 
-        foreach ($users as $user) {
-            $user->notify(new TestPushNotification());
-            $user->notify_read_browser = null;
-            $user->notify_read_web = null;
-            $user->save();
-        }
-
-        // Qui devo impostare la notifica come inviata dopo che tutti gli utenti hanno ricevuto la notifica
-        // Bisogna trovare il modo di leggere il dato anche se asincrono.
-        $notification = PushNotification::whereNull('sent')->orderBy('created_at', 'desc')->first();
         if ($notification) {
-            $notification->sent = 1;
-            $notification->save();
-        }
 
-        return Redirect::route('notification.index', 'orderby=created_at&ordertype=desc&s=');
+            $users = \App\Models\User::query()->with('pushSubscriptions')->get();
+
+            foreach ($users as $user) {
+                $user->notify(new \App\Notifications\PushNotification([
+                    'title' => $notification->title,
+                    'body' => $notification->body,
+                    'url' => $notification->url,
+                    'icon' => '/faper3-logo.png',
+                    'data' => [
+                        'created_at' => $notification->created_at
+                    ],
+                    'actions' => [
+                        [
+                            'action' => 'view_details',
+                            'title' => 'Vedi dettagli',
+                        ], [
+                            'action' => 'dismiss',
+                            'title' => 'Chiudi',
+                        ],
+                    ],
+                ]));
+                $user->notify_read_browser = null;
+                $user->notify_read_web = null;
+                $user->save();
+            }
+
+            // Qui devo impostare la notifica come inviata dopo che tutti gli utenti hanno ricevuto la notifica
+            // Bisogna trovare il modo di leggere il dato anche se asincrono.
+            if ($notification) {
+//                $notification->sent = 1;
+                $notification->save();
+            }
+
+            return Redirect::route('notification.index', 'orderby=created_at&ordertype=desc&s=');
+        }
     }
 }
