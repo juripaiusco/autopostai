@@ -1,4 +1,5 @@
-self.addEventListener('push', function(event) {
+/*self.addEventListener('push', function(event) {
+    console.log('Push event received:', event);
     event.waitUntil(
         (async () => {
             let data = {};
@@ -27,8 +28,8 @@ self.addEventListener('push', function(event) {
                 }
             }
 
-            /*console.log('data:', data);
-            console.log('url', data.url);*/
+            console.log('data:', data);
+            console.log('url', data.url);
 
             const title = data.title || 'Notifica';
             const options = {
@@ -40,6 +41,32 @@ self.addEventListener('push', function(event) {
 
             await self.registration.showNotification(title, options);
         })()
+    );
+});*/
+
+self.addEventListener('push', event => {
+    event.waitUntil(
+        (async () => {
+
+            if (event.data) {
+
+                const payload = event.data.json();
+
+                const title = payload.title || 'Notifica';
+                const options = {
+                    body: payload.body || '',
+                    icon: payload.icon || '/faper3-logo.png',
+                    data: { url: payload.url ? payload.url : '/' },
+                    actions: payload.actions || [],
+                };
+
+                await self.registration.showNotification(title, options);
+
+            } else {
+                console.log('No payload received');
+            }
+        }
+        )()
     );
 });
 
@@ -97,10 +124,6 @@ self.addEventListener('push', function(event) {
             await self.registration.showNotification(title, options);
         })()
     );
-});*/
-
-/*self.addEventListener('push', event => {
-    console.log('RAW event.data:', event.data);
 });*/
 
 /*self.addEventListener('push', function (event) {
