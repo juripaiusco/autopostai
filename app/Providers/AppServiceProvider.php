@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Models\Post;
 use App\Models\User;
+use App\Models\PushNotification;
 use App\Policies\PostPolicy;
 use App\Policies\UserPolicy;
+use App\Policies\NotificationPolicy;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -16,6 +18,7 @@ class AppServiceProvider extends ServiceProvider
     protected $policies = [
         User::class => UserPolicy::class,
         Post::class => PostPolicy::class,
+        PushNotification::class => NotificationPolicy::class,
     ];
 
     /**
