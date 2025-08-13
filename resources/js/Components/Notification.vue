@@ -170,7 +170,8 @@ navigator.serviceWorker.ready.then(registration => {
                 <ul class="divide-y divide-gray-200 max-h-64 overflow-auto">
                     <li v-for="n in notifications" :key="n.id">
                         <a
-                            :href="n.url"
+                            :href="n.url ? n.url : '#'"
+                            :target="n.url ? '_blank' : ''"
                             class="block px-4 py-3 hover:bg-gray-50 transition"
                         >
                             <p class="font-medium text-sm text-gray-800">{{ n.title }}</p>
