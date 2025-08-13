@@ -48,7 +48,6 @@ class WordPressPost(BasePost):
 
         # Assicuriamoci che cat_id sia un numero valido
         if not isinstance(cat_id, int):
-            print(f"⚠️ Errore: ID categoria non valido ({cat_id})")
             cat_id = None
         else:
             cat_id = [cat_id]

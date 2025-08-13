@@ -102,9 +102,11 @@ class Wordpress:
             "title": title,
             "content": content,
             "status": "publish",
-            "categories": cat_id if cat_id else [],
-            "featured_media": img_wp_array[0]['id'] if len(img_wp_array) > 0 else []
+            "categories": cat_id if cat_id else []
         }
+
+        if len(img_wp_array) > 0:
+            data["featured_media"] = img_wp_array[0]['id']
 
         response = requests.post(
             f"{self.wordpress_url}/wp-json/wp/v2/posts",
