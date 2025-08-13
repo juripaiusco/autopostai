@@ -310,7 +310,7 @@ class PushNotifications extends Controller
                     'title' => $notification->title,
                     'body' => $notification->body,
                     'url' => $notification->url,
-                    'icon' => '/faper3-logo.png',
+                    'icon' => env('APP_URL') . '/faper3-logo.png',
                     'data' => [
                         'created_at' => $notification->created_at
                     ],
@@ -329,10 +329,8 @@ class PushNotifications extends Controller
                 $user->save();
             }
 
-            // Qui devo impostare la notifica come inviata dopo che tutti gli utenti hanno ricevuto la notifica
-            // Bisogna trovare il modo di leggere il dato anche se asincrono.
             if ($notification) {
-//                $notification->sent = 1;
+                $notification->sent = 1;
                 $notification->save();
             }
 
