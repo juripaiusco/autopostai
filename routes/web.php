@@ -86,6 +86,8 @@ Route::middleware('auth')->group(function () {
         ->name('notification.destroy');
     Route::get('/notifications/send/{id}', [PushNotifications::class, 'send'])
         ->name('notification.send');
+    Route::get('/notifications/send-to-specific-users', [PushNotifications::class, 'send_to_specific_users'])
+        ->name('notification.send_to_specific_users');
 
     Route::get('/linkedin/redirect/{linkedin_client_id}', [\App\Http\Controllers\LinkedInController::class, 'redirect'])
         ->name('linkedin.redirect');

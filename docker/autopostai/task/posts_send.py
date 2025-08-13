@@ -1,4 +1,7 @@
 import json
+
+import requests
+
 import config as cfg
 from datetime import datetime
 from services.mysql import Mysql
@@ -225,13 +228,28 @@ def ctrl_posts_sent(id, debug = False):
                                     user_id,
                                     title,
                                     body,
-                                    url
-                                ) VALUES (%s, %s, %s, %s)
+                                    url,
+                                    created_at
+                                ) VALUES (%s, %s, %s, %s, %s)
                             """, (
             rows[0]['created_by_user_id'],
             rows[0]['title'],
             'Post inviato',
             f"{cfg.URL}/posts/show/{rows[0]['id']}",
+            datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
         ))
+
+        # Invio notifiche
+        if "localhost" in cfg.URL:
+            print('Notifica non inviata perché in localhost')
+        else:
+            url_send_notifications = f"{cfg.URL}/notifications/send-to-specific-users"
+            response = requests.get(url_send_notifications)
+
+            # Controlla se la richiesta è andata a buon fine
+            if response.status_code == 200:
+                print("Contenuto:", response.text)
+            else:
+                print("Errore:", response.status_code)
 
     mysql.close()

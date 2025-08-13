@@ -309,6 +309,7 @@ class PushNotifications extends Controller
         if ($notification) {
 
             $users = \App\Models\User::query()->with('pushSubscriptions')->get();
+            $sent_at = Carbon::now('Europe/Rome')->toDateTimeString();
 
             foreach ($users as $user) {
                 $user->notify(new \App\Notifications\PushNotification([
@@ -318,7 +319,7 @@ class PushNotifications extends Controller
                     'icon' => env('APP_URL') . '/faper3-logo.png',
                     'data' => [
                         'created_at' => $notification->created_at,
-                        'sent_at' => $notification->sent_at
+                        'sent_at' => $sent_at
                     ],
                     'actions' => [
                         [
@@ -336,11 +337,55 @@ class PushNotifications extends Controller
             }
 
             if ($notification) {
-                $notification->sent_at = Carbon::now('Europe/Rome')->toDateTimeString();
+                $notification->sent_at = $sent_at;
                 $notification->save();
             }
 
             return Redirect::route('notification.index', 'orderby=created_at&ordertype=desc&s=');
         }
+    }
+
+    public function send_to_specific_users()
+    {
+        $notifications = PushNotification::query()
+            ->whereNotNull('user_id')
+            ->whereNull('sent_at')
+            ->orderBy('created_at')
+            ->get();
+
+        foreach ($notifications as $notification) {
+
+            $user = \App\Models\User::query()
+                ->where('id', $notification->user_id)
+                ->with('pushSubscriptions')
+                ->first();
+            $sent_at = Carbon::now('Europe/Rome')->toDateTimeString();
+
+            $user->notify(new \App\Notifications\PushNotification([
+                'title' => $notification->title,
+                'body' => $notification->body,
+                'url' => $notification->url,
+                'icon' => env('APP_URL') . '/faper3-logo.png',
+                'data' => [
+                    'created_at' => $notification->created_at,
+                    'sent_at' => $sent_at
+                ],
+                'actions' => [
+                    [
+                        'action' => 'view_details',
+                        'title' => 'Vedi dettagli',
+                    ], [
+                        'action' => 'dismiss',
+                        'title' => 'Chiudi',
+                    ],
+                ],
+            ]));
+
+            $notification_save = PushNotification::find($notification->id);
+            $notification_save->sent_at = $sent_at;
+            $notification_save->save();
+        }
+
+        return "Notifications sent";
     }
 }
