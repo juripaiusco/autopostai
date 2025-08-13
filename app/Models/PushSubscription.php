@@ -10,7 +10,7 @@ class PushSubscription extends Model
 {
     use Notifiable;
 
-    protected $fillable = ['endpoint', 'publicKey', 'authToken', 'content_encoding'];
+    protected $fillable = ['endpoint', 'public_key', 'auth_token', 'content_encoding'];
 
     public function subscribable()
     {
@@ -22,15 +22,15 @@ class PushSubscription extends Model
         Log::info('Subscriptions per user ' . $this->id, ['subs' => $this->pushSubscriptions]);
 
         // Verifica che tutti i dati necessari siano presenti
-        if (!$this->endpoint || !$this->publicKey || !$this->authToken) {
+        if (!$this->endpoint || !$this->public_key || !$this->auth_token) {
             return null;
         }
 
         // Restituisce un array invece di un oggetto WebPushSubscription
         return [
             'endpoint' => $this->endpoint,
-            'publicKey' => $this->publicKey,
-            'authToken' => $this->authToken,
+            'public_key' => $this->public_key,
+            'auth_token' => $this->auth_token,
             'content_encoding' => $this->content_encoding ?? 'aes128gcm',
             'exception' => function ($exception) {
                 // Gestione dell'eccezione, se necessario
