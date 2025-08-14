@@ -92,7 +92,7 @@ const showingNavigationDropdown = ref(false);
 
                                 <NavLink v-if="!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
                                          class="w-[100px] text-center"
-                                         :href="route('notification.index') + '?orderby=created_at&ordertype=desc&s='"
+                                         :href="route('notification.index') + '?orderby=sent_at&ordertype=desc&s='"
                                          :active="route().current().search('notification') === 0 ? true : false">
                                     Notifiche
                                 </NavLink>
@@ -256,7 +256,7 @@ const showingNavigationDropdown = ref(false);
                             Impostazioni
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="!$page.props.auth.user.parent_id && !$page.props.auth.user.child_on"
-                                 :href="route('notification.index') + '?orderby=created_at&ordertype=desc&s='"
+                                 :href="route('notification.index') + '?orderby=sent_at&ordertype=desc&s='"
                                  :active="route().current().search('notification') === 0 ? true : false">
                             Notifiche
                         </ResponsiveNavLink>

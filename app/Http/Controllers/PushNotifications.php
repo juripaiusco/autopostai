@@ -31,7 +31,7 @@ class PushNotifications extends Controller
             'title',
             'body',
             'url',
-            'created_at',
+            'sent_at',
         ];
 
         $request_validate_array = $request_search_array;
@@ -211,7 +211,7 @@ class PushNotifications extends Controller
             $notification->delete();
         }
 
-        return Redirect::route('notification.index', 'orderby=created_at&ordertype=desc&s=');
+        return Redirect::route('notification.index', 'orderby=sent_at&ordertype=desc&s=');
     }
 
     /*public function send_raw()
