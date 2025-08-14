@@ -69,6 +69,9 @@
         <link rel="apple-touch-icon" href="{{ URL::asset('apple-touch-icon.png') }}">
         <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
+        <!-- VAPID Public Key for Web Push Notifications -->
+        <meta name="vapid-public-key" content="{{ env('VAPID_PUBLIC_KEY') }}">
+
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->

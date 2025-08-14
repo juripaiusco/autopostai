@@ -8,7 +8,7 @@ import {__date} from "@/ComponentsExt/Date.js";
 
 const notifications = usePage().props.notifications;
 const app_url = import.meta.env.VITE_APP_URL;
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+const VAPID_PUBLIC_KEY = document.querySelector('meta[name="vapid-public-key"]').content;
 const token = usePage().props.auth.token_notification
 const notificationsEnabled = ref(false)
 
