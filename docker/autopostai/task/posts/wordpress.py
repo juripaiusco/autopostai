@@ -53,7 +53,9 @@ class WordPressPost(BasePost):
             cat_id = [cat_id]
 
         channels = json.loads(self.data.get('channels'))
-        selected_categories = self.categories_get(channels.get('wordpress').get('options').get('categories'))
+        selected_categories = self.categories_get(
+            channels.get('wordpress', {}).get('options', {}).get('categories', [])
+        )
 
         if selected_categories:
             cat_id = self.categories_get(channels.get('wordpress').get('options').get('categories'))
