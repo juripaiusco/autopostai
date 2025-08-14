@@ -223,41 +223,51 @@ def ctrl_posts_sent(id, debug = False):
     if published == 1 and rows is not None:
         # Verifico che l'utente sia registrato, altrimenti si creerebbero notifiche
         # per ogni utente, anche quelli non registrati.
-        ### inserire qui il codice di verifica
+        subscription = mysql.query(f"""
+                    SELECT  {cfg.DB_PREFIX}push_subscriptions.id AS id
 
-        # Inserisco la notifica push da inviare all'autore del post
-        mysql.query(f"""
-                                INSERT INTO {cfg.DB_PREFIX}push_notifications (
-                                    user_id,
-                                    title,
-                                    body,
-                                    url,
-                                    created_at
-                                ) VALUES (%s, %s, %s, %s, %s)
-                            """, (
-            rows[0]['created_by_user_id'],
-            rows[0]['title'],
-            'Post inviato',
-            f"{cfg.URL}/posts/show/{rows[0]['id']}",
-            datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
-        ))
+                        FROM {cfg.DB_PREFIX}push_subscriptions
 
-        # Invio le notifiche
-        if "localhost" in cfg.URL:
-            print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                  "Notifica non inviata perché in localhost")
-        else:
-            url_send_notifications = f"{cfg.URL}/notifications/send-to-specific-users"
-            response = requests.get(url_send_notifications)
+                    WHERE {cfg.DB_PREFIX}push_subscriptions.subscribable_type = %s
+                        AND {cfg.DB_PREFIX}push_subscriptions.subscribable_id = %s
 
-            # Controlla se la richiesta è andata a buon fine
-            if response.status_code == 200:
-                if debug:
-                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                          "Send push notification")
+                    LIMIT 1
+                """, ("App\\Models\\User", rows[0]['created_by_user_id']))
+
+        if subscription[0]['id'] is None:
+            # Inserisco la notifica push da inviare all'autore del post
+            mysql.query(f"""
+                                            INSERT INTO {cfg.DB_PREFIX}push_notifications (
+                                                user_id,
+                                                title,
+                                                body,
+                                                url,
+                                                created_at
+                                            ) VALUES (%s, %s, %s, %s, %s)
+                                        """, (
+                rows[0]['created_by_user_id'],
+                rows[0]['title'],
+                'Post inviato',
+                f"{cfg.URL}/posts/show/{rows[0]['id']}",
+                datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
+            ))
+
+            # Invio le notifiche
+            if "localhost" in cfg.URL:
+                print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                      "Notifica non inviata perché in localhost")
             else:
-                if debug:
-                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                          "Errore:", response.status_code)
+                url_send_notifications = f"{cfg.URL}/notifications/send-to-specific-users"
+                response = requests.get(url_send_notifications)
+
+                # Controlla se la richiesta è andata a buon fine
+                if response.status_code == 200:
+                    if debug:
+                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                              "Send push notification")
+                else:
+                    if debug:
+                        print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                              "Errore:", response.status_code)
 
     mysql.close()
