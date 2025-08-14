@@ -31,19 +31,19 @@ class PushNotification extends Notification //implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        Log::info('Subscription:', [
+        /*Log::info('Subscription:', [
             'webpush' => $notifiable->routeNotificationFor('webpush')
-        ]);
+        ]);*/
 
         return [WebPushChannel::class];
     }
 
     public function toWebPush($notifiable, $notification)
     {
-        Log::info('toWebPush:', [
+        /*Log::info('toWebPush:', [
             'notifiable' => $notifiable,
             'notification' => $notification
-        ]);
+        ]);*/
 
         return (new WebPushMessage)
             ->title($this->data['title'])
