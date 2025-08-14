@@ -92,6 +92,20 @@
             });
         </script>
 
+        <!-- Reload page on scroll to top -->
+        <!-- <script>
+            let refreshTimeout;
+
+            document.addEventListener('scroll', function () {
+                if (window.scrollY === 0) {
+                    clearTimeout(refreshTimeout);
+                    refreshTimeout = setTimeout(() => {
+                        location.reload();
+                    }, 300);
+                }
+            });
+        </script> -->
+
         <!-- CSS -->
         <link href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" rel="stylesheet" />
 
