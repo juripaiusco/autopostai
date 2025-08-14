@@ -221,9 +221,11 @@ def ctrl_posts_sent(id, debug = False):
 
     # Salvo le notifiche una volta che il post è pubblicato
     if published == 1 and rows is not None:
+        # Verifico che l'utente sia registrato, altrimenti si creerebbero notifiche
+        # per ogni utente, anche quelli non registrati.
+        ### inserire qui il codice di verifica
+
         # Inserisco la notifica push da inviare all'autore del post
-        # print('created_by_user_id ', rows[0]['created_by_user_id'])
-        # print('title', rows[0]['title'])
         mysql.query(f"""
                                 INSERT INTO {cfg.DB_PREFIX}push_notifications (
                                     user_id,
@@ -240,17 +242,22 @@ def ctrl_posts_sent(id, debug = False):
             datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
         ))
 
-    # Invio le notifiche
-    if "localhost" in cfg.URL:
-        print('Notifica non inviata perché in localhost')
-    else:
-        url_send_notifications = f"{cfg.URL}/notifications/send-to-specific-users"
-        response = requests.get(url_send_notifications)
-
-        # Controlla se la richiesta è andata a buon fine
-        if response.status_code == 200:
-            print("success")
+        # Invio le notifiche
+        if "localhost" in cfg.URL:
+            print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                  "Notifica non inviata perché in localhost")
         else:
-            print("Errore:", response.status_code)
+            url_send_notifications = f"{cfg.URL}/notifications/send-to-specific-users"
+            response = requests.get(url_send_notifications)
+
+            # Controlla se la richiesta è andata a buon fine
+            if response.status_code == 200:
+                if debug:
+                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                          "Send push notification")
+            else:
+                if debug:
+                    print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                          "Errore:", response.status_code)
 
     mysql.close()
