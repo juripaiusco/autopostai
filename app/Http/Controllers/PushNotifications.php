@@ -60,11 +60,17 @@ class PushNotifications extends Controller
 
         // Filtro ORDINAMENTO
         if (request('orderby') && request('ordertype')) {
+//            $data->orderby(request('orderby'), strtoupper(request('ordertype')));
 
             $orderby = request('orderby');
             $ordertype = strtoupper(request('ordertype'));
 
-            $data->orderBy($orderby, $ordertype);
+            if ($orderby === 'sent_at') {
+                // Metti i null prima
+                $data->orderByRaw("ISNULL(sent_at) DESC")->orderBy('sent_at', $ordertype);
+            } else {
+                $data->orderBy($orderby, $ordertype);
+            }
         }
 
         $data = $data->paginate(env('VIEWS_PAGINATE'))->withQueryString();
