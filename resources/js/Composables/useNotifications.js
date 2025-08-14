@@ -25,6 +25,11 @@ export const useNotifications = () => {
     }
 
     async function subscribeUser() {
+        if (!token) {
+            alert('Devi essere loggato per abilitare le notifiche. Esci e rientra nel nell\'applicazione.')
+            return
+        }
+
         const permission = await Notification.requestPermission()
         if (permission !== 'granted') return
 
