@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Settings;
 use App\Http\Controllers\Users;
 use App\Http\Controllers\PushNotifications;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -102,6 +103,36 @@ Route::middleware('auth')->group(function () {
         ->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
+
+    Route::get('/sse/notification', function () {
+        return response()->stream(function () {
+            header('Content-Type: text/event-stream');
+            header('Cache-Control: no-cache');
+            header('Connection: keep-alive');
+            header('X-Accel-Buffering: no');
+
+            $user = Auth::user();
+            $lastValue = null;
+
+            while (true) {
+                $value = $user->fresh()->notify_read_web == 1 ? 1 : 0;
+
+                if ($value !== $lastValue) {
+                    echo "data: " . json_encode(['active' => $value]) . "\n\n";
+                    ob_flush();
+                    flush();
+                    $lastValue = $value;
+                } else {
+                    // Keep alive ogni 20 secondi
+                    echo ": keep-alive\n\n";
+                    ob_flush();
+                    flush();
+                }
+
+                sleep(3);
+            }
+        });
+    })->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
 });
 

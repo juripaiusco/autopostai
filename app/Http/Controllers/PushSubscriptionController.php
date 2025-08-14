@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PushNotification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -52,12 +53,21 @@ class PushSubscriptionController extends Controller
     /**
      * Imposta come letta la notifica push per il web
      *
-     * @return void
+     * @return \Illuminate\Http\JsonResponse
      */
     public function read_set()
     {
         $user = User::find(Auth::user()->id);
         $user->notify_read_web = 1;
         $user->save();
+
+        $notifications = PushNotification::query()
+            ->take(5)
+            ->whereNull('user_id')
+            ->whereNotNull('sent_at')
+            ->orderBy('sent_at', 'desc')
+            ->get();
+
+        return response()->json(['notifications' => $notifications]);
     }
 }

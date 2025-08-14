@@ -6,9 +6,9 @@ import {__date} from "@/ComponentsExt/Date.js";
 import { useNotifications } from "@/Composables/useNotifications.js";
 const {
     notifications,
-    notify_read_web,
     notificationsEnabled,
-    clicked,
+    notify_read_web,
+    notify_clicked,
     handleClick,
     subscribeUser,
     unsubscribeUser
@@ -24,7 +24,7 @@ const {
             <div
                 class="mt-2"
                 :class="[
-                    notify_read_web === null && clicked === false ?
+                    notify_read_web === 0 && notify_clicked === false ?
                         'text-sky-500 animate-ring' : 'text-gray-300 dark:text-gray-600',
                     /*clicked ? 'text-gray-300 dark:text-gray-600' : 'text-sky-500 animate-ring'*/
                 ]"
