@@ -15,10 +15,10 @@ const notificationsEnabled = ref(false)
 // Stato per sapere se la campanella è stata cliccata
 const clicked = ref(false)
 
-const handleClick = () => {
+const handleClick = async () => {
     clicked.value = true
 
-    axios.get(app_url + '/api/notify-read-web', {
+    await axios.get(app_url + '/api/notify-read-web', {
         headers: {
             Authorization: `Bearer ${token}`
         }
