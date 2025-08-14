@@ -222,19 +222,19 @@ def ctrl_posts_sent(id, debug = False):
     # Salvo le notifiche una volta che il post è pubblicato
     if published == 1 and rows is not None:
         # Verifico che l'utente sia registrato, altrimenti si creerebbero notifiche
-        # per ogni utente, anche quelli non registrati.
+        # anche per utente non registrati alle push notification.
         subscription = mysql.query(f"""
                     SELECT  {cfg.DB_PREFIX}push_subscriptions.id AS id
 
                         FROM {cfg.DB_PREFIX}push_subscriptions
 
-                    WHERE {cfg.DB_PREFIX}push_subscriptions.subscribable_type = %s
-                        AND {cfg.DB_PREFIX}push_subscriptions.subscribable_id = %s
+                    WHERE {cfg.DB_PREFIX}push_subscriptions.subscribable_type = "App\\Models\\User"
+                        AND {cfg.DB_PREFIX}push_subscriptions.subscribable_id = {rows[0]['created_by_user_id']}
 
                     LIMIT 1
-                """, ("App\\Models\\User", rows[0]['created_by_user_id']))
+                """)
 
-        if subscription[0]['id'] is None:
+        if subscription and len(subscription) > 0:
             # Inserisco la notifica push da inviare all'autore del post
             mysql.query(f"""
                                             INSERT INTO {cfg.DB_PREFIX}push_notifications (
@@ -255,7 +255,7 @@ def ctrl_posts_sent(id, debug = False):
             # Invio le notifiche
             if "localhost" in cfg.URL:
                 print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                      "Notifica non inviata perché in localhost")
+                      "Push notification not send because LOCALHOST")
             else:
                 url_send_notifications = f"{cfg.URL}/notifications/send-to-specific-users"
                 response = requests.get(url_send_notifications)
