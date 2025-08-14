@@ -104,7 +104,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
 
-    Route::get('/sse/notification', function () {
+    /*Route::get('/sse/notification', function () {
         return response()->stream(function () {
             header('Content-Type: text/event-stream');
             header('Cache-Control: no-cache');
@@ -114,7 +114,8 @@ Route::middleware('auth')->group(function () {
             $user = Auth::user();
             $lastValue = null;
 
-            while (true) {
+            $start = time();
+            while (time() - $start < 15) {
                 $value = $user->fresh()->notify_read_web == 1 ? 1 : 0;
 
                 if ($value !== $lastValue) {
@@ -132,7 +133,7 @@ Route::middleware('auth')->group(function () {
                 sleep(3);
             }
         });
-    })->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+    })->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);*/
 
 });
 

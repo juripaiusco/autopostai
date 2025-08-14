@@ -50,6 +50,13 @@ class PushSubscriptionController extends Controller
         return response()->json(['message' => 'Subscription eliminata con successo']);
     }
 
+    public function notify_web_check()
+    {
+        $user = User::find(Auth::user()->id);
+
+        return response()->json(['notify' => $user->notify_read_web ? 1 : 0]);
+    }
+
     /**
      * Imposta come letta la notifica push per il web
      *

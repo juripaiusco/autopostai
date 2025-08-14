@@ -4,7 +4,7 @@ import axios from 'axios'
 
 let initialized = false
 let evtSource = null
-const notify_read_web = ref(0)
+const notify_read_web = ref(1)
 const notify_clicked = ref(false)
 const notifications = ref([])
 
@@ -14,6 +14,7 @@ export const useNotifications = () => {
     const token = usePage().props.auth.token_notification
     const notificationsEnabled = ref(false)
     notifications.value = usePage().props.notifications
+    let intervalId = null
 
     const handleClick = async () => {
         notify_clicked.value = true
@@ -22,6 +23,19 @@ export const useNotifications = () => {
         }).then(response => {
             notifications.value = response.data.notifications
         })
+    }
+
+    const checkNotification = async () => {
+        try {
+            await axios.get(`${app_url}/api/notify-web-check`, {
+                headers: { Authorization: `Bearer ${token}` }
+            }).then(response => {
+                notify_read_web.value = response.data.notify
+                notify_clicked.value = false
+            })
+        } catch (error) {
+            console.error("Errore durante il controllo delle notifiche:", error)
+        }
     }
 
     async function subscribeUser() {
@@ -96,7 +110,12 @@ export const useNotifications = () => {
 
         // SSE solo la prima volta
         if (!initialized) {
-            evtSource = new EventSource(app_url + '/sse/notification')
+
+            initialized = true
+            await checkNotification()
+            intervalId = setInterval(checkNotification, 3000)
+
+            /*evtSource = new EventSource(app_url + '/sse/notification')
 
             evtSource.onmessage = (event) => {
                 try {
@@ -106,23 +125,26 @@ export const useNotifications = () => {
                 } catch (e) {
                     console.error("Errore parsing SSE:", e)
                 }
-            }
+            }*/
 
             /*evtSource.onerror = (err) => {
                 console.error("Errore SSE:", err)
             }*/
-
-            initialized = true
         }
     })
 
     onUnmounted(() => {
+        if (intervalId) {
+            clearInterval(intervalId)
+            intervalId = null
+            initialized = false
+        }
         // Chiudi SSE quando non serve più
-        if (evtSource) {
+        /*if (evtSource) {
             evtSource.close()
             evtSource = null
             initialized = false
-        }
+        }*/
     })
 
     return {

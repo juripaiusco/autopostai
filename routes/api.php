@@ -19,7 +19,10 @@ Route::post('/push-subscribe', [PushSubscriptionController::class, 'store'])
 Route::post('/push-destroy', [PushSubscriptionController::class, 'destroy'])
     ->middleware('auth:sanctum');
 
-// PUSH API Web - Imposta come letta la notifica push per il web
+Route::get('/notify-web-check', [PushSubscriptionController::class, 'notify_web_check'])
+    ->middleware('auth:sanctum');
+
+// PUSH API Web - Imposta come letta la notifica push per il web e recupera le notifiche
 Route::get('/notify-read-web', [PushSubscriptionController::class, 'read_set'])
     ->middleware('auth:sanctum');
 
