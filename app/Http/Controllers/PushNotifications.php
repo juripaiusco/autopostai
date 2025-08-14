@@ -216,7 +216,7 @@ class PushNotifications extends Controller
         }
 
         // Recupera utenti con subscription
-        $users = User::with('pushSubscriptions')->get();
+        $users = \App\Models\User::query()->with('pushSubscriptions')->get();
 
         if ($users->isEmpty()) {
             return Redirect::route('notification.index')
@@ -263,6 +263,10 @@ class PushNotifications extends Controller
                     $payload
                 );
             }
+
+            $user->notify_read_browser = null;
+            $user->notify_read_web = null;
+            $user->save();
         }
 
         Log::info('Chiamo flush()...');
@@ -282,9 +286,9 @@ class PushNotifications extends Controller
 
         // Segna come inviata solo se tutto ok
         if ($tuttiOk) {
-            $notification = PushNotification::whereNull('sent')->orderBy('created_at', 'desc')->first();
+            $notification = PushNotification::whereNull('sent_at')->orderBy('created_at', 'desc')->first();
             if ($notification) {
-                $notification->sent = 1;
+                $notification->sent_at = Carbon::now('Europe/Rome')->toDateTimeString();
                 $notification->save();
             }
         }
