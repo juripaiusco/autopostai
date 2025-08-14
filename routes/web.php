@@ -12,6 +12,10 @@ Route::get('/', function () {
     return redirect('/posts?orderby=published_at&ordertype=desc&s=');
 });
 
+// Invio delle notifiche push a tutti gli utenti iscritti
+Route::get('/notifications/send-to-specific-users', [PushNotifications::class, 'send_to_specific_users'])
+    ->name('notification.send_to_specific_users');
+
 //Route::get('/dashboard', [Dashboard::class])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -86,8 +90,6 @@ Route::middleware('auth')->group(function () {
         ->name('notification.destroy');
     Route::get('/notifications/send/{id}', [PushNotifications::class, 'send'])
         ->name('notification.send');
-    Route::get('/notifications/send-to-specific-users', [PushNotifications::class, 'send_to_specific_users'])
-        ->name('notification.send_to_specific_users');
 
     Route::get('/linkedin/redirect/{linkedin_client_id}', [\App\Http\Controllers\LinkedInController::class, 'redirect'])
         ->name('linkedin.redirect');
