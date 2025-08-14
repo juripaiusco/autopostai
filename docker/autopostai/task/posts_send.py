@@ -228,7 +228,7 @@ def ctrl_posts_sent(id, debug = False):
 
                         FROM {cfg.DB_PREFIX}push_subscriptions
 
-                    WHERE {cfg.DB_PREFIX}push_subscriptions.subscribable_type = "App\\Models\\User"
+                    WHERE {cfg.DB_PREFIX}push_subscriptions.subscribable_type = "App\\\\Models\\\\User"
                         AND {cfg.DB_PREFIX}push_subscriptions.subscribable_id = {rows[0]['created_by_user_id']}
 
                     LIMIT 1
@@ -252,6 +252,12 @@ def ctrl_posts_sent(id, debug = False):
                 datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
             ))
 
+            print(" " * 19, "***")
+            print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                  "Push notification - START")
+            print(" " * 19, "User ID to notify:", rows[0]['created_by_user_id'])
+            print(" " * 19, "Title to notify:", rows[0]['title'])
+
             # Invio le notifiche
             if "localhost" in cfg.URL:
                 print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
@@ -264,10 +270,14 @@ def ctrl_posts_sent(id, debug = False):
                 if response.status_code == 200:
                     if debug:
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
-                              "Send push notification")
+                              "Push notification sent")
                 else:
                     if debug:
                         print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
                               "Errore:", response.status_code)
+
+            print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
+                  "Push notification - END")
+            print(" " * 19, "***")
 
     mysql.close()
