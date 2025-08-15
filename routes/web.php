@@ -29,6 +29,7 @@ Route::get('/site.webmanifest-' . str_replace('.', '-', env('APP_VERSION')), fun
             ]
         ],
         'start_url' => env('PWA_START_URL', '/'),
+        'lang' => env('APP_LOCALE'),
         'version' => env('APP_VERSION', 'dev'),
     ])->header('Content-Type', 'application/manifest+json');
 });
