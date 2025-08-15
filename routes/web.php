@@ -9,6 +9,31 @@ use App\Http\Controllers\PushNotifications;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/site.webmanifest-' . str_replace('.', '-', env('APP_VERSION')), function () {
+    return response()->json([
+        'name' => env('APP_NAME'),
+        'short_name' => env('APP_NAME'),
+        'theme_color' => env('PWA_THEME_COLOR', '#ffffff'),
+        'background_color' => env('PWA_BG_COLOR', '#ffffff'),
+        'display' => 'standalone',
+        'icons' => [
+            [
+                "src" => asset('icons/android-chrome-192x192.png'),
+                "sizes" => "192x192",
+                "type" => "image/png"
+            ],
+            [
+                "src" => asset('icons/android-chrome-512x512.png'),
+                "sizes" => "512x512",
+                "type" => "image/png"
+            ]
+        ],
+        'start_url' => env('PWA_START_URL', '/'),
+        'version' => env('APP_VERSION', 'dev'),
+    ])->header('Content-Type', 'application/manifest+json');
+});
+
+// Redirect to posts with default sorting
 Route::get('/', function () {
     return redirect('/posts?orderby=published_at&ordertype=desc&s=');
 });

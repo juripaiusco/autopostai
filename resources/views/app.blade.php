@@ -54,7 +54,7 @@
         <link rel="apple-touch-icon" sizes="180x180" href="{{ URL::asset('apple-touch-icon.png') }}">
         <link rel="icon" type="image/png" sizes="32x32" href="{{ URL::asset('favicon-32x32.png') }}">
         <link rel="icon" type="image/png" sizes="16x16" href="{{ URL::asset('favicon-16x16.png') }}">
-        <link rel="manifest" href="{{ URL::asset('site.webmanifest') }}">
+        <link rel="manifest" href="{{ URL::asset('site.webmanifest') }}-{{ str_replace('.', '-', env('APP_VERSION')) }}">
 
         <!-- Colore della barra superiore -->
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
