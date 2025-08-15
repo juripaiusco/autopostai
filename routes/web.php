@@ -18,12 +18,12 @@ Route::get('/site.webmanifest-' . str_replace('.', '-', env('APP_VERSION')), fun
         'display' => 'standalone',
         'icons' => [
             [
-                "src" => asset('icons/android-chrome-192x192.png'),
+                "src" => asset('/android-chrome-192x192.png'),
                 "sizes" => "192x192",
                 "type" => "image/png"
             ],
             [
-                "src" => asset('icons/android-chrome-512x512.png'),
+                "src" => asset('/android-chrome-512x512.png'),
                 "sizes" => "512x512",
                 "type" => "image/png"
             ]
