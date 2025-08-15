@@ -51,6 +51,7 @@ class PushNotification extends Notification //implements ShouldQueue
             ->data(['url' => $this->data['url']])
             ->icon($this->data['icon'])
             ->action('View account', 'view_account')
+            ->lang('it-IT')
             ->options(['TTL' => 1000]);
         // ->data(['id' => $notification->id])
         // ->badge()
