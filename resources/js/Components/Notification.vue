@@ -103,7 +103,7 @@ const {
                 </div>
 
                 <!-- Lista notifiche -->
-                <ul class="divide-y divide-gray-200 max-h-96 overflow-auto">
+                <ul class="divide-y divide-gray-200 max-h-80 overflow-auto">
                     <li v-for="n in notifications" :key="n.id">
                         <a
                             :href="n.url ? n.url : '#'"
