@@ -68,7 +68,7 @@ const {
             leave-to-class="translate-y-1 opacity-0"
         >
             <PopoverPanel
-                class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-black/5 z-30"
+                class="fixed inset-12 mx-auto max-h-96 sm:w-80 bg-white rounded-lg shadow-lg ring-1 ring-black/5 z-30"
             >
                 <div class="flex w-full px-4 py-2 bg-gray-50 border-b rounded-t-lg items-center justify-between">
 
