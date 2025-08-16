@@ -5,7 +5,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import {Head, Link, useForm, usePage} from '@inertiajs/vue3';
 import {__} from "@/ComponentsExt/Translations.js";
 
 defineProps({
@@ -102,6 +102,12 @@ const submit = () => {
                 >
                     {{ __('login.login') }}
                 </PrimaryButton>
+            </div>
+
+            <br>
+
+            <div class="lg:container lg:m-auto text-gray-300 dark:text-gray-700 text-sm text-center">
+                <small>v.{{ usePage().props.app.version }}</small>
             </div>
         </form>
     </GuestLayout>
