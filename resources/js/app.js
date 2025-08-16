@@ -12,6 +12,19 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+// funzione per aggiornare la classe del body
+function updateBodyClass(page) {
+    // rimuovi tutte le classi "page-" precedenti
+    document.body.className = document.body.className
+        .split(' ')
+        .filter(c => !c.startsWith('page-'))
+        .join(' ');
+
+    // aggiungi la nuova classe
+    const componentClass = 'page-' + page.component.replace('/', '-');
+    document.body.classList.add(componentClass);
+}
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>
@@ -20,10 +33,24 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        return createApp({ render: () => h(App, props) })
+        const vueApp = createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
             .mount(el);
+
+        // classe iniziale
+        updateBodyClass(props.initialPage);
+
+        // aggiorna la classe ad ogni navigazione Inertia
+        document.addEventListener('inertia:navigate', (event) => {
+            updateBodyClass(event.detail.page);
+        });
+
+        return vueApp;
+        /*return createApp({ render: () => h(App, props) })
+            .use(plugin)
+            .use(ZiggyVue)
+            .mount(el);*/
     },
     progress: {
         showSpinner: true,
