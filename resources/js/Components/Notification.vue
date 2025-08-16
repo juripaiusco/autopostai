@@ -1,6 +1,6 @@
 <script setup>
 
-import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
+import { Popover, PopoverButton, PopoverPanel, PopoverOverlay } from '@headlessui/vue'
 import {__date} from "@/ComponentsExt/Date.js";
 
 import { useNotifications } from "@/Composables/useNotifications.js";
@@ -18,15 +18,15 @@ const {
 
 <template>
     <!-- Notification Bell new version -->
-    <Popover class="relative">
+    <Popover class="relative z-30">
         <!-- Bottone campanella -->
         <PopoverButton class="focus:outline-none" @click="handleClick">
             <div
                 class="mt-2"
                 :class="[
-                    notify_read_web === 0 && notify_clicked === false ?
-                        'text-sky-500 animate-ring' : 'text-gray-300 dark:text-gray-600',
-                    /*clicked ? 'text-gray-300 dark:text-gray-600' : 'text-sky-500 animate-ring'*/
+                    notify_read_web === 0 && notify_clicked === false
+                    ? 'text-sky-500 animate-ring'
+                    : 'text-gray-300 dark:text-gray-600',
                 ]"
             >
                 <svg
@@ -46,6 +46,18 @@ const {
             </div>
         </PopoverButton>
 
+        <!-- Overlay -->
+        <transition
+            enter-active-class="transition-opacity duration-200"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-opacity duration-150"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <PopoverOverlay class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30" />
+        </transition>
+
         <!-- Pannello notifiche -->
         <transition
             enter-active-class="transition duration-200 ease-out"
@@ -56,7 +68,7 @@ const {
             leave-to-class="translate-y-1 opacity-0"
         >
             <PopoverPanel
-                class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-black/5 z-50"
+                class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-black/5 z-30"
             >
                 <div class="flex w-full px-4 py-2 bg-gray-50 border-b rounded-t-lg items-center justify-between">
 
@@ -91,7 +103,7 @@ const {
                 </div>
 
                 <!-- Lista notifiche -->
-                <ul class="divide-y divide-gray-200 max-h-64 overflow-auto">
+                <ul class="divide-y divide-gray-200 max-h-96 overflow-auto">
                     <li v-for="n in notifications" :key="n.id">
                         <a
                             :href="n.url ? n.url : '#'"
