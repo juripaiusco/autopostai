@@ -38,13 +38,13 @@ let interval = null;
 const fetchPosts = () => {
     isLoading.value = true;
     axios
-        .get(app_url + '/index.php/api/posts', {
+        .get(app_url + '/api/posts', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
         })
         .then((response) => {
-            const newPosts = response.data;
+            const newPosts = response.data.posts;
 
             // Aggiorna solo i post esistenti che hanno lo stesso ID
             newPosts.forEach((newPost) => {

@@ -30,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // WEB NOTIFICATIONS - END -------------------------------------------------
 
+
     // Aggiornamento dei posts in background
     Route::get('/posts', function () {
         $posts = new \App\Http\Controllers\Posts();
@@ -37,7 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $data = $data->take(env('VIEWS_PAGINATE'));
         $data = $data->latest();
 
-        return $data->get();
+        return response()->json(['posts' => $data->get()]);
     });
 
     // Esecuzione di un job in background per la generazione di immagini
