@@ -14,7 +14,7 @@ Route::get('/site.webmanifest-' . str_replace('.', '-', env('APP_VERSION')), fun
         'name' => env('APP_NAME'),
         'short_name' => env('APP_NAME'),
         'theme_color' => env('PWA_THEME_COLOR', '#ffffff'),
-        'background_color' => env('PWA_BG_COLOR', '#ffffff'),
+        'background_color' => env('PWA_BG_COLOR', '#000000'),
         'display' => 'standalone',
         'icons' => [
             [
@@ -28,8 +28,8 @@ Route::get('/site.webmanifest-' . str_replace('.', '-', env('APP_VERSION')), fun
                 "type" => "image/png"
             ]
         ],
-        'start_url' => env('PWA_START_URL', '/'),
-        'lang' => env('APP_LOCALE'),
+//        'start_url' => env('APP_LOCALE'),
+//        'lang' => env('APP_LOCALE'),
         'version' => env('APP_VERSION', 'dev'),
     ])->header('Content-Type', 'application/manifest+json');
 });
