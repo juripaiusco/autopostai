@@ -2,28 +2,19 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { usePage } from "@inertiajs/vue3"
 import axios from 'axios'
 
-let initialized = false
-let evtSource = null
+const app_url = import.meta.env.VITE_APP_URL
 const notify_read_web = ref(1)
 const notify_clicked = ref(false)
 const notifications = ref([])
+let initialized = false
+let evtSource = null
 
 export const useNotifications = () => {
-    const app_url = import.meta.env.VITE_APP_URL
     const VAPID_PUBLIC_KEY = document.querySelector('meta[name="vapid-public-key"]').content
-    const token = usePage().props.auth.token_notification
     const notificationsEnabled = ref(false)
-    notifications.value = usePage().props.notifications
     let intervalId = null
-
-    const handleClick = async () => {
-        notify_clicked.value = true
-        await axios.get(`${app_url}/api/notify-read-web`, {
-            headers: { Authorization: `Bearer ${token}` }
-        }).then(response => {
-            notifications.value = response.data.notifications
-        })
-    }
+    let token = usePage().props.auth.token
+    notifications.value = usePage().props.notifications
 
     const checkNotification = async () => {
         try {
@@ -36,6 +27,15 @@ export const useNotifications = () => {
         } catch (error) {
             console.error("Errore durante il controllo delle notifiche:", error)
         }
+    }
+
+    const handleClick = async () => {
+        notify_clicked.value = true
+        await axios.get(`${app_url}/api/notify-read-web`, {
+            headers: { Authorization: `Bearer ${token}` }
+        }).then(response => {
+            notifications.value = response.data.notifications
+        })
     }
 
     async function subscribeUser() {

@@ -34,8 +34,12 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = $request->user();
-        $token = $user->createToken('notification')->plainTextToken;
-        session(['notification_token' => $token]);
+        $token = $user->createToken(
+            env('APP_NAME') . '_token',
+            ['*'],
+            now()->addMinutes(floatval(config('session.lifetime')))
+        );
+        session([env('APP_NAME') . '_token' => $token->plainTextToken]);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
