@@ -54,7 +54,7 @@ const submit = () => {
                     <InputLabel for="email" value="Email" class="!text-base !text-gray-600" />
                 </div>
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                <!-- <InputError class="mt-2" :message="form.errors.email" /> -->
             </div>
 
             <div class="mt-4">
@@ -82,6 +82,9 @@ const submit = () => {
                     >
                 </label>
             </div>
+
+            <InputError class="mt-4 text-center"
+                        :message="__(form.errors.email)" />
 
             <div class="mt-6 flex items-center justify-center">
                 <!--<Link
