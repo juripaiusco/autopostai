@@ -36,7 +36,7 @@ const showingNavigationDropdown = ref(false);
                 <!-- Primary Navigation Menu -->
                 <div class="
                 fixed w-full mt-[-64px] sm:relative sm:w-auto sm:mt-0 sm:shadow-none
-                z-30 bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-900 shadow-md
+                z-30 bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-800 shadow-md
                 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="flex h-16 justify-between">
                         <div class="flex">
