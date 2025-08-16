@@ -7,46 +7,47 @@ use \App\Http\Controllers\WordPressController;
 use \App\Http\Controllers\NewsletterController;
 use \App\Http\Controllers\PushSubscriptionController;
 
-/*Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');*/
+Route::middleware('auth:sanctum')->group(function () {
 
-// PUSH API - Salvataggio della subscription per le notifiche push
-Route::post('/push-subscribe', [PushSubscriptionController::class, 'store'])
-    ->middleware('auth:sanctum');
+    // PUSH NOTIFICATIONS - START -----------------------------------------------
 
-// PUSH API - Eliminazione della subscription per le notifiche push
-Route::post('/push-destroy', [PushSubscriptionController::class, 'destroy'])
-    ->middleware('auth:sanctum');
+    // Salvataggio della subscription per le notifiche push
+    Route::post('/push-subscribe', [PushSubscriptionController::class, 'store']);
 
-Route::get('/notify-web-check', [PushSubscriptionController::class, 'notify_web_check'])
-    ->middleware('auth:sanctum');
+    // Eliminazione della subscription per le notifiche push
+    Route::post('/push-destroy', [PushSubscriptionController::class, 'destroy']);
 
-// PUSH API Web - Imposta come letta la notifica push per il web e recupera le notifiche
-Route::get('/notify-read-web', [PushSubscriptionController::class, 'read_set'])
-    ->middleware('auth:sanctum');
+    // PUSH NOTIFICATIONS - END -------------------------------------------------
 
-// Aggiornamento dei posts in background
-Route::get('/posts', function () {
 
-    $posts = new \App\Http\Controllers\Posts();
-    $data = $posts->getData();
-    $data = $data->take(env('VIEWS_PAGINATE'));
-    $data = $data->latest();
+    // WEB NOTIFICATIONS - START -----------------------------------------------
 
-    return $data->get();
-})->middleware('auth:sanctum');
+    // Verifica se l'utente ha notifiche web da leggere
+    Route::get('/notify-web-check', [PushSubscriptionController::class, 'notify_web_check']);
 
-// Esecuzione di un job in background
-Route::post('/start-job', [ImageController::class, 'startJob'])
-    ->middleware('auth:sanctum');
-Route::get('/check-job-status/{jobId}', [ImageController::class, 'checkJobStatus'])
-    ->middleware('auth:sanctum');
+    // Imposta come letta la notifica web e recupera le notifiche
+    Route::get('/notify-read-web', [PushSubscriptionController::class, 'read_set']);
 
-// Esecuzione WordPressController
-Route::get('/wordpress-categories/{userId}', [WordPressController::class, 'categories_get'])
-    ->middleware('auth:sanctum');
+    // WEB NOTIFICATIONS - END -------------------------------------------------
 
-// Esecuzione NewsletterController
-Route::get('/newsletter-lists/{userId}', [NewsletterController::class, 'lists_get'])
-    ->middleware('auth:sanctum');
+    // Aggiornamento dei posts in background
+    Route::get('/posts', function () {
+        $posts = new \App\Http\Controllers\Posts();
+        $data = $posts->getData();
+        $data = $data->take(env('VIEWS_PAGINATE'));
+        $data = $data->latest();
+
+        return $data->get();
+    });
+
+    // Esecuzione di un job in background per la generazione di immagini
+    Route::post('/start-job', [ImageController::class, 'startJob']);
+    Route::get('/check-job-status/{jobId}', [ImageController::class, 'checkJobStatus']);
+
+    // WordPressController recupera le categorie
+    Route::get('/wordpress-categories/{userId}', [WordPressController::class, 'categories_get']);
+
+    // NewsletterController recupera le liste di newsletter
+    Route::get('/newsletter-lists/{userId}', [NewsletterController::class, 'lists_get']);
+
+});
