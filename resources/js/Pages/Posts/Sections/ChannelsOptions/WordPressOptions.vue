@@ -44,7 +44,7 @@ function channelOptionsGET(userId, channel, getType) {
     channelOptionsGETLoad.value = true;
 
     axios
-        .get(app_url + '/index.php/api/' + channel + '-' + getType + '/' + userId, {
+        .get(app_url + '/api/' + channel + '-' + getType + '/' + userId, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

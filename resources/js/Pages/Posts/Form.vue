@@ -98,7 +98,7 @@ const startJob = async () => {
     try {
         // Avvia il job tramite API
         const { data } = await axios.post(
-            app_url + "/index.php/api/start-job",
+            app_url + "/api/start-job",
             {
                 user_id: form.user_id,
                 prompt: form.ai_prompt_img,
@@ -115,7 +115,7 @@ const startJob = async () => {
         let status = "pending";
         while (status === "pending" || status === "running") {
             const statusResponse = await axios.get(
-                app_url + `/index.php/api/check-job-status/${jobId}`,
+                app_url + `/api/check-job-status/${jobId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
