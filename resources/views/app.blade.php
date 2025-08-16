@@ -57,7 +57,9 @@
         <link rel="manifest" href="{{ URL::asset('site.webmanifest') }}-{{ str_replace('.', '-', env('APP_VERSION')) }}">
 
         <!-- Colore della barra superiore -->
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="msapplication-TileColor" content="black">
+        <meta name="theme-color" content="black">
 
         <!-- Abilita la modalità standalone -->
         <meta name="mobile-web-app-capable" content="yes">
@@ -84,6 +86,13 @@
                 // Cambia automaticamente il tema Bootstrap in base alla preferenza
                 const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
+                document.documentElement.setAttribute('theme-color', isDarkMode ? '#000000' : '#ffffff');
+
+                // Set theme-color
+                let metaThemeColor = document.querySelector("meta[name=theme-color]");
+                if (metaThemeColor) {
+                    metaThemeColor.setAttribute("content", isDarkMode ? 'rgb(31 41 55)' : 'rgba(255 255 255)');
+                }
 
                 // Ascolta i cambiamenti del tema di sistema
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {

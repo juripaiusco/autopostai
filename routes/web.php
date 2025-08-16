@@ -13,7 +13,7 @@ Route::get('/site.webmanifest-' . str_replace('.', '-', env('APP_VERSION')), fun
     return response()->json([
         'name' => env('APP_NAME'),
         'short_name' => env('APP_NAME'),
-        'theme_color' => env('PWA_THEME_COLOR', '#ffffff'),
+        'theme_color' => env('PWA_THEME_COLOR', '#000000'),
         'background_color' => env('PWA_BG_COLOR', '#000000'),
         'display' => 'standalone',
         'icons' => [
