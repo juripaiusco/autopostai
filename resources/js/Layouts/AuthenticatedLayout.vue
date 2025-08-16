@@ -34,7 +34,10 @@ const showingNavigationDropdown = ref(false);
         <div class="flex flex-col min-h-screen bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-900">
             <nav class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
                 <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="
+                fixed w-full mt-[-64px] sm:relative sm:w-auto sm:mt-0 sm:shadow-none
+                z-40 bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-900 shadow-md
+                mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="flex h-16 justify-between">
                         <div class="flex">
                             <!-- Logo -->
@@ -225,7 +228,11 @@ const showingNavigationDropdown = ref(false);
                         block: showingNavigationDropdown,
                         hidden: !showingNavigationDropdown,
                     }"
-                    class="sm:hidden"
+                    class="
+                    fixed w-full sm:relative sm:w-auto
+                    z-50 bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-900 shadow-md
+                    border-b border-gray-200 dark:border-gray-600
+                    sm:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
                         <!-- <ResponsiveNavLink

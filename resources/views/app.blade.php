@@ -119,7 +119,10 @@
 
         <x-translations />
     </head>
-    <body class="font-sans antialiased">
+    <body class="
+    pt-[64px] sm:pt-0
+    bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-900
+    font-sans antialiased">
         <div id="splash-screen">
             <div id="splash-logo">
                 Loading . . .
