@@ -1,3 +1,5 @@
+import {now} from "es-toolkit/compat";
+
 export function __date(dateString, format = '') {
 
     const date = new Date(dateString);
@@ -22,25 +24,51 @@ export function __date(dateString, format = '') {
         switch (format) {
             case 'day':
                 return d + '/' + m + '/' + y;
-                break;
             case 'hour':
                 return h + ':' + i;
-                break;
             case 'date':
                 return y + '-' + m + '-' + d;
-                break;
             case 'y':
                 return y;
-                break;
             case 'm':
                 return m;
-                break;
             case 'n':
                 return parseInt(m);
-                break;
             case 'datestring':
                 return y + '-' + m + '-' + d + ' ' + h + ':' + i + ':' + s;
-                break;
+            case 'diff':
+                const nowDate = new Date(now());
+                const targetDate = new Date(dateString);
+
+                // Stesso anno, mese, giorno, ora e minuto
+                if (
+                    nowDate.getFullYear() === targetDate.getFullYear() &&
+                    nowDate.getMonth() === targetDate.getMonth() &&
+                    nowDate.getDate() === targetDate.getDate() &&
+                    nowDate.getHours() === targetDate.getHours() &&
+                    nowDate.getMinutes() === targetDate.getMinutes()
+                ) {
+                    return "Adesso";
+                }
+
+                // Stesso giorno → calcola differenza
+                if (
+                    nowDate.getFullYear() === targetDate.getFullYear() &&
+                    nowDate.getMonth() === targetDate.getMonth() &&
+                    nowDate.getDate() === targetDate.getDate()
+                ) {
+                    const diffSec = Math.floor((nowDate - targetDate) / 1000);
+
+                    if (diffSec < 60) {
+                        return diffSec + " sec fa";
+                    } else {
+                        const diffMin = Math.floor(diffSec / 60);
+                        return diffMin + " min fa";
+                    }
+                }
+
+                // Giorno diverso → mostra solo la data
+                return __date(dateString, 'day');
             default:
                 return d + '/' + m + '/' + y + ' ' + h + ':' + i + ':' + s;
         }

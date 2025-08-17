@@ -69,7 +69,7 @@ const {
         >
             <PopoverPanel
                 class="
-                fixed z-30 inset-12 mx-auto max-h-96 sm:w-80
+                fixed z-30 inset-12 mx-auto max-h-96 sm:w-96
                 bg-white rounded-lg ring-1 ring-black/5
                 shadow-lg shadow-black/40"
             >
@@ -124,14 +124,18 @@ const {
 
                                 </span>
 
-                                <span>
-                                    {{ n.title }}
-                                </span>
+                                <div class="flex w-full items-center justify-between">
+                                    <div>
+                                        {{ n.title }}
+                                    </div>
+                                    <div class="text-gray-400 text-xs">
+                                        {{ __date(n.sent_at, 'diff') }}
+                                        <!-- {{ __date(n.sent_at, 'day') }} - {{ __date(n.sent_at, 'hour') }} -->
+                                    </div>
+                                </div>
+
                             </div>
                             <p class="text-gray-600 text-xs mb-1">{{ n.body }}</p>
-                            <p class="text-gray-400 text-xs">
-                                {{ __date(n.sent_at, 'day') }} - {{ __date(n.sent_at, 'hour') }}
-                            </p>
                         </a>
                     </li>
                 </ul>
