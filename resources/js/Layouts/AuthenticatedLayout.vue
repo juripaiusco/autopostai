@@ -230,7 +230,8 @@ const showingNavigationDropdown = ref(false);
                     }"
                     class="
                     fixed w-full sm:relative sm:w-auto
-                    z-20 bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-900 shadow-md
+                    z-20 shadow-md
+                    bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-900
                     border-b border-gray-200 dark:border-gray-600
                     sm:hidden"
                 >
@@ -328,10 +329,10 @@ const showingNavigationDropdown = ref(false);
         <nav class="
         sm:hidden
         fixed z-10 bottom-[-2px] w-full py-2 pb-8
-        shadow-[0_-2px_4px_rgba(0,0,0,0.08)]
+        shadow-[0_-4px_6px_rgba(0,0,0,0.08)]
         text-gray-400 dark:text-gray-600
         bg-gray-100 dark:bg-gray-900
-        border-t border-t-gray-300 dark:border-t-gray-700">
+        border-t border-gray-400/40 dark:border-gray-700">
             <div class="container-fluid mx-auto flex justify-around">
 
                 <Link v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on"
