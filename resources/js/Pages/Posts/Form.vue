@@ -131,7 +131,7 @@ const startJob = async () => {
                     'image_url': statusResponse.data.image_url,
                     'prompt': statusResponse.data.prompt,
                 });
-                form.img = form.img_selected = ai_prompt_img_path.value;
+                form.img = form.img_selected = [ai_prompt_img_path.value];
                 selectedImage = 0;
                 break;
             }
