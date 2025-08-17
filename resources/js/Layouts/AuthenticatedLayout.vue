@@ -36,7 +36,7 @@ const showingNavigationDropdown = ref(false);
                 <!-- Primary Navigation Menu -->
                 <div class="
                 fixed w-full mt-[-64px] sm:relative sm:w-auto sm:mt-0 sm:shadow-none
-                z-30 bg-white lg:bg-gray-100 dark:bg-gray-800 lg:dark:bg-gray-800 shadow-md
+                z-30 bg-white dark:bg-gray-800 lg:dark:bg-gray-800 shadow-md
                 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="flex h-16 justify-between">
                         <div class="flex">
@@ -315,7 +315,10 @@ const showingNavigationDropdown = ref(false);
 
             <!-- Footer -->
             <footer class="w-full">
-                <div class="lg:container lg:m-auto text-gray-400 text-sm ps-2 pb-4">
+                <div class="
+                text-center text-gray-400 pb-4
+                sm:text-left sm:ps-6
+                lg:container lg:m-auto text-sm lg:ps-2">
                     <small>{{ usePage().props.app.name }} - v.{{ usePage().props.app.version }}</small>
                 </div>
             </footer>
