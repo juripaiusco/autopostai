@@ -50,19 +50,22 @@
         </script>
 
         <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-        <!-- Tag per rendere Mobile la WebApp -->
+        <!-- Tag per rendere PWA la WebApp -->
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-touch-fullscreen" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-icon" sizes="180x180" href="{{ URL::asset('apple-touch-icon.png') }}">
         <link rel="icon" type="image/png" sizes="32x32" href="{{ URL::asset('favicon-32x32.png') }}">
         <link rel="icon" type="image/png" sizes="16x16" href="{{ URL::asset('favicon-16x16.png') }}">
         <link rel="manifest" href="{{ URL::asset('site.webmanifest') }}-{{ str_replace('.', '-', env('APP_VERSION')) }}">
 
         <!-- Colore della barra superiore -->
-        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="msapplication-TileColor" content="black">
         <meta name="theme-color" content="black">
 
-        <!-- Abilita la modalità standalone -->
-        <meta name="mobile-web-app-capable" content="yes">
+        <!-- iOS Splash Screen -->
+        @include('includes.pwa-splash')
 
         <!-- Nome della tua web app su iOS -->
         <meta name="apple-mobile-web-app-title" content="{{ config('app.name', 'Laravel') }}">
@@ -91,7 +94,7 @@
                 // Set theme-color
                 let metaThemeColor = document.querySelector("meta[name=theme-color]");
                 if (metaThemeColor) {
-                    metaThemeColor.setAttribute("content", isDarkMode ? 'rgb(31 41 55)' : 'rgba(255 255 255)');
+                    metaThemeColor.setAttribute("content", isDarkMode ? 'rgb(31 41 55)' : 'rgb(255 255 255)');
                 }
 
                 // Ascolta i cambiamenti del tema di sistema

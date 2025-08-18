@@ -3,7 +3,8 @@
     "type": "module",
     "scripts": {
         "build": "dotenv -e .env.production vite build",
-        "dev": "dotenv -e .env vite"
+        "dev": "dotenv -e .env vite",
+        "pwa:splash": "node _pwa-generator.cjs"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
@@ -15,6 +16,7 @@
         "dotenv-cli": "^8.0.0",
         "laravel-vite-plugin": "^1.0",
         "postcss": "^8.4.31",
+        "pwa-asset-generator": "^8.0.5",
         "sass-embedded": "^1.83.0",
         "tailwindcss": "^3.2.1",
         "vite": "^6.0",
