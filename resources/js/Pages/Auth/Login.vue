@@ -42,7 +42,7 @@ const submit = () => {
             <div>
                 <div class="form-floating">
                     <TextInput
-                        id="email"
+                        id="username"
                         type="email"
                         class="mt-1 block w-full form-control"
                         v-model="form.email"
@@ -51,7 +51,7 @@ const submit = () => {
                         autocomplete="username"
                         placeholder="name@example.com"
                     />
-                    <InputLabel for="email" value="Email" class="!text-base !text-gray-600" />
+                    <InputLabel for="username" value="Nome utente" class="!text-base !text-gray-600" />
                 </div>
 
                 <!-- <InputError class="mt-2" :message="form.errors.email" /> -->
