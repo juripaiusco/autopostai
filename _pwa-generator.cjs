@@ -3,13 +3,13 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const icon     = 'public/apple-icon-512x512.png';
+const icon     = 'public/pwa-faper3-logo.png';
 const outBase  = 'public/assets/splash';
 const bladeOut = 'resources/views/includes/pwa-splash.blade.php';
 
 const combos = [
-    { theme: 'dark',  bg: 'rgb(31 41 55)', mode: 'portrait',  padding: '35%' },
-    { theme: 'dark',  bg: 'rgb(31 41 55)', mode: 'landscape', padding: '15%' },
+    { theme: 'dark',  bg: 'rgb(31 41 55)', mode: 'portrait' },
+    { theme: 'dark',  bg: 'rgb(31 41 55)', mode: 'landscape' },
     /*{ theme: 'light', bg: 'rgb(255 255 255)', mode: 'portrait',  padding: '35%' },
     { theme: 'light', bg: 'rgb(255 255 255)', mode: 'landscape', padding: '15%' },*/
 ];
