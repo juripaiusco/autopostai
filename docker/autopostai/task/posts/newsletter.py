@@ -131,7 +131,7 @@ class NewsletterPost(BasePost):
 
                 for list in lists:
                     if list['on'] == '1':
-                        lists_id_new.append(list['id'])
+                        lists_id_new.append(int(list['id']))
 
                 if lists_id_new:
                     lists_id = lists_id_new
