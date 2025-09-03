@@ -305,7 +305,7 @@ function previewAIContent() {
 
                                 <!-- Mostra un'immagine placeholder -->
                                 <div
-                                    v-if="!form.img.length && !previewUrls.length"
+                                    v-if="!form.img?.length && !previewUrls.length"
                                     @click="triggerFileInput"
                                     class="
                                      border
