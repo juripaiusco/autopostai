@@ -6,7 +6,6 @@ use App\Models\ImageJob;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Process\Exceptions\ProcessFailedException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -298,7 +297,7 @@ class Posts extends Controller
         ]);
     }
 
-    private function storeData(Request $request, $published_at = '', $preview = false)
+    private function storeData(Request $request, $published_at = null, $preview = false)
     {
         $this->validateRequest($request);
 
@@ -312,10 +311,6 @@ class Posts extends Controller
         unset($request['ai_prompt_img']);
         unset($request['img_selected']);
         unset($request['schedule']);
-
-        if ($published_at) {
-            unset($request['published_at']);
-        }
 
         $post = new Post();
         $post->fill($request->all());
@@ -336,6 +331,7 @@ class Posts extends Controller
         $post->user_id = $request->input('user_id') ? $request->input('user_id') : auth()->user()->id;
 
         $post->img = null;
+
         $post->save();
         $this->save_img('posts', $post, $request);
 
@@ -668,7 +664,7 @@ class Posts extends Controller
 
         // Salvo i dati del post
         if (!$request->input('id')) {
-            $data = $this->storeData($request, '', true);
+            $data = $this->storeData($request, null, true);
         } else {
             $data = $this->updateData($request, $request->input('id'));
         }
