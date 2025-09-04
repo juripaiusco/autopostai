@@ -17,7 +17,11 @@ class WordPressController extends Controller
     {
         $settings = \App\Models\Settings::where('user_id', $userId)->first();
 
-        $response = Http::get($settings->wordpress_url . '/wp-json/wp/v2/categories');
+        $response = Http::get($settings->wordpress_url . '/wp-json/wp/v2/categories', [
+            'per_page' => 100,
+            'orderby' => 'name',
+            'order' => 'asc',
+        ]);
 
         if ($response->successful()) {
             $categories = $response->json();
