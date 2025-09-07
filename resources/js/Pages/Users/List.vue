@@ -207,7 +207,7 @@ let modalData = ref(props.data);
 
                             }
                         }, {
-                            class: 'text-center sm:w-[200px]',
+                            class: 'text-right sm:w-[200px]',
                             label: 'Token',
                             field: 'tokens_limit',
                             fnc: function (d) {
@@ -229,7 +229,7 @@ let modalData = ref(props.data);
                                 }
 
                                 if (d.child_on === null) {
-                                    html += tokens_used_total +
+                                    html += (tokens_used_total === '0' ? '-' : tokens_used_total) +
                                     ' / ' +
                                     '<small>' +
                                         tokens_limit +
