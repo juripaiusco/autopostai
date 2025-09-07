@@ -223,6 +223,20 @@ class Users extends Controller
     }
 
     /**
+     * Recupera i manager con i loro sotto utenti
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function managers_data_get(): \Illuminate\Database\Eloquent\Collection
+    {
+        return User::query()
+            ->with('children')
+            ->whereNotNull('parent_id')
+            ->whereNotNull('child_on')
+            ->get();
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()
@@ -250,6 +264,8 @@ class Users extends Controller
         $data['saveRedirect'] = Redirect::back()->getTargetUrl();
 
         $data['channels'] = $this->get_channels();
+
+        $data['managers'] = $this->managers_data_get();
 
         $data = json_decode(json_encode($data), true);
 
@@ -281,7 +297,10 @@ class Users extends Controller
         $saveRedirect = $request['saveRedirect'];
         unset($request['saveRedirect']);
 
-        $request['parent_id'] = auth()->user()->id;
+        if ($request->input('parent_id') == '') {
+            $request['parent_id'] = auth()->user()->id;
+        }
+
         $request['password'] = Hash::make($request['password']);
 
         // Salvo il nuovo utente
@@ -323,6 +342,8 @@ class Users extends Controller
         $data['saveRedirect'] = Redirect::back()->getTargetUrl();
 
         $data['channels'] = array_replace($this->get_channels(), json_decode($data->channels, true));
+
+        $data['managers'] = $this->managers_data_get();
 
         return Inertia::render('Users/Form', [
             'data' => $data,

@@ -91,7 +91,35 @@ form.password = '';
                             </div>
 
                             <div class="row">
-                                <div class="col-lg-6">
+                                <div v-if="form.child_on === '0' || form.child_on === '' || form.child_on === null"
+                                     class="col-lg">
+
+                                    <label class="form-label">
+                                        Scegli a quale manager assegnare questo account
+                                        <br>
+                                        <small>
+                                            <span v-if="form.parent_id">
+                                                L'account è assegnato a
+                                                <span class="font-bold">
+                                                    {{ form.managers.find(d => d.id === form.parent_id).name }}
+                                                </span>
+                                            </span>
+                                            <span v-else>
+                                                L'account non ha manager
+                                            </span>
+                                        </small>
+                                    </label>
+                                    <select class="form-select"
+                                            aria-label="Default select example"
+                                            v-model="form.parent_id">
+                                        <option value="">Seleziona l'account</option>
+                                        <option v-for="manager in data.managers" :key="manager.id" :value="manager.id">
+                                            {{ manager.name }} - {{ manager.children.length }}/{{ manager.child_max }}
+                                        </option>
+                                    </select>
+
+                                </div>
+                                <div class="col-lg">
 
                                     <div v-if="form.child_on === '1' || form.child_on === 1">
 
@@ -124,7 +152,7 @@ form.password = '';
                                     </div>
 
                                 </div>
-                                <div class="col-lg-6 !mt-6 sm:!mt-0">
+                                <div class="col-lg !mt-6 sm:!mt-0">
 
                                     <label class="form-label">
                                         Immagini al giorno
