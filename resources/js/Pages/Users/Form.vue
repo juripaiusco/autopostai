@@ -98,10 +98,10 @@ form.password = '';
                                         Scegli a quale manager assegnare questo account
                                         <br>
                                         <small>
-                                            <span v-if="form.parent_id">
+                                            <span v-if="form.parent_id && form.parent_id !== 1">
                                                 L'account è assegnato a
                                                 <span class="font-bold">
-                                                    {{ form.managers.find(d => d.id === form.parent_id).name }}
+                                                    {{ form.managers.find(d => d.id === form.parent_id)?.name }}
                                                 </span>
                                             </span>
                                             <span v-else>
