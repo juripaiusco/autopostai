@@ -46,7 +46,8 @@ let modalData = ref(props.data);
                             Nuovo
                         </Link>
 
-                        <Link class="btn btn-warning w-[120px] !hidden sm:!block"
+                        <Link v-if="!$page.props.auth.user.parent_id || !$page.props.auth.user.child_on"
+                              class="btn btn-warning w-[120px] !hidden sm:!block"
                               :href="route('user.index', {
                                   'orderby': 'name',
                                   'ordertype': 'asc',
@@ -56,7 +57,8 @@ let modalData = ref(props.data);
                             Utenti
                         </Link>
 
-                        <Link class="btn btn-primary w-[120px] !hidden sm:!block"
+                        <Link v-if="!$page.props.auth.user.parent_id || !$page.props.auth.user.child_on"
+                              class="btn btn-primary w-[120px] !hidden sm:!block"
                               :href="route('user.index', {
                                   'orderby': 'name',
                                   'ordertype': 'asc',
