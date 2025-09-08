@@ -66,7 +66,12 @@ const showingNavigationDropdown = ref(false);
 
                                 <NavLink v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on"
                                          class="w-[100px] text-center"
-                                         :href="route('user.index')"
+                                         :href="route('user.index', {
+                                              'orderby': 'name',
+                                              'ordertype': 'asc',
+                                              's': '',
+                                              'filter': 'users'
+                                          })"
                                          :active="route().current().search('user') === 0 ? true : false">
                                     Account
                                 </NavLink>
@@ -243,7 +248,12 @@ const showingNavigationDropdown = ref(false);
                             Dashboard
                         </ResponsiveNavLink> -->
                         <ResponsiveNavLink v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on"
-                                           :href="route('user.index')"
+                                           :href="route('user.index', {
+                                                      'orderby': 'name',
+                                                      'ordertype': 'asc',
+                                                      's': '',
+                                                      'filter': 'users'
+                                                  })"
                                            :active="route().current().search('user') === 0 ? true : false">
                             Account
                         </ResponsiveNavLink>
@@ -337,7 +347,12 @@ const showingNavigationDropdown = ref(false);
 
                 <Link v-if="!$page.props.auth.user.parent_id || $page.props.auth.user.child_on"
                          class="px-4 py-2"
-                         :href="route('user.index')"
+                         :href="route('user.index', {
+                                  'orderby': 'name',
+                                  'ordertype': 'asc',
+                                  's': '',
+                                  'filter': 'users'
+                              })"
                          :class="{
                              '!text-black dark:!text-gray-300': route().current().search('user') === 0
                          }">

@@ -151,7 +151,17 @@ class Users extends Controller
 
         // Query data
         $data = \App\Models\User::query();
-//        $data = $data->with('posts');
+        $data = $data->with('parent');
+
+        if (request('filter') == 'users') {
+            $data = $data->whereNotNull('parent_id');
+            $data = $data->whereNull('child_on');
+        }
+
+        if (request('filter') == 'managers') {
+            $data = $data->whereNotNull('parent_id');
+            $data = $data->whereNotNull('child_on');
+        }
 
         // Request validate
         request()->validate([
@@ -198,6 +208,7 @@ class Users extends Controller
             DB::raw('COALESCE(SUM(CASE WHEN ' . env('DB_PREFIX') . 'token_logs.type = "post" THEN 1 ELSE 0 END), 0) as post_count'),
             DB::raw('COALESCE(SUM(CASE WHEN ' . env('DB_PREFIX') . 'token_logs.type = "reply" THEN 1 ELSE 0 END), 0) as reply_count'),
             'users.child_on',
+            'users.parent_id',
         ])->groupBy(
             'users.id',
             'users.name',
@@ -206,6 +217,7 @@ class Users extends Controller
             'users.tokens_limit',
             'users.image_model_limit',
             'users.child_on',
+            'users.parent_id',
         );
 
         if (auth()->user()->parent_id == null) {

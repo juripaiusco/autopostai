@@ -39,10 +39,34 @@ let modalData = ref(props.data);
 
                 <div class="lg:w-3/4 mr-4 lg:mr-0">
 
-                    <Link class="btn btn-dark w-[120px]"
-                          :href="route('user.create')">
-                        Nuovo
-                    </Link>
+                    <div class="flex flex-row space-x-4">
+
+                        <Link class="btn btn-dark w-[120px]"
+                              :href="route('user.create')">
+                            Nuovo
+                        </Link>
+
+                        <Link class="btn btn-warning w-[120px] !hidden sm:!block"
+                              :href="route('user.index', {
+                                  'orderby': 'name',
+                                  'ordertype': 'asc',
+                                  's': '',
+                                  'filter': 'users'
+                              })">
+                            Utenti
+                        </Link>
+
+                        <Link class="btn btn-primary w-[120px] !hidden sm:!block"
+                              :href="route('user.index', {
+                                  'orderby': 'name',
+                                  'ordertype': 'asc',
+                                  's': '',
+                                  'filter': 'managers'
+                              })">
+                            Manager
+                        </Link>
+
+                    </div>
 
                 </div>
 
@@ -93,7 +117,13 @@ let modalData = ref(props.data);
                             field: 'name',
                             fnc: function (d) {
 
-                                let html = d.name
+                                let html = ''
+
+                                html += d.name
+
+                                if (d.parent.parent_id !== null) {
+                                    html += '<small> - <b>' + d.parent.name + '</b></small>'
+                                }
 
                                 if (d.child_on === 1) {
 
@@ -134,6 +164,10 @@ let modalData = ref(props.data);
                                      '</div>'
 
                                      html += '</div>'
+                                }*/
+
+                                /*if (d.parent_id > 1) {
+                                    html = '<div class=\'!pl-6\'>' + html + '</div>'
                                 }*/
 
                                 return html

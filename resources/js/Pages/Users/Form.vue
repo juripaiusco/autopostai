@@ -90,7 +90,7 @@ form.password = '';
 
                             </div>
 
-                            <div class="row">
+                            <div class="row space-y-6 lg:space-y-0">
                                 <div v-if="form.child_on === '0' || form.child_on === '' || form.child_on === null"
                                      class="col-lg">
 
@@ -152,7 +152,7 @@ form.password = '';
                                     </div>
 
                                 </div>
-                                <div class="col-lg !mt-6 sm:!mt-0">
+                                <div class="col-lg">
 
                                     <label class="form-label">
                                         Immagini al giorno
