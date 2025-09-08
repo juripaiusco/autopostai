@@ -91,6 +91,7 @@ class Posts extends Controller
             // Query data per mostrare gli utenti a cui collegare il Post
             $data['users'] = \App\Models\User::query();
             $data['users'] = $data['users']->with('children');
+            $data['users'] = $data['users']->orderBy('name', 'ASC');
 
             // Se l'utente è admin
             if (!auth()->user()->parent_id) {
