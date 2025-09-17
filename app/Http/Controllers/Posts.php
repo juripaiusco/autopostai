@@ -433,9 +433,11 @@ class Posts extends Controller
         return Redirect::to($saveRedirect);
     }
 
-    public function updateData(Request $request, string $id)
+    public function updateData(Request $request, string $id, $update_no_redirect = false)
     {
-        $this->validateRequest($request);
+        if ($update_no_redirect == false) {
+            $this->validateRequest($request);
+        }
 
         if ($request['img_selected'])
             $request['img'] = $request['img_selected'];
@@ -467,7 +469,7 @@ class Posts extends Controller
 
     public function update_no_redirect(Request $request, string $id)
     {
-        $this->updateData($request, $id);
+        $this->updateData($request, $id, true);
     }
 
     private function save_img($post_path, $data, Request $request)
