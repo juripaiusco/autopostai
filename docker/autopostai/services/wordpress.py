@@ -35,8 +35,8 @@ class Wordpress:
 
             if len(img_wp_array) > 1:
                 gallery_html = f"""
-                                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
                                 <!-- wp:gallery -->
+                                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
                                 <figure class="wp-block-gallery has-nested-images columns-default is-cropped
                                 wp-block-gallery-1 is-layout-flex wp-block-gallery-is-layout-flex">
                                 """
@@ -57,11 +57,10 @@ class Wordpress:
 
                                     </figure>
                                     """
-                    
+
                 gallery_html += f"""
                                 </figure>
                                 <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
-                                <!-- /wp:gallery -->
                                 """
                 gallery_html += """
                                 <script>
@@ -69,6 +68,7 @@ class Wordpress:
                                     GLightbox({selector: ".glightbox"});
                                 });
                                 </script>
+                                <!-- /wp:gallery -->
                                 """
 
                 content = gallery_html + "<br>" + content
@@ -133,6 +133,9 @@ class Wordpress:
         }
 
     def update(self, post_id, title, content):
+        # Qui bisogna leggere il contenuto del post e recuperare
+        # tutto quello che c'è tra i tag <!-- wp:gallery --> e <!-- /wp:gallery -->
+
         data = {
             "title": title,
             "content": content,
