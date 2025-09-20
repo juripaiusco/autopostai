@@ -57,29 +57,7 @@ class Wordpress:
 
                                     </figure>
                                     """
-                    # gallery_html += f"""
-                    #                 <figure data-wp-context="{{&quot;imageId&quot;:&quot;{img_wp['id']}&quot;}}"
-                    #                         data-wp-interactive="core/image"
-                    #                         class="wp-block-image size-large wp-lightbox-container">
-                    #
-                    #                         <img decoding="async"
-                    #                             alt=""
-                    #                             class="wp-image-{img_wp['id']}"
-                    #                             data-id="{img_wp['id']}"
-                    #                             data-src="{img_wp['url']}"
-                    #                             src="{img_wp['url']}">
-                    #
-                    #                         <button class="lightbox-trigger"
-                    #                                 type="button"
-                    #                                 aria-haspopup="dialog"
-                    #                                 aria-label="Ingrandisci">
-                    #                             <svg xmlns="http://www.w3.org/2000/svg"
-                    #                                  width="12" height="12" fill="none" viewBox="0 0 12 12">
-                    #                                  <path fill="#fff" d="M2 0a2 2 0 0 0-2 2v2h1.5V2a.5.5 0 0 1 .5-.5h2V0H2Zm2 10.5H2a.5.5 0 0 1-.5-.5V8H0v2a2 2 0 0 0 2 2h2v-1.5ZM8 12v-1.5h2a.5.5 0 0 0 .5-.5V8H12v2a2 2 0 0 1-2 2H8Zm2-12a2 2 0 0 1 2 2v2h-1.5V2a.5.5 0 0 0-.5-.5H8V0h2Z"></path>
-                    #                             </svg>
-                    #                         </button>
-                    #                 </figure>
-                    #                 """
+                    
                 gallery_html += f"""
                                 </figure>
                                 <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
