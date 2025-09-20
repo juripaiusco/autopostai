@@ -25,6 +25,7 @@ class Wordpress:
         return headers
 
     def send(self, title, content, img_path, cat_id):
+        gallery_html = None
         img_wp_array = []
 
         # Upload immagine
@@ -107,7 +108,7 @@ class Wordpress:
         #     json=data
         # )
 
-        return post_id, post_url
+        return post_id, post_url, gallery_html
 
     def upload_img(self, img_path):
         # Aprire il file e inviare la richiesta

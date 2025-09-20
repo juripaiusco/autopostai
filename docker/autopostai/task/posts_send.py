@@ -138,7 +138,7 @@ def posts_send(debug = False):
                     print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'),
                           channels[i]['name'], "- post sending")
                 wordpress_post = WordPressPost(data=row, debug=debug)
-                channels[i]['id'], channels[i]['url'] = wordpress_post.send(ai_content_get(
+                channels[i]['id'], channels[i]['url'], channels[i]['gallery_html'] = wordpress_post.send(ai_content_get(
                     channelName=channels[i]['name'],
                     data=row,
                     debug=debug

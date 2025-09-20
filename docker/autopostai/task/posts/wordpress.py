@@ -60,7 +60,7 @@ class WordPressPost(BasePost):
         if selected_categories:
             cat_id = self.categories_get(channels.get('wordpress').get('options').get('categories'))
 
-        post_id, post_url = self.wordpress_init().send(
+        post_id, post_url, gallery_html = self.wordpress_init().send(
             title=title,
             content=body,
             img_path=self.img_path_get(get_all_img=True) if self.data['img'] else None,
@@ -71,7 +71,7 @@ class WordPressPost(BasePost):
             print(datetime.now(cfg.LOCAL_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S'), "WordPress - post ID:",
                   post_id)
 
-        return post_id, post_url
+        return post_id, post_url, gallery_html
 
     # Aggiorno il post su WordPress
     def update(self, post_id, content):
