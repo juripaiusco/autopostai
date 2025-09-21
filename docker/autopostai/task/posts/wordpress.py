@@ -77,6 +77,13 @@ class WordPressPost(BasePost):
     def update(self, post_id, content):
         title, body = self.data_get(content)
 
+        # Recupero la gallery caricata online e salvata nel json del canale WordPress
+        channels = json.loads(self.data.get('channels'))
+        gallery_html = channels.get('wordpress', {}).get('gallery_html', None)
+
+        if gallery_html is not None:
+            body = gallery_html + "<br>" + body
+
         return self.wordpress_init().update(
             post_id=post_id,
             title=title,
