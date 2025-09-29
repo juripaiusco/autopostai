@@ -182,7 +182,7 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <!-- Hamburger -->
-                        <div class="-me-2 flex items-center sm:hidden">
+                        <div class="-me-2 w-[64px] sm:w-auto flex items-center sm:hidden">
 
                             <Notification />
 
