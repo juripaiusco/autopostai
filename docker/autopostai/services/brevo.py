@@ -41,6 +41,7 @@ class Brevo:
             "name": subject,
             "subject": subject,
             "htmlContent": html_content,
+            "replyTo": data['brevo_from_email'],
             "recipients": {
                 "listIds": self.list_id
             },
