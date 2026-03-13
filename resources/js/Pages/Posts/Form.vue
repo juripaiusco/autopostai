@@ -558,6 +558,17 @@ function previewAIContent() {
                                         data.tokens.reduce((sum, token) => sum + token.tokens_used, 0) }}
                                     {{ usePage().props.auth.user.parent_id ? 'crediti' : ' token' }}
                                 </span>
+                                |
+                                <span :class="{
+                                    'text-red-500 font-bold' : form.channels['linkedin'].on === '1' &&
+                                                                 form.ai_content.length >= 3000
+                                }">
+                                    {{ form.ai_content.length }} Caratteri
+                                    <span v-if="form.channels['linkedin'].on === '1' &&
+                                                form.ai_content.length >= 3000">
+                                        (LinkedIn ne accetta 3000, il post non verrà pubblicato su LinkedIn)
+                                    </span>
+                                </span>
                                 <!-- <span v-else
                                       class="text-red-500">
                                     Error: token non disponibile
