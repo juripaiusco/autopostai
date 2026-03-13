@@ -563,9 +563,9 @@ function previewAIContent() {
                                     'text-red-500 font-bold' : form.channels['linkedin'].on === '1' &&
                                                                  form.ai_content.length >= 3000
                                 }">
-                                    {{ form.ai_content.length }} Caratteri
+                                    {{ form.ai_content?.length }} Caratteri
                                     <span v-if="form.channels['linkedin'].on === '1' &&
-                                                form.ai_content.length >= 3000">
+                                                form.ai_content?.length >= 3000">
                                         (LinkedIn ne accetta 3000, il post non verrà pubblicato su LinkedIn)
                                     </span>
                                 </span>
