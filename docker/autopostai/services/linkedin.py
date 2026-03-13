@@ -66,12 +66,11 @@ class LinkedIn:
         response = requests.post(url, headers=headers, data=json.dumps(payload))
 
         if response.status_code != 201:
+            # Mostra il risultato nel caso di errore
+            print(f'Status Code: {response.status_code}')
+            print('Response:')
+            print(response.json())
             return None, None
-
-        # Mostra il risultato
-        # print(f'Status Code: {response.status_code}')
-        # print('Response:')
-        # print(response.json())
 
         return response.json().get('id'), f"https://www.linkedin.com/feed/update/{response.json().get('id')}"
 
