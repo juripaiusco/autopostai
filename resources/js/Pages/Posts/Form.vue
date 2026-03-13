@@ -561,7 +561,7 @@ function previewAIContent() {
                                 |
                                 <span :class="{
                                     'text-red-500 font-bold' : form.channels['linkedin'].on === '1' &&
-                                                                 form.ai_content.length >= 3000
+                                                                 form.ai_content?.length >= 3000
                                 }">
                                     {{ form.ai_content?.length }} Caratteri
                                     <span v-if="form.channels['linkedin'].on === '1' &&
