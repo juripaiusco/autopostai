@@ -1,4 +1,0 @@
-.idea
-*.pyc
-.*env
-.docker_image_built
