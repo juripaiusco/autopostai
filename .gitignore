@@ -6,6 +6,8 @@
 /docs/documentation
 _config.sh
 /public/assets
+.editorconfig
+.env*
 
 # PHPStorm
 /.phpunit.cache
