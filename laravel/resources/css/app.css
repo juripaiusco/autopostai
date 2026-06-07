@@ -4,6 +4,128 @@
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* ============================================================
+   FaPer3 — design token (fonte di verità: colors_and_type.css
+   del bundle Claude Design). Usare le CSS var qui sotto.
+   ============================================================ */
+:root {
+    /* ---------- BRAND ---------- */
+    --sky:        #38bdf8;   /* logo · sky-400 · accento brand primario */
+    --sky-strong: #0369a1;   /* sky-700 · tab attiva, blu brand profondo */
+    --sky-50:     #f0f9ff;   /* tint nav attiva */
+    --sky-100:    #e0f2fe;
+    --ink:        #1f2937;   /* gray-800 · "blue dark", titoli, bottoni scuri */
+
+    /* ---------- NEUTRI (scala gray Tailwind) ---------- */
+    --gray-900: #111827;
+    --gray-800: #1f2937;
+    --gray-700: #374151;
+    --gray-600: #4b5563;
+    --gray-500: #6b7280;   /* label form, testo secondario */
+    --gray-400: #9ca3af;   /* icone idle, muted */
+    --gray-300: #d1d5db;   /* bordi input */
+    --gray-200: #e5e7eb;   /* hairline, dropzone tratteggiata */
+    --gray-100: #f3f4f6;   /* sfondo canvas app */
+    --gray-50:  #f9fafb;
+    --white:    #ffffff;
+
+    /* ---------- RUOLI TESTO ---------- */
+    --fg1: var(--gray-800);  /* testo primario / titoli */
+    --fg2: var(--gray-500);  /* testo secondario / label */
+    --fg3: var(--gray-400);  /* terziario / hint */
+    --fg-on-dark: #ffffff;
+
+    /* ---------- SUPERFICI ---------- */
+    --bg-canvas:  var(--gray-100); /* sfondo shell app */
+    --bg-surface: #ffffff;         /* card, nav, pannelli */
+    --bg-sunken:  var(--gray-50);  /* pannelli inset */
+    --border:     var(--gray-200);
+    --border-input: var(--gray-300);
+
+    /* ---------- COLORI AZIONE (semantica Bootstrap 5) ---------- */
+    --primary:   #0d6efd;
+    --primary-h: #0b5ed7;
+    --success:   #198754;
+    --success-h: #157347;
+    --danger:    #dc3545;
+    --danger-h:  #bb2d3b;
+    --warning:   #ffc107;
+    --secondary: #6c757d;
+    --dark:      #212529;
+    --light:     #f8f9fa;
+
+    /* ---------- STATO PUBBLICAZIONE ---------- */
+    --status-scheduled-bg:     #fef9c3;
+    --status-scheduled-border: #eab308;
+    --status-scheduled-fg:     #ca8a04;
+    --status-published-bg:     #bbf7d0;
+    --status-published-border: #22c55e;
+    --status-published-fg:     #16a34a;
+    --status-done-bg:     #e5e7eb;
+    --status-done-border: #6b7280;
+    --status-done-fg:     #4b5563;
+    --status-error-fg:    #ef4444;
+
+    /* ---------- COLORI CANALE ---------- */
+    --ch-facebook:  #1877f2;
+    --ch-instagram: #e4405f;
+    --ch-linkedin:  #0a66c2;
+    --ch-wordpress: #21759b;
+    --ch-newsletter: var(--gray-600);
+
+    /* ---------- FAMIGLIE TYPE ---------- */
+    --font-brand: 'Montserrat', system-ui, sans-serif;   /* display / logo */
+    --font-ui:    'Figtree', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    /* ---------- SCALA TYPE ---------- */
+    --text-xs:   0.75rem;
+    --text-sm:   0.875rem;
+    --text-base: 1rem;
+    --text-lg:   1.125rem;
+    --text-xl:   1.25rem;
+    --text-2xl:  1.5rem;
+    --text-3xl:  1.875rem;
+    --text-4xl:  2.5rem;
+
+    /* ---------- PESI ---------- */
+    --w-light: 300;
+    --w-regular: 400;
+    --w-medium: 500;
+    --w-semibold: 600;
+    --w-bold: 700;
+    --w-extrabold: 800;
+    --w-black: 900;
+
+    /* ---------- RADII ---------- */
+    --radius-sm: 0.25rem;
+    --radius:    0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-full: 9999px;
+
+    /* ---------- OMBRE ---------- */
+    --shadow-sm:   0 1px 2px 0 rgba(0,0,0,.05);
+    --shadow-md:   0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -2px rgba(0,0,0,.05);
+    --shadow-lg:   0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.05);
+    --shadow-nav:  0 4px 6px rgba(0,0,0,.08);
+    --shadow-up:   0 -4px 6px rgba(0,0,0,.08);
+    --shadow-card: 0 14px 34px 0 rgba(0,0,0,.08);
+    --glow-sky:    0 0 12px 2px rgba(56,189,248,.6);
+
+    /* ---------- SPAZIATURA (base 4px Tailwind) ---------- */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-16: 4rem;
+
+    /* ---------- LAYOUT ---------- */
+    --container-max: 80rem;  /* max-w-7xl */
+    --nav-height: 4rem;      /* h-16 */
 }

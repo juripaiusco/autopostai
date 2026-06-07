@@ -12,8 +12,11 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
             fonts: [
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
+                // Figtree = font UI del prodotto (design system FaPer3).
+                // Montserrat (--font-brand) si aggiungerà quando una pagina
+                // userà davvero il display brand; sul login non è renderizzato.
+                bunny('Figtree', {
+                    weights: [300, 400, 500, 600, 700, 800, 900],
                 }),
             ],
         }),
