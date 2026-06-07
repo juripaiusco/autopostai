@@ -1,7 +1,9 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import tailwindcss from '@tailwindcss/vite';
+import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     plugins: [
@@ -15,7 +17,13 @@ export default defineConfig({
             ],
         }),
         tailwindcss(),
+        vue(),
     ],
+    resolve: {
+        alias: {
+            'ziggy-js': fileURLToPath(new URL('./vendor/tightenco/ziggy', import.meta.url)),
+        },
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],
