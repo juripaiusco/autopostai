@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -15,9 +16,13 @@ Route::get('/dashboard', fn () => Inertia::render('Dashboard'))
     ->middleware('auth')
     ->name('dashboard');
 
-Route::get('/account', fn () => Inertia::render('Account'))
+Route::get('/account', [AccountController::class, 'index'])
     ->middleware('auth')
     ->name('account');
+
+Route::delete('/account/{user}', [AccountController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('account.destroy');
 
 Route::get('/posts', fn () => Inertia::render('Posts'))
     ->middleware('auth')

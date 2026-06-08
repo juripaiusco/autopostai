@@ -161,6 +161,8 @@ main{ flex: 1; }
 .btn-primary{ background: var(--primary); color: #fff; } .btn-primary:hover:not(:disabled){ background: var(--primary-h); }
 .btn-dark{ background: var(--dark); color: #fff; } .btn-dark:hover:not(:disabled){ background: #000; }
 .btn-light{ background: var(--light); color: var(--dark); border-color: var(--g300); } .btn-light:hover:not(:disabled){ background: var(--light-h); }
+.btn-secondary{ background: #fff; color: var(--g700); border-color: var(--g300); } .btn-secondary:hover:not(:disabled){ background: var(--g50); }
+.btn-danger{ background: var(--danger); color: #fff; } .btn-danger:hover:not(:disabled){ background: var(--danger-h); }
 .btn-lg{ font-size: 17px; padding: 12px 24px; }
 .btn-sm{ font-size: 12.5px; padding: 6px 12px; }
 .btn-block{ width: 100%; }
@@ -188,6 +190,15 @@ main{ flex: 1; }
 .icon-btn--ghost{ width: 32px; height: 32px; background: transparent; color: var(--g400); border: 1px solid var(--g200); transition: background .15s ease, color .15s ease, border-color .15s ease; }
 .icon-btn--ghost:hover{ background: var(--g50); color: var(--ink); border-color: var(--g300); }
 .icon-btn--danger:hover{ background: color-mix(in srgb, var(--danger) 10%, white); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 35%, white); }
+
+/* ---------- Modal / overlay ---------- */
+.overlay{ position: fixed; inset: 0; background: rgba(0,0,0,.4); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 50; animation: overlayFade .2s ease-out; }
+.modal{ background: #fff; border-radius: var(--radius-lg); box-shadow: 0 10px 30px rgba(0,0,0,.25); width: 100%; max-width: 440px; overflow: hidden; animation: modalRise .2s ease-out; }
+.modal-head{ padding: 16px 20px; border-bottom: 1px solid var(--g200); font-weight: 700; font-size: 16px; }
+.modal-body{ padding: 20px; font-size: 14px; color: var(--g700); line-height: 1.55; }
+.modal-foot{ padding: 14px 20px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--g100); }
+@keyframes overlayFade{ from{ opacity: 0; } to{ opacity: 1; } }
+@keyframes modalRise{ from{ transform: translateY(8px); opacity: 0; } to{ transform: translateY(0); opacity: 1; } }
 
 /* Canali — chip neutro, colore brand solo all'hover */
 .ch-chip{ width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; background: var(--g100); color: var(--g500); transition: background .15s ease, color .15s ease; }
