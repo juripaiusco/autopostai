@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Mario',
             'email' => 'mario@test.it',
             'password' => Hash::make('12345'),
-            'channels' => json_encode($channels),
+            'channels' => $channels,
             'tokens_limit' => 10000,
         ]);
 
@@ -56,7 +56,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Luigi',
             'email' => 'luigi@test.it',
             'password' => Hash::make('12345'),
-            'channels' => json_encode($channels),
+            'channels' => $channels,
             'tokens_limit' => 10000,
         ]);
 
@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Pietro',
             'email' => 'pietro@prova.it',
             'password' => Hash::make('12345'),
-            'channels' => json_encode($this->defaultChannels()),
+            'channels' => $this->defaultChannels(),
             'child_on' => 1,
             'child_max' => 2,
         ]);
@@ -91,7 +91,7 @@ class DatabaseSeeder extends Seeder
                 'name' => $item['name'],
                 'email' => $item['email'],
                 'password' => Hash::make('12345'),
-                'channels' => json_encode($channels),
+                'channels' => $channels,
                 'tokens_limit' => 10000,
             ]);
 
@@ -111,7 +111,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => $owner->id,
             'created_by_user_id' => $createdBy->id,
             'title' => $titlePrefix !== '' ? $titlePrefix . fake()->text(60) : fake()->text(60),
-            'channels' => json_encode($channels),
+            'channels' => $channels,
         ]);
 
         foreach ($posts as $post) {

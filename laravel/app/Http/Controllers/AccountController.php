@@ -69,7 +69,11 @@ class AccountController extends Controller
                 'name' => $u->name,
                 'email' => $u->email,
                 'role' => $u->parent_id === null ? 'amministratore' : ($u->child_on == 1 ? 'manager' : 'utente'),
-                'channels' => $u->channels ?? [],
+                'channels' => collect($u->channels ?? [])
+                    ->filter(fn ($c) => !empty($c['on']))
+                    ->keys()
+                    ->values()
+                    ->all(),
                 'post' => $u->posts_count,
                 'reply' => $u->comments_count,
                 'immagini' => $u->images_used_count,
