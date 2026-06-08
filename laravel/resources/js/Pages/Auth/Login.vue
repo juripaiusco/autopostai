@@ -1,5 +1,5 @@
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import GuestLayout from '../../Layouts/GuestLayout.vue';
 
@@ -128,7 +128,7 @@ function submit() {
             <div class="auth-foot">
                 <!-- Registrazione non ancora implementata (feature Fortify disattivata) -->
                 <div class="signup">Non hai un account? <a href="#" @click.prevent>Registrati</a></div>
-                <div class="ver">v.2.4.1</div>
+                <div class="ver">v.{{ usePage().props.app.version }}</div>
             </div>
         </form>
     </GuestLayout>

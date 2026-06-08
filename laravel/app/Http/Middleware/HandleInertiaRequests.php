@@ -40,6 +40,10 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user()?->only('id', 'name', 'email'),
             ],
+            'app' => [
+                'version' => env('APP_VERSION', '0.0.0'),
+                'changelog_url' => env('APP_CHANGELOG_URL', '#'),
+            ],
         ];
     }
 }
