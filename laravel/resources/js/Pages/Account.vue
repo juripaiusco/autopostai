@@ -83,7 +83,7 @@ const colSpan = computed(() => (props.isAdmin ? 8 : 7));
     <Head title="Account" />
 
     <AppLayout :current="'account'" :user="userName">
-        <header class="page-header" style="background: #fff; box-shadow: 0 1px 0 var(--g200); margin: -32px -24px 24px">
+        <header class="page-header" style="background: #fff; box-shadow: 0 1px 0 var(--g200); margin: -30px -30px 24px">
             <div style="padding: 18px 28px; display: flex; align-items: center; justify-content: space-between">
                 <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--g500)">
                     <span>Account</span>

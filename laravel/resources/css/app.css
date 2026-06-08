@@ -207,7 +207,7 @@ tr:hover .ch-chip{ background: var(--g200); }
 
 /* ---------- App shell: sidebar + topbar ---------- */
 .app.has-sidebar{ flex-direction: row; height: 100vh; overflow: hidden; }
-.app.has-sidebar .container{ max-width: 72rem; padding: 30px 30px 60px; }
+.app.has-sidebar .container{ max-width: none; padding: 30px 30px 60px; }
 
 .sidebar{ width: 248px; flex-shrink: 0; background: #fff; box-shadow: 1px 0 0 var(--g200), var(--shadow-md); position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; padding: 18px 14px; z-index: 30; }
 .sb-top{ display: flex; align-items: center; height: 62px; padding: 0 8px 0 22px; margin: -18px -14px 14px; border-bottom: 1px solid var(--g200); }
