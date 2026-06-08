@@ -295,7 +295,7 @@ tr:hover .ch-chip{ background: var(--g200); }
     .sidebar .sb-new{ width: calc(100% - 28px); margin: 18px 14px 10px; font-size: 15px; padding: 14px; flex-shrink: 0; }
     .sidebar .sb-nav{ gap: 0; flex: none; }
     .sidebar .sb-link{ font-size: 15.5px; padding: 15px 20px; border-radius: 0; border-bottom: 1px solid var(--g100); }
-    .sidebar .sb-foot{ margin-top: 8px; padding: 8px 14px calc(16px + env(safe-area-inset-bottom, 0px)); border-top: none; background: #fff; flex-shrink: 0; }
+    .sidebar .sb-foot{ margin-top: auto; padding: 8px 14px calc(16px + env(safe-area-inset-bottom, 0px)); border-top: none; background: #fff; flex-shrink: 0; }
     .sidebar .sb-credits{ display: none; }
     .sidebar-overlay{ display: none !important; }
 
