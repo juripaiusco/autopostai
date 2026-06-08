@@ -2,6 +2,8 @@
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import GuestLayout from '../../Layouts/GuestLayout.vue';
+import Icon from '@/Components/Icon.vue';
+import FormField from '@/Components/UI/FormField.vue';
 
 defineProps({
     // Messaggio di stato flashato in sessione (es. dopo logout). Opzionale.
@@ -40,73 +42,39 @@ function submit() {
             <div v-if="status" class="status-banner" role="status">{{ status }}</div>
 
             <!-- Nome utente (email) -->
-            <div class="field" :class="{ 'has-error': form.errors.email }">
-                <label class="field-label" for="email">Nome utente</label>
-                <div class="input-wrap">
-                    <input
-                        id="email"
-                        v-model="form.email"
-                        type="email"
-                        name="email"
-                        placeholder="name@example.com"
-                        autocomplete="username"
-                        required
-                    />
-                </div>
-                <div v-if="form.errors.email" class="input-error">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
-                        <line x1="12" y1="9" x2="12" y2="13" />
-                        <line x1="12" y1="17" x2="12.01" y2="17" />
-                    </svg>
-                    {{ form.errors.email }}
-                </div>
-            </div>
+            <FormField
+                id="email"
+                v-model="form.email"
+                type="email"
+                label="Nome utente"
+                placeholder="name@example.com"
+                autocomplete="username"
+                required
+                :error="form.errors.email"
+            />
 
             <!-- Password -->
-            <div class="field field--pw" :class="{ 'has-error': form.errors.password }">
-                <label class="field-label" for="password">Password</label>
-                <div class="input-wrap">
-                    <input
-                        id="password"
-                        v-model="form.password"
-                        :type="showPw ? 'text' : 'password'"
-                        name="password"
-                        placeholder="Inserisci la password"
-                        autocomplete="current-password"
-                        required
-                    />
+            <FormField
+                id="password"
+                v-model="form.password"
+                :type="showPw ? 'text' : 'password'"
+                label="Password"
+                placeholder="Inserisci la password"
+                autocomplete="current-password"
+                required
+                :error="form.errors.password"
+            >
+                <template #trailing>
                     <button
                         type="button"
                         class="pw-toggle"
                         :aria-label="showPw ? 'Nascondi password' : 'Mostra password'"
                         @click="showPw = !showPw"
                     >
-                        <svg v-if="showPw" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-                            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-                            <line x1="2" y1="2" x2="22" y2="22" />
-                        </svg>
-                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                            <circle cx="12" cy="12" r="3" />
-                        </svg>
+                        <Icon :name="showPw ? 'eyeOff' : 'eye'" :size="20" />
                     </button>
-                </div>
-                <div v-if="form.errors.password" class="input-error">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
-                        <line x1="12" y1="9" x2="12" y2="13" />
-                        <line x1="12" y1="17" x2="12.01" y2="17" />
-                    </svg>
-                    {{ form.errors.password }}
-                </div>
-            </div>
+                </template>
+            </FormField>
 
             <!-- Ricordami + Password dimenticata -->
             <div class="form-row">
@@ -173,44 +141,8 @@ function submit() {
     padding: 10px 12px;
 }
 
-/* ---------- Campo con label impilata ---------- */
-.field {
-    margin-bottom: 18px;
-}
-.field-label {
-    display: block;
-    font-size: var(--text-sm);
-    font-weight: var(--w-semibold);
-    color: var(--fg1);
-    margin: 0 0 7px 2px;
-}
-.input-wrap {
-    position: relative;
-}
-.field input {
-    width: 100%;
-    height: 48px;
-    padding: 0 14px;
-    border: 1px solid var(--border-input);
-    border-radius: var(--radius);
-    background: var(--bg-surface);
-    font-family: inherit;
-    font-size: var(--text-base);
-    color: var(--fg1);
-    box-shadow: var(--shadow-sm);
-    transition: border-color .15s ease, box-shadow .15s ease;
-}
-.field input::placeholder {
-    color: var(--gray-400);
-}
-.field input:focus {
-    outline: none;
-    border-color: var(--sky);
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, .28);
-}
-.field--pw input {
-    padding-right: 46px;
-}
+/* ---------- Toggle mostra/nascondi password (adornment dello slot #trailing) ----------
+   Gli stili del campo (.field*, .input-wrap, .input-error) sono globali in app.css. */
 .pw-toggle {
     position: absolute;
     right: 7px;
@@ -235,26 +167,6 @@ function submit() {
 .pw-toggle:focus-visible {
     outline: 2px solid var(--sky);
     outline-offset: 1px;
-}
-
-/* ---------- Stato errore ---------- */
-.field.has-error input {
-    border-color: var(--danger);
-}
-.field.has-error input:focus {
-    box-shadow: 0 0 0 3px rgba(220, 53, 69, .22);
-}
-.field.has-error .field-label {
-    color: var(--danger);
-}
-.input-error {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 7px 4px 0;
-    font-size: var(--text-xs);
-    color: var(--status-error-fg);
-    font-weight: var(--w-medium);
 }
 
 /* ---------- Riga: ricordami + password dimenticata ---------- */
