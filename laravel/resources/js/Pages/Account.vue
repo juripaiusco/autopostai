@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
@@ -8,6 +8,12 @@ import RoleBadge from '@/Components/RoleBadge.vue';
 import UserAvatar from '@/Components/UserAvatar.vue';
 import TokenBar from '@/Components/TokenBar.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
+import PageHeader from '@/Components/Layout/PageHeader.vue';
+import FilterTabs from '@/Components/UI/FilterTabs.vue';
+import SearchInput from '@/Components/UI/SearchInput.vue';
+import SortableTh from '@/Components/UI/SortableTh.vue';
+import Pagination from '@/Components/UI/Pagination.vue';
+import { useTableFilters } from '@/Composables/useTableFilters';
 import { CH_CONFIG } from '@/data/dashboardMock';
 
 const props = defineProps({
@@ -19,8 +25,10 @@ const props = defineProps({
 
 const userName = computed(() => usePage().props.auth?.user?.name ?? 'Mario Rossi');
 
-const search = ref(props.filters.search);
-const deleteTarget = ref(null);
+const { search, setFilter, handleSort, clearSearch } = useTableFilters({
+    routeName: 'account',
+    filters: () => props.filters,
+});
 
 const TABS = computed(() => [
     { id: 'tutti', label: 'Tutti', count: props.counts.tutti },
@@ -28,46 +36,8 @@ const TABS = computed(() => [
     ...(props.isAdmin ? [{ id: 'manager', label: 'Manager', count: props.counts.manager }] : []),
 ]);
 
-function reload(extra = {}) {
-    router.get(route('account'), {
-        filter: props.filters.filter,
-        search: search.value,
-        sort: props.filters.sort,
-        dir: props.filters.dir,
-        ...extra,
-    }, { preserveState: true, preserveScroll: true, replace: true });
-}
-
-function setFilter(id) {
-    reload({ filter: id, page: undefined });
-}
-
-function handleSort(col) {
-    if (props.filters.sort === col) {
-        reload({ dir: props.filters.dir === 'asc' ? 'desc' : 'asc' });
-    } else {
-        reload({ sort: col, dir: 'asc' });
-    }
-}
-
-function clearSearch() {
-    search.value = '';
-    reload({ search: '', page: undefined });
-}
-
-let searchTimer = null;
-watch(search, (value) => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => reload({ search: value, page: undefined }), 350);
-});
-
-function sortIconFor(col) {
-    if (props.filters.sort !== col) return '↕';
-    return props.filters.dir === 'asc' ? '↑' : '↓';
-}
-function sortIconColor(col) {
-    return props.filters.sort === col ? 'var(--sky-strong)' : 'var(--g300)';
-}
+const deleteTarget = ref(null);
+const colSpan = computed(() => (props.isAdmin ? 8 : 7));
 
 function confirmDelete(id) {
     router.delete(route('account.destroy', id), {
@@ -75,120 +45,73 @@ function confirmDelete(id) {
         onFinish: () => { deleteTarget.value = null; },
     });
 }
-
-const colSpan = computed(() => (props.isAdmin ? 8 : 7));
 </script>
 
 <template>
     <Head title="Account" />
 
     <AppLayout :current="'account'" :user="userName">
-        <header class="page-header" style="background: #fff; box-shadow: 0 1px 0 var(--g200); margin: -30px -30px 24px">
-            <div style="padding: 18px 28px; display: flex; align-items: center; justify-content: space-between">
-                <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--g500)">
-                    <span>Account</span>
-                    <span style="color: var(--g300)">›</span>
-                    <b style="color: var(--ink)">Lista</b>
-                </div>
-                <span v-if="!isAdmin" style="font-size: 12px; color: var(--g500); background: var(--g100); padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--g200)">
+        <PageHeader :crumbs="[{ label: 'Account' }, { label: 'Lista', current: true }]">
+            <template #actions>
+                <span v-if="!isAdmin" class="page-header__note">
                     Stai vedendo i tuoi {{ counts.tutti }} sub-utenti
                 </span>
-            </div>
-        </header>
+            </template>
+        </PageHeader>
 
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap">
-            <button class="btn btn-dark" style="gap: 7px">
+        <div class="list-toolbar">
+            <button class="btn btn-dark">
                 <Icon name="plus" :size="17" />Nuovo
             </button>
 
-            <div style="display: flex; gap: 4px; background: #fff; border: 1px solid var(--g200); border-radius: var(--radius); padding: 3px">
-                <button v-for="t in TABS" :key="t.id"
-                    @click="setFilter(t.id)"
-                    :style="{
-                        border: 'none', borderRadius: '5px', padding: '6px 14px',
-                        fontSize: '13px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-                        background: filters.filter === t.id ? 'var(--sky-50)' : 'transparent',
-                        color: filters.filter === t.id ? 'var(--sky-strong)' : 'var(--g500)',
-                        transition: 'all .15s',
-                    }"
-                >
-                    {{ t.label }}
-                    <span :style="{
-                        fontSize: '11px', fontWeight: 700, minWidth: '18px', textAlign: 'center',
-                        padding: '1px 5px', borderRadius: '9999px',
-                        background: filters.filter === t.id ? 'var(--sky-200)' : 'var(--g100)',
-                        color: filters.filter === t.id ? 'var(--sky-strong)' : 'var(--g500)',
-                    }">{{ t.count }}</span>
-                </button>
-            </div>
+            <FilterTabs :model-value="filters.filter" :tabs="TABS" @update:model-value="setFilter" />
 
-            <div style="margin-left: auto; display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--g200); border-radius: var(--radius); padding: 8px 12px; min-width: 240px">
-                <Icon name="search" :size="16" style="color: var(--g400); flex-shrink: 0" />
-                <input
-                    v-model="search"
-                    type="text"
-                    placeholder="Cerca account…"
-                    style="border: none; outline: none; font-family: var(--font-ui); font-size: 13.5px; color: var(--ink); width: 100%; background: transparent"
-                />
-                <button v-if="search" @click="clearSearch" style="border: none; background: none; cursor: pointer; color: var(--g400); display: flex; padding: 0">
-                    <Icon name="x" :size="14" />
-                </button>
-            </div>
+            <SearchInput v-model="search" placeholder="Cerca account…" @clear="clearSearch" />
         </div>
 
-        <div class="card" style="overflow-x: auto">
-            <table class="table" style="width: 100%">
+        <div class="card table-wrap">
+            <table class="table">
                 <thead>
                     <tr>
-                        <th @click="handleSort('name')" style="cursor: pointer; user-select: none; white-space: nowrap">
-                            Account <span :style="{ color: sortIconColor('name'), fontSize: '10px', marginLeft: '3px' }">{{ sortIconFor('name') }}</span>
-                        </th>
+                        <SortableTh label="Account" column="name" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
                         <th v-if="isAdmin">Ruolo</th>
                         <th>Canali</th>
-                        <th @click="handleSort('post')" style="cursor: pointer; user-select: none; text-align: center; white-space: nowrap">
-                            Post <span :style="{ color: sortIconColor('post'), fontSize: '10px', marginLeft: '3px' }">{{ sortIconFor('post') }}</span>
-                        </th>
-                        <th @click="handleSort('reply')" style="cursor: pointer; user-select: none; text-align: center; white-space: nowrap">
-                            Reply <span :style="{ color: sortIconColor('reply'), fontSize: '10px', marginLeft: '3px' }">{{ sortIconFor('reply') }}</span>
-                        </th>
-                        <th @click="handleSort('immagini')" style="cursor: pointer; user-select: none; text-align: center; white-space: nowrap">
-                            Immagini <span :style="{ color: sortIconColor('immagini'), fontSize: '10px', marginLeft: '3px' }">{{ sortIconFor('immagini') }}</span>
-                        </th>
-                        <th @click="handleSort('tokenUsed')" style="cursor: pointer; user-select: none; text-align: right; white-space: nowrap">
-                            Token <span :style="{ color: sortIconColor('tokenUsed'), fontSize: '10px', marginLeft: '3px' }">{{ sortIconFor('tokenUsed') }}</span>
-                        </th>
+                        <SortableTh label="Post" column="post" align="center" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
+                        <SortableTh label="Reply" column="reply" align="center" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
+                        <SortableTh label="Immagini" column="immagini" align="center" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
+                        <SortableTh label="Token" column="tokenUsed" align="right" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-if="users.data.length === 0">
-                        <td :colspan="colSpan" style="text-align: center; padding: 48px 16px; color: var(--g400)">
-                            <Icon name="users" :size="32" style="margin: 0 auto 10px; opacity: .35" />
-                            <div style="font-size: 14px">Nessun utente trovato</div>
+                        <td :colspan="colSpan" class="table-empty">
+                            <Icon name="users" :size="32" class="table-empty__icon" />
+                            <div class="table-empty__text">Nessun utente trovato</div>
                         </td>
                     </tr>
                     <tr v-for="u in users.data" :key="u.id">
-                        <td style="min-width: 200px">
-                            <div style="display: flex; align-items: center; gap: 11px">
+                        <td class="user-td">
+                            <div class="user-cell">
                                 <UserAvatar :name="u.name" />
-                                <div style="min-width: 0">
-                                    <div style="font-weight: 600; font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ u.name }}</div>
-                                    <div style="font-size: 12px; color: var(--g500); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ u.email }}</div>
+                                <div class="user-cell__meta">
+                                    <div class="user-cell__name">{{ u.name }}</div>
+                                    <div class="user-cell__email">{{ u.email }}</div>
                                 </div>
                             </div>
                         </td>
                         <td v-if="isAdmin"><RoleBadge :role="u.role" /></td>
                         <td>
-                            <div style="display: flex; gap: 4px; flex-wrap: wrap">
+                            <div class="ch-list">
                                 <span v-for="c in u.channels" :key="c" class="ch-chip" :title="CH_CONFIG[c]?.label ?? c">
                                     <ChannelIcon :id="c" :size="13" />
                                 </span>
                             </div>
                         </td>
-                        <td style="text-align: center; font-variant-numeric: tabular-nums">{{ u.post }}</td>
-                        <td style="text-align: center; font-variant-numeric: tabular-nums">{{ u.reply }}</td>
-                        <td style="text-align: center; font-variant-numeric: tabular-nums">{{ u.immagini }}</td>
-                        <td style="text-align: right; min-width: 160px">
+                        <td class="num">{{ u.post }}</td>
+                        <td class="num">{{ u.reply }}</td>
+                        <td class="num">{{ u.immagini }}</td>
+                        <td class="token-td">
                             <TokenBar :used="u.tokenUsed" :total="u.tokenTotal" />
                         </td>
                         <td>
@@ -205,29 +128,14 @@ const colSpan = computed(() => (props.isAdmin ? 8 : 7));
                 </tbody>
             </table>
 
-            <div v-if="users.data.length > 0" style="padding: 12px 20px; border-top: 1px solid var(--g100); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px">
-                <span style="font-size: 12.5px; color: var(--g400)">
+            <div v-if="users.data.length > 0" class="list-footer">
+                <span class="list-footer__info">
                     {{ users.total }} {{ users.total === 1 ? 'utente' : 'utenti' }}{{ filters.search ? ' trovati' : '' }}
                 </span>
 
-                <div style="display: flex; align-items: center; gap: 4px">
-                    <Link v-for="(link, i) in users.links" :key="i"
-                        :href="link.url ?? '#'"
-                        :style="{
-                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            minWidth: '30px', height: '30px', padding: '0 8px', borderRadius: 'var(--radius)',
-                            fontSize: '12.5px', fontWeight: 600, textDecoration: 'none',
-                            border: '1px solid var(--g200)',
-                            background: link.active ? 'var(--sky-50)' : '#fff',
-                            color: link.active ? 'var(--sky-strong)' : (link.url ? 'var(--g600)' : 'var(--g300)'),
-                            pointerEvents: link.url ? 'auto' : 'none',
-                        }"
-                        preserve-scroll preserve-state
-                        v-html="link.label"
-                    />
-                </div>
+                <Pagination :links="users.links" />
 
-                <button v-if="filters.search" @click="clearSearch" style="font-size: 12px; color: var(--sky-strong); background: none; border: none; cursor: pointer; text-decoration: underline">
+                <button v-if="filters.search" class="list-footer__clear" @click="clearSearch">
                     Cancella filtro
                 </button>
             </div>
@@ -242,7 +150,7 @@ const colSpan = computed(() => (props.isAdmin ? 8 : 7));
             @confirm="confirmDelete(deleteTarget.id)"
         >
             Sei sicuro di voler eliminare <b>{{ deleteTarget.name }}</b>?<br />
-            <span style="color: var(--g500); font-size: 13px; margin-top: 6px; display: block">
+            <span class="modal-note">
                 Questa azione è irreversibile. I post associati rimarranno nel sistema.
             </span>
         </ConfirmModal>

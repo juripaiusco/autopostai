@@ -205,6 +205,70 @@ main{ flex: 1; }
 tr:hover .ch-chip{ background: var(--g200); }
 .ch-chip:hover{ background: color-mix(in srgb, var(--ch-hue) 14%, white); color: var(--ch-hue); }
 
+/* ============================================================
+   Lista con filtri (Account; riuso futuro: Posts)
+   Valori 1:1 dagli inline style precedenti — nessun cambio visivo.
+   ============================================================ */
+
+/* Header pagina con breadcrumb */
+.page-header{ background: #fff; box-shadow: 0 1px 0 var(--g200); margin: -30px -30px 24px; }
+.page-header__inner{ padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; }
+.page-header__crumbs{ display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--g500); }
+.page-header__crumbs b{ color: var(--ink); font-weight: 700; }
+.crumb-sep{ color: var(--g300); }
+.page-header__note{ font-size: 12px; color: var(--g500); background: var(--g100); padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--g200); }
+
+/* Toolbar lista */
+.list-toolbar{ display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.list-toolbar .search-box{ margin-left: auto; }
+
+/* Tabs segmentate con count */
+.filter-tabs{ display: flex; gap: 4px; background: #fff; border: 1px solid var(--g200); border-radius: var(--radius); padding: 3px; }
+.filter-tab{ display: flex; align-items: center; gap: 6px; border: none; border-radius: 5px; padding: 6px 14px; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--g500); background: transparent; cursor: pointer; transition: all .15s; }
+.filter-tab--active{ background: var(--sky-50); color: var(--sky-strong); }
+.filter-tab__count{ min-width: 18px; padding: 1px 5px; text-align: center; font-size: 11px; font-weight: 700; border-radius: 9999px; color: var(--g500); background: var(--g100); }
+.filter-tab--active .filter-tab__count{ background: var(--sky-200); color: var(--sky-strong); }
+
+/* Search box (contenuto pagina) */
+.search-box{ display: flex; align-items: center; gap: 8px; min-width: 240px; padding: 8px 12px; background: #fff; border: 1px solid var(--g200); border-radius: var(--radius); color: var(--g400); }
+.search-box input{ width: 100%; border: none; outline: none; background: transparent; font-family: var(--font-ui); font-size: 13.5px; color: var(--ink); }
+.search-box__clear{ display: flex; padding: 0; border: none; background: none; color: var(--g400); cursor: pointer; }
+
+/* Header tabella ordinabile */
+.th-sort{ cursor: pointer; user-select: none; white-space: nowrap; }
+.th-sort--center{ text-align: center; }
+.th-sort--right{ text-align: right; }
+.th-sort__icon{ margin-left: 3px; font-size: 10px; color: var(--g300); }
+.th-sort__icon--active{ color: var(--sky-strong); }
+
+/* Celle lista */
+.table-wrap{ overflow-x: auto; }
+.user-td{ min-width: 200px; }
+.user-cell{ display: flex; align-items: center; gap: 11px; }
+.user-cell__meta{ min-width: 0; }
+.user-cell__name{ font-weight: 600; font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-cell__email{ margin-top: 1px; font-size: 12px; color: var(--g500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-list{ display: flex; gap: 4px; flex-wrap: wrap; }
+.num{ text-align: center; font-variant-numeric: tabular-nums; }
+.token-td{ min-width: 160px; text-align: right; }
+
+/* Stato vuoto tabella */
+.table-empty{ padding: 48px 16px; text-align: center; color: var(--g400); }
+.table-empty__icon{ margin: 0 auto 10px; opacity: .35; }
+.table-empty__text{ font-size: 14px; }
+
+/* Footer lista + pagination */
+.list-footer{ display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--g100); }
+.list-footer__info{ font-size: 12.5px; color: var(--g400); }
+.list-footer__clear{ font-size: 12px; color: var(--sky-strong); background: none; border: none; cursor: pointer; text-decoration: underline; }
+.pagination{ display: flex; align-items: center; gap: 4px; }
+.pagination__link{ display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 30px; padding: 0 8px; border: 1px solid var(--g200); border-radius: var(--radius); background: #fff; color: var(--g600); font-size: 12.5px; font-weight: 600; text-decoration: none; }
+.pagination__link--active{ background: var(--sky-50); color: var(--sky-strong); }
+.pagination__link--disabled{ color: var(--g300); pointer-events: none; }
+
+/* Nota descrittiva nelle modali */
+.modal-note{ display: block; margin-top: 6px; font-size: 13px; color: var(--g500); }
+
 /* ---------- App shell: sidebar + topbar ---------- */
 .app.has-sidebar{ flex-direction: row; height: 100vh; overflow: hidden; }
 .app.has-sidebar .container{ max-width: none; padding: 30px 30px 60px; }
