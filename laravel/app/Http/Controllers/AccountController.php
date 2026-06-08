@@ -62,6 +62,7 @@ class AccountController extends Controller
             ->withCount(['posts', 'comments', 'imagesUsed'])
             ->withSum('tokensUsed', 'tokens_used')
             ->orderBy($sortColumn, $dir)
+            ->where('parent_id', '!=', null) // Escludi amministratori
             ->paginate(15)
             ->withQueryString()
             ->through(fn (User $u) => [
