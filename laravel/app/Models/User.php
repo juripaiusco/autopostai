@@ -7,6 +7,9 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -29,5 +32,38 @@ class User extends Authenticatable
             'password' => 'hashed',
             'channels' => 'array',
         ];
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(User::class, 'parent_id');
+    }
+
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    public function settings(): HasOne
+    {
+        return $this->hasOne(Settings::class);
+    }
+
+    public function tokensUsed(): HasMany
+    {
+        return $this->hasMany(TokenLog::class)
+            ->whereMonth('token_logs.created_at', now()->month)
+            ->whereYear('token_logs.created_at', now()->year);
+    }
+
+    public function imagesUsed(): HasMany
+    {
+        return $this->hasMany(ImageJob::class)
+            ->whereDay('image_jobs.created_at', now()->day);
     }
 }

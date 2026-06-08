@@ -1,0 +1,30 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Post;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<Post>
+ */
+class PostFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'title' => fake()->text(60),
+            'ai_prompt_post' => fake()->paragraph(),
+            'ai_content' => fake()->paragraph(),
+            'ai_prompt_comment' => fake()->paragraph(),
+            'published_at' => now(),
+            'published' => (string) rand(0, 1),
+            'task_complete' => (string) rand(0, 1),
+        ];
+    }
+}
