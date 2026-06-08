@@ -359,6 +359,26 @@ tr:hover .ch-chip{ background: var(--g200); }
 .widget-title{ font-size: 16px; font-weight: 700; color: var(--ink); }
 .widget-sub{ font-size: 12.5px; margin-top: 2px; }
 
+/* Saluto dashboard (desktop; il mobile override h1 sta nelle media query sotto) */
+.dash-head h1{ margin: 0; font-size: 40px; font-weight: 600; line-height: 1.4; }
+.dash-head p{ margin: 5px 0 0; font-size: 14px; }
+
+/* Utility card riusabili */
+.dash-card{ margin-bottom: 20px; }
+.card-clip{ overflow: hidden; }
+.card-col{ display: flex; flex-direction: column; }
+.card-pad--flush{ padding-bottom: 0; }
+.donut-wrap{ flex: 1; display: flex; align-items: center; }
+
+/* Riga metrica evidenziata (MetricHighlight) */
+.metric-stack{ display: flex; flex-direction: column; gap: 14px; }
+.metric-row{ display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-radius: 10px; background: var(--g50); }
+.metric-row--sky{ background: var(--sky-50); }
+.metric-row__label{ margin-bottom: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--g500); }
+.metric-row--sky .metric-row__label{ color: var(--sky-strong); }
+.metric-row__value{ font-size: 34px; font-weight: 800; color: var(--ink); line-height: 1; }
+.metric-row__sub{ margin-top: 5px; font-size: 12px; color: var(--g500); }
+
 @media (min-width: 769px) and (max-width: 1200px){
     .stat-grid{ grid-template-columns: repeat(2, 1fr); }
     .dash-grid{ grid-template-columns: 1fr; }
