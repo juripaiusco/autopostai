@@ -112,7 +112,10 @@ function confirmDelete(id) {
                         </td>
                         <td class="num">{{ u.post }}</td>
                         <td class="num">{{ u.reply }}</td>
-                        <td class="num">{{ u.immagini }}</td>
+                        <td class="token-td">
+                            <TokenBar v-if="u.imageTotal > 0" :used="u.immagini" :total="u.imageTotal" />
+                            <span v-else class="num">{{ u.immagini }}</span>
+                        </td>
                         <td class="token-td">
                             <TokenBar :used="u.tokenUsed" :total="u.tokenTotal" />
                         </td>

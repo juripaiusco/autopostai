@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Comment;
+use App\Models\ImageJob;
 use App\Models\Post;
 use App\Models\Settings;
 use App\Models\TokenLog;
@@ -40,6 +41,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('12345'),
             'channels' => $channels,
             'tokens_limit' => 10000,
+            'image_model_limit' => 20,
         ]);
 
         Settings::factory()->create(['user_id' => $mario->id]);
@@ -93,6 +95,7 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('12345'),
                 'channels' => $channels,
                 'tokens_limit' => 10000,
+                'image_model_limit' => 20,
             ]);
 
             Settings::factory()->create(['user_id' => $subUser->id]);
@@ -137,6 +140,8 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        ImageJob::factory(rand(2, 5))->create(['user_id' => $owner->id]);
     }
 
     /**

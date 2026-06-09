@@ -62,7 +62,7 @@ class AccountController extends Controller
             ->withCount(['posts', 'comments', 'imagesUsed'])
             ->withSum('tokensUsed', 'tokens_used')
             ->orderBy($sortColumn, $dir)
-            ->where('parent_id', '!=', null) // Escludi amministratori
+            ->whereNotNull('parent_id')
             ->paginate(15)
             ->withQueryString()
             ->through(fn (User $u) => [
@@ -80,6 +80,7 @@ class AccountController extends Controller
                 'immagini' => $u->images_used_count,
                 'tokenUsed' => (int) ($u->tokens_used_sum ?? 0),
                 'tokenTotal' => $u->tokens_limit,
+                'imageTotal' => $u->image_model_limit,
             ]);
 
         return Inertia::render('Account/List', [
@@ -174,8 +175,8 @@ class AccountController extends Controller
             'updatedAt' => $user->updated_at?->diffForHumans() ?? '—',
             'createdBy' => $me->name,
             'usage'     => [
-                'tokensUsed' => (int) ($user->tokens_used_sum ?? rand(1200, 8500)),
-                'imagesUsed' => (int) ($user->images_used_count ?? rand(2, 15)),
+                'tokensUsed' => $user->tokensUsed()->sum('tokens_used'),
+                'imagesUsed' => $user->imagesUsed()->count(),
             ],
         ];
 

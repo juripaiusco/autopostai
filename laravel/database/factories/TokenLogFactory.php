@@ -18,7 +18,8 @@ class TokenLogFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
     }
 }
