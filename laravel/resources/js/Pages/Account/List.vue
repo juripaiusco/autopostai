@@ -90,7 +90,9 @@ function confirmDelete(id) {
                             <div class="table-empty__text">Nessun utente trovato</div>
                         </td>
                     </tr>
-                    <tr v-for="u in users.data" :key="u.id">
+                    <tr v-for="u in users.data" :key="u.id"
+                        class="tr-clickable"
+                        @click="router.get(route('account.edit', u.id))">
                         <td class="user-td">
                             <div class="user-cell">
                                 <UserAvatar :name="u.name" />
@@ -119,7 +121,7 @@ function confirmDelete(id) {
                                 <a :href="route('account.edit', u.id)" class="icon-btn icon-btn--ghost" title="Modifica">
                                     <Icon name="pencil" :size="15" />
                                 </a>
-                                <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" @click="deleteTarget = u">
+                                <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" @click.stop="deleteTarget = u">
                                     <Icon name="trash" :size="15" />
                                 </button>
                             </div>
@@ -156,3 +158,8 @@ function confirmDelete(id) {
         </ConfirmModal>
     </AppLayout>
 </template>
+
+<style scoped>
+.tr-clickable { cursor: pointer; }
+.tr-clickable:hover td { background: var(--g50); }
+</style>
