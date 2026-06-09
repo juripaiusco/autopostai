@@ -176,4 +176,19 @@ onMounted(() => {
     border-radius: 9999px;
     width: 0;
 }
+
+@media (max-width: 520px) {
+    .donut-layout {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+    .donut-svg {
+        width: 140px;
+        height: 140px;
+    }
+    .donut-legend {
+        width: 100%;
+    }
+}
 </style>

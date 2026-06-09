@@ -449,7 +449,7 @@ tr:hover .ch-chip{ background: var(--g200); }
     .stat-value{ font-size: 22px !important; }
     .stat-label{ font-size: 12px; }
     .stat-body{ margin-bottom: 8px; }
-    .stat svg{ display: none !important; }
+    .stat-body svg{ display: none !important; }
 
     .app.has-sidebar, .main-col{ overflow-x: hidden; }
 }

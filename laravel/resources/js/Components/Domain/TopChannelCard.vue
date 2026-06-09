@@ -286,4 +286,16 @@ onMounted(() => {
     min-width: 44px;
     text-align: right;
 }
+
+@media (max-width: 520px) {
+    .top-ch__views {
+        font-size: 22px;
+    }
+    .top-ch__stat-val {
+        font-size: 13px;
+    }
+    .top-ch__stat-lbl {
+        font-size: 10px;
+    }
+}
 </style>
