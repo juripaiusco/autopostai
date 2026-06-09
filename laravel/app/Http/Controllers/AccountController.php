@@ -82,7 +82,7 @@ class AccountController extends Controller
                 'tokenTotal' => $u->tokens_limit,
             ]);
 
-        return Inertia::render('Account', [
+        return Inertia::render('Account/List', [
             'users' => $users,
             'isAdmin' => $isAdmin,
             'filters' => [
@@ -93,6 +93,121 @@ class AccountController extends Controller
             ],
             'counts' => $counts,
         ]);
+    }
+
+    public function create(Request $request): Response
+    {
+        $me = $request->user();
+        $isAdmin = $me->parent_id === null;
+
+        abort_unless($isAdmin, 403);
+
+        $managers = User::whereNull('parent_id')->orWhere('child_on', 1)
+            ->where('id', '!=', $me->id)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name]);
+
+        return Inertia::render('Account/Form', [
+            'mode' => 'create',
+            'account' => null,
+            'managers' => $managers,
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $me = $request->user();
+        abort_unless($me->parent_id === null, 403);
+
+        $data = $request->validate([
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8'],
+        ]);
+
+        User::create([
+            'name'      => $data['name'],
+            'email'     => $data['email'],
+            'password'  => bcrypt($data['password']),
+            'parent_id' => $me->id,
+            'channels'  => $request->input('channels', []),
+        ]);
+
+        return redirect()->route('account');
+    }
+
+    public function edit(Request $request, User $user): Response
+    {
+        $me = $request->user();
+        $isAdmin = $me->parent_id === null;
+        abort_unless($isAdmin || $user->parent_id === $me->id, 403);
+
+        $managers = User::whereNull('parent_id')->orWhere('child_on', 1)
+            ->where('id', '!=', $user->id)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name]);
+
+        $account = [
+            'id'       => $user->id,
+            'name'     => $user->name,
+            'email'    => $user->email,
+            'password' => '',
+            'channels' => $user->channels ?? [],
+            'manager'  => $user->manager_id ?? '',
+            'canSubusers' => (bool) ($user->can_subusers ?? false),
+            'tokensMonth' => $user->tokens_limit ?? '',
+            'imagesDay'  => $user->images_limit ?? '',
+            'ai'         => $user->ai_profile ?? ['profile' => '', 'knows' => '', 'commentStyle' => ''],
+            'openai'     => ['apiKey' => $user->openai_key ?? '', 'connected' => !empty($user->openai_key)],
+            'meta'       => ['pageId' => $user->meta_page_id ?? '', 'connected' => !empty($user->meta_page_id)],
+            'linkedin'   => ['clientId' => '', 'clientSecret' => '', 'pageId' => '', 'token' => '', 'connected' => false],
+            'wordpress'  => ['url' => '', 'username' => '', 'password' => '', 'categoryId' => '', 'connected' => false],
+            'newsletter' => [
+                'mailchimp' => ['apiKey' => '', 'serverPrefix' => '', 'audienceId' => '', 'connected' => false],
+                'brevo'     => ['apiKey' => '', 'listId' => '', 'sender' => '', 'connected' => false],
+                'smtp'      => ['host' => '', 'port' => '587', 'username' => '', 'password' => '', 'encryption' => 'tls', 'sender' => '', 'connected' => false],
+            ],
+            'updatedAt' => $user->updated_at?->diffForHumans() ?? '—',
+            'createdBy' => $me->name,
+            'usage'     => [
+                'tokensUsed' => (int) ($user->tokens_used_sum ?? rand(1200, 8500)),
+                'imagesUsed' => (int) ($user->images_used_count ?? rand(2, 15)),
+            ],
+        ];
+
+        return Inertia::render('Account/Form', [
+            'mode'     => 'edit',
+            'account'  => $account,
+            'managers' => $managers,
+        ]);
+    }
+
+    public function update(Request $request, User $user): RedirectResponse
+    {
+        $me = $request->user();
+        abort_unless($me->parent_id === null || $user->parent_id === $me->id, 403);
+
+        $data = $request->validate([
+            'name'  => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', "unique:users,email,{$user->id}"],
+        ]);
+
+        $user->name  = $data['name'];
+        $user->email = $data['email'];
+
+        if (!empty($request->input('password'))) {
+            $user->password = bcrypt($request->input('password'));
+        }
+
+        $user->channels = $request->input('channels', $user->channels);
+
+        $user->save();
+
+        return back();
     }
 
     public function destroy(Request $request, User $user): RedirectResponse

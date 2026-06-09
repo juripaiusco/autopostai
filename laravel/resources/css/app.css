@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './pages/account-form.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -168,6 +169,7 @@ main{ flex: 1; }
 .btn-light{ background: var(--light); color: var(--dark); border-color: var(--g300); } .btn-light:hover:not(:disabled){ background: var(--light-h); }
 .btn-secondary{ background: #fff; color: var(--g700); border-color: var(--g300); } .btn-secondary:hover:not(:disabled){ background: var(--g50); }
 .btn-danger{ background: var(--danger); color: #fff; } .btn-danger:hover:not(:disabled){ background: var(--danger-h); }
+.btn-success{ background: var(--success); color: #fff; border-color: var(--success); } .btn-success:hover:not(:disabled){ background: var(--success-h); }
 .btn-lg{ font-size: 17px; padding: 12px 24px; }
 .btn-sm{ font-size: 12.5px; padding: 6px 12px; }
 .btn-block{ width: 100%; }

@@ -18,6 +18,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/account', [AccountController::class, 'index'])
         ->name('account');
 
+    Route::get('/account/create', [AccountController::class, 'create'])
+        ->name('account.create');
+
+    Route::post('/account', [AccountController::class, 'store'])
+        ->name('account.store');
+
+    Route::get('/account/{user}/edit', [AccountController::class, 'edit'])
+        ->name('account.edit');
+
+    Route::put('/account/{user}', [AccountController::class, 'update'])
+        ->name('account.update');
+
     Route::delete('/account/{user}', [AccountController::class, 'destroy'])
         ->name('account.destroy');
 

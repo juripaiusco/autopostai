@@ -19,7 +19,11 @@ const searchQuery = ref('');
 
 <template>
     <div class="app has-sidebar">
-        <Sidebar :current="current" :user="user" :is-open="sidebarOpen" @close="sidebarOpen = false" />
+        <Sidebar :current="current" :user="user" :is-open="sidebarOpen" @close="sidebarOpen = false">
+            <template v-if="$slots['sidebar-footer-top']" #footer-top>
+                <slot name="sidebar-footer-top" />
+            </template>
+        </Sidebar>
 
         <div class="main-col">
             <header class="topbar">

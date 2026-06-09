@@ -60,9 +60,9 @@ function confirmDelete(id) {
         </PageHeader>
 
         <div class="list-toolbar">
-            <button class="btn btn-dark">
+            <a :href="route('account.create')" class="btn btn-dark">
                 <Icon name="plus" :size="17" />Nuovo
-            </button>
+            </a>
 
             <FilterTabs :model-value="filters.filter" :tabs="TABS" @update:model-value="setFilter" />
 
@@ -116,9 +116,9 @@ function confirmDelete(id) {
                         </td>
                         <td>
                             <div class="row-actions">
-                                <button class="icon-btn icon-btn--ghost" title="Modifica">
+                                <a :href="route('account.edit', u.id)" class="icon-btn icon-btn--ghost" title="Modifica">
                                     <Icon name="pencil" :size="15" />
-                                </button>
+                                </a>
                                 <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" @click="deleteTarget = u">
                                     <Icon name="trash" :size="15" />
                                 </button>

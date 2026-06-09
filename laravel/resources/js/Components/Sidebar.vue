@@ -61,6 +61,7 @@ function logout() {
         </nav>
 
         <div class="sb-foot">
+            <slot name="footer-top" />
             <div class="sb-credits">
                 <div class="sb-credits-row"><span>Crediti utilizzati</span><span>62%</span></div>
                 <div class="sb-bar"><div class="sb-bar-fill" style="width: 62%"></div></div>
