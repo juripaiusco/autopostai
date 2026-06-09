@@ -129,6 +129,10 @@
     --container-max: 80rem;  /* max-w-7xl */
     --nav-height: 4rem;      /* h-16 */
 
+    /* ---------- EASING ---------- */
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+    --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+
     /* ---------- ALIAS — nomi corti usati nel kit CSS del bundle Claude Design ---------- */
     --g900: var(--gray-900); --g800: var(--gray-800); --g700: var(--gray-700);
     --g600: var(--gray-600); --g500: var(--gray-500); --g400: var(--gray-400);
@@ -155,7 +159,8 @@ main{ flex: 1; }
 .muted{ color: var(--g500); }
 
 /* ---------- Buttons ---------- */
-.btn{ display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid transparent; border-radius: var(--radius); padding: 9px 18px; font-size: 14px; font-weight: 500; line-height: 1.4; cursor: pointer; transition: background .15s, box-shadow .15s, opacity .15s; white-space: nowrap; font-family: inherit; }
+.btn{ display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid transparent; border-radius: var(--radius); padding: 9px 18px; font-size: 14px; font-weight: 500; line-height: 1.4; cursor: pointer; transition: background .15s, box-shadow .15s, opacity .15s, transform .1s; white-space: nowrap; font-family: inherit; }
+.btn:active:not(:disabled){ transform: scale(0.97); }
 .btn:disabled{ opacity: .45; cursor: not-allowed; }
 .btn svg{ width: 18px; height: 18px; }
 .btn-primary{ background: var(--primary); color: #fff; } .btn-primary:hover:not(:disabled){ background: var(--primary-h); }
@@ -205,7 +210,16 @@ main{ flex: 1; }
 .toast-undo__btn{ background: none; border: 1px solid rgba(255,255,255,.35); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: background .12s; }
 .toast-undo__btn:hover{ background: rgba(255,255,255,.1); }
 @keyframes toastIn{ from{ opacity: 0; transform: translateX(-50%) translateY(8px); } to{ opacity: 1; transform: translateX(-50%) translateY(0); } }
-@media (prefers-reduced-motion: reduce){ .toast-undo{ animation: none; } }
+@keyframes fadeUp{ from{ opacity: 0; transform: translateY(10px); } to{ opacity: 1; transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+    }
+}
 
 /* Canali — chip neutro, colore brand solo all'hover */
 .ch-chip{ width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; background: var(--g100); color: var(--g500); transition: background .15s ease, color .15s ease; }
@@ -358,38 +372,30 @@ tr:hover .ch-chip{ background: var(--g200); }
 /* ---------- Dashboard widgets ---------- */
 .dash-head{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
 .stat-grid{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
-.stat{ padding: 18px 20px; }
-.stat-head{ display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.stat-value{ font-size: 30px; font-weight: 700; line-height: 1; color: var(--ink); }
-.stat-label{ font-size: 13px; color: var(--g500); margin-top: 6px; }
-.stat-sub{ display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 14px; }
+.stat{ padding: 18px 20px; animation: fadeUp 280ms var(--ease-out-quart) calc(var(--i, 0) * 60ms) both; }
+.stat-header{ display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.stat-icon-badge{ width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stat-label{ font-size: 12.5px; font-weight: 600; color: var(--g600); }
+.stat-body{ display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.stat-value{ font-size: 28px; font-weight: 700; line-height: 1; color: var(--ink); }
+.stat-sub{ display: flex; align-items: center; gap: 8px; font-size: 12px; }
 .dash-grid{ display: grid; grid-template-columns: 3fr 2fr; gap: 20px; margin-bottom: 20px; }
 .widget-head{ display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; gap: 10px; }
 .widget-title{ font-size: 16px; font-weight: 700; color: var(--ink); }
 .widget-sub{ font-size: 12.5px; margin-top: 2px; }
 
 /* Saluto dashboard (desktop; il mobile override h1 sta nelle media query sotto) */
-.dash-head h1{ margin: 0; font-family: var(--font-brand); font-size: 40px; font-weight: 700; line-height: 1.1; text-wrap: balance; }
-.dash-head p{ margin: 5px 0 0; font-size: 14px; }
+.dash-head h1{ margin: 0; font-family: var(--font-brand); font-size: 40px; font-weight: 700; line-height: 1.1; text-wrap: balance; animation: fadeUp 320ms var(--ease-out-quart) both; }
+.dash-head p{ margin: 5px 0 0; font-size: 14px; animation: fadeUp 320ms var(--ease-out-quart) 70ms both; }
 
 /* Utility card riusabili */
 .dash-card{ margin-bottom: 20px; }
 .card-clip{ overflow: hidden; }
 .card-col{ display: flex; flex-direction: column; }
 .card-pad--flush{ padding-bottom: 0; }
-.donut-wrap{ flex: 1; display: flex; align-items: center; }
+.donut-wrap{ flex: 1; display: flex; align-items: stretch; min-height: 0; }
 
-/* Top channel spotlight (Domain/TopChannelCard) */
-.top-ch{ display: flex; flex-direction: column; gap: 16px; flex: 1; padding-top: 4px; }
-.top-ch__hero{ display: flex; align-items: center; gap: 12px; }
-.top-ch__badge{ width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.top-ch__name{ font-size: 15px; font-weight: 700; color: var(--ink); }
-.top-ch__views{ font-size: 34px; font-weight: 800; color: var(--ink); line-height: 1; display: block; }
-.top-ch__views-label{ font-size: 12px; color: var(--g500); margin-top: 4px; display: block; }
-.top-ch__stats{ display: flex; flex-direction: column; gap: 10px; }
-.top-ch__stat-row{ display: flex; justify-content: space-between; align-items: baseline; font-size: 13.5px; }
-.top-ch__stat-row b{ font-weight: 600; color: var(--ink); }
-.top-ch__rank{ font-size: 12px; color: var(--g500); padding-top: 12px; border-top: 1px solid var(--g100); margin-top: auto; }
+/* Top channel spotlight — stili migrati in TopChannelCard.vue (scoped) */
 
 @media (min-width: 769px) and (max-width: 1200px){
     .stat-grid{ grid-template-columns: repeat(2, 1fr); }
@@ -438,9 +444,11 @@ tr:hover .ch-chip{ background: var(--g200); }
     .app.has-sidebar .container{ padding: 20px 14px 60px !important; }
 
     .stat{ padding: 12px 14px; }
+    .stat-header{ margin-bottom: 10px; }
+    .stat-icon-badge{ width: 26px; height: 26px; }
     .stat-value{ font-size: 22px !important; }
     .stat-label{ font-size: 12px; }
-    .stat-sub{ margin-top: 8px; }
+    .stat-body{ margin-bottom: 8px; }
     .stat svg{ display: none !important; }
 
     .app.has-sidebar, .main-col{ overflow-x: hidden; }
