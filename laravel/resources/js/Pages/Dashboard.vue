@@ -68,6 +68,7 @@ const pSpark = [8, 11, 9, 14, 13, 16, 15];
           </div>
           <div class="mv2-body">
             <div class="mv2-bars">
+              <div class="mv2-bars-head">Views</div>
               <div class="mv2-bar-row">
                 <span class="mv2-bar-icon" style="background:color-mix(in srgb,#1877f2 12%,white)"><svg width="14" height="14" viewBox="0 0 24 24" style="color:#1877f2"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.84c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94Z" fill="currentColor"/></svg></span>
                 <span class="mv2-bar-label">Facebook</span>
@@ -163,8 +164,19 @@ const pSpark = [8, 11, 9, 14, 13, 16, 15];
   grid-template-columns: 1fr 1fr;
 }
 .mv2-bars {
-  padding: 14px 20px;
+  padding: 0 20px 14px;
   border-right: 1px solid var(--g100);
+}
+.mv2-bars-head {
+  font: 700 11px/1.3 var(--font-ui);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--g500);
+  background: var(--g50);
+  padding: 10px 0;
+  margin: 0 -20px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 .mv2-bar-row {
   display: flex;
