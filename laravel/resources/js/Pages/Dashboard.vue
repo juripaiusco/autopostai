@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Icon from '@/Components/Icon.vue';
 import DashStatWidget from '@/Components/DashStatWidget.vue';
@@ -9,7 +9,7 @@ import ChannelDonut from '@/Components/ChannelDonut.vue';
 import ChannelMetricsTable from '@/Components/ChannelMetricsTable.vue';
 import PostsTable from '@/Components/PostsTable.vue';
 import WidgetHeader from '@/Components/Layout/WidgetHeader.vue';
-import MetricHighlight from '@/Components/Domain/MetricHighlight.vue';
+import TopChannelCard from '@/Components/Domain/TopChannelCard.vue';
 import { GLOBAL_METRICS, CHANNEL_METRICS, RECENT_POSTS, MONTHLY_DATA } from '@/data/dashboardMock';
 
 const user = computed(() => usePage().props.auth?.user);
@@ -23,7 +23,6 @@ const uSpark = [8, 10, 9, 13, 15, 17, 20];
 const cSpark = [89, 95, 112, 141, 178, 267, 334];
 const pSpark = [8, 11, 9, 14, 13, 16, 15];
 
-const avgViewsPerPost = computed(() => (g.posts > 0 ? Math.round(g.views / g.posts) : 0));
 </script>
 
 <template>
@@ -56,24 +55,9 @@ const avgViewsPerPost = computed(() => (g.posts > 0 ? Math.round(g.views / g.pos
                     <ChannelDonut :data="CHANNEL_METRICS" />
                 </div>
             </div>
-            <div class="card card-pad">
-                <WidgetHeader title="Post e views generate" sub="Ultimi 90 giorni" />
-                <div class="metric-stack">
-                    <MetricHighlight
-                        label="Post creati"
-                        :value="g.posts"
-                        sub="su tutti i canali"
-                        accent="neutral"
-                        :spark-data="pSpark"
-                    />
-                    <MetricHighlight
-                        label="Views generate"
-                        :value="g.views.toLocaleString('it-IT')"
-                        :sub="`media ${avgViewsPerPost.toLocaleString('it-IT')} views/post`"
-                        accent="sky"
-                        :spark-data="vSpark"
-                    />
-                </div>
+            <div class="card card-pad card-col">
+                <WidgetHeader title="Canale più attivo" sub="Views · ultimi 90 giorni" />
+                <TopChannelCard :data="CHANNEL_METRICS" />
             </div>
         </div>
 
@@ -88,7 +72,7 @@ const avgViewsPerPost = computed(() => (g.posts > 0 ? Math.round(g.views / g.pos
             <div class="card-pad card-pad--flush">
                 <WidgetHeader title="Ultimi post inviati" sub="I 10 post più recenti su tutti i canali">
                     <template #action>
-                        <button class="btn btn-light btn-sm" @click="() => {}">
+                        <button class="btn btn-light btn-sm" @click="router.visit(route('posts'))">
                             Vedi tutti <Icon name="arrowRight" :size="15" />
                         </button>
                     </template>

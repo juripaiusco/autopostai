@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, getCurrentInstance } from 'vue';
 import { bezierPath } from '@/data/chartHelpers';
 
 const props = defineProps({
@@ -9,11 +9,8 @@ const props = defineProps({
 
 const W = 80, H = 34, PAD = 3;
 
-const gid = computed(() => {
-    const max = Math.max(...props.data);
-    const min = Math.min(...props.data);
-    return 'spk' + Math.round(min * 7 + max * 13 + props.data.length);
-});
+const uid = getCurrentInstance()?.uid ?? Math.random().toString(36).slice(2);
+const gid = `spk${uid}`;
 
 const area = computed(() => {
     const max = Math.max(...props.data);

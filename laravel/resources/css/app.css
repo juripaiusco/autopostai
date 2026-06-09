@@ -200,6 +200,13 @@ main{ flex: 1; }
 @keyframes overlayFade{ from{ opacity: 0; } to{ opacity: 1; } }
 @keyframes modalRise{ from{ transform: translateY(8px); opacity: 0; } to{ transform: translateY(0); opacity: 1; } }
 
+/* Undo toast (PostsTable) */
+.toast-undo{ position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--gray-900); color: #fff; padding: 10px 16px; border-radius: var(--radius); display: flex; align-items: center; gap: 14px; font-size: 14px; box-shadow: var(--shadow-lg); z-index: 60; animation: toastIn .2s ease-out; white-space: nowrap; }
+.toast-undo__btn{ background: none; border: 1px solid rgba(255,255,255,.35); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: background .12s; }
+.toast-undo__btn:hover{ background: rgba(255,255,255,.1); }
+@keyframes toastIn{ from{ opacity: 0; transform: translateX(-50%) translateY(8px); } to{ opacity: 1; transform: translateX(-50%) translateY(0); } }
+@media (prefers-reduced-motion: reduce){ .toast-undo{ animation: none; } }
+
 /* Canali — chip neutro, colore brand solo all'hover */
 .ch-chip{ width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; background: var(--g100); color: var(--g500); transition: background .15s ease, color .15s ease; }
 tr:hover .ch-chip{ background: var(--g200); }
@@ -277,7 +284,9 @@ tr:hover .ch-chip{ background: var(--g200); }
 .field-label{ display: block; font-size: var(--text-sm); font-weight: var(--w-semibold); color: var(--fg1); margin: 0 0 7px 2px; }
 .input-wrap{ position: relative; }
 .field input{ width: 100%; height: 48px; padding: 0 14px; border: 1px solid var(--border-input); border-radius: var(--radius); background: var(--bg-surface); font-family: inherit; font-size: var(--text-base); color: var(--fg1); box-shadow: var(--shadow-sm); transition: border-color .15s ease, box-shadow .15s ease; }
-.field input::placeholder{ color: var(--gray-400); }
+.field input::placeholder{ color: var(--gray-500); }
+.topbar-search input::placeholder,
+.search-box input::placeholder{ color: var(--gray-500); }
 .field input:focus{ outline: none; border-color: var(--sky); box-shadow: 0 0 0 3px rgba(56, 189, 248, .28); }
 .field--adorned input{ padding-right: 46px; }
 .field.has-error input{ border-color: var(--danger); }
@@ -360,7 +369,7 @@ tr:hover .ch-chip{ background: var(--g200); }
 .widget-sub{ font-size: 12.5px; margin-top: 2px; }
 
 /* Saluto dashboard (desktop; il mobile override h1 sta nelle media query sotto) */
-.dash-head h1{ margin: 0; font-size: 40px; font-weight: 600; line-height: 1.4; }
+.dash-head h1{ margin: 0; font-family: var(--font-brand); font-size: 40px; font-weight: 700; line-height: 1.1; text-wrap: balance; }
 .dash-head p{ margin: 5px 0 0; font-size: 14px; }
 
 /* Utility card riusabili */
@@ -370,14 +379,17 @@ tr:hover .ch-chip{ background: var(--g200); }
 .card-pad--flush{ padding-bottom: 0; }
 .donut-wrap{ flex: 1; display: flex; align-items: center; }
 
-/* Riga metrica evidenziata (MetricHighlight) */
-.metric-stack{ display: flex; flex-direction: column; gap: 14px; }
-.metric-row{ display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-radius: 10px; background: var(--g50); }
-.metric-row--sky{ background: var(--sky-50); }
-.metric-row__label{ margin-bottom: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--g500); }
-.metric-row--sky .metric-row__label{ color: var(--sky-strong); }
-.metric-row__value{ font-size: 34px; font-weight: 800; color: var(--ink); line-height: 1; }
-.metric-row__sub{ margin-top: 5px; font-size: 12px; color: var(--g500); }
+/* Top channel spotlight (Domain/TopChannelCard) */
+.top-ch{ display: flex; flex-direction: column; gap: 16px; flex: 1; padding-top: 4px; }
+.top-ch__hero{ display: flex; align-items: center; gap: 12px; }
+.top-ch__badge{ width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.top-ch__name{ font-size: 15px; font-weight: 700; color: var(--ink); }
+.top-ch__views{ font-size: 34px; font-weight: 800; color: var(--ink); line-height: 1; display: block; }
+.top-ch__views-label{ font-size: 12px; color: var(--g500); margin-top: 4px; display: block; }
+.top-ch__stats{ display: flex; flex-direction: column; gap: 10px; }
+.top-ch__stat-row{ display: flex; justify-content: space-between; align-items: baseline; font-size: 13.5px; }
+.top-ch__stat-row b{ font-weight: 600; color: var(--ink); }
+.top-ch__rank{ font-size: 12px; color: var(--g500); padding-top: 12px; border-top: 1px solid var(--g100); margin-top: auto; }
 
 @media (min-width: 769px) and (max-width: 1200px){
     .stat-grid{ grid-template-columns: repeat(2, 1fr); }
