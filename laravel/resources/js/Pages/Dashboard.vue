@@ -37,10 +37,10 @@ const pSpark = [8, 11, 9, 14, 13, 16, 15];
         </div>
 
         <div class="stat-grid">
+            <DashStatWidget label="Post inviati" :value="g.posts" sub="su tutti i canali" :trend="-4" color="var(--g400)" :spark-data="pSpark" />
             <DashStatWidget label="Views totali" :value="g.views" sub="vs periodo precedente" :trend="14" color="var(--sky)" :spark-data="vSpark" />
             <DashStatWidget label="Utenti unici" :value="g.unique" sub="audience raggiunta" :trend="9" color="var(--sky)" :spark-data="uSpark" />
             <DashStatWidget label="Commenti" :value="g.comments" sub="interazioni ricevute" :trend="22" color="var(--sky)" :spark-data="cSpark" />
-            <DashStatWidget label="Post inviati" :value="g.posts" sub="su tutti i canali" :trend="-4" color="var(--g400)" :spark-data="pSpark" />
         </div>
 
         <div class="card card-pad dash-card">
