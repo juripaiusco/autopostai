@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -166,6 +167,8 @@ class AccountController extends Controller
             ], $rawChannels[$key] ?? []);
         }
 
+        $s = $user->settings;
+
         $account = [
             'id'       => $user->id,
             'name'     => $user->name,
@@ -177,14 +180,40 @@ class AccountController extends Controller
             'subusersLimit' => $user->child_max ?? '',
             'tokensMonth' => $user->tokens_limit ?? '',
             'imagesDay'  => $user->image_model_limit ?? '',
-            'ai'         => $user->ai_profile ?? ['profile' => '', 'knows' => '', 'commentStyle' => ''],
-            'openai'     => ['apiKey' => $user->openai_key ?? '', 'connected' => !empty($user->openai_key)],
-            'meta'       => ['pageId' => $user->meta_page_id ?? '', 'connected' => !empty($user->meta_page_id)],
-            'linkedin'   => ['clientId' => '', 'clientSecret' => '', 'pageId' => '', 'token' => '', 'connected' => false],
-            'wordpress'  => ['url' => '', 'username' => '', 'password' => '', 'categoryId' => '', 'connected' => false],
+            'ai'         => [
+                'profile'      => $s->ai_personality ?? '',
+                'knows'        => $s->ai_prompt_prefix ?? '',
+                'commentStyle' => $s->ai_comment_prefix ?? '',
+            ],
+            'openai'     => ['apiKey' => $s->openai_api_key ?? '', 'connected' => !empty($s?->openai_api_key)],
+            'meta'       => ['pageId' => $s->meta_page_id ?? '', 'connected' => !empty($s?->meta_page_id)],
+            'linkedin'   => [
+                'clientId'     => $s->linkedin_client_id ?? '',
+                'clientSecret' => $s->linkedin_client_secret ?? '',
+                'pageId'       => $s->linkedin_company_id ?? '',
+                'token'        => $s->linkedin_token ?? '',
+                'connected'    => !empty($s?->linkedin_token),
+            ],
+            'wordpress'  => [
+                'url'        => $s->wordpress_url ?? '',
+                'username'   => $s->wordpress_username ?? '',
+                'password'   => $s->wordpress_password ?? '',
+                'categoryId' => $s->wordpress_cat_id ?? '',
+                'connected'  => !empty($s?->wordpress_url) && !empty($s?->wordpress_username),
+            ],
             'newsletter' => [
-                'mailchimp' => ['apiKey' => '', 'serverPrefix' => '', 'audienceId' => '', 'connected' => false],
-                'brevo'     => ['apiKey' => '', 'listId' => '', 'sender' => '', 'connected' => false],
+                'mailchimp' => [
+                    'apiKey'       => $s->mailchimp_api ?? '',
+                    'serverPrefix' => $s->mailchimp_datacenter ?? '',
+                    'audienceId'   => $s->mailchimp_list_id ?? '',
+                    'connected'    => !empty($s?->mailchimp_api),
+                ],
+                'brevo' => [
+                    'apiKey'    => $s->brevo_api ?? '',
+                    'listId'    => $s->brevo_list_id ?? '',
+                    'sender'    => $s->brevo_from_email ?? '',
+                    'connected' => !empty($s?->brevo_api),
+                ],
                 'smtp'      => ['host' => '', 'port' => '587', 'username' => '', 'password' => '', 'encryption' => 'tls', 'sender' => '', 'connected' => false],
             ],
             'updatedAt' => $user->updated_at?->diffForHumans() ?? '—',
@@ -236,6 +265,45 @@ class AccountController extends Controller
         $user->channels = $channels;
 
         $user->save();
+
+        $ai = $request->input('ai', []);
+        $openai = $request->input('openai', []);
+        $meta = $request->input('meta', []);
+        $linkedin = $request->input('linkedin', []);
+        $wordpress = $request->input('wordpress', []);
+        $newsletter = $request->input('newsletter', []);
+        $mailchimp = $newsletter['mailchimp'] ?? [];
+        $brevo = $newsletter['brevo'] ?? [];
+
+        Settings::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'ai_personality' => $ai['profile'] ?? null,
+                'ai_prompt_prefix' => $ai['knows'] ?? null,
+                'ai_comment_prefix' => $ai['commentStyle'] ?? null,
+
+                'openai_api_key' => $openai['apiKey'] ?? null,
+
+                'meta_page_id' => $meta['pageId'] ?? null,
+
+                'linkedin_client_id' => $linkedin['clientId'] ?? null,
+                'linkedin_client_secret' => $linkedin['clientSecret'] ?? null,
+                'linkedin_company_id' => $linkedin['pageId'] ?? null,
+
+                'wordpress_url' => $wordpress['url'] ?? null,
+                'wordpress_username' => $wordpress['username'] ?? null,
+                'wordpress_password' => $wordpress['password'] ?? null,
+                'wordpress_cat_id' => $wordpress['categoryId'] ?? null,
+
+                'mailchimp_api' => $mailchimp['apiKey'] ?? null,
+                'mailchimp_datacenter' => $mailchimp['serverPrefix'] ?? null,
+                'mailchimp_list_id' => $mailchimp['audienceId'] ?? null,
+
+                'brevo_api' => $brevo['apiKey'] ?? null,
+                'brevo_list_id' => $brevo['listId'] ?? null,
+                'brevo_from_email' => $brevo['sender'] ?? null,
+            ]
+        );
 
         return back();
     }

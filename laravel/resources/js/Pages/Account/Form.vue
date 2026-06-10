@@ -125,7 +125,6 @@ const activeIntg = ref('ai');
 const openNl     = ref('mailchimp');
 const toast      = ref(null);
 let toastTimer   = null;
-const verifying  = reactive({});
 
 const activeCh  = computed(() => CHANNELS.filter(c => form.channels[c.id].on).length);
 const title     = computed(() => props.mode === 'create' ? 'Nuovo account' : (form.name || 'Account'));
@@ -190,14 +189,8 @@ function showToast(msg) {
     toastTimer = setTimeout(() => { toast.value = null; }, 2400);
 }
 
-function verify(key, onResult) {
-    verifying[key] = true;
-    onResult('checking');
-    setTimeout(() => {
-        verifying[key] = false;
-        onResult('ok');
-        set(key + '.connected', true);
-    }, 1100);
+function getLinkedinToken() {
+    showToast('Funzione in arrivo: collegamento OAuth LinkedIn');
 }
 
 /* ------------------------------------------------------------------ */
@@ -618,15 +611,8 @@ function goToIntegration(chId) {
                                         @update:model-value="set('openai.apiKey', $event)" />
                                 </div>
                                 <div class="acc-verify-row">
-                                    <ConnectionBadge :state="form.openai.connected ? 'ok' : (verifying['openai'] ? 'checking' : 'off')" />
+                                    <ConnectionBadge :state="form.openai.connected ? 'ok' : 'off'" />
                                     <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
-                                    <button type="button" class="acc-verify" style="margin-left:auto"
-                                        :disabled="verifying['openai']"
-                                        @click="verifying['openai'] = true; setTimeout(() => { verifying['openai'] = false; set('openai.connected', true); }, 1100)">
-                                        <span v-if="verifying['openai']" class="acc-spin" />
-                                        <Icon v-else :name="form.openai.connected ? 'check' : 'link'" :size="15" />
-                                        {{ verifying['openai'] ? 'Verifica…' : form.openai.connected ? 'Riverifica' : 'Verifica connessione' }}
-                                    </button>
                                 </div>
                             </div>
 
@@ -639,15 +625,8 @@ function goToIntegration(chId) {
                                         @input="set('meta.pageId', $event.target.value)" />
                                 </div>
                                 <div class="acc-verify-row">
-                                    <ConnectionBadge :state="form.meta.connected ? 'ok' : (verifying['meta'] ? 'checking' : 'off')" />
+                                    <ConnectionBadge :state="form.meta.connected ? 'ok' : 'off'" />
                                     <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
-                                    <button type="button" class="acc-verify" style="margin-left:auto"
-                                        :disabled="verifying['meta']"
-                                        @click="verifying['meta'] = true; setTimeout(() => { verifying['meta'] = false; set('meta.connected', true); }, 1100)">
-                                        <span v-if="verifying['meta']" class="acc-spin" />
-                                        <Icon v-else :name="form.meta.connected ? 'check' : 'link'" :size="15" />
-                                        {{ verifying['meta'] ? 'Verifica…' : form.meta.connected ? 'Riverifica' : 'Verifica connessione' }}
-                                    </button>
                                 </div>
                             </div>
 
@@ -682,14 +661,12 @@ function goToIntegration(chId) {
                                         placeholder="Si genera dopo «Verifica connessione»" />
                                 </div>
                                 <div class="acc-verify-row">
-                                    <ConnectionBadge :state="form.linkedin.connected ? 'ok' : (verifying['linkedin'] ? 'checking' : 'off')" />
+                                    <ConnectionBadge :state="form.linkedin.connected ? 'ok' : 'off'" />
                                     <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
                                     <button type="button" class="acc-verify" style="margin-left:auto"
-                                        :disabled="verifying['linkedin']"
-                                        @click="verifying['linkedin'] = true; setTimeout(() => { verifying['linkedin'] = false; set('linkedin.connected', true); }, 1100)">
-                                        <span v-if="verifying['linkedin']" class="acc-spin" />
-                                        <Icon v-else :name="form.linkedin.connected ? 'check' : 'link'" :size="15" />
-                                        {{ verifying['linkedin'] ? 'Verifica…' : form.linkedin.connected ? 'Riverifica' : 'Verifica connessione' }}
+                                        @click="getLinkedinToken">
+                                        <Icon name="link" :size="15" />
+                                        Ottieni token
                                     </button>
                                 </div>
                             </div>
@@ -723,15 +700,8 @@ function goToIntegration(chId) {
                                         @input="set('wordpress.categoryId', $event.target.value)" />
                                 </div>
                                 <div class="acc-verify-row">
-                                    <ConnectionBadge :state="form.wordpress.connected ? 'ok' : (verifying['wordpress'] ? 'checking' : 'off')" />
+                                    <ConnectionBadge :state="form.wordpress.connected ? 'ok' : 'off'" />
                                     <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
-                                    <button type="button" class="acc-verify" style="margin-left:auto"
-                                        :disabled="verifying['wordpress']"
-                                        @click="verifying['wordpress'] = true; setTimeout(() => { verifying['wordpress'] = false; set('wordpress.connected', true); }, 1100)">
-                                        <span v-if="verifying['wordpress']" class="acc-spin" />
-                                        <Icon v-else :name="form.wordpress.connected ? 'check' : 'link'" :size="15" />
-                                        {{ verifying['wordpress'] ? 'Verifica…' : form.wordpress.connected ? 'Riverifica' : 'Verifica connessione' }}
-                                    </button>
                                 </div>
                             </div>
 
@@ -857,16 +827,9 @@ function goToIntegration(chId) {
                                                 </div>
                                             </template>
 
-                                            <!-- Verify row -->
+                                            <!-- Status row -->
                                             <div style="display:flex;align-items:center;gap:12px;margin-top:6px;padding-top:16px;border-top:1px solid var(--g100)">
                                                 <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
-                                                <button type="button" class="acc-verify" style="margin-left:auto"
-                                                    :disabled="verifying['nl-' + p.id]"
-                                                    @click="verifying['nl-' + p.id] = true; setTimeout(() => { verifying['nl-' + p.id] = false; set('newsletter.' + p.id + '.connected', true); }, 1100)">
-                                                    <span v-if="verifying['nl-' + p.id]" class="acc-spin" />
-                                                    <Icon v-else :name="form.newsletter[p.id].connected ? 'check' : 'link'" :size="15" />
-                                                    {{ verifying['nl-' + p.id] ? 'Verifica…' : form.newsletter[p.id].connected ? 'Riverifica' : 'Verifica connessione' }}
-                                                </button>
                                             </div>
                                         </div>
                                     </div>
