@@ -194,6 +194,7 @@ main{ flex: 1; }
 .pill-scheduled{ background: var(--st-sch-bg); border-color: var(--st-sch-bd); color: var(--st-sch-fg); } .pill-scheduled .dot{ background: var(--st-sch-fg); }
 .pill-published{ background: var(--st-pub-bg); border-color: var(--st-pub-bd); color: var(--st-pub-fg); } .pill-published .dot{ background: var(--st-pub-fg); }
 .pill-done{ background: var(--st-done-bg); border-color: var(--st-done-bd); color: var(--st-done-fg); } .pill-done .dot{ background: var(--st-done-fg); }
+.pill-draft{ background: var(--g100); border-color: var(--g300); color: var(--g600); } .pill-draft .dot{ background: var(--g500); }
 
 /* Ruolo account */
 .role-badge{ display: inline-flex; align-items: center; padding: 2px 9px; border-radius: var(--radius-full); border: 1px solid var(--g300); background: var(--g100); color: var(--g600); font-size: 11px; font-weight: 600; white-space: nowrap; }

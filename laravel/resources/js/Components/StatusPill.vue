@@ -5,6 +5,7 @@ const STATUS = {
     scheduled: { cls: 'pill-scheduled', label: 'Schedulato' },
     published: { cls: 'pill-published', label: 'Pubblicato' },
     done: { cls: 'pill-done', label: 'Completato' },
+    draft: { cls: 'pill-draft', label: 'Bozza' },
     error: { cls: 'pill-error', label: 'Errore' },
 };
 

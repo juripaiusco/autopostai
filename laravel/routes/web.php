@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\PostController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -33,8 +34,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/account/{user}', [AccountController::class, 'destroy'])
         ->name('account.destroy');
 
-    Route::get('/posts', fn () => Inertia::render('Posts'))
+    Route::get('/posts', [PostController::class, 'index'])
         ->name('posts');
+
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])
+        ->name('posts.destroy');
 
     Route::get('/calendarizza', fn () => Inertia::render('Schedule'))
         ->name('schedule');
