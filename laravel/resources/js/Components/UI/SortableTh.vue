@@ -15,15 +15,21 @@ defineEmits(['sort']);
 
 const active = computed(() => props.sort === props.column);
 const icon = computed(() => (!active.value ? '↕' : props.dir === 'asc' ? '↑' : '↓'));
+const ariaSort = computed(() => (!active.value ? 'none' : props.dir === 'asc' ? 'ascending' : 'descending'));
 </script>
 
 <template>
     <th
         class="th-sort"
         :class="align !== 'left' ? `th-sort--${align}` : null"
+        role="button"
+        tabindex="0"
+        :aria-sort="ariaSort"
         @click="$emit('sort', column)"
+        @keydown.enter.prevent="$emit('sort', column)"
+        @keydown.space.prevent="$emit('sort', column)"
     >
         {{ label }}
-        <span class="th-sort__icon" :class="{ 'th-sort__icon--active': active }">{{ icon }}</span>
+        <span class="th-sort__icon" :class="{ 'th-sort__icon--active': active }" aria-hidden="true">{{ icon }}</span>
     </th>
 </template>

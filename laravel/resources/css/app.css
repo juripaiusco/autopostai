@@ -71,6 +71,17 @@
     --status-done-fg:     #4b5563;
     --status-error-fg:    #ef4444;
 
+    /* ---------- RUOLI ACCOUNT ---------- */
+    --role-admin-bg:     #ede9fe;
+    --role-admin-border: #a78bfa;
+    --role-admin-fg:     #5b21b6;
+    --role-manager-bg:     #dbeafe;
+    --role-manager-border: #60a5fa;
+    --role-manager-fg:     #1d4ed8;
+
+    /* ---------- PROGRESS BAR (token/credit usage) ---------- */
+    --progress-fill: var(--sky-strong);
+
     /* ---------- COLORI CANALE ---------- */
     --ch-facebook:  #1877f2;
     --ch-instagram: #e4405f;
@@ -183,6 +194,22 @@ main{ flex: 1; }
 .pill-scheduled{ background: var(--st-sch-bg); border-color: var(--st-sch-bd); color: var(--st-sch-fg); } .pill-scheduled .dot{ background: var(--st-sch-fg); }
 .pill-published{ background: var(--st-pub-bg); border-color: var(--st-pub-bd); color: var(--st-pub-fg); } .pill-published .dot{ background: var(--st-pub-fg); }
 .pill-done{ background: var(--st-done-bg); border-color: var(--st-done-bd); color: var(--st-done-fg); } .pill-done .dot{ background: var(--st-done-fg); }
+
+/* Ruolo account */
+.role-badge{ display: inline-flex; align-items: center; padding: 2px 9px; border-radius: var(--radius-full); border: 1px solid var(--g300); background: var(--g100); color: var(--g600); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.role-badge--amministratore{ background: var(--role-admin-bg); border-color: var(--role-admin-border); color: var(--role-admin-fg); }
+.role-badge--manager{ background: var(--role-manager-bg); border-color: var(--role-manager-border); color: var(--role-manager-fg); }
+
+/* Barra utilizzo token/immagini */
+.token-bar{ min-width: 140px; }
+.token-bar__head{ display: flex; justify-content: flex-end; gap: 4px; font-size: 12px; color: var(--g500); margin-bottom: 5px; }
+.token-bar__used{ font-weight: 600; color: var(--ink); }
+.token-bar__used--warn{ color: var(--danger); }
+.token-bar__sep{ color: var(--g300); }
+.token-bar__track{ height: 6px; border-radius: var(--radius-full); background: var(--g200); overflow: hidden; }
+.token-bar__fill{ height: 100%; border-radius: var(--radius-full); background: var(--progress-fill); transition: width .3s ease; }
+.token-bar__fill--warn{ background: var(--danger); }
+.token-bar__fill--empty{ background: var(--g200); }
 .pill-error{ background: #fff; border-color: #fecaca; color: var(--st-err); }
 
 .table{ width: 100%; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-collapse: collapse; overflow: hidden; }
@@ -204,6 +231,9 @@ main{ flex: 1; }
 .modal-head{ padding: 16px 20px; border-bottom: 1px solid var(--g200); font-weight: 700; font-size: 16px; }
 .modal-body{ padding: 20px; font-size: 14px; color: var(--g700); line-height: 1.55; }
 .modal-foot{ padding: 14px 20px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--g100); }
+.modal-error{ margin: 12px 0 0; padding: 8px 12px; border-radius: var(--radius); background: color-mix(in srgb, var(--danger) 8%, white); border: 1px solid color-mix(in srgb, var(--danger) 30%, white); color: var(--danger); font-size: 13px; }
+.btn-spinner{ display: inline-block; width: 13px; height: 13px; border-radius: 50%; border: 2px solid currentColor; border-top-color: transparent; opacity: .6; animation: spin .6s linear infinite; }
+@keyframes spin{ to{ transform: rotate(360deg); } }
 @keyframes overlayFade{ from{ opacity: 0; } to{ opacity: 1; } }
 @keyframes modalRise{ from{ transform: translateY(8px); opacity: 0; } to{ transform: translateY(0); opacity: 1; } }
 
@@ -256,6 +286,7 @@ tr:hover .ch-chip{ background: var(--g200); }
 /* Search box (contenuto pagina) */
 .search-box{ display: flex; align-items: center; gap: 8px; min-width: 240px; padding: 8px 12px; background: #fff; border: 1px solid var(--g200); border-radius: var(--radius); color: var(--g400); }
 .search-box input{ width: 100%; border: none; outline: none; background: transparent; font-family: var(--font-ui); font-size: 13.5px; color: var(--ink); }
+.search-box input::placeholder{ color: var(--g600); }
 .search-box__clear{ display: flex; padding: 0; border: none; background: none; color: var(--g400); cursor: pointer; }
 
 /* Header tabella ordinabile */
@@ -459,3 +490,33 @@ tr:hover .ch-chip{ background: var(--g200); }
 
 @media (max-width: 1100px){ .stat-grid{ grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 1000px){ .dash-grid{ grid-template-columns: 1fr; } }
+
+/* ---------- Mobile (<= 640px): liste con filtri ---------- */
+@media (max-width: 640px){
+    .list-toolbar{ flex-direction: column; align-items: stretch; }
+    .list-toolbar .btn{ width: 100%; }
+    .list-toolbar .filter-tabs{ width: 100%; justify-content: space-between; }
+    .list-toolbar .filter-tab{ flex: 1; justify-content: center; }
+    .list-toolbar .search-box{ margin-left: 0; width: 100%; min-width: 0; }
+
+    .icon-btn--ghost{ width: 40px; height: 40px; }
+
+    /* Tabella → card: ogni riga diventa una card, ogni cella una riga label/valore */
+    .table--responsive-cards{ display: block; box-shadow: none; background: transparent; border-radius: 0; overflow: visible; }
+    .table--responsive-cards thead{ display: none; }
+    .table--responsive-cards tbody{ display: block; }
+    .table--responsive-cards tr{ display: block; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 4px 16px; margin-bottom: 12px; }
+    .table--responsive-cards tr:last-child{ margin-bottom: 0; }
+    .table--responsive-cards tr:hover{ background: #fff; }
+    .table--responsive-cards td{ display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--g100); text-align: right; }
+    .table--responsive-cards td:last-child{ border-bottom: none; }
+    .table--responsive-cards td[data-label]:not([data-label=""])::before{
+        content: attr(data-label); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--g500); text-align: left; flex-shrink: 0;
+    }
+    .table--responsive-cards td.user-td{ justify-content: flex-start; min-width: 0; }
+    .table--responsive-cards td.token-td{ min-width: 0; }
+    .table--responsive-cards .token-bar{ min-width: 0; flex: 1; }
+    .table--responsive-cards td.user-td .user-cell{ width: 100%; }
+    .table--responsive-cards .row-actions{ width: 100%; justify-content: flex-end; }
+    .table--responsive-cards td.table-empty{ display: block; text-align: center; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+}

@@ -11,13 +11,15 @@ defineEmits(['update:modelValue']);
 </script>
 
 <template>
-    <div class="filter-tabs">
+    <div class="filter-tabs" role="tablist">
         <button
             v-for="t in tabs"
             :key="t.id"
             type="button"
+            role="tab"
             class="filter-tab"
             :class="{ 'filter-tab--active': modelValue === t.id }"
+            :aria-selected="modelValue === t.id"
             @click="$emit('update:modelValue', t.id)"
         >
             {{ t.label }}

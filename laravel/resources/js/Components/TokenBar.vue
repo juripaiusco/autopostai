@@ -9,22 +9,29 @@ const props = defineProps({
 const pct = computed(() => (props.total > 0 ? Math.min((props.used / props.total) * 100, 100) : 0));
 const warn = computed(() => pct.value >= 80);
 const fmt = (n) => Math.round(Number(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const ariaLabel = computed(() => `${fmt(props.used)} di ${fmt(props.total)}`);
 </script>
 
 <template>
-    <div style="min-width: 140px">
-        <div style="display: flex; justify-content: flex-end; gap: 4px; font-size: 12px; color: var(--g500); margin-bottom: 5px">
-            <span :style="{ fontWeight: 600, color: warn ? 'var(--danger)' : 'var(--ink)' }">{{ fmt(used) }}</span>
-            <span style="color: var(--g300)">/</span>
+    <div
+        class="token-bar"
+        role="progressbar"
+        :aria-valuenow="used"
+        :aria-valuemin="0"
+        :aria-valuemax="total"
+        :aria-label="ariaLabel"
+    >
+        <div class="token-bar__head" aria-hidden="true">
+            <span class="token-bar__used" :class="{ 'token-bar__used--warn': warn }">{{ fmt(used) }}</span>
+            <span class="token-bar__sep">/</span>
             <span>{{ fmt(total) }}</span>
         </div>
-        <div style="height: 6px; border-radius: 9999px; background: var(--g200); overflow: hidden">
-            <div :style="{
-                height: '100%', borderRadius: '9999px',
-                width: pct + '%',
-                background: pct === 0 ? 'var(--g200)' : (warn ? 'var(--danger)' : 'var(--st-pub-bd)'),
-                transition: 'width .3s ease',
-            }"></div>
+        <div class="token-bar__track">
+            <div
+                class="token-bar__fill"
+                :class="{ 'token-bar__fill--warn': warn, 'token-bar__fill--empty': pct === 0 }"
+                :style="{ width: pct + '%' }"
+            ></div>
         </div>
     </div>
 </template>

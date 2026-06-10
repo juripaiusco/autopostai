@@ -11,7 +11,7 @@ const hue = computed(() => (props.name.charCodeAt(0) * 17) % 360);
 </script>
 
 <template>
-    <div :style="{
+    <div aria-hidden="true" :style="{
         width: size + 'px', height: size + 'px', borderRadius: '50%', flexShrink: 0,
         background: `oklch(0.78 0.12 ${hue})`,
         color: `oklch(0.28 0.08 ${hue})`,

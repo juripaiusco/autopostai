@@ -18,12 +18,14 @@ defineEmits(['update:modelValue', 'clear']);
             :value="modelValue"
             type="text"
             :placeholder="placeholder"
+            :aria-label="placeholder"
             @input="$emit('update:modelValue', $event.target.value)"
         />
         <button
             v-if="modelValue"
             type="button"
             class="search-box__clear"
+            aria-label="Cancella ricerca"
             @click="$emit('clear')"
         >
             <Icon name="x" :size="14" />

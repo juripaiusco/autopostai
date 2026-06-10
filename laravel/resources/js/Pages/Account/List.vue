@@ -37,12 +37,29 @@ const TABS = computed(() => [
 ]);
 
 const deleteTarget = ref(null);
+const deleting = ref(false);
+const deleteError = ref(null);
 const colSpan = computed(() => (props.isAdmin ? 8 : 7));
 
+function openDelete(u) {
+    deleteTarget.value = u;
+    deleteError.value = null;
+}
+
+function cancelDelete() {
+    if (deleting.value) return;
+    deleteTarget.value = null;
+    deleteError.value = null;
+}
+
 function confirmDelete(id) {
+    deleting.value = true;
+    deleteError.value = null;
     router.delete(route('account.destroy', id), {
         preserveScroll: true,
-        onFinish: () => { deleteTarget.value = null; },
+        onSuccess: () => { deleteTarget.value = null; },
+        onError: () => { deleteError.value = 'Eliminazione non riuscita. Riprova.'; },
+        onFinish: () => { deleting.value = false; },
     });
 }
 </script>
@@ -63,7 +80,7 @@ function confirmDelete(id) {
 
         <div class="list-toolbar">
             <a :href="route('account.create')" class="btn btn-dark">
-                <Icon name="plus" :size="17" />Nuovo
+                <Icon name="plus" :size="17" />Nuovo account
             </a>
 
             <FilterTabs :model-value="filters.filter" :tabs="TABS" @update:model-value="setFilter" />
@@ -72,7 +89,7 @@ function confirmDelete(id) {
         </div>
 
         <div class="card table-wrap">
-            <table class="table">
+            <table class="table table--responsive-cards">
                 <thead>
                     <tr>
                         <SortableTh label="Account" column="name" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
@@ -89,7 +106,11 @@ function confirmDelete(id) {
                     <tr v-if="users.data.length === 0">
                         <td :colspan="colSpan" class="table-empty">
                             <Icon name="users" :size="32" class="table-empty__icon" />
-                            <div class="table-empty__text">Nessun utente trovato</div>
+                            <template v-if="filters.search">
+                                <div class="table-empty__text">Nessun risultato per «{{ filters.search }}»</div>
+                                <button type="button" class="list-footer__clear" @click="clearSearch">Cancella ricerca</button>
+                            </template>
+                            <div v-else class="table-empty__text">Nessun utente trovato</div>
                         </td>
                     </tr>
                     <tr v-for="u in users.data" :key="u.id"
@@ -104,29 +125,29 @@ function confirmDelete(id) {
                                 </div>
                             </div>
                         </td>
-                        <td v-if="isAdmin"><RoleBadge :role="u.role" /></td>
-                        <td>
+                        <td v-if="isAdmin" data-label="Ruolo"><RoleBadge :role="u.role" /></td>
+                        <td data-label="Canali">
                             <div class="ch-list">
                                 <span v-for="c in u.channels" :key="c" class="ch-chip" :title="CH_CONFIG[c]?.label ?? c">
                                     <ChannelIcon :id="c" :size="13" />
                                 </span>
                             </div>
                         </td>
-                        <td class="num">{{ u.post }}</td>
-                        <td class="num">{{ u.reply }}</td>
-                        <td class="token-td">
+                        <td class="num" data-label="Post">{{ u.post }}</td>
+                        <td class="num" data-label="Reply">{{ u.reply }}</td>
+                        <td class="token-td" data-label="Immagini">
                             <TokenBar v-if="u.imageTotal > 0" :used="u.immagini" :total="u.imageTotal" />
                             <span v-else class="num">{{ u.immagini }}</span>
                         </td>
-                        <td class="token-td">
+                        <td class="token-td" data-label="Token">
                             <TokenBar :used="u.tokenUsed" :total="u.tokenTotal" />
                         </td>
-                        <td>
+                        <td data-label="">
                             <div class="row-actions">
-                                <a :href="route('account.edit', u.id)" class="icon-btn icon-btn--ghost" title="Modifica">
+                                <a :href="route('account.edit', u.id)" class="icon-btn icon-btn--ghost" title="Modifica" :aria-label="`Modifica ${u.name}`">
                                     <Icon name="pencil" :size="15" />
                                 </a>
-                                <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" @click.stop="deleteTarget = u">
+                                <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" :aria-label="`Elimina ${u.name}`" @click.stop="openDelete(u)">
                                     <Icon name="trash" :size="15" />
                                 </button>
                             </div>
@@ -152,8 +173,11 @@ function confirmDelete(id) {
             v-if="deleteTarget"
             title="Elimina utente"
             confirm-label="Elimina"
+            pending-label="Eliminazione…"
             danger
-            @cancel="deleteTarget = null"
+            :loading="deleting"
+            :error="deleteError"
+            @cancel="cancelDelete"
             @confirm="confirmDelete(deleteTarget.id)"
         >
             Sei sicuro di voler eliminare <b>{{ deleteTarget.name }}</b>?<br />
