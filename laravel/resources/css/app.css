@@ -502,6 +502,7 @@ tr:hover .ch-chip{ background: var(--g200); }
     .icon-btn--ghost{ width: 40px; height: 40px; }
 
     /* Tabella → card: ogni riga diventa una card, ogni cella una riga label/valore */
+    .card:has(.table--responsive-cards){ background: transparent; box-shadow: none; border-radius: 0; overflow: visible; }
     .table--responsive-cards{ display: block; box-shadow: none; background: transparent; border-radius: 0; overflow: visible; }
     .table--responsive-cards thead{ display: none; }
     .table--responsive-cards tbody{ display: block; }
@@ -519,4 +520,6 @@ tr:hover .ch-chip{ background: var(--g200); }
     .table--responsive-cards td.user-td .user-cell{ width: 100%; }
     .table--responsive-cards .row-actions{ width: 100%; justify-content: flex-end; }
     .table--responsive-cards td.table-empty{ display: block; text-align: center; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+
+    .card:has(.table--responsive-cards) .list-footer{ margin-top: 12px; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-top: none; }
 }
