@@ -138,12 +138,14 @@ const completion = computed(() => {
     const checks = [
         !!form.name,
         !!form.email,
-        !!(form.password && form.password.replace(/•/g, '').length > 0),
+        props.mode === 'edit' || !!(form.password && form.password.replace(/•/g, '').length > 0),
+        !!form.tokensMonth,
+        !!form.imagesDay,
         CHANNELS.some(c => form.channels[c.id].on),
         !!(form.ai.profile && form.ai.profile.length > 30),
         !!form.openai.apiKey,
-        !!(form.meta.pageId || form.wordpress.url || form.linkedin.clientId ||
-           form.newsletter.mailchimp.apiKey || form.newsletter.brevo.apiKey),
+        !!(form.meta.connected || form.linkedin.connected || form.wordpress.connected ||
+           form.newsletter.mailchimp.connected || form.newsletter.brevo.connected || form.newsletter.smtp.connected),
     ];
     return Math.round(checks.filter(Boolean).length / checks.length * 100);
 });
