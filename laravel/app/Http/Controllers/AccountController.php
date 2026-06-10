@@ -159,9 +159,10 @@ class AccountController extends Controller
             'password' => '',
             'channels' => $user->channels ?? [],
             'manager'  => $user->manager_id ?? '',
-            'canSubusers' => (bool) ($user->can_subusers ?? false),
+            'canSubusers' => (bool) ($user->child_on ?? false),
+            'subusersLimit' => $user->child_max ?? '',
             'tokensMonth' => $user->tokens_limit ?? '',
-            'imagesDay'  => $user->images_limit ?? '',
+            'imagesDay'  => $user->image_model_limit ?? '',
             'ai'         => $user->ai_profile ?? ['profile' => '', 'knows' => '', 'commentStyle' => ''],
             'openai'     => ['apiKey' => $user->openai_key ?? '', 'connected' => !empty($user->openai_key)],
             'meta'       => ['pageId' => $user->meta_page_id ?? '', 'connected' => !empty($user->meta_page_id)],
@@ -177,6 +178,7 @@ class AccountController extends Controller
             'usage'     => [
                 'tokensUsed' => $user->tokensUsed()->sum('tokens_used'),
                 'imagesUsed' => $user->imagesUsed()->count(),
+                'subusersActive' => $user->children()->count(),
             ],
         ];
 

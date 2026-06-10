@@ -167,13 +167,30 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
 .acc-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 .acc-grid-2--equal { align-items: stretch; }
 .acc-grid-2--equal > .acc-card { margin-bottom: 0; display: flex; flex-direction: column; }
+.acc-grid-2--profile { grid-template-columns: 4fr 8fr; }
 @media (max-width: 980px) { .acc-grid-2 { grid-template-columns: 1fr; } }
 .acc-divider { height: 1px; background: var(--g100); margin: 6px 0 22px; }
+
+/* ---------- Field row (side by side fields) ---------- */
+.acc-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
+.acc-field-row .acc-field { margin-bottom: 0; }
+.acc-field-row--3 { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 980px) { .acc-field-row { grid-template-columns: 1fr; gap: 22px; } }
 
 /* ---------- Input with unit suffix ---------- */
 .acc-input-unit { position: relative; display: flex; align-items: center; }
 .acc-input-unit .unit { position: absolute; right: 14px; font-size: 13px; font-weight: 600; color: var(--g400); pointer-events: none; }
-.acc-input-unit .control { padding-right: 90px; }
+.acc-input-unit .control { padding-right: 70px; }
+.acc-input-unit input[type="number"] {
+    text-align: right;
+    -moz-appearance:textfield;
+}
+/* Chrome, Safari, Edge, Opera */
+.acc-input-unit input[type="number"]::-webkit-outer-spin-button,
+.acc-input-unit input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
 /* ---------- Secret field (show/hide + optional copy) ---------- */
 .acc-secret { display: flex; gap: 8px; align-items: stretch; }

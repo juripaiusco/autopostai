@@ -84,7 +84,7 @@ function buildForm(account) {
     if (!account) {
         return {
             name: '', email: '', password: '',
-            canSubusers: false, manager: '', tokensMonth: '', imagesDay: '',
+            canSubusers: false, manager: '', subusersLimit: '', tokensMonth: '', imagesDay: '',
             channels: defaultChannels(),
             ai: { profile: '', knows: '', commentStyle: '' },
             openai:    { apiKey: '', connected: false },
@@ -280,7 +280,7 @@ function nlConn(providerId) {
             </div>
 
             <!-- ──────────────── Tab: Profilo & Piano ──────────────── -->
-            <div v-if="activeTab === 'profile'" class="acc-grid-2 acc-grid-2--equal acc-reveal">
+            <div v-if="activeTab === 'profile'" class="acc-grid-2 acc-grid-2--equal acc-grid-2--profile acc-reveal">
 
                 <!-- Profilo Account -->
                 <div class="acc-card">
@@ -334,77 +334,90 @@ function nlConn(providerId) {
                         </div>
                     </div>
 
-                    <!-- Manager assegnato -->
-                    <div class="acc-field">
-                        <label class="acc-row-label">Manager assegnato</label>
-                        <span class="acc-row-help">{{ form.manager ? 'Account gestito da un manager.' : "L'account non ha ancora un manager." }}</span>
-                        <select class="control" :value="form.manager" @change="set('manager', $event.target.value)">
-                            <option value="">Nessun manager</option>
-                            <option v-for="m in managers" :key="m.id" :value="m.id">{{ m.name }}</option>
-                            <option v-if="!managers.length" value="mock-1">Studio Sociale · agenzia</option>
-                            <option v-if="!managers.length" value="mock-2">Marketing interno</option>
-                        </select>
-                        <!-- Edit mode: inline usage bar -->
-                        <div v-if="mode === 'edit' && account?.usage" class="acc-inline-usage">
-                            <div class="acc-inline-usage-bar">
-                                <div class="acc-inline-usage-fill"
-                                    :style="{ width: Math.min(Math.round(2 / 5 * 100), 100) + '%', background: 'var(--sky)' }" />
+                    <!-- Sotto-utenti / Manager, Token al mese, Immagini al giorno -->
+                    <div class="acc-field-row acc-field-row--3">
+                        <div v-if="form.canSubusers" class="acc-field" style="margin-bottom:0">
+                            <label class="acc-row-label">Numero massimo sotto-utenti</label>
+                            <span class="acc-row-help">Quanti utenti si possono creare.</span>
+                            <div class="acc-input-unit">
+                                <input class="control" type="number" :value="form.subusersLimit" placeholder="5"
+                                    @input="set('subusersLimit', $event.target.value)" />
+                                <span class="unit">utenti</span>
                             </div>
-                            <div class="acc-inline-usage-row">
-                                <span>sotto-utenti attivi</span>
-                                <span class="acc-inline-usage-val" style="color:var(--sky-strong)">2 / 5</span>
+                            <div v-if="mode === 'edit' && account?.usage" class="acc-inline-usage">
+                                <div class="acc-inline-usage-bar">
+                                    <div class="acc-inline-usage-fill"
+                                        :style="{
+                                            width: Math.min(Math.round((account.usage.subusersActive ?? 0) / (Number(form.subusersLimit) || 1) * 100), 100) + '%',
+                                            background: 'var(--sky)'
+                                        }" />
+                                </div>
+                                <div class="acc-inline-usage-row">
+                                    <span>sotto-utenti attivi</span>
+                                    <span class="acc-inline-usage-val" style="color:var(--sky-strong)">
+                                        {{ account.usage.subusersActive ?? 0 }} / {{ Number(form.subusersLimit) || 0 }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div v-else class="acc-field" style="margin-bottom:0">
+                            <label class="acc-row-label">Manager assegnato</label>
+                            <span class="acc-row-help">{{ form.manager ? 'Account gestito da un manager.' : "L'account non ha ancora un manager." }}</span>
+                            <select class="control" :value="form.manager" @change="set('manager', $event.target.value)">
+                                <option value="">Nessun manager</option>
+                                <option v-for="m in managers" :key="m.id" :value="m.id">{{ m.name }}</option>
+                                <option v-if="!managers.length" value="mock-1">Studio Sociale · agenzia</option>
+                                <option v-if="!managers.length" value="mock-2">Marketing interno</option>
+                            </select>
+                        </div>
 
-                    <!-- Token al mese -->
-                    <div class="acc-field">
-                        <label class="acc-row-label">Token al mese</label>
-                        <span class="acc-row-help">Numero massimo di token utilizzabili al mese.</span>
-                        <div class="acc-input-unit">
-                            <input class="control" type="number" :value="form.tokensMonth" placeholder="50000"
-                                @input="set('tokensMonth', $event.target.value)" />
-                            <span class="unit">token</span>
-                        </div>
-                        <div v-if="mode === 'edit' && account?.usage" class="acc-inline-usage">
-                            <div class="acc-inline-usage-bar">
-                                <div class="acc-inline-usage-fill"
-                                    :style="{
-                                        width: Math.min(Math.round(account.usage.tokensUsed / (Number(form.tokensMonth) || 50000) * 100), 100) + '%',
-                                        background: 'var(--sky)'
-                                    }" />
+                        <div class="acc-field" style="margin-bottom:0">
+                            <label class="acc-row-label">Token al mese</label>
+                            <span class="acc-row-help">Numero massimo di token utilizzabili al mese.</span>
+                            <div class="acc-input-unit">
+                                <input class="control" type="number" :value="form.tokensMonth" placeholder="50000"
+                                    @input="set('tokensMonth', $event.target.value)" />
+                                <span class="unit">token</span>
                             </div>
-                            <div class="acc-inline-usage-row">
-                                <span>token usati questo mese</span>
-                                <span class="acc-inline-usage-val" style="color:var(--sky-strong)">
-                                    {{ account.usage.tokensUsed.toLocaleString('it') }} / {{ (Number(form.tokensMonth) || 50000).toLocaleString('it') }}
-                                </span>
+                            <div v-if="mode === 'edit' && account?.usage" class="acc-inline-usage">
+                                <div class="acc-inline-usage-bar">
+                                    <div class="acc-inline-usage-fill"
+                                        :style="{
+                                            width: Math.min(Math.round(account.usage.tokensUsed / (Number(form.tokensMonth) || 50000) * 100), 100) + '%',
+                                            background: 'var(--sky)'
+                                        }" />
+                                </div>
+                                <div class="acc-inline-usage-row">
+                                    <span>token usati questo mese</span>
+                                    <span class="acc-inline-usage-val" style="color:var(--sky-strong)">
+                                        {{ account.usage.tokensUsed.toLocaleString('it') }} / {{ (Number(form.tokensMonth) || 50000).toLocaleString('it') }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Immagini al giorno -->
-                    <div class="acc-field" style="margin-bottom:0">
-                        <label class="acc-row-label">Immagini al giorno</label>
-                        <span class="acc-row-help">Numero massimo di immagini generabili al giorno.</span>
-                        <div class="acc-input-unit">
-                            <input class="control" type="number" :value="form.imagesDay" placeholder="20"
-                                @input="set('imagesDay', $event.target.value)" />
-                            <span class="unit">img / die</span>
-                        </div>
-                        <div v-if="mode === 'edit' && account?.usage" class="acc-inline-usage">
-                            <div class="acc-inline-usage-bar">
-                                <div class="acc-inline-usage-fill"
-                                    :style="{
-                                        width: Math.min(Math.round(account.usage.imagesUsed / (Number(form.imagesDay) || 20) * 100), 100) + '%',
-                                        background: 'var(--st-pub-bd)'
-                                    }" />
+                        <div class="acc-field" style="margin-bottom:0">
+                            <label class="acc-row-label">Immagini al giorno</label>
+                            <span class="acc-row-help">Numero massimo di immagini generabili.</span>
+                            <div class="acc-input-unit">
+                                <input class="control" type="number" :value="form.imagesDay" placeholder="20"
+                                    @input="set('imagesDay', $event.target.value)" />
+                                <span class="unit">img al dì</span>
                             </div>
-                            <div class="acc-inline-usage-row">
-                                <span>immagini generate oggi</span>
-                                <span class="acc-inline-usage-val" style="color:var(--st-pub-fg)">
-                                    {{ account.usage.imagesUsed }} / {{ Number(form.imagesDay) || 20 }}
-                                </span>
+                            <div v-if="mode === 'edit' && account?.usage" class="acc-inline-usage">
+                                <div class="acc-inline-usage-bar">
+                                    <div class="acc-inline-usage-fill"
+                                        :style="{
+                                            width: Math.min(Math.round(account.usage.imagesUsed / (Number(form.imagesDay) || 20) * 100), 100) + '%',
+                                            background: 'var(--st-pub-bd)'
+                                        }" />
+                                </div>
+                                <div class="acc-inline-usage-row">
+                                    <span>immagini generate oggi</span>
+                                    <span class="acc-inline-usage-val" style="color:var(--st-pub-fg)">
+                                        {{ account.usage.imagesUsed }} / {{ Number(form.imagesDay) || 20 }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
