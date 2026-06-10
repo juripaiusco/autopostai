@@ -45,6 +45,7 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
     outline-offset: 2px;
 }
 .acc-toggle--on { background: var(--sky); }
+.acc-toggle:disabled { cursor: default; opacity: .45; }
 .acc-toggle-thumb {
     position: absolute;
     top: 3px; left: 3px;

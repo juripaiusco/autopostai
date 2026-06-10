@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'ai_prompt_comment',
     'img',
     'img_ai_check_on',
+    'comments_enabled',
+    'auto_reply_enabled',
     'channels',
     'preview',
     'published_at',

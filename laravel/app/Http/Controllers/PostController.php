@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -96,6 +99,96 @@ class PostController extends Controller
             ],
             'counts' => $counts,
         ]);
+    }
+
+    /**
+     * Form di creazione di un nuovo post (Composer).
+     */
+    public function create(Request $request): Response
+    {
+        $me = $request->user();
+
+        $userChannels = collect($me->channels ?? [])
+            ->filter(fn ($c) => !empty($c['on']))
+            ->keys()
+            ->values()
+            ->all();
+
+        $channelsAvailable = $userChannels ?: array_keys(User::CHANNELS);
+
+        $prefill = $request->session()->pull('post_prefill');
+
+        return Inertia::render('Posts/Form', [
+            'channelsAvailable' => $channelsAvailable,
+            'prefill' => $prefill,
+        ]);
+    }
+
+    /**
+     * Salva un nuovo post (bozza, programmato o da pubblicare).
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $me = $request->user();
+
+        $data = $request->validate([
+            'title' => ['nullable', 'string', 'max:255'],
+            'channels' => ['required', 'array', 'min:1'],
+            'channels.*' => ['string', Rule::in(array_keys(User::CHANNELS))],
+            'ai_prompt_post' => ['nullable', 'string'],
+            'comments_enabled' => ['boolean'],
+            'auto_reply_enabled' => ['boolean'],
+            'ai_prompt_comment' => ['nullable', 'string'],
+            'ai_content' => ['nullable', 'string'],
+            'image' => ['nullable', 'image', 'max:10240'],
+            'img_source' => ['nullable', 'string', Rule::in(['upload', 'generated', 'archive'])],
+            'published_at' => ['nullable', 'date'],
+            'action' => ['required', 'string', Rule::in(['save', 'save_and_add'])],
+        ]);
+
+        $img = null;
+        if ($request->hasFile('image')) {
+            $img = Storage::disk('public')->putFile('posts', $request->file('image'));
+        }
+
+        $channels = collect(User::CHANNELS)
+            ->keys()
+            ->mapWithKeys(fn ($id) => [$id => ['on' => in_array($id, $data['channels'], true)]])
+            ->all();
+
+        $post = Post::create([
+            'user_id' => $me->id,
+            'created_by_user_id' => $me->id,
+            'title' => $data['title'] ?? '',
+            'ai_prompt_post' => $data['ai_prompt_post'] ?? null,
+            'ai_content' => $data['ai_content'] ?? null,
+            'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
+            'img' => $img,
+            'img_ai_check_on' => ($data['img_source'] ?? null) === 'generated' ? '1' : '0',
+            'comments_enabled' => !empty($data['comments_enabled']) ? '1' : '0',
+            'auto_reply_enabled' => !empty($data['auto_reply_enabled']) ? '1' : '0',
+            'channels' => $channels,
+            'published_at' => $data['published_at'] ?? null,
+            'published' => '0',
+        ]);
+
+        if ($data['action'] === 'save_and_add') {
+            $request->session()->flash('post_prefill', [
+                'title' => $post->title,
+                'channels' => $data['channels'],
+                'ai_prompt_post' => $post->ai_prompt_post,
+                'comments_enabled' => $post->comments_enabled === '1',
+                'auto_reply_enabled' => $post->auto_reply_enabled === '1',
+                'ai_prompt_comment' => $post->ai_prompt_comment,
+            ]);
+            $request->session()->flash('toast', "Post salvato. Ne abbiamo creato una copia: adattala a un altro canale e salva.");
+
+            return redirect()->route('posts.create');
+        }
+
+        $request->session()->flash('toast', 'Post salvato.');
+
+        return redirect()->route('posts');
     }
 
     public function destroy(Request $request, Post $post): RedirectResponse

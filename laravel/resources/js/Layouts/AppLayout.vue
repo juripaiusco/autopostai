@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import Icon from '@/Components/Icon.vue';
 import Sidebar from '@/Components/Sidebar.vue';
 
@@ -15,6 +15,21 @@ defineProps({
 
 const sidebarOpen = ref(false);
 const searchQuery = ref('');
+
+// Toast globale alimentato dal flash di sessione (es. dopo un redirect post-save).
+const toast = ref(null);
+let toastTimer = null;
+
+watch(
+    () => usePage().props.flash?.toast,
+    (msg) => {
+        if (!msg) return;
+        toast.value = msg;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { toast.value = null; }, 4000);
+    },
+    { immediate: true },
+);
 </script>
 
 <template>
@@ -67,5 +82,11 @@ const searchQuery = ref('');
                 </div>
             </main>
         </div>
+
+        <Teleport to="body">
+            <div v-if="toast" class="acc-toast">
+                <Icon name="check" :size="17" />{{ toast }}
+            </div>
+        </Teleport>
     </div>
 </template>

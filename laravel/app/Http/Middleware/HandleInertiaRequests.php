@@ -44,6 +44,9 @@ class HandleInertiaRequests extends Middleware
                 'version' => env('APP_VERSION', '0.0.0'),
                 'changelog_url' => env('APP_CHANGELOG_URL', '#'),
             ],
+            'flash' => [
+                'toast' => fn () => $request->session()->get('toast'),
+            ],
         ];
     }
 }

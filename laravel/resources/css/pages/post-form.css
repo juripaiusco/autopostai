@@ -1,0 +1,178 @@
+/* ============================================================
+   FaPer3 — Composer / Posts/Form page styles (pf-* namespace)
+   Ported from Claude Design bundle (Composer.html / composer-screen.jsx)
+   ============================================================ */
+
+/* ---------- Step bar ---------- */
+.pf-stepbar { display: flex; align-items: center; margin-bottom: 28px; }
+.pf-step { display: flex; align-items: center; gap: 8px; background: none; border: none; padding: 6px 0; cursor: default; opacity: .42; }
+.pf-step--active, .pf-step--done { opacity: 1; }
+.pf-step--clickable { cursor: pointer; }
+.pf-step-circle {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11.5px; font-weight: 700;
+    background: var(--g200); color: var(--g500);
+    transition: background .2s ease;
+}
+.pf-step--done .pf-step-circle { background: var(--ink); color: #fff; }
+.pf-step--active .pf-step-circle { background: var(--sky); color: #fff; box-shadow: 0 0 0 3px var(--sky-100); }
+.pf-step-label { font-size: 13.5px; font-weight: 500; color: var(--g400); }
+.pf-step--active .pf-step-label, .pf-step--done .pf-step-label { font-weight: 700; color: var(--ink); }
+.pf-step--active .pf-step-label { color: var(--sky-strong); }
+.pf-step-line { flex: 1; height: 1px; margin: 0 10px; background: var(--g200); transition: background .2s ease; }
+.pf-step-line--done { background: var(--ink); }
+
+/* ---------- Step 1: channel grid ---------- */
+.pf-channel-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 860px) { .pf-channel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pf-channel-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 9px 12px; border-radius: var(--radius);
+    border: 1.5px solid var(--g200); background: #fff; color: var(--g600);
+    font-size: 13.5px; font-weight: 600; white-space: nowrap;
+    cursor: pointer; transition: all .15s ease;
+}
+.pf-channel-btn svg { width: 15px; height: 15px; color: var(--g400); }
+.pf-channel-btn--on { border-color: var(--sky); background: var(--sky-50); color: var(--sky-strong); }
+.pf-channel-btn--on svg { color: var(--sky); }
+.pf-channel-error { margin-top: 8px; font-size: 12.5px; color: var(--danger); }
+
+/* ---------- Step 1: comments card ---------- */
+.pf-comments-card { background: var(--g50); border-radius: var(--radius-lg); padding: 16px 18px; }
+.pf-comments-title { font-weight: 700; font-size: 13.5px; color: var(--ink); margin-bottom: 12px; }
+.pf-check-row { margin-bottom: 10px; }
+.pf-check-row:last-child { margin-bottom: 0; }
+.pf-check-row--disabled .pf-check-title,
+.pf-check-row--disabled .pf-check-help { opacity: .45; }
+.pf-check-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.pf-check-help { font-size: 12px; color: var(--g400); margin-top: 2px; }
+
+.pf-counter { text-align: right; font-size: 11.5px; color: var(--g400); margin-top: 4px; }
+
+/* ---------- Step 2: media tabs ---------- */
+.pf-tabs { display: flex; border-bottom: 1px solid var(--g100); margin-bottom: 24px; }
+.pf-tab {
+    padding: 9px 18px; border: none; background: none; cursor: pointer;
+    font-size: 14px; font-weight: 400; color: var(--g500);
+    border-bottom: 2.5px solid transparent; margin-bottom: -1px;
+    transition: all .15s ease; font-family: inherit;
+}
+.pf-tab--active { font-weight: 700; color: var(--ink); border-bottom-color: var(--sky); }
+
+.pf-dropzone {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 220px; border: 3px dashed var(--g200); border-radius: var(--radius-lg);
+    padding: 20px; text-align: center; color: var(--g300);
+    cursor: pointer; transition: border-color .15s, color .15s;
+}
+.pf-dropzone:hover { border-color: var(--sky); }
+.pf-dropzone svg { width: 46px; height: 46px; color: var(--g300); }
+.pf-dropzone-title { margin-top: 14px; font-size: 14.5px; font-weight: 500; color: var(--g600); }
+.pf-dropzone-sub { margin-top: 5px; font-size: 13px; color: var(--g400); }
+.pf-dropzone-sub b { color: var(--sky-strong); font-weight: 600; }
+.pf-dropzone-hint { margin-top: 8px; font-size: 12px; color: var(--g300); }
+
+.pf-preview-frame { position: relative; height: 240px; border-radius: var(--radius-lg); overflow: hidden; background: var(--g100); }
+.pf-preview-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pf-preview-remove {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(0,0,0,.55); border: none; border-radius: var(--radius-sm);
+    color: #fff; padding: 4px 12px; cursor: pointer; font-size: 12.5px;
+}
+
+.pf-note {
+    margin-top: 12px; padding: 10px 14px; background: var(--g50);
+    border-radius: var(--radius); font-size: 12.5px; color: var(--g500);
+    display: flex; gap: 8px; align-items: center;
+}
+.pf-note svg { color: var(--g400); width: 15px; height: 15px; flex-shrink: 0; }
+
+/* ---------- Step 2: AI image generation mini-steps ---------- */
+.pf-genstep { display: flex; align-items: center; gap: 6px; margin-bottom: 22px; }
+.pf-genstep-item { display: flex; align-items: center; gap: 6px; }
+.pf-genstep-dot {
+    width: 20px; height: 20px; border-radius: 50%; font-size: 10.5px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--g200); color: var(--g400);
+}
+.pf-genstep-dot--done { background: var(--ink); color: #fff; }
+.pf-genstep-dot--active { background: var(--sky); color: #fff; }
+.pf-genstep-label { font-size: 12.5px; color: var(--g400); }
+.pf-genstep-label--active { font-weight: 600; color: var(--ink); }
+.pf-genstep-line { flex: 1; height: 1px; background: var(--g100); }
+.pf-genstep-line--done { background: var(--ink); }
+
+.pf-gen-loading { text-align: center; padding: 52px 0; }
+.pf-gen-loading-title { font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.pf-gen-loading-sub { font-size: 13.5px; color: var(--g400); }
+
+.pf-spinner {
+    width: 50px; height: 50px; margin: 0 auto 18px; border-radius: 50%;
+    border: 3px solid var(--sky-200); border-top-color: var(--sky);
+    animation: spin .8s linear infinite;
+}
+.pf-spinner--sm { width: 26px; height: 26px; border-width: 3px; margin: 0; }
+
+.pf-gen-result-img { height: 240px; border-radius: var(--radius-lg); margin-bottom: 14px; }
+.pf-gen-result-prompt { font-size: 12.5px; color: var(--g500); margin-bottom: 18px; font-style: italic; line-height: 1.5; }
+.pf-gen-actions { display: flex; gap: 10px; }
+
+/* ---------- Step 2: archive grid ---------- */
+.pf-archive-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.pf-archive-empty { text-align: center; padding: 48px 0; color: var(--g400); }
+.pf-archive-empty svg { width: 36px; height: 36px; }
+.pf-archive-empty-text { margin-top: 12px; }
+
+/* ---------- Step 2: active media chip ---------- */
+.pf-active-media {
+    margin-top: 20px; padding: 11px 14px; background: var(--sky-50);
+    border-radius: var(--radius); border: 1px solid var(--sky-200);
+    display: flex; align-items: center; gap: 12px;
+}
+.pf-active-media-thumb { width: 40px; height: 40px; border-radius: var(--radius-sm); flex-shrink: 0; overflow: hidden; background: var(--g100); }
+.pf-active-media-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.pf-active-media-text { flex: 1; min-width: 0; }
+.pf-active-media-title { font-weight: 600; font-size: 13px; color: var(--sky-strong); }
+.pf-active-media-sub { font-size: 12px; color: var(--g500); margin-top: 2px; }
+.pf-active-media-remove { background: none; border: none; color: var(--g400); cursor: pointer; font-size: 20px; line-height: 1; padding: 0 4px; }
+
+/* ---------- Step 3: summary card ---------- */
+.pf-summary { background: var(--g50); border-radius: var(--radius-lg); padding: 18px 20px; }
+.pf-summary-title { font-weight: 700; font-size: 13px; color: var(--g500); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; }
+.pf-summary-row { display: flex; gap: 14px; align-items: flex-start; }
+.pf-summary-thumb { width: 72px; height: 72px; border-radius: var(--radius); flex-shrink: 0; overflow: hidden; background: var(--g200); }
+.pf-summary-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.pf-summary-grow { flex: 1; min-width: 0; }
+.pf-summary-name { font-weight: 700; color: var(--ink); font-size: 15px; margin-bottom: 5px; }
+.pf-summary-empty { color: var(--g300); }
+.pf-summary-prompt {
+    font-size: 13px; color: var(--g500); line-height: 1.5; margin-bottom: 10px;
+    overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.pf-summary-channels { display: flex; gap: 6px; flex-wrap: wrap; }
+.pf-summary-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: var(--radius-full); background: var(--g100); font-size: 12px; color: var(--g600); }
+.pf-summary-chip svg { width: 11px; height: 11px; }
+.pf-summary-warn { font-size: 12px; color: var(--danger); font-weight: 500; }
+
+/* ---------- Step 3: AI preview ---------- */
+.pf-ai-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+.pf-ai-box { position: relative; min-height: 96px; border: 1px solid var(--g200); border-radius: var(--radius); padding: 14px 16px; background: #fff; }
+.pf-ai-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.82); border-radius: var(--radius); z-index: 2; }
+.pf-ai-empty { color: var(--g300); font-size: 13.5px; }
+.pf-ai-text { font-size: 14.5px; line-height: 1.75; color: var(--ink); white-space: pre-wrap; }
+.pf-ai-textarea { border: none; padding: 0; box-shadow: none; resize: vertical; }
+.pf-ai-meta { margin-top: 12px; }
+.pf-ai-meta-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pf-ai-edit-btn { padding: 5px 12px; border-radius: var(--radius-sm); border: 1px solid var(--g200); background: var(--g50); color: var(--g700); font-size: 12.5px; font-weight: 500; cursor: pointer; font-family: inherit; }
+.pf-ai-count { font-size: 12px; color: var(--g400); }
+.pf-ai-count--over { font-weight: 700; color: var(--danger); }
+.pf-ai-warn { margin-top: 8px; font-size: 12.5px; color: var(--danger); display: flex; gap: 6px; align-items: flex-start; line-height: 1.45; }
+.pf-ai-warn svg { margin-top: 2px; flex-shrink: 0; width: 14px; height: 14px; }
+
+/* ---------- Actions / footer ---------- */
+.pf-actions { display: flex; gap: 10px; align-items: center; padding-top: 4px; flex-wrap: wrap; }
+.pf-actions .spacer { flex: 1; }
+.pf-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--g100); }
+.pf-footer .spacer { flex: 1; }

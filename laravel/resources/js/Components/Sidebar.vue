@@ -48,9 +48,9 @@ function logout() {
             </span>
         </div>
 
-        <button class="btn btn-dark sb-new" @click="handleNavigate">
+        <Link class="btn btn-dark sb-new" :href="route('posts.create')" @click="handleNavigate">
             <Icon name="plus" :size="18" />Nuovo post
-        </button>
+        </Link>
 
         <nav class="sb-nav">
             <Link v-for="l in links" :key="l.id" :href="route(l.route)"
