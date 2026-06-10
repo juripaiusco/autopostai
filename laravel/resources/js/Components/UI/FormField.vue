@@ -13,6 +13,7 @@ defineProps({
     placeholder: { type: String, default: '' },
     autocomplete: { type: String, default: null },
     required: { type: Boolean, default: false },
+    autofocus: { type: Boolean, default: false },
 });
 
 defineEmits(['update:modelValue']);
@@ -30,6 +31,7 @@ defineEmits(['update:modelValue']);
                 :placeholder="placeholder"
                 :autocomplete="autocomplete"
                 :required="required"
+                :autofocus="autofocus"
                 @input="$emit('update:modelValue', $event.target.value)"
             />
             <slot name="trailing" />

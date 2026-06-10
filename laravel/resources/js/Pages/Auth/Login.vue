@@ -50,6 +50,7 @@ function submit() {
                 placeholder="name@example.com"
                 autocomplete="username"
                 required
+                :autofocus="true"
                 :error="form.errors.email"
             />
 
