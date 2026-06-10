@@ -207,7 +207,7 @@ main{ flex: 1; }
 .token-bar__used--warn{ color: var(--danger); }
 .token-bar__sep{ color: var(--g300); }
 .token-bar__track{ height: 6px; border-radius: var(--radius-full); background: var(--g200); overflow: hidden; }
-.token-bar__fill{ height: 100%; border-radius: var(--radius-full); background: var(--progress-fill); transition: width .3s ease; }
+.token-bar__fill{ height: 100%; border-radius: var(--radius-full); background: var(--progress-fill); transition: width .5s var(--ease-out-quart); }
 .token-bar__fill--warn{ background: var(--danger); }
 .token-bar__fill--empty{ background: var(--g200); }
 .pill-error{ background: #fff; border-color: #fecaca; color: var(--st-err); }

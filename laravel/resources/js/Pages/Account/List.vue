@@ -113,7 +113,7 @@ function confirmDelete(id) {
                             <div v-else class="table-empty__text">Nessun utente trovato</div>
                         </td>
                     </tr>
-                    <tr v-for="u in users.data" :key="u.id"
+                    <tr v-for="(u, i) in users.data" :key="u.id"
                         class="tr-clickable"
                         @click="router.get(route('account.edit', u.id))">
                         <td class="user-td">
@@ -136,11 +136,11 @@ function confirmDelete(id) {
                         <td class="num" data-label="Post">{{ u.post }}</td>
                         <td class="num" data-label="Reply">{{ u.reply }}</td>
                         <td class="token-td" data-label="Immagini">
-                            <TokenBar v-if="u.imageTotal > 0" :used="u.immagini" :total="u.imageTotal" />
+                            <TokenBar v-if="u.imageTotal > 0" :used="u.immagini" :total="u.imageTotal" :index="i" />
                             <span v-else class="num">{{ u.immagini }}</span>
                         </td>
                         <td class="token-td" data-label="Token">
-                            <TokenBar :used="u.tokenUsed" :total="u.tokenTotal" />
+                            <TokenBar :used="u.tokenUsed" :total="u.tokenTotal" :index="i" />
                         </td>
                         <td data-label="">
                             <div class="row-actions">
