@@ -91,7 +91,7 @@ function submit(action) {
             <div class="card card-pad">
                 <StepBar :current="step" :labels="STEP_LABELS" @goto="goto" />
 
-                <div style="margin-top:22px">
+                <div class="pf-step-content">
                     <StepWrite v-if="step === 0" :form="form" :channels="channels" @set="set" />
                     <StepMedia v-else-if="step === 1" :form="form" @set="set" />
                     <StepPublish v-else :form="form" :channels="channels" :saving="saving"

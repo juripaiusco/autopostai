@@ -115,12 +115,14 @@ function regenerate() {
                 <img :src="form.imagePreviewUrl" alt="Immagine caricata" />
                 <button type="button" class="pf-preview-remove" @click="removeImage">Rimuovi</button>
             </div>
-            <div v-else class="pf-dropzone" @dragover.prevent @drop.prevent="onFile" @click="fileInput?.click()">
+            <div v-else class="pf-dropzone" role="button" tabindex="0" aria-label="Carica immagine"
+                @dragover.prevent @drop.prevent="onFile" @click="fileInput?.click()"
+                @keydown.enter.prevent="fileInput?.click()" @keydown.space.prevent="fileInput?.click()">
                 <Icon name="image" :size="46" />
                 <div class="pf-dropzone-title">Trascina qui l'immagine</div>
                 <div class="pf-dropzone-sub">oppure <b>sfoglia i file</b></div>
                 <div class="pf-dropzone-hint">JPG, PNG, WebP — max 10 MB</div>
-                <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="onFile" />
+                <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="onFile" tabindex="-1" />
             </div>
             <div class="pf-note">
                 <Icon name="clock" :size="15" />
@@ -149,11 +151,11 @@ function regenerate() {
                     <textarea id="post-img-prompt" class="control" rows="4" v-model="genPrompt"
                         placeholder="Es. Una pizza margherita appena sfornata, luce calda e rustica, fotografia professionale" />
                 </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:12px;flex-wrap:wrap">
-                    <div style="font-size:12.5px;color:var(--g400);display:flex;gap:6px;align-items:center">
+                <div class="pf-gen-meta">
+                    <div class="pf-gen-meta-info">
                         <Icon name="info" :size="14" />
-                        Modello: <strong style="color:var(--g600)">DALL·E 3</strong>
-                        <span style="color:var(--g300)">· scelta modello in arrivo</span>
+                        Modello: <strong class="pf-gen-meta-strong">DALL·E 3</strong>
+                        <span class="pf-gen-meta-soon">· scelta modello in arrivo</span>
                     </div>
                     <button type="button" class="btn btn-dark" :disabled="!genPrompt.trim()" @click="handleGenerate">
                         <Icon name="sparkles" :size="16" />Genera immagine
@@ -168,7 +170,7 @@ function regenerate() {
             </div>
 
             <div v-else-if="genStep === 2 && genResultUrl">
-                <img :src="genResultUrl" alt="" class="pf-gen-result-img" style="width:100%;object-fit:cover;display:block" />
+                <img :src="genResultUrl" alt="Immagine generata dall'AI" class="pf-gen-result-img" />
                 <div class="pf-gen-result-prompt">"{{ genPrompt }}"</div>
                 <div class="pf-gen-actions">
                     <button type="button" class="btn btn-dark" style="flex:1" @click="saveAndUse">
@@ -186,8 +188,8 @@ function regenerate() {
                 <div class="pf-archive-empty-text">Nessuna immagine generata ancora.</div>
             </div>
             <div v-else class="pf-archive-grid">
-                <div style="border:2px solid var(--sky);border-radius:var(--radius);box-shadow:var(--glow-sky,none);overflow:hidden">
-                    <img :src="form.imagePreviewUrl" alt="" style="height:96px;width:100%;object-fit:cover;display:block" />
+                <div class="pf-archive-item pf-archive-item--selected">
+                    <img :src="form.imagePreviewUrl" alt="Immagine generata, selezionata per il post" />
                 </div>
             </div>
         </div>
@@ -195,7 +197,7 @@ function regenerate() {
         <!-- Selezione attiva -->
         <div v-if="form.imagePreviewUrl" class="pf-active-media">
             <div class="pf-active-media-thumb">
-                <img :src="form.imagePreviewUrl" alt="" />
+                <img :src="form.imagePreviewUrl" alt="Anteprima immagine selezionata per il post" />
             </div>
             <div class="pf-active-media-text">
                 <div class="pf-active-media-title">Immagine selezionata per il post</div>
@@ -203,7 +205,7 @@ function regenerate() {
                     {{ { upload: 'Caricata dal dispositivo', generated: 'Generata con AI', archive: "Dall'archivio" }[form.img_source] || '' }}
                 </div>
             </div>
-            <button type="button" class="pf-active-media-remove" @click="removeImage">×</button>
+            <button type="button" class="pf-active-media-remove" aria-label="Rimuovi immagine" @click="removeImage">×</button>
         </div>
     </div>
 </template>

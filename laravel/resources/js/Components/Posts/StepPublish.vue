@@ -58,7 +58,7 @@ function runPreview() {
             <div class="pf-summary-title">Riepilogo</div>
             <div class="pf-summary-row">
                 <div v-if="form.imagePreviewUrl" class="pf-summary-thumb">
-                    <img :src="form.imagePreviewUrl" alt="" />
+                    <img :src="form.imagePreviewUrl" alt="Anteprima immagine del post" />
                 </div>
                 <div class="pf-summary-grow">
                     <div class="pf-summary-name">

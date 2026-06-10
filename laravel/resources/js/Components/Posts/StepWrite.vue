@@ -33,6 +33,7 @@ function toggleChannel(id) {
             <div class="pf-channel-grid">
                 <button v-for="ch in channels" :key="ch.id" type="button"
                     class="pf-channel-btn" :class="{ 'pf-channel-btn--on': form.channels.includes(ch.id) }"
+                    :aria-pressed="form.channels.includes(ch.id)"
                     @click="toggleChannel(ch.id)">
                     <ChannelIcon :id="ch.id" :size="15" />
                     {{ ch.label }}

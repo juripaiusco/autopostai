@@ -15,13 +15,25 @@
     background: var(--g200); color: var(--g500);
     transition: background .2s ease;
 }
+/* Bottone step: area cliccabile minima 44x44 anche se il pallino visivo resta 26px */
+.pf-step { min-height: 44px; padding: 0 4px; }
+.pf-step--clickable { min-width: 44px; }
 .pf-step--done .pf-step-circle { background: var(--ink); color: #fff; }
 .pf-step--active .pf-step-circle { background: var(--sky); color: #fff; box-shadow: 0 0 0 3px var(--sky-100); }
-.pf-step-label { font-size: 13.5px; font-weight: 500; color: var(--g400); }
+.pf-step-label { font-size: 13.5px; font-weight: 500; color: var(--g500); }
 .pf-step--active .pf-step-label, .pf-step--done .pf-step-label { font-weight: 700; color: var(--ink); }
 .pf-step--active .pf-step-label { color: var(--sky-strong); }
-.pf-step-line { flex: 1; height: 1px; margin: 0 10px; background: var(--g200); transition: background .2s ease; }
+.pf-step-line { flex: 1; height: 1px; margin: 0 10px; background: var(--g200); transition: background .2s ease; min-width: 12px; }
 .pf-step-line--done { background: var(--ink); }
+
+@media (max-width: 480px) {
+    .pf-step-label { font-size: 12px; }
+    .pf-step-line { margin: 0 4px; }
+    .pf-stepbar { flex-wrap: wrap; row-gap: 10px; }
+}
+
+/* ---------- Step content wrapper ---------- */
+.pf-step-content { margin-top: 22px; }
 
 /* ---------- Step 1: channel grid ---------- */
 .pf-channel-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
@@ -71,7 +83,7 @@
 .pf-dropzone-title { margin-top: 14px; font-size: 14.5px; font-weight: 500; color: var(--g600); }
 .pf-dropzone-sub { margin-top: 5px; font-size: 13px; color: var(--g400); }
 .pf-dropzone-sub b { color: var(--sky-strong); font-weight: 600; }
-.pf-dropzone-hint { margin-top: 8px; font-size: 12px; color: var(--g300); }
+.pf-dropzone-hint { margin-top: 8px; font-size: 12px; color: var(--g500); }
 
 .pf-preview-frame { position: relative; height: 240px; border-radius: var(--radius-lg); overflow: hidden; background: var(--g100); }
 .pf-preview-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -89,7 +101,8 @@
 .pf-note svg { color: var(--g400); width: 15px; height: 15px; flex-shrink: 0; }
 
 /* ---------- Step 2: AI image generation mini-steps ---------- */
-.pf-genstep { display: flex; align-items: center; gap: 6px; margin-bottom: 22px; }
+.pf-genstep { display: flex; align-items: center; gap: 6px; margin-bottom: 22px; flex-wrap: wrap; row-gap: 10px; }
+.pf-genstep-line { min-width: 16px; }
 .pf-genstep-item { display: flex; align-items: center; gap: 6px; }
 .pf-genstep-dot {
     width: 20px; height: 20px; border-radius: 50%; font-size: 10.5px; font-weight: 700;
@@ -98,7 +111,7 @@
 }
 .pf-genstep-dot--done { background: var(--ink); color: #fff; }
 .pf-genstep-dot--active { background: var(--sky); color: #fff; }
-.pf-genstep-label { font-size: 12.5px; color: var(--g400); }
+.pf-genstep-label { font-size: 12.5px; color: var(--g500); }
 .pf-genstep-label--active { font-weight: 600; color: var(--ink); }
 .pf-genstep-line { flex: 1; height: 1px; background: var(--g100); }
 .pf-genstep-line--done { background: var(--ink); }
@@ -114,12 +127,21 @@
 }
 .pf-spinner--sm { width: 26px; height: 26px; border-width: 3px; margin: 0; }
 
-.pf-gen-result-img { height: 240px; border-radius: var(--radius-lg); margin-bottom: 14px; }
+.pf-gen-result-img { width: 100%; height: 240px; object-fit: cover; display: block; border-radius: var(--radius-lg); margin-bottom: 14px; }
+
+/* ---------- Step 2: AI generation meta row ---------- */
+.pf-gen-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; gap: 12px; flex-wrap: wrap; }
+.pf-gen-meta-info { font-size: 12.5px; color: var(--g500); display: flex; gap: 6px; align-items: center; }
+.pf-gen-meta-strong { color: var(--g600); }
+.pf-gen-meta-soon { color: var(--g400); }
 .pf-gen-result-prompt { font-size: 12.5px; color: var(--g500); margin-bottom: 18px; font-style: italic; line-height: 1.5; }
 .pf-gen-actions { display: flex; gap: 10px; }
 
 /* ---------- Step 2: archive grid ---------- */
 .pf-archive-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.pf-archive-item { border-radius: var(--radius); overflow: hidden; }
+.pf-archive-item img { height: 96px; width: 100%; object-fit: cover; display: block; }
+.pf-archive-item--selected { border: 2px solid var(--sky); box-shadow: var(--glow-sky); }
 .pf-archive-empty { text-align: center; padding: 48px 0; color: var(--g400); }
 .pf-archive-empty svg { width: 36px; height: 36px; }
 .pf-archive-empty-text { margin-top: 12px; }
@@ -135,7 +157,12 @@
 .pf-active-media-text { flex: 1; min-width: 0; }
 .pf-active-media-title { font-weight: 600; font-size: 13px; color: var(--sky-strong); }
 .pf-active-media-sub { font-size: 12px; color: var(--g500); margin-top: 2px; }
-.pf-active-media-remove { background: none; border: none; color: var(--g400); cursor: pointer; font-size: 20px; line-height: 1; padding: 0 4px; }
+.pf-active-media-remove {
+    background: none; border: none; color: var(--g400); cursor: pointer;
+    font-size: 20px; line-height: 1;
+    width: 44px; height: 44px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+}
 
 /* ---------- Step 3: summary card ---------- */
 .pf-summary { background: var(--g50); border-radius: var(--radius-lg); padding: 18px 20px; }
@@ -145,7 +172,7 @@
 .pf-summary-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .pf-summary-grow { flex: 1; min-width: 0; }
 .pf-summary-name { font-weight: 700; color: var(--ink); font-size: 15px; margin-bottom: 5px; }
-.pf-summary-empty { color: var(--g300); }
+.pf-summary-empty { color: var(--g500); }
 .pf-summary-prompt {
     font-size: 13px; color: var(--g500); line-height: 1.5; margin-bottom: 10px;
     overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
