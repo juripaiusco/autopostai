@@ -22,6 +22,17 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Canali di pubblicazione disponibili: chiave => metadati canonici.
+     */
+    public const CHANNELS = [
+        'facebook'   => ['name' => 'Facebook',   'css_class' => 'fa-brands fa-facebook'],
+        'instagram'  => ['name' => 'Instagram',  'css_class' => 'fa-brands fa-instagram'],
+        'linkedin'   => ['name' => 'LinkedIn',   'css_class' => 'fa-brands fa-linkedin'],
+        'wordpress'  => ['name' => 'WordPress',  'css_class' => 'fa-brands fa-wordpress-simple'],
+        'newsletter' => ['name' => 'Newsletter', 'css_class' => 'fa-regular fa-envelope'],
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

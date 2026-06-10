@@ -152,12 +152,26 @@ class AccountController extends Controller
             ->get()
             ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name]);
 
+        $rawChannels = $user->channels ?? [];
+        $channels = [];
+        foreach (User::CHANNELS as $key => $meta) {
+            $channels[$key] = array_merge([
+                'name' => $meta['name'],
+                'css_class' => $meta['css_class'],
+                'id' => null,
+                'on' => null,
+                'reply_on' => null,
+                'reply_n' => null,
+                'options' => [],
+            ], $rawChannels[$key] ?? []);
+        }
+
         $account = [
             'id'       => $user->id,
             'name'     => $user->name,
             'email'    => $user->email,
             'password' => '',
-            'channels' => $user->channels ?? [],
+            'channels' => $channels,
             'manager'  => $user->manager_id ?? '',
             'canSubusers' => (bool) ($user->child_on ?? false),
             'subusersLimit' => $user->child_max ?? '',
@@ -206,7 +220,20 @@ class AccountController extends Controller
             $user->password = bcrypt($request->input('password'));
         }
 
-        $user->channels = $request->input('channels', $user->channels);
+        $incoming = $request->input('channels', []);
+        $channels = $user->channels ?? [];
+        foreach (User::CHANNELS as $key => $meta) {
+            $channels[$key] = array_merge(
+                $channels[$key] ?? ['name' => $meta['name'], 'css_class' => $meta['css_class'], 'id' => null, 'options' => []],
+                [
+                    'on'       => $incoming[$key]['on'] ?? null,
+                    'reply_on' => $incoming[$key]['reply_on'] ?? null,
+                    'reply_n'  => $incoming[$key]['reply_n'] ?? null,
+                    'options'  => $incoming[$key]['options'] ?? ($channels[$key]['options'] ?? []),
+                ]
+            );
+        }
+        $user->channels = $channels;
 
         $user->save();
 

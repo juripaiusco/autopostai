@@ -35,15 +35,15 @@ const CH_COPY = {
         optTitle: 'Rispondi ai commenti',
         optHelp: "L'AI risponde automaticamente ai commenti ricevuti su questo canale.",
         countTitle: 'A quanti commenti rispondere',
-        countHelp: 'Numero massimo di commenti a cui rispondere ogni giorno.',
-        unit: 'commenti / giorno',
+        countHelp: 'Numero massimo di commenti a cui rispondere.',
+        unit: 'commenti',
     },
     mail: {
         optTitle: 'Rispondi alle email',
         optHelp: "Per la Newsletter le risposte non sono commenti pubblici: l'AI risponde via email.",
         countTitle: 'A quante email rispondere',
-        countHelp: 'Numero massimo di email a cui rispondere ogni giorno.',
-        unit: 'email / giorno',
+        countHelp: 'Numero massimo di email a cui rispondere.',
+        unit: 'email',
     },
 };
 
@@ -75,9 +75,11 @@ const NL_PROVIDERS = [
 /* Form state                                                           */
 /* ------------------------------------------------------------------ */
 
+const CH_TO_INTG = { facebook: 'meta', instagram: 'meta', linkedin: 'linkedin', wordpress: 'wordpress', newsletter: 'newsletter' };
+
 function defaultChannels() {
     return Object.fromEntries(
-        CHANNELS.map(ch => [ch.id, { enabled: false, comments: false, count: 5, connected: false }])
+        CHANNELS.map(ch => [ch.id, { id: null, on: null, reply_on: null, reply_n: 5, options: [] }])
     );
 }
 
@@ -125,7 +127,7 @@ const toast      = ref(null);
 let toastTimer   = null;
 const verifying  = reactive({});
 
-const activeCh  = computed(() => CHANNELS.filter(c => form.channels[c.id].enabled).length);
+const activeCh  = computed(() => CHANNELS.filter(c => form.channels[c.id].on).length);
 const title     = computed(() => props.mode === 'create' ? 'Nuovo account' : (form.name || 'Account'));
 const saveLabel = computed(() => props.mode === 'create' ? 'Crea account' : 'Salva');
 
@@ -138,7 +140,7 @@ const completion = computed(() => {
         !!form.name,
         !!form.email,
         !!(form.password && form.password.replace(/•/g, '').length > 0),
-        CHANNELS.some(c => form.channels[c.id].enabled),
+        CHANNELS.some(c => form.channels[c.id].on),
         !!(form.ai.profile && form.ai.profile.length > 30),
         !!form.openai.apiKey,
         !!(form.meta.pageId || form.wordpress.url || form.linkedin.clientId ||
@@ -213,6 +215,22 @@ function intgConn(id) {
 
 function nlConn(providerId) {
     return form.newsletter[providerId]?.connected ? 'ok' : 'off';
+}
+
+function chConn(chId) {
+    return intgConn(CH_TO_INTG[chId]);
+}
+
+function onToggleReplyOn(chId, value) {
+    set('channels.' + chId + '.reply_on', value);
+    if (value && form.channels[chId].reply_n == null) {
+        set('channels.' + chId + '.reply_n', 5);
+    }
+}
+
+function goToIntegration(chId) {
+    activeTab.value = 'imp';
+    activeIntg.value = CH_TO_INTG[chId];
 }
 </script>
 
@@ -434,48 +452,54 @@ function nlConn(providerId) {
 
                     <div class="acc-channels">
                         <div v-for="ch in CHANNELS" :key="ch.id"
-                            class="acc-ch" :class="{ on: form.channels[ch.id].enabled }">
+                            class="acc-ch" :class="{ on: form.channels[ch.id].on }">
 
                             <!-- Channel header (toggle row) -->
-                            <div class="acc-ch-head" @click="set('channels.' + ch.id + '.enabled', !form.channels[ch.id].enabled)">
-                                <div :class="['acc-ch-ic', ch.ic, !form.channels[ch.id].enabled ? 'off' : '']">
+                            <div class="acc-ch-head" @click="set('channels.' + ch.id + '.on', !form.channels[ch.id].on)">
+                                <div :class="['acc-ch-ic', ch.ic, !form.channels[ch.id].on ? 'off' : '']">
                                     <ChannelIcon :id="ch.id" :size="20" />
                                 </div>
                                 <div class="acc-ch-grow">
-                                    <div :class="['acc-ch-name', !form.channels[ch.id].enabled ? 'off' : '']">{{ ch.label }}</div>
+                                    <div :class="['acc-ch-name', !form.channels[ch.id].on ? 'off' : '']">{{ ch.label }}</div>
                                     <div class="acc-ch-meta">
-                                        {{ form.channels[ch.id].enabled
-                                            ? (form.channels[ch.id].comments ? CH_COPY[ch.kind].optTitle + ' · attivo' : 'Pubblicazione attiva')
+                                        {{ form.channels[ch.id].on
+                                            ? (form.channels[ch.id].reply_on ? CH_COPY[ch.kind].optTitle + ' · attivo' : 'Pubblicazione attiva')
                                             : ch.meta }}
                                     </div>
                                 </div>
                                 <div class="acc-ch-right" @click.stop>
-                                    <ConnectionBadge v-if="form.channels[ch.id].enabled"
-                                        :state="form.channels[ch.id].connected ? 'ok' : 'off'" />
+                                    <ConnectionBadge v-if="form.channels[ch.id].on" :state="chConn(ch.id)" />
                                     <span v-else class="acc-ch-off-tag">Non attivo</span>
-                                    <ToggleSwitch :model-value="form.channels[ch.id].enabled"
-                                        @update:model-value="set('channels.' + ch.id + '.enabled', $event)" />
+                                    <ToggleSwitch :model-value="form.channels[ch.id].on"
+                                        @update:model-value="set('channels.' + ch.id + '.on', $event)" />
                                 </div>
                             </div>
 
                             <!-- Channel body (expanded when enabled) -->
-                            <div v-if="form.channels[ch.id].enabled" class="acc-ch-body acc-reveal">
+                            <div v-if="form.channels[ch.id].on" class="acc-ch-body acc-reveal">
 
                                 <!-- Not connected warning -->
-                                <div v-if="!form.channels[ch.id].connected"
+                                <div v-if="chConn(ch.id) !== 'ok'"
                                     class="acc-ch-opt" style="border-color:var(--st-sch-bd);background:#fffdf3">
                                     <div class="acc-ch-opt-row">
                                         <div class="acc-ch-opt-txt">
                                             <div class="acc-ch-opt-title" style="color:var(--st-sch-fg)">Canale non ancora collegato</div>
-                                            <div class="acc-ch-opt-help">Verifica le credenziali nelle impostazioni per poter pubblicare.</div>
+                                            <div class="acc-ch-opt-help">Collega le credenziali in AI &amp; Integrazioni per poter pubblicare.</div>
                                         </div>
-                                        <button type="button" class="acc-verify"
-                                            :disabled="verifying['ch-' + ch.id]"
-                                            @click="verify('channels.' + ch.id, s => { if (s === 'checking') verifying['ch-' + ch.id] = true; else { verifying['ch-' + ch.id] = false; set('channels.' + ch.id + '.connected', true); } })">
-                                            <span v-if="verifying['ch-' + ch.id]" class="acc-spin" />
-                                            <Icon v-else name="link" :size="15" />
-                                            {{ verifying['ch-' + ch.id] ? 'Verifica…' : 'Verifica connessione' }}
+                                        <button type="button" class="acc-verify" @click="goToIntegration(ch.id)">
+                                            <Icon name="link" :size="15" />
+                                            Vai a Integrazioni
                                         </button>
+                                    </div>
+                                </div>
+
+                                <!-- Connected: what this channel can do -->
+                                <div v-else class="acc-ch-opt" style="border-color:var(--st-pub-bd);background:#f6fffb">
+                                    <div class="acc-ch-opt-row">
+                                        <div class="acc-ch-opt-txt">
+                                            <div class="acc-ch-opt-title" style="color:var(--st-pub-fg)">Canale collegato</div>
+                                            <div class="acc-ch-opt-help">{{ ch.meta }}</div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -486,21 +510,21 @@ function nlConn(providerId) {
                                             <div class="acc-ch-opt-title">{{ CH_COPY[ch.kind].optTitle }}</div>
                                             <div class="acc-ch-opt-help">{{ CH_COPY[ch.kind].optHelp }}</div>
                                         </div>
-                                        <ToggleSwitch :model-value="form.channels[ch.id].comments"
-                                            @update:model-value="set('channels.' + ch.id + '.comments', $event)" />
+                                        <ToggleSwitch :model-value="form.channels[ch.id].reply_on"
+                                            @update:model-value="onToggleReplyOn(ch.id, $event)" />
                                     </div>
 
                                     <!-- Reply count stepper (when replies enabled) -->
-                                    <div v-if="form.channels[ch.id].comments" class="acc-count-field acc-reveal">
+                                    <div v-if="form.channels[ch.id].reply_on" class="acc-count-field acc-reveal">
                                         <div class="acc-ch-opt-row">
                                             <div class="acc-ch-opt-txt">
                                                 <div class="acc-ch-opt-title" style="font-weight:500;color:var(--g600)">{{ CH_COPY[ch.kind].countTitle }}</div>
                                                 <div class="acc-ch-opt-help">{{ CH_COPY[ch.kind].countHelp }}</div>
                                             </div>
                                             <div class="acc-count">
-                                                <NumberStepper :model-value="form.channels[ch.id].count" :min="1" :max="200"
-                                                    @update:model-value="set('channels.' + ch.id + '.count', $event)" />
-                                                <span style="font-size:12.5px;color:var(--g500);white-space:nowrap">{{ CH_COPY[ch.kind].unit }}</span>
+                                                <NumberStepper :model-value="form.channels[ch.id].reply_n ?? 5" :min="1" :max="200"
+                                                    @update:model-value="set('channels.' + ch.id + '.reply_n', $event)" />
+                                                <!-- <span style="font-size:12.5px;color:var(--g500);white-space:nowrap">{{ CH_COPY[ch.kind].unit }}</span> -->
                                             </div>
                                         </div>
                                     </div>
