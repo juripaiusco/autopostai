@@ -57,6 +57,10 @@ const searchQuery = ref('');
                 </button>
             </header>
 
+            <div v-if="$slots['page-header']" class="page-header-slot">
+                <slot name="page-header" />
+            </div>
+
             <main>
                 <div class="container">
                     <slot />

@@ -255,25 +255,27 @@ function goToIntegration(chId) {
             </div>
         </template>
 
-        <PageHeader :crumbs="[{ label: 'Account' }, { label: title, current: true }]">
-            <template #actions>
-                <div class="acc-head-meta">
-                    <span v-if="dirty" class="acc-dirty">
-                        <span class="acc-dirty-dot" />Modifiche non salvate
-                    </span>
-                    <span v-else-if="mode === 'edit'" class="acc-chip acc-chip--active">
-                        <span class="acc-chip-dot acc-chip-dot--ok" />Account attivo
-                    </span>
-                    <span v-else class="acc-chip">
-                        <Icon name="info" :size="14" />Bozza non salvata
-                    </span>
-                    <button type="button" class="btn btn-light btn-sm" @click="doCancel">Annulla</button>
-                    <button type="button" class="btn btn-success btn-sm" @click="doSave">
-                        <Icon name="check" :size="16" />{{ saveLabel }}
-                    </button>
-                </div>
-            </template>
-        </PageHeader>
+        <template #page-header>
+            <PageHeader :crumbs="[{ label: 'Account' }, { label: title, current: true }]">
+                <template #actions>
+                    <div class="acc-head-meta">
+                        <span v-if="dirty" class="acc-dirty">
+                            <span class="acc-dirty-dot" />Modifiche non salvate
+                        </span>
+                        <span v-else-if="mode === 'edit'" class="acc-chip acc-chip--active">
+                            <span class="acc-chip-dot acc-chip-dot--ok" />Account attivo
+                        </span>
+                        <span v-else class="acc-chip">
+                            <Icon name="info" :size="14" />Bozza non salvata
+                        </span>
+                        <button type="button" class="btn btn-light btn-sm" @click="doCancel">Annulla</button>
+                        <button type="button" class="btn btn-success btn-sm" @click="doSave">
+                            <Icon name="check" :size="16" />{{ saveLabel }}
+                        </button>
+                    </div>
+                </template>
+            </PageHeader>
+        </template>
 
         <!-- Main content -->
         <div class="acc-content">

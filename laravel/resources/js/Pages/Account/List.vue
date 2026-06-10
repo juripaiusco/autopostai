@@ -51,13 +51,15 @@ function confirmDelete(id) {
     <Head title="Account" />
 
     <AppLayout :current="'account'" :user="userName">
-        <PageHeader :crumbs="[{ label: 'Account' }, { label: 'Lista', current: true }]">
-            <template #actions>
-                <span v-if="!isAdmin" class="page-header__note">
-                    Stai vedendo i tuoi {{ counts.tutti }} sub-utenti
-                </span>
-            </template>
-        </PageHeader>
+        <template #page-header>
+            <PageHeader :crumbs="[{ label: 'Account' }, { label: 'Lista', current: true }]">
+                <template #actions>
+                    <span v-if="!isAdmin" class="page-header__note">
+                        Stai vedendo i tuoi {{ counts.tutti }} sub-utenti
+                    </span>
+                </template>
+            </PageHeader>
+        </template>
 
         <div class="list-toolbar">
             <a :href="route('account.create')" class="btn btn-dark">
