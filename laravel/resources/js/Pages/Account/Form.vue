@@ -263,8 +263,8 @@ function goToIntegration(chId) {
                         <span v-else class="acc-chip">
                             <Icon name="info" :size="14" />Bozza non salvata
                         </span>
-                        <button type="button" class="btn btn-light btn-sm" @click="doCancel">Annulla</button>
-                        <button type="button" class="btn btn-success btn-sm" @click="doSave">
+                        <button type="button" class="btn btn-secondary btn-sm" @click="doCancel">Annulla</button>
+                        <button type="button" class="btn btn-primary btn-sm" @click="doSave">
                             <Icon name="check" :size="16" />{{ saveLabel }}
                         </button>
                     </div>
@@ -276,21 +276,24 @@ function goToIntegration(chId) {
         <div class="acc-content">
 
             <!-- Workspace tabs -->
-            <div class="acc-mtabs">
-                <button type="button" class="acc-mtab" :class="{ active: activeTab === 'profile' }" @click="activeTab = 'profile'">
+            <div class="acc-mtabs" role="tablist">
+                <button type="button" class="acc-mtab" role="tab" id="acc-tab-profile" :aria-selected="activeTab === 'profile'" aria-controls="acc-panel-profile"
+                    :class="{ active: activeTab === 'profile' }" @click="activeTab = 'profile'">
                     <Icon name="users" :size="16" />Profilo &amp; Piano
                 </button>
-                <button type="button" class="acc-mtab" :class="{ active: activeTab === 'canali' }" @click="activeTab = 'canali'">
+                <button type="button" class="acc-mtab" role="tab" id="acc-tab-canali" :aria-selected="activeTab === 'canali'" aria-controls="acc-panel-canali"
+                    :class="{ active: activeTab === 'canali' }" @click="activeTab = 'canali'">
                     <Icon name="chat" :size="16" />Canali
                     <span class="ct">{{ activeCh }}</span>
                 </button>
-                <button type="button" class="acc-mtab" :class="{ active: activeTab === 'imp' }" @click="activeTab = 'imp'">
+                <button type="button" class="acc-mtab" role="tab" id="acc-tab-imp" :aria-selected="activeTab === 'imp'" aria-controls="acc-panel-imp"
+                    :class="{ active: activeTab === 'imp' }" @click="activeTab = 'imp'">
                     <Icon name="sparkles" :size="16" />AI &amp; Integrazioni
                 </button>
             </div>
 
             <!-- ──────────────── Tab: Profilo & Piano ──────────────── -->
-            <div v-if="activeTab === 'profile'" class="acc-grid-2 acc-grid-2--equal acc-grid-2--profile acc-reveal">
+            <div v-if="activeTab === 'profile'" id="acc-panel-profile" role="tabpanel" aria-labelledby="acc-tab-profile" class="acc-grid-2 acc-grid-2--equal acc-grid-2--profile acc-reveal">
 
                 <!-- Profilo Account -->
                 <div class="acc-card">
@@ -307,21 +310,21 @@ function goToIntegration(chId) {
                     </div>
 
                     <div class="acc-field">
-                        <label class="acc-row-label">Nome</label>
+                        <label class="acc-row-label" for="acc-name">Nome</label>
                         <span class="acc-row-help">Solo ad uso interno, non viene pubblicato.</span>
-                        <input class="control" type="text" :value="form.name" placeholder="Es. Trattoria da Marco"
+                        <input id="acc-name" class="control" type="text" :value="form.name" placeholder="Es. Trattoria da Marco"
                             @input="set('name', $event.target.value)" />
                     </div>
                     <div class="acc-field">
-                        <label class="acc-row-label">E-mail</label>
+                        <label class="acc-row-label" for="acc-email">E-mail</label>
                         <span class="acc-row-help">Serve per l'accesso. Solo ad uso interno, non viene pubblicata.</span>
-                        <input class="control" type="email" :value="form.email" placeholder="nome@dominio.it"
+                        <input id="acc-email" class="control" type="email" :value="form.email" placeholder="nome@dominio.it"
                             @input="set('email', $event.target.value)" />
                     </div>
                     <div class="acc-field" style="margin-bottom:0">
-                        <label class="acc-row-label">Password</label>
+                        <label class="acc-row-label" for="acc-password">Password</label>
                         <span class="acc-row-help">{{ mode === 'edit' ? 'Lascia invariato per non cambiarla.' : 'Scegli una password sicura.' }}</span>
-                        <SecretField :model-value="form.password" placeholder="Almeno 8 caratteri"
+                        <SecretField id="acc-password" :model-value="form.password" placeholder="Almeno 8 caratteri"
                             @update:model-value="set('password', $event)" />
                     </div>
                 </div>
@@ -347,10 +350,10 @@ function goToIntegration(chId) {
                     <!-- Sotto-utenti / Manager, Token al mese, Immagini al giorno -->
                     <div class="acc-field-row acc-field-row--3">
                         <div v-if="form.canSubusers" class="acc-field" style="margin-bottom:0">
-                            <label class="acc-row-label">Numero massimo sotto-utenti</label>
+                            <label class="acc-row-label" for="acc-subusers-limit">Numero massimo sotto-utenti</label>
                             <span class="acc-row-help">Quanti utenti si possono creare.</span>
                             <div class="acc-input-unit">
-                                <input class="control" type="number" :value="form.subusersLimit" placeholder="5"
+                                <input id="acc-subusers-limit" class="control" type="number" :value="form.subusersLimit" placeholder="5"
                                     @input="set('subusersLimit', $event.target.value)" />
                                 <span class="unit">utenti</span>
                             </div>
@@ -371,9 +374,9 @@ function goToIntegration(chId) {
                             </div>
                         </div>
                         <div v-else class="acc-field" style="margin-bottom:0">
-                            <label class="acc-row-label">Manager assegnato</label>
+                            <label class="acc-row-label" for="acc-manager">Manager assegnato</label>
                             <span class="acc-row-help">{{ form.manager ? 'Account gestito da un manager.' : "L'account non ha ancora un manager." }}</span>
-                            <select class="control" :value="form.manager" @change="set('manager', $event.target.value)">
+                            <select id="acc-manager" class="control" :value="form.manager" @change="set('manager', $event.target.value)">
                                 <option value="">Nessun manager</option>
                                 <option v-for="m in managers" :key="m.id" :value="m.id">{{ m.name }}</option>
                                 <option v-if="!managers.length" value="mock-1">Studio Sociale · agenzia</option>
@@ -382,10 +385,10 @@ function goToIntegration(chId) {
                         </div>
 
                         <div class="acc-field" style="margin-bottom:0">
-                            <label class="acc-row-label">Token al mese</label>
+                            <label class="acc-row-label" for="acc-tokens-month">Token al mese</label>
                             <span class="acc-row-help">Numero massimo di token utilizzabili al mese.</span>
                             <div class="acc-input-unit">
-                                <input class="control" type="number" :value="form.tokensMonth" placeholder="50000"
+                                <input id="acc-tokens-month" class="control" type="number" :value="form.tokensMonth" placeholder="50000"
                                     @input="set('tokensMonth', $event.target.value)" />
                                 <span class="unit">token</span>
                             </div>
@@ -407,10 +410,10 @@ function goToIntegration(chId) {
                         </div>
 
                         <div class="acc-field" style="margin-bottom:0">
-                            <label class="acc-row-label">Immagini al giorno</label>
+                            <label class="acc-row-label" for="acc-images-day">Immagini al giorno</label>
                             <span class="acc-row-help">Numero massimo di immagini generabili.</span>
                             <div class="acc-input-unit">
-                                <input class="control" type="number" :value="form.imagesDay" placeholder="20"
+                                <input id="acc-images-day" class="control" type="number" :value="form.imagesDay" placeholder="20"
                                     @input="set('imagesDay', $event.target.value)" />
                                 <span class="unit">img al dì</span>
                             </div>
@@ -435,7 +438,7 @@ function goToIntegration(chId) {
             </div>
 
             <!-- ──────────────── Tab: Canali ──────────────── -->
-            <div v-if="activeTab === 'canali'" class="acc-reveal">
+            <div v-if="activeTab === 'canali'" id="acc-panel-canali" role="tabpanel" aria-labelledby="acc-tab-canali" class="acc-reveal">
                 <div class="acc-card">
                     <div class="acc-sec-head with-aside">
                         <div>
@@ -452,7 +455,11 @@ function goToIntegration(chId) {
                             class="acc-ch" :class="{ on: form.channels[ch.id].on }">
 
                             <!-- Channel header (toggle row) -->
-                            <div class="acc-ch-head" @click="set('channels.' + ch.id + '.on', !form.channels[ch.id].on)">
+                            <div class="acc-ch-head" role="switch" :aria-checked="form.channels[ch.id].on" tabindex="0"
+                                :aria-label="'Attiva ' + ch.label"
+                                @click="set('channels.' + ch.id + '.on', !form.channels[ch.id].on)"
+                                @keydown.enter.prevent="set('channels.' + ch.id + '.on', !form.channels[ch.id].on)"
+                                @keydown.space.prevent="set('channels.' + ch.id + '.on', !form.channels[ch.id].on)">
                                 <div :class="['acc-ch-ic', ch.ic, !form.channels[ch.id].on ? 'off' : '']">
                                     <ChannelIcon :id="ch.id" :size="20" />
                                 </div>
@@ -477,7 +484,7 @@ function goToIntegration(chId) {
 
                                 <!-- Not connected warning -->
                                 <div v-if="chConn(ch.id) !== 'ok'"
-                                    class="acc-ch-opt" style="border-color:var(--st-sch-bd);background:#fffdf3">
+                                    class="acc-ch-opt" style="border-color:var(--st-sch-bd);background:var(--st-sch-bg)">
                                     <div class="acc-ch-opt-row">
                                         <div class="acc-ch-opt-txt">
                                             <div class="acc-ch-opt-title" style="color:var(--st-sch-fg)">Canale non ancora collegato</div>
@@ -491,7 +498,7 @@ function goToIntegration(chId) {
                                 </div>
 
                                 <!-- Connected: what this channel can do -->
-                                <div v-else class="acc-ch-opt" style="border-color:var(--st-pub-bd);background:#f6fffb">
+                                <div v-else class="acc-ch-opt" style="border-color:var(--st-pub-bd);background:var(--st-pub-bg)">
                                     <div class="acc-ch-opt-row">
                                         <div class="acc-ch-opt-txt">
                                             <div class="acc-ch-opt-title" style="color:var(--st-pub-fg)">Canale collegato</div>
@@ -533,7 +540,7 @@ function goToIntegration(chId) {
             </div>
 
             <!-- ──────────────── Tab: AI & Integrazioni ──────────────── -->
-            <div v-if="activeTab === 'imp'" class="acc-reveal">
+            <div v-if="activeTab === 'imp'" id="acc-panel-imp" role="tabpanel" aria-labelledby="acc-tab-imp" class="acc-reveal">
                 <div class="acc-card">
                     <div class="acc-sec-head">
                         <div class="acc-sec-title">AI &amp; Integrazioni</div>
@@ -582,23 +589,23 @@ function goToIntegration(chId) {
                             <!-- AI fields -->
                             <div v-if="activeIntg === 'ai'" style="display:flex;flex-direction:column;gap:4px">
                                 <div class="acc-field">
-                                    <label class="acc-row-label">Profilo dell'AI</label>
+                                    <label class="acc-row-label" for="acc-ai-profile">Profilo dell'AI</label>
                                     <span class="acc-row-help">Descrivi chi è l'AI: nome, ruolo, personalità e tono. È il prompt di sistema.</span>
-                                    <textarea class="control" :value="form.ai.profile" style="min-height:150px"
+                                    <textarea id="acc-ai-profile" class="control" :value="form.ai.profile" style="min-height:150px"
                                         placeholder="Descrivi nel modo più dettagliato possibile il profilo che deve avere l'AI…"
                                         @input="set('ai.profile', $event.target.value)" />
                                 </div>
                                 <div class="acc-field">
-                                    <label class="acc-row-label">Cosa deve sapere l'AI</label>
+                                    <label class="acc-row-label" for="acc-ai-knows">Cosa deve sapere l'AI</label>
                                     <span class="acc-row-help">Le informazioni concrete da conoscere: orari, prodotti, regole.</span>
-                                    <textarea class="control" :value="form.ai.knows" style="min-height:130px"
+                                    <textarea id="acc-ai-knows" class="control" :value="form.ai.knows" style="min-height:130px"
                                         placeholder="Scrivi quello che vuoi che l'AI conosca…"
                                         @input="set('ai.knows', $event.target.value)" />
                                 </div>
                                 <div class="acc-field" style="margin-bottom:0">
-                                    <label class="acc-row-label">Come deve commentare l'AI</label>
+                                    <label class="acc-row-label" for="acc-ai-comment">Come deve commentare l'AI</label>
                                     <span class="acc-row-help">Lo stile generale con cui l'AI risponde ai commenti e alle email.</span>
-                                    <textarea class="control" :value="form.ai.commentStyle" style="min-height:110px"
+                                    <textarea id="acc-ai-comment" class="control" :value="form.ai.commentStyle" style="min-height:110px"
                                         placeholder="Scrivi come l'AI deve commentare e rispondere…"
                                         @input="set('ai.commentStyle', $event.target.value)" />
                                 </div>
@@ -607,9 +614,9 @@ function goToIntegration(chId) {
                             <!-- OpenAI fields -->
                             <div v-else-if="activeIntg === 'openai'">
                                 <div class="acc-field">
-                                    <label class="acc-row-label">API Key</label>
+                                    <label class="acc-row-label" for="acc-openai-key">API Key</label>
                                     <span class="acc-row-help">La chiave segreta del tuo account OpenAI. Viene usata per generare testi e immagini.</span>
-                                    <SecretField :model-value="form.openai.apiKey" placeholder="sk-proj-…"
+                                    <SecretField id="acc-openai-key" :model-value="form.openai.apiKey" placeholder="sk-proj-…"
                                         @update:model-value="set('openai.apiKey', $event)" />
                                 </div>
                                 <div class="acc-verify-row">
@@ -621,9 +628,9 @@ function goToIntegration(chId) {
                             <!-- Meta fields -->
                             <div v-else-if="activeIntg === 'meta'">
                                 <div class="acc-field">
-                                    <label class="acc-row-label">ID della pagina Facebook</label>
+                                    <label class="acc-row-label" for="acc-meta-pageid">ID della pagina Facebook</label>
                                     <span class="acc-row-help">L'ID numerico della pagina su cui pubblicare. Instagram pubblica tramite la pagina collegata.</span>
-                                    <input class="control" type="text" :value="form.meta.pageId" placeholder="es. 104882736591023"
+                                    <input id="acc-meta-pageid" class="control" type="text" :value="form.meta.pageId" placeholder="es. 104882736591023"
                                         @input="set('meta.pageId', $event.target.value)" />
                                 </div>
                                 <div class="acc-verify-row">
@@ -636,30 +643,30 @@ function goToIntegration(chId) {
                             <div v-else-if="activeIntg === 'linkedin'">
                                 <div class="acc-grid-2">
                                     <div class="acc-field">
-                                        <label class="acc-row-label">Client ID</label>
+                                        <label class="acc-row-label" for="acc-li-clientid">Client ID</label>
                                         <span class="acc-row-help">Dall'app LinkedIn Developers.</span>
-                                        <input class="control" type="text" :value="form.linkedin.clientId" placeholder="86xxxxxxxxxx"
+                                        <input id="acc-li-clientid" class="control" type="text" :value="form.linkedin.clientId" placeholder="86xxxxxxxxxx"
                                             @input="set('linkedin.clientId', $event.target.value)" />
                                     </div>
                                     <div class="acc-field">
-                                        <label class="acc-row-label">Client Secret</label>
+                                        <label class="acc-row-label" for="acc-li-secret">Client Secret</label>
                                         <span class="acc-row-help">Tienilo riservato.</span>
-                                        <SecretField :model-value="form.linkedin.clientSecret" placeholder="••••••••"
+                                        <SecretField id="acc-li-secret" :model-value="form.linkedin.clientSecret" placeholder="••••••••"
                                             @update:model-value="set('linkedin.clientSecret', $event)" />
                                     </div>
                                 </div>
                                 <div class="acc-field">
-                                    <label class="acc-row-label">ID della pagina LinkedIn</label>
+                                    <label class="acc-row-label" for="acc-li-pageid">ID della pagina LinkedIn</label>
                                     <span class="acc-row-help">La pagina aziendale su cui pubblicare.</span>
-                                    <input class="control" type="text" :value="form.linkedin.pageId" placeholder="es. 7654321"
+                                    <input id="acc-li-pageid" class="control" type="text" :value="form.linkedin.pageId" placeholder="es. 7654321"
                                         @input="set('linkedin.pageId', $event.target.value)" />
                                 </div>
                                 <div class="acc-field">
-                                    <label class="acc-row-label">
+                                    <label class="acc-row-label" for="acc-li-token">
                                         Token LinkedIn <span class="acc-readonly-tag">solo lettura</span>
                                     </label>
                                     <span class="acc-row-help">Generato automaticamente dopo l'autorizzazione. Non modificabile a mano.</span>
-                                    <SecretField :model-value="form.linkedin.token" :read-only="true" :copyable="true"
+                                    <SecretField id="acc-li-token" :model-value="form.linkedin.token" :read-only="true" :copyable="true"
                                         placeholder="Si genera dopo «Verifica connessione»" />
                                 </div>
                                 <div class="acc-verify-row">
@@ -676,29 +683,29 @@ function goToIntegration(chId) {
                             <!-- WordPress fields -->
                             <div v-else-if="activeIntg === 'wordpress'">
                                 <div class="acc-field">
-                                    <label class="acc-row-label">URL del sito</label>
+                                    <label class="acc-row-label" for="acc-wp-url">URL del sito</label>
                                     <span class="acc-row-help">L'indirizzo del tuo sito WordPress.</span>
-                                    <input class="control" type="url" :value="form.wordpress.url" placeholder="https://iltuosito.it"
+                                    <input id="acc-wp-url" class="control" type="url" :value="form.wordpress.url" placeholder="https://iltuosito.it"
                                         @input="set('wordpress.url', $event.target.value)" />
                                 </div>
                                 <div class="acc-grid-2">
                                     <div class="acc-field">
-                                        <label class="acc-row-label">Username</label>
+                                        <label class="acc-row-label" for="acc-wp-username">Username</label>
                                         <span class="acc-row-help">Utente con permessi di pubblicazione.</span>
-                                        <input class="control" type="text" :value="form.wordpress.username" placeholder="admin"
+                                        <input id="acc-wp-username" class="control" type="text" :value="form.wordpress.username" placeholder="admin"
                                             @input="set('wordpress.username', $event.target.value)" />
                                     </div>
                                     <div class="acc-field">
-                                        <label class="acc-row-label">Application Password</label>
+                                        <label class="acc-row-label" for="acc-wp-password">Application Password</label>
                                         <span class="acc-row-help">Usa una password applicativa, non quella di accesso.</span>
-                                        <SecretField :model-value="form.wordpress.password" placeholder="xxxx xxxx xxxx xxxx"
+                                        <SecretField id="acc-wp-password" :model-value="form.wordpress.password" placeholder="xxxx xxxx xxxx xxxx"
                                             @update:model-value="set('wordpress.password', $event)" />
                                     </div>
                                 </div>
                                 <div class="acc-field">
-                                    <label class="acc-row-label">Categoria ID</label>
+                                    <label class="acc-row-label" for="acc-wp-category">Categoria ID</label>
                                     <span class="acc-row-help">L'ID della categoria in cui salvare gli articoli.</span>
-                                    <input class="control" type="text" :value="form.wordpress.categoryId" placeholder="es. 8"
+                                    <input id="acc-wp-category" class="control" type="text" :value="form.wordpress.categoryId" placeholder="es. 8"
                                         @input="set('wordpress.categoryId', $event.target.value)" />
                                 </div>
                                 <div class="acc-verify-row">
@@ -717,7 +724,11 @@ function goToIntegration(chId) {
                                 <div class="acc-acc">
                                     <div v-for="p in NL_PROVIDERS" :key="p.id"
                                         class="acc-acc-item" :class="{ open: openNl === p.id }">
-                                        <div class="acc-acc-head" @click="openNl = openNl === p.id ? '' : p.id">
+                                        <div class="acc-acc-head" role="button" tabindex="0" :aria-expanded="openNl === p.id"
+                                            :aria-label="'Espandi ' + p.name"
+                                            @click="openNl = openNl === p.id ? '' : p.id"
+                                            @keydown.enter.prevent="openNl = openNl === p.id ? '' : p.id"
+                                            @keydown.space.prevent="openNl = openNl === p.id ? '' : p.id">
                                             <div class="acc-acc-ic">
                                                 <Icon :name="p.id === 'smtp' ? 'settings' : 'chat'" :size="18" />
                                             </div>
@@ -733,22 +744,22 @@ function goToIntegration(chId) {
                                             <!-- MailChimp -->
                                             <template v-if="p.id === 'mailchimp'">
                                                 <div class="acc-field">
-                                                    <label class="acc-row-label">API Key</label>
+                                                    <label class="acc-row-label" for="acc-nl-mc-key">API Key</label>
                                                     <span class="acc-row-help">Dalla sezione Account › Extra › API keys di MailChimp.</span>
-                                                    <SecretField :model-value="form.newsletter.mailchimp.apiKey" placeholder="xxxxxxxx-us21"
+                                                    <SecretField id="acc-nl-mc-key" :model-value="form.newsletter.mailchimp.apiKey" placeholder="xxxxxxxx-us21"
                                                         @update:model-value="set('newsletter.mailchimp.apiKey', $event)" />
                                                 </div>
                                                 <div class="acc-grid-2">
                                                     <div class="acc-field">
-                                                        <label class="acc-row-label">Server prefix</label>
+                                                        <label class="acc-row-label" for="acc-nl-mc-server">Server prefix</label>
                                                         <span class="acc-row-help">Es. us21 (è nel dominio della tua dashboard).</span>
-                                                        <input class="control" type="text" :value="form.newsletter.mailchimp.serverPrefix" placeholder="us21"
+                                                        <input id="acc-nl-mc-server" class="control" type="text" :value="form.newsletter.mailchimp.serverPrefix" placeholder="us21"
                                                             @input="set('newsletter.mailchimp.serverPrefix', $event.target.value)" />
                                                     </div>
                                                     <div class="acc-field">
-                                                        <label class="acc-row-label">Audience ID</label>
+                                                        <label class="acc-row-label" for="acc-nl-mc-audience">Audience ID</label>
                                                         <span class="acc-row-help">La lista a cui inviare.</span>
-                                                        <input class="control" type="text" :value="form.newsletter.mailchimp.audienceId" placeholder="9f3c1a7b2e"
+                                                        <input id="acc-nl-mc-audience" class="control" type="text" :value="form.newsletter.mailchimp.audienceId" placeholder="9f3c1a7b2e"
                                                             @input="set('newsletter.mailchimp.audienceId', $event.target.value)" />
                                                     </div>
                                                 </div>
@@ -757,22 +768,22 @@ function goToIntegration(chId) {
                                             <!-- Brevo -->
                                             <template v-else-if="p.id === 'brevo'">
                                                 <div class="acc-field">
-                                                    <label class="acc-row-label">API Key</label>
+                                                    <label class="acc-row-label" for="acc-nl-brevo-key">API Key</label>
                                                     <span class="acc-row-help">Dalla sezione SMTP &amp; API di Brevo.</span>
-                                                    <SecretField :model-value="form.newsletter.brevo.apiKey" placeholder="xkeysib-…"
+                                                    <SecretField id="acc-nl-brevo-key" :model-value="form.newsletter.brevo.apiKey" placeholder="xkeysib-…"
                                                         @update:model-value="set('newsletter.brevo.apiKey', $event)" />
                                                 </div>
                                                 <div class="acc-grid-2">
                                                     <div class="acc-field">
-                                                        <label class="acc-row-label">List ID</label>
+                                                        <label class="acc-row-label" for="acc-nl-brevo-list">List ID</label>
                                                         <span class="acc-row-help">L'ID numerico della lista.</span>
-                                                        <input class="control" type="text" :value="form.newsletter.brevo.listId" placeholder="es. 12"
+                                                        <input id="acc-nl-brevo-list" class="control" type="text" :value="form.newsletter.brevo.listId" placeholder="es. 12"
                                                             @input="set('newsletter.brevo.listId', $event.target.value)" />
                                                     </div>
                                                     <div class="acc-field">
-                                                        <label class="acc-row-label">Mittente</label>
+                                                        <label class="acc-row-label" for="acc-nl-brevo-sender">Mittente</label>
                                                         <span class="acc-row-help">Email verificata come mittente.</span>
-                                                        <input class="control" type="email" :value="form.newsletter.brevo.sender" placeholder="news@dominio.it"
+                                                        <input id="acc-nl-brevo-sender" class="control" type="email" :value="form.newsletter.brevo.sender" placeholder="news@dominio.it"
                                                             @input="set('newsletter.brevo.sender', $event.target.value)" />
                                                     </div>
                                                 </div>
@@ -782,37 +793,37 @@ function goToIntegration(chId) {
                                             <template v-else-if="p.id === 'smtp'">
                                                 <div class="acc-grid-2">
                                                     <div class="acc-field">
-                                                        <label class="acc-row-label">Host SMTP</label>
+                                                        <label class="acc-row-label" for="acc-nl-smtp-host">Host SMTP</label>
                                                         <span class="acc-row-help">Il server della tua casella email.</span>
-                                                        <input class="control" type="text" :value="form.newsletter.smtp.host" placeholder="smtp.dominio.it"
+                                                        <input id="acc-nl-smtp-host" class="control" type="text" :value="form.newsletter.smtp.host" placeholder="smtp.dominio.it"
                                                             @input="set('newsletter.smtp.host', $event.target.value)" />
                                                     </div>
                                                     <div class="acc-field">
-                                                        <label class="acc-row-label">Porta</label>
+                                                        <label class="acc-row-label" for="acc-nl-smtp-port">Porta</label>
                                                         <span class="acc-row-help">Di solito 587 (TLS) o 465 (SSL).</span>
-                                                        <input class="control" type="text" :value="form.newsletter.smtp.port" placeholder="587"
+                                                        <input id="acc-nl-smtp-port" class="control" type="text" :value="form.newsletter.smtp.port" placeholder="587"
                                                             @input="set('newsletter.smtp.port', $event.target.value)" />
                                                     </div>
                                                 </div>
                                                 <div class="acc-grid-2">
                                                     <div class="acc-field">
-                                                        <label class="acc-row-label">Username</label>
+                                                        <label class="acc-row-label" for="acc-nl-smtp-username">Username</label>
                                                         <span class="acc-row-help">L'utente di autenticazione.</span>
-                                                        <input class="control" type="text" :value="form.newsletter.smtp.username" placeholder="news@dominio.it"
+                                                        <input id="acc-nl-smtp-username" class="control" type="text" :value="form.newsletter.smtp.username" placeholder="news@dominio.it"
                                                             @input="set('newsletter.smtp.username', $event.target.value)" />
                                                     </div>
                                                     <div class="acc-field">
-                                                        <label class="acc-row-label">Password</label>
+                                                        <label class="acc-row-label" for="acc-nl-smtp-password">Password</label>
                                                         <span class="acc-row-help">La password della casella.</span>
-                                                        <SecretField :model-value="form.newsletter.smtp.password" placeholder="••••••••"
+                                                        <SecretField id="acc-nl-smtp-password" :model-value="form.newsletter.smtp.password" placeholder="••••••••"
                                                             @update:model-value="set('newsletter.smtp.password', $event)" />
                                                     </div>
                                                 </div>
                                                 <div class="acc-grid-2">
                                                     <div class="acc-field">
-                                                        <label class="acc-row-label">Cifratura</label>
+                                                        <label class="acc-row-label" for="acc-nl-smtp-encryption">Cifratura</label>
                                                         <span class="acc-row-help">Protocollo di sicurezza.</span>
-                                                        <select class="control" :value="form.newsletter.smtp.encryption"
+                                                        <select id="acc-nl-smtp-encryption" class="control" :value="form.newsletter.smtp.encryption"
                                                             @change="set('newsletter.smtp.encryption', $event.target.value)">
                                                             <option value="tls">TLS</option>
                                                             <option value="ssl">SSL</option>
@@ -820,9 +831,9 @@ function goToIntegration(chId) {
                                                         </select>
                                                     </div>
                                                     <div class="acc-field">
-                                                        <label class="acc-row-label">Mittente</label>
+                                                        <label class="acc-row-label" for="acc-nl-smtp-sender">Mittente</label>
                                                         <span class="acc-row-help">Indirizzo che vedranno gli iscritti.</span>
-                                                        <input class="control" type="text" :value="form.newsletter.smtp.sender"
+                                                        <input id="acc-nl-smtp-sender" class="control" type="text" :value="form.newsletter.smtp.sender"
                                                             placeholder="Trattoria &lt;news@dominio.it&gt;"
                                                             @input="set('newsletter.smtp.sender', $event.target.value)" />
                                                     </div>

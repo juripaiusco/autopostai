@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import Icon from '@/Components/Icon.vue';
 
 const props = defineProps({
+    id: { type: String, default: null },
     modelValue: { type: String, default: '' },
     placeholder: { type: String, default: '' },
     readOnly: { type: Boolean, default: false },
@@ -24,6 +25,7 @@ function copy() {
 <template>
     <div class="acc-secret">
         <input
+            :id="id"
             class="control"
             :type="show ? 'text' : 'password'"
             :value="modelValue"
@@ -31,10 +33,10 @@ function copy() {
             :readonly="readOnly"
             @input="emit('update:modelValue', $event.target.value)"
         />
-        <button type="button" class="acc-iconbtn" :title="show ? 'Nascondi' : 'Mostra'" @click="show = !show">
+        <button type="button" class="acc-iconbtn" :title="show ? 'Nascondi' : 'Mostra'" :aria-label="show ? 'Nascondi valore' : 'Mostra valore'" @click="show = !show">
             <Icon :name="show ? 'eyeOff' : 'eye'" :size="17" />
         </button>
-        <button v-if="copyable" type="button" class="acc-iconbtn" title="Copia" @click="copy">
+        <button v-if="copyable" type="button" class="acc-iconbtn" title="Copia" aria-label="Copia valore" @click="copy">
             <Icon :name="copied ? 'check' : 'copy'" :size="17" />
         </button>
     </div>

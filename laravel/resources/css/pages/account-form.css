@@ -33,6 +33,17 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
     flex-shrink: 0;
     padding: 0;
 }
+.acc-toggle::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px; height: 44px;
+}
+.acc-toggle:focus-visible {
+    outline: 2px solid var(--sky);
+    outline-offset: 2px;
+}
 .acc-toggle--on { background: var(--sky); }
 .acc-toggle-thumb {
     position: absolute;
@@ -109,11 +120,10 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
     margin-bottom: 22px;
 }
 .acc-sec-title {
-    font-size: 19px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--ink);
-    letter-spacing: -.01em;
-    line-height: 1.2;
+    line-height: 1.3;
 }
 .acc-sec-sub {
     font-size: 13.5px;
@@ -121,7 +131,7 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
     margin-top: 4px;
     line-height: 1.5;
 }
-.acc-sec-head { margin-bottom: 22px; }
+.acc-sec-head { margin-bottom: 24px; }
 .acc-sec-head.with-aside {
     display: flex;
     align-items: flex-start;
@@ -326,6 +336,10 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
     background: var(--sky-50);
 }
 .acc-ch-head { display: flex; align-items: center; gap: 14px; padding: 15px 18px; cursor: pointer; }
+.acc-ch-head:focus-visible, .acc-acc-head:focus-visible {
+    outline: 2px solid var(--sky);
+    outline-offset: -2px;
+}
 .acc-ch:not(.on) .acc-ch-head { opacity: .72; }
 .acc-ch-ic {
     width: 40px; height: 40px;
@@ -429,7 +443,7 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
 .acc-ipanel { padding: 24px 26px; min-width: 0; }
 .acc-iphead { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--g100); }
 .acc-iphead-ic { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.acc-iphead-t { font-size: 17px; font-weight: 700; color: var(--ink); }
+.acc-iphead-t { font-size: 16px; font-weight: 700; color: var(--ink); }
 .acc-iphead-s { font-size: 12.5px; color: var(--g500); margin-top: 2px; }
 .acc-iphead-r { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
