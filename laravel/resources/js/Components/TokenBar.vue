@@ -8,7 +8,7 @@ const props = defineProps({
 
 const pct = computed(() => (props.total > 0 ? Math.min((props.used / props.total) * 100, 100) : 0));
 const warn = computed(() => pct.value >= 80);
-const fmt = (n) => (n >= 1000 ? `${(n / 1000).toFixed(0)}.000` : String(n));
+const fmt = (n) => Math.round(Number(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 </script>
 
 <template>

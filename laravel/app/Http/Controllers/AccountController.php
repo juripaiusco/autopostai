@@ -60,7 +60,7 @@ class AccountController extends Controller
 
         $users = $query
             ->withCount(['postLogs', 'replyLogs', 'imagesUsed'])
-            ->withSum('tokensUsed', 'tokens_used')
+            ->withSum(['tokensUsed as tokens_used_sum'], 'tokens_used')
             ->orderBy($sortColumn, $dir)
             ->whereNotNull('parent_id')
             ->paginate(15)
