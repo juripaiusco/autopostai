@@ -169,7 +169,7 @@ function regenerate() {
                 <div class="pf-gen-loading-sub">"{{ genPrompt }}"</div>
             </div>
 
-            <div v-else-if="genStep === 2 && genResultUrl">
+            <div v-else-if="genStep === 2 && genResultUrl" class="pf-fade-in">
                 <img :src="genResultUrl" alt="Immagine generata dall'AI" class="pf-gen-result-img" />
                 <div class="pf-gen-result-prompt">"{{ genPrompt }}"</div>
                 <div class="pf-gen-actions">
@@ -195,7 +195,7 @@ function regenerate() {
         </div>
 
         <!-- Selezione attiva -->
-        <div v-if="form.imagePreviewUrl" class="pf-active-media">
+        <div v-if="form.imagePreviewUrl" class="pf-active-media pf-fade-in">
             <div class="pf-active-media-thumb">
                 <img :src="form.imagePreviewUrl" alt="Anteprima immagine selezionata per il post" />
             </div>

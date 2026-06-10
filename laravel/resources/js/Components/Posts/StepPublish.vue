@@ -99,7 +99,7 @@ function runPreview() {
                 <template v-if="form.ai_content">
                     <textarea v-if="editing" class="control pf-ai-textarea" rows="6" :value="form.ai_content"
                         @input="emit('set', 'ai_content', $event.target.value)" />
-                    <div v-else class="pf-ai-text">{{ form.ai_content }}</div>
+                    <div v-else class="pf-ai-text pf-fade-in">{{ form.ai_content }}</div>
                 </template>
                 <div v-else class="pf-ai-empty">
                     {{ form.ai_prompt_post ? 'Clicca "Genera anteprima" per vedere il testo che verrà pubblicato.' : 'Inserisci un prompt nello step 1 per generare l\'anteprima.' }}
@@ -113,7 +113,7 @@ function runPreview() {
                             <template v-if="charLimit !== null && limitChannel"> · limite {{ limitChannel.label }}</template>
                         </span>
                     </div>
-                    <div v-if="overLimit" class="pf-ai-warn">
+                    <div v-if="overLimit" class="pf-ai-warn pf-fade-in">
                         <Icon name="warning" :size="14" />
                         <span>Superi il limite di {{ limitChannel.label }} di {{ charLimit.toLocaleString('it-IT') }} caratteri: riduci il testo per poter salvare.</span>
                     </div>
@@ -128,10 +128,12 @@ function runPreview() {
             <button type="button" class="btn btn-secondary" :disabled="!canSave || saving"
                 title="Salva questo post e creane subito una copia, da adattare a un altro canale"
                 @click="emit('save-and-add')">
-                <Icon name="clone" :size="16" />Salva e aggiungi
+                <span v-if="saving" class="btn-spinner" aria-hidden="true"></span>
+                <Icon v-else name="clone" :size="16" />{{ saving ? 'Salvataggio…' : 'Salva e aggiungi' }}
             </button>
             <button type="button" class="btn btn-dark" :disabled="!canSave || saving" @click="emit('save')">
-                <Icon name="bookmark" :size="16" />Salva
+                <span v-if="saving" class="btn-spinner" aria-hidden="true"></span>
+                <Icon v-else name="bookmark" :size="16" />{{ saving ? 'Salvataggio…' : 'Salva' }}
             </button>
         </div>
     </div>

@@ -39,7 +39,7 @@ function toggleChannel(id) {
                     {{ ch.label }}
                 </button>
             </div>
-            <div v-if="form.channels.length === 0" class="pf-channel-error">
+            <div v-if="form.channels.length === 0" class="pf-channel-error pf-fade-in">
                 Seleziona almeno un canale per continuare.
             </div>
         </div>

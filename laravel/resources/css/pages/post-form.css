@@ -19,7 +19,9 @@
 .pf-step { min-height: 44px; padding: 0 4px; }
 .pf-step--clickable { min-width: 44px; }
 .pf-step--done .pf-step-circle { background: var(--ink); color: #fff; }
-.pf-step--active .pf-step-circle { background: var(--sky); color: #fff; box-shadow: 0 0 0 3px var(--sky-100); }
+.pf-step--active .pf-step-circle { background: var(--sky); color: #fff; box-shadow: 0 0 0 3px var(--sky-100); animation: pfStepPop .15s var(--ease-out-quart); }
+
+@keyframes pfStepPop { from { transform: scale(.9); } to { transform: scale(1); } }
 .pf-step-label { font-size: 13.5px; font-weight: 500; color: var(--g500); }
 .pf-step--active .pf-step-label, .pf-step--done .pf-step-label { font-weight: 700; color: var(--ink); }
 .pf-step--active .pf-step-label { color: var(--sky-strong); }
@@ -35,6 +37,14 @@
 /* ---------- Step content wrapper ---------- */
 .pf-step-content { margin-top: 22px; }
 
+/* ---------- Step transition ---------- */
+.pf-step-enter-active, .pf-step-leave-active { transition: opacity .2s var(--ease-out-quart), transform .2s var(--ease-out-quart); }
+.pf-step-enter-from { opacity: 0; transform: translateX(8px); }
+.pf-step-leave-to { opacity: 0; transform: translateX(-8px); }
+
+/* ---------- Generic fade-up entrance (validation, generated/selected content) ---------- */
+.pf-fade-in { animation: fadeUp .2s var(--ease-out-quart) both; }
+
 /* ---------- Step 1: channel grid ---------- */
 .pf-channel-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 @media (max-width: 860px) { .pf-channel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -46,6 +56,7 @@
     cursor: pointer; transition: all .15s ease;
 }
 .pf-channel-btn svg { width: 15px; height: 15px; color: var(--g400); }
+.pf-channel-btn:active { transform: scale(.97); }
 .pf-channel-btn--on { border-color: var(--sky); background: var(--sky-50); color: var(--sky-strong); }
 .pf-channel-btn--on svg { color: var(--sky); }
 .pf-channel-error { margin-top: 8px; font-size: 12.5px; color: var(--danger); }
