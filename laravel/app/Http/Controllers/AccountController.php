@@ -37,8 +37,8 @@ class AccountController extends Controller
 
         $sortable = [
             'name' => 'name',
-            'post' => 'posts_count',
-            'reply' => 'comments_count',
+            'post' => 'post_logs_count',
+            'reply' => 'reply_logs_count',
             'immagini' => 'images_used_count',
             'tokenUsed' => 'tokens_used_sum',
         ];
@@ -59,7 +59,7 @@ class AccountController extends Controller
         }
 
         $users = $query
-            ->withCount(['posts', 'comments', 'imagesUsed'])
+            ->withCount(['postLogs', 'replyLogs', 'imagesUsed'])
             ->withSum('tokensUsed', 'tokens_used')
             ->orderBy($sortColumn, $dir)
             ->whereNotNull('parent_id')
@@ -75,8 +75,8 @@ class AccountController extends Controller
                     ->keys()
                     ->values()
                     ->all(),
-                'post' => $u->posts_count,
-                'reply' => $u->comments_count,
+                'post' => $u->post_logs_count,
+                'reply' => $u->reply_logs_count,
                 'immagini' => $u->images_used_count,
                 'tokenUsed' => (int) ($u->tokens_used_sum ?? 0),
                 'tokenTotal' => $u->tokens_limit,

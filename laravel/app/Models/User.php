@@ -72,4 +72,20 @@ class User extends Authenticatable
         return $this->hasMany(ImageJob::class)
             ->whereDay('image_jobs.created_at', now()->day);
     }
+
+    public function postLogs(): HasMany
+    {
+        return $this->hasMany(TokenLog::class)
+            ->where('type', 'post')
+            ->whereMonth('token_logs.created_at', now()->month)
+            ->whereYear('token_logs.created_at', now()->year);
+    }
+
+    public function replyLogs(): HasMany
+    {
+        return $this->hasMany(TokenLog::class)
+            ->where('type', 'reply')
+            ->whereMonth('token_logs.created_at', now()->month)
+            ->whereYear('token_logs.created_at', now()->year);
+    }
 }
