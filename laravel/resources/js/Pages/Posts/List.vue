@@ -95,8 +95,8 @@ function formatDate(value) {
                         <th></th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr v-if="posts.data.length === 0">
+                <tbody v-if="posts.data.length === 0">
+                    <tr>
                         <td :colspan="colSpan + 1" class="table-empty">
                             <Icon name="chat" :size="32" class="table-empty__icon" />
                             <template v-if="filters.search">
@@ -106,7 +106,9 @@ function formatDate(value) {
                             <div v-else class="table-empty__text">Nessun post trovato</div>
                         </td>
                     </tr>
-                    <tr v-for="p in posts.data" :key="p.id">
+                </tbody>
+                <TransitionGroup v-else name="row-list" tag="tbody">
+                    <tr v-for="(p, i) in posts.data" :key="p.id" :style="{ '--i': Math.min(i, 10) }">
                         <td data-label="Titolo">{{ p.title }}</td>
                         <td v-if="showAuthor" data-label="Autore">{{ p.author }}</td>
                         <td data-label="Canali">
@@ -127,7 +129,7 @@ function formatDate(value) {
                             </div>
                         </td>
                     </tr>
-                </tbody>
+                </TransitionGroup>
             </table>
 
             <div v-if="posts.data.length > 0" class="list-footer">

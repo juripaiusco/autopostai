@@ -2,11 +2,11 @@
 import Icon from '@/Components/Icon.vue';
 
 const STATUS = {
-    scheduled: { cls: 'pill-scheduled', label: 'Schedulato' },
+    scheduled: { cls: 'pill-scheduled pill--pulse-warn', label: 'Schedulato' },
     published: { cls: 'pill-published', label: 'Pubblicato' },
     done: { cls: 'pill-done', label: 'Completato' },
     draft: { cls: 'pill-draft', label: 'Bozza' },
-    error: { cls: 'pill-error', label: 'Errore' },
+    error: { cls: 'pill-error pill--pulse-error', label: 'Errore' },
 };
 
 const props = defineProps({
@@ -17,7 +17,7 @@ const s = STATUS[props.status] ?? STATUS.scheduled;
 </script>
 
 <template>
-    <span v-if="status === 'error'" class="pill pill-error">
+    <span v-if="status === 'error'" class="pill" :class="s.cls">
         <Icon name="warning" :size="13" /> {{ s.label }}
     </span>
     <span v-else class="pill" :class="s.cls">

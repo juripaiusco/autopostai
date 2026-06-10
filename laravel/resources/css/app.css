@@ -190,8 +190,13 @@ main{ flex: 1; }
 .card{ background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: visible; }
 .card-pad{ padding: 20px; }
 
-.pill{ display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--radius-lg); border: 1px solid; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill{ display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--radius-lg); border: 1px solid; font-size: 12px; font-weight: 600; white-space: nowrap; animation: pillPop .2s cubic-bezier(0.25, 1, 0.5, 1); }
 .pill .dot{ width: 8px; height: 8px; border-radius: 50%; }
+.pill--pulse-warn .dot{ animation: pulseDot 2s ease-in-out infinite; }
+.pill--pulse-error svg{ animation: pulseDot 1.4s ease-in-out infinite; }
+
+@keyframes pillPop{ from{ opacity: 0; transform: scale(.92); } to{ opacity: 1; transform: scale(1); } }
+@keyframes pulseDot{ 0%, 100%{ opacity: 1; transform: scale(1); } 50%{ opacity: .55; transform: scale(1.15); } }
 .pill-scheduled{ background: var(--st-sch-bg); border-color: var(--st-sch-bd); color: var(--st-sch-fg); } .pill-scheduled .dot{ background: var(--st-sch-fg); }
 .pill-published{ background: var(--st-pub-bg); border-color: var(--st-pub-bd); color: var(--st-pub-fg); } .pill-published .dot{ background: var(--st-pub-fg); }
 .pill-done{ background: var(--st-done-bg); border-color: var(--st-done-bd); color: var(--st-done-fg); } .pill-done .dot{ background: var(--st-done-fg); }
@@ -220,6 +225,12 @@ main{ flex: 1; }
 .table tbody tr{ transition: background .12s; }
 .table tbody tr:hover{ background: var(--g50); }
 .table tbody tr:last-child td{ border-bottom: none; }
+
+.row-list-enter-active{ transition: opacity .2s cubic-bezier(0.25, 1, 0.5, 1), transform .2s cubic-bezier(0.25, 1, 0.5, 1); transition-delay: calc(var(--i, 0) * 30ms); }
+.row-list-leave-active{ transition: opacity .15s cubic-bezier(0.25, 1, 0.5, 1), transform .15s cubic-bezier(0.25, 1, 0.5, 1); }
+.row-list-enter-from{ opacity: 0; transform: translateY(6px); }
+.row-list-leave-to{ opacity: 0; transform: translateY(-6px); }
+.row-list-move{ transition: transform .2s cubic-bezier(0.25, 1, 0.5, 1); }
 .row-actions{ display: flex; gap: 6px; justify-content: flex-end; }
 .icon-btn{ width: 34px; height: 34px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: #fff; }
 .icon-btn svg{ width: 16px; height: 16px; }
