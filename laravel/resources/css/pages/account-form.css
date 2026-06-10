@@ -45,35 +45,7 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
 }
 .acc-toggle--on .acc-toggle-thumb { transform: translateX(20px); }
 
-/* ---------- Sticky sub-header (breadcrumb + save) ---------- */
-.acc-head {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    background: rgba(255,255,255,.92);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--g200);
-    flex-shrink: 0;
-    margin: -30px -30px 0;
-}
-.acc-head-inner {
-    max-width: 80rem;
-    margin: 0 auto;
-    padding: 16px 28px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-.acc-crumb {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 17px;
-    color: var(--g500);
-    text-decoration: none;
-}
-.acc-crumb b { color: var(--ink); font-weight: 700; }
-.acc-crumb .sep { color: var(--g300); }
+/* ---------- Header actions (save bar) ---------- */
 .acc-head-meta {
     margin-left: auto;
     display: flex;
@@ -526,7 +498,7 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
 .acc-hint-inline svg { width: 14px; height: 14px; color: var(--g400); }
 
 /* ---------- Content area padding (reset container for Form) ---------- */
-.acc-content { padding-top: 28px; padding-bottom: 56px; }
+.acc-content { padding-bottom: 56px; }
 
 /* ---------- Mobile ---------- */
 @media (max-width: 768px) {

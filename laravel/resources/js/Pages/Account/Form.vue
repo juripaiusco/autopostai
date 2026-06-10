@@ -2,6 +2,7 @@
 import { ref, reactive, computed } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/Layout/PageHeader.vue';
 import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import SecretField from '@/Components/UI/SecretField.vue';
@@ -236,14 +237,8 @@ function nlConn(providerId) {
             </div>
         </template>
 
-        <!-- Sticky sub-header -->
-        <div class="acc-head">
-            <div class="acc-head-inner">
-                <div class="acc-crumb">
-                    <span>Account</span>
-                    <span class="sep">›</span>
-                    <b>{{ title }}</b>
-                </div>
+        <PageHeader :crumbs="[{ label: 'Account' }, { label: title, current: true }]">
+            <template #actions>
                 <div class="acc-head-meta">
                     <span v-if="dirty" class="acc-dirty">
                         <span class="acc-dirty-dot" />Modifiche non salvate
@@ -259,8 +254,8 @@ function nlConn(providerId) {
                         <Icon name="check" :size="16" />{{ saveLabel }}
                     </button>
                 </div>
-            </div>
-        </div>
+            </template>
+        </PageHeader>
 
         <!-- Main content -->
         <div class="acc-content">
