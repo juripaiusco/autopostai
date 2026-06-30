@@ -41,10 +41,10 @@ function onUserSelect(u) {
 
         <div class="flex w-full flex-row gap-4">
 
-            <div v-if="mode === 'create' && users.length > 0" class="acc-field w-1/3 pf-combobox" style="margin-bottom:0">
+            <div class="acc-field w-1/3 pf-combobox" style="margin-bottom:0">
                 <label class="acc-row-label" for="post-user">Account</label>
                 <span class="acc-row-help">Il post verrà pubblicato con i canali collegati a questo account.</span>
-                <Combobox :model-value="selectedUser" @update:model-value="onUserSelect">
+                <Combobox v-if="mode === 'create' && users.length > 0" :model-value="selectedUser" @update:model-value="onUserSelect">
                     <div class="pf-combobox-wrap">
                         <ComboboxInput id="post-user" class="control"
                             :display-value="userLabel"
@@ -61,10 +61,9 @@ function onUserSelect(u) {
                         </ComboboxOptions>
                     </div>
                 </Combobox>
-            </div>
-            <div v-else-if="mode === 'edit' && owner" class="acc-field w-1/3" style="margin-bottom:0">
-                <label class="acc-row-label">Account</label>
-                <span class="acc-row-help">{{ owner.name }} - {{ owner.email }}</span>
+                <div v-else-if="mode === 'edit' && owner" class="acc-field" style="margin-bottom:0">
+                    <input class="control readonly" readonly type="text" :value="owner.name + ' - ' + owner.email" />
+                </div>
             </div>
 
             <div class="acc-field w-2/3" style="margin-bottom:0">
