@@ -376,7 +376,7 @@ function goToIntegration(chId) {
                         <div v-else class="acc-field" style="margin-bottom:0">
                             <label class="acc-row-label" for="acc-manager">Manager assegnato</label>
                             <span class="acc-row-help">{{ form.manager ? 'Account gestito da un manager.' : "L'account non ha ancora un manager." }}</span>
-                            <select id="acc-manager" class="control" :value="form.manager" @change="set('manager', $event.target.value)">
+                            <select id="acc-manager" class="control" :value="form.parent_id" @change="set('manager', $event.target.value)">
                                 <option value="">Nessun manager</option>
                                 <option v-for="m in managers" :key="m.id" :value="m.id">{{ m.name }}</option>
                                 <option v-if="!managers.length" value="mock-1">Studio Sociale · agenzia</option>
