@@ -22,26 +22,31 @@ function toggleChannel(id) {
 
 <template>
     <div style="display:flex;flex-direction:column;gap:12px">
-        <div v-if="mode === 'create' && users.length > 0" class="acc-field" style="margin-bottom:0">
-            <label class="acc-row-label" for="post-user">Account</label>
-            <span class="acc-row-help">Il post verrà pubblicato con i canali collegati a questo account.</span>
-            <select id="post-user" class="control" :value="form.user_id"
-                @change="emit('set', 'user_id', Number($event.target.value) || null)">
-                <option disabled value="">Seleziona l'account</option>
-                <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }} - {{ u.email }}</option>
-            </select>
-        </div>
-        <div v-else-if="mode === 'edit' && owner" class="acc-field" style="margin-bottom:0">
-            <label class="acc-row-label">Account</label>
-            <span class="acc-row-help">{{ owner.name }} - {{ owner.email }}</span>
-        </div>
 
-        <div class="acc-field" style="margin-bottom:0">
-            <label class="acc-row-label" for="post-title">Titolo</label>
-            <span class="acc-row-help">Solo ad uso interno, non viene pubblicato.</span>
-            <input id="post-title" class="control" type="text" :value="form.title"
-                placeholder="Es. Promo del venerdì"
-                @input="emit('set', 'title', $event.target.value)" />
+        <div class="flex w-full flex-row gap-4">
+
+            <div v-if="mode === 'create' && users.length > 0" class="acc-field w-1/3" style="margin-bottom:0">
+                <label class="acc-row-label" for="post-user">Account</label>
+                <span class="acc-row-help">Il post verrà pubblicato con i canali collegati a questo account.</span>
+                <select id="post-user" class="control" :value="form.user_id"
+                    @change="emit('set', 'user_id', Number($event.target.value) || null)">
+                    <option disabled value="">Seleziona l'account</option>
+                    <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }} - {{ u.email }}</option>
+                </select>
+            </div>
+            <div v-else-if="mode === 'edit' && owner" class="acc-field w-1/3" style="margin-bottom:0">
+                <label class="acc-row-label">Account</label>
+                <span class="acc-row-help">{{ owner.name }} - {{ owner.email }}</span>
+            </div>
+
+            <div class="acc-field w-2/3" style="margin-bottom:0">
+                <label class="acc-row-label" for="post-title">Titolo</label>
+                <span class="acc-row-help">Solo ad uso interno, non viene pubblicato.</span>
+                <input id="post-title" class="control" type="text" :value="form.title"
+                    placeholder="Es. Promo del venerdì"
+                    @input="emit('set', 'title', $event.target.value)" />
+            </div>
+
         </div>
 
         <div>
