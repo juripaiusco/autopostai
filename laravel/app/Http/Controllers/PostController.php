@@ -107,6 +107,8 @@ class PostController extends Controller
     public function create(Request $request): Response
     {
         $me = $request->user();
+        $isAdmin = $me->parent_id === null;
+        $isManager = $me->child_on == 1;
 
         $userChannels = collect($me->channels ?? [])
             ->filter(fn ($c) => !empty($c['on']))
@@ -116,10 +118,34 @@ class PostController extends Controller
 
         $channelsAvailable = $userChannels ?: array_keys(User::CHANNELS);
 
+        $users = null;
+        if ($isAdmin || $isManager) {
+            $usersQuery = User::query()->orderBy('name');
+            if ($isAdmin) {
+                $usersQuery->whereNotNull('parent_id')->whereNull('child_on');
+            } else {
+                $usersQuery->where('parent_id', $me->id);
+            }
+
+            $users = $usersQuery->get(['id', 'name', 'email', 'channels'])
+                ->map(fn (User $u) => [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'channelsAvailable' => collect($u->channels ?? [])
+                        ->filter(fn ($c) => !empty($c['on']))
+                        ->keys()
+                        ->values()
+                        ->all(),
+                ])
+                ->values();
+        }
+
         $prefill = $request->session()->pull('post_prefill');
 
         return Inertia::render('Posts/Form', [
             'channelsAvailable' => $channelsAvailable,
+            'users' => $users ?? [],
             'prefill' => $prefill,
         ]);
     }
@@ -155,6 +181,9 @@ class PostController extends Controller
             'post' => [
                 'id' => $post->id,
                 'title' => $post->title,
+                'owner' => $isAdmin || $isManager
+                    ? ['name' => $post->user->name, 'email' => $post->user->email]
+                    : null,
                 'channels' => collect($post->channels ?? [])
                     ->filter(fn ($c) => !empty($c['on']))
                     ->keys()
@@ -178,9 +207,12 @@ class PostController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $me = $request->user();
+        $isAdmin = $me->parent_id === null;
+        $isManager = $me->child_on == 1;
 
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
+            'user_id' => ['nullable', 'integer'],
             'channels' => ['required', 'array', 'min:1'],
             'channels.*' => ['string', Rule::in(array_keys(User::CHANNELS))],
             'ai_prompt_post' => ['nullable', 'string'],
@@ -194,6 +226,15 @@ class PostController extends Controller
             'action' => ['required', 'string', Rule::in(['save', 'save_and_add'])],
         ]);
 
+        $targetUserId = match (true) {
+            $isAdmin => User::whereNotNull('parent_id')->whereNull('child_on')
+                ->whereKey($data['user_id'] ?? null)->value('id'),
+            $isManager => User::where('parent_id', $me->id)
+                ->whereKey($data['user_id'] ?? null)->value('id'),
+            default => $me->id,
+        };
+        abort_if(($isAdmin || $isManager) && !$targetUserId, 422, 'Account non valido.');
+
         $img = null;
         if ($request->hasFile('image')) {
             $img = Storage::disk('public')->putFile('posts', $request->file('image'));
@@ -205,7 +246,7 @@ class PostController extends Controller
             ->all();
 
         $post = Post::create([
-            'user_id' => $me->id,
+            'user_id' => $targetUserId,
             'created_by_user_id' => $me->id,
             'title' => $data['title'] ?? '',
             'ai_prompt_post' => $data['ai_prompt_post'] ?? null,

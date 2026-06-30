@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/Layout/PageHeader.vue';
@@ -11,6 +11,7 @@ import StepPublish from '@/Components/Posts/StepPublish.vue';
 const props = defineProps({
     mode: { type: String, default: 'create' }, // 'create' | 'edit'
     channelsAvailable: { type: Array, default: () => [] },
+    users: { type: Array, default: () => [] },
     prefill: { type: Object, default: null },
     post: { type: Object, default: null },
 });
@@ -25,7 +26,17 @@ const CHANNELS_CFG = [
     { id: 'newsletter', label: 'Newsletter', limit: null },
 ];
 
-const channels = computed(() => CHANNELS_CFG.filter((c) => props.channelsAvailable.includes(c.id)));
+const selectedUser = computed(() => props.users.find((u) => u.id === form.user_id));
+
+const channels = computed(() => {
+    if (props.mode === 'edit') return CHANNELS_CFG.filter((c) => props.channelsAvailable.includes(c.id));
+    if (props.users.length > 0) {
+        return selectedUser.value
+            ? CHANNELS_CFG.filter((c) => selectedUser.value.channelsAvailable.includes(c.id))
+            : [];
+    }
+    return CHANNELS_CFG.filter((c) => props.channelsAvailable.includes(c.id));
+});
 
 function buildForm() {
     if (props.mode === 'edit' && props.post) {
@@ -46,6 +57,7 @@ function buildForm() {
 
     return {
         title: props.prefill?.title ?? '',
+        user_id: null,
         channels: props.prefill?.channels ?? [],
         ai_prompt_post: props.prefill?.ai_prompt_post ?? '',
         comments_enabled: props.prefill?.comments_enabled ?? true,
@@ -69,8 +81,15 @@ function set(key, value) {
     form[key] = value;
 }
 
+if (props.mode === 'create' && props.users.length > 0) {
+    watch(() => form.user_id, () => { form.channels = []; });
+}
+
 const canAdvance = computed(() => {
-    if (step.value === 0) return form.channels.length > 0;
+    if (step.value === 0) {
+        if (props.mode === 'create' && props.users.length > 0 && !form.user_id) return false;
+        return form.channels.length > 0;
+    }
     return true;
 });
 
@@ -117,7 +136,8 @@ function submit(action) {
 
                 <Transition name="pf-step" mode="out-in">
                     <div class="pf-step-content" :key="step">
-                        <StepWrite v-if="step === 0" :form="form" :channels="channels" @set="set" />
+                        <StepWrite v-if="step === 0" :form="form" :channels="channels" :users="users"
+                            :mode="mode" :owner="post?.owner ?? null" @set="set" />
                         <StepMedia v-else-if="step === 1" :form="form" @set="set" />
                         <StepPublish v-else :form="form" :channels="channels" :saving="saving" :mode="mode"
                             @set="set" @back="back" @save="submit('save')" @save-and-add="submit('save_and_add')" />
