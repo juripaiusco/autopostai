@@ -151,6 +151,71 @@ class PostController extends Controller
     }
 
     /**
+     * Dettaglio di un post: contenuto inviato, commenti ricevuti e risposte AI.
+     */
+    public function show(Request $request, Post $post): Response
+    {
+        $me = $request->user();
+        $isAdmin = $me->parent_id === null;
+        $isManager = $me->child_on == 1;
+
+        $allowed = $isAdmin
+            || ($isManager && $post->user->parent_id === $me->id)
+            || $post->user_id === $me->id;
+
+        abort_unless($allowed, 403);
+
+        $post->load([
+            'user:id,name,email',
+            'token',
+            'comments' => fn ($q) => $q->orderByDesc('message_created_time'),
+            'comments.token',
+        ]);
+
+        $commentsByChannel = $post->comments->countBy('channel');
+
+        $totalTokens = ($post->token?->tokens_used ?? 0)
+            + $post->comments->sum(fn ($c) => $c->token?->tokens_used ?? 0);
+
+        return Inertia::render('Posts/Show', [
+            'post' => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'status' => $this->status($post),
+                'owner' => ['name' => $post->user->name, 'email' => $post->user->email],
+                'channels' => collect($post->channels ?? [])
+                    ->filter(fn ($c) => !empty($c['on']))
+                    ->keys()
+                    ->values()
+                    ->all(),
+                'prompt' => $post->ai_prompt_post,
+                'aiContent' => $post->ai_content,
+                'postTokens' => $post->token?->tokens_used ?? 0,
+                'totalTokens' => $totalTokens,
+                'commentsEnabled' => $post->comments_enabled === '1',
+                'autoReplyEnabled' => $post->auto_reply_enabled === '1',
+                'commentsByChannel' => $commentsByChannel,
+                'commentsTotal' => $post->comments->count(),
+                'imgUrl' => $post->img ? Storage::disk('public')->url($post->img) : null,
+                'publishedAt' => $post->published_at?->toIso8601String(),
+                'createdAt' => $post->created_at?->toIso8601String(),
+            ],
+            'comments' => $post->comments->map(fn ($c) => [
+                'id' => $c->id,
+                'channel' => $c->channel,
+                'author' => $c->from_name,
+                'time' => $c->message_created_time?->toIso8601String(),
+                'text' => $c->message,
+                'reply' => $c->reply ? [
+                    'text' => $c->reply,
+                    'time' => $c->reply_created_time?->toIso8601String(),
+                    'tokens' => $c->token?->tokens_used,
+                ] : null,
+            ])->values(),
+        ]);
+    }
+
+    /**
      * Form di modifica di un post esistente (solo programmati/bozze, vedi destroy() per i permessi).
      */
     public function edit(Request $request, Post $post): Response
