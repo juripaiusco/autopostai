@@ -228,11 +228,8 @@ main{ flex: 1; }
 .tr-clickable{ cursor: pointer; }
 .tr-clickable:hover td{ background: var(--g50); }
 
-.row-list-enter-active{ transition: opacity .12s cubic-bezier(0.25, 1, 0.5, 1); }
-.row-list-leave-active{ transition: opacity .1s cubic-bezier(0.25, 1, 0.5, 1); }
-.row-list-enter-from{ opacity: 0; }
-.row-list-leave-to{ opacity: 0; }
-.row-list-move{ transition: transform .2s cubic-bezier(0.25, 1, 0.5, 1); }
+.table-fade-enter-active, .table-fade-leave-active{ transition: opacity .15s ease; }
+.table-fade-enter-from, .table-fade-leave-to{ opacity: 0; }
 .row-actions{ display: flex; gap: 6px; justify-content: flex-end; }
 .icon-btn{ width: 34px; height: 34px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: #fff; }
 .icon-btn svg{ width: 16px; height: 16px; }

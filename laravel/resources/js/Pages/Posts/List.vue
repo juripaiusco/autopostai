@@ -39,6 +39,7 @@ const deleteTarget = ref(null);
 const deleting = ref(false);
 const deleteError = ref(null);
 const colSpan = computed(() => (props.showAuthor ? 6 : 5));
+const listKey = computed(() => `${props.filters.filter}-${props.filters.search}-${props.filters.sort}-${props.filters.dir}-${props.posts.current_page}`);
 
 function openDelete(p) {
     deleteTarget.value = p;
@@ -104,43 +105,45 @@ function formatDate(value) {
                         <th></th>
                     </tr>
                 </thead>
-                <tbody v-if="posts.data.length === 0">
-                    <tr>
-                        <td :colspan="colSpan + 1" class="table-empty">
-                            <Icon name="chat" :size="32" class="table-empty__icon" />
-                            <template v-if="filters.search">
-                                <div class="table-empty__text">Nessun risultato per «{{ filters.search }}»</div>
-                                <button type="button" class="list-footer__clear" @click="clearSearch">Cancella ricerca</button>
-                            </template>
-                            <div v-else class="table-empty__text">Nessun post trovato</div>
-                        </td>
-                    </tr>
-                </tbody>
-                <TransitionGroup v-else name="row-list" tag="tbody">
-                    <tr v-for="(p, i) in posts.data" :key="p.id" :style="{ '--i': Math.min(i, 10) }"
-                        :class="{ 'tr-clickable': p.status !== 'published' }"
-                        @click="p.status !== 'published' && router.get(route('posts.edit', p.id))">
-                        <td data-label="Titolo">{{ p.title }}</td>
-                        <td v-if="showAuthor" data-label="Autore">{{ p.author }}</td>
-                        <td data-label="Canali">
-                            <div class="ch-list">
-                                <span v-for="c in p.channels" :key="c" class="ch-chip" :title="CH_CONFIG[c]?.label ?? c">
-                                    <ChannelIcon :id="c" :size="13" />
-                                </span>
-                            </div>
-                        </td>
-                        <td data-label="Stato"><StatusPill :status="p.status" /></td>
-                        <td data-label="Pubblicazione">{{ formatDate(p.publishedAt) }}</td>
-                        <td class="num" data-label="Commenti">{{ p.comments }}</td>
-                        <td data-label="">
-                            <div class="row-actions">
-                                <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" :aria-label="`Elimina ${p.title}`" @click.stop="openDelete(p)">
-                                    <Icon name="trash" :size="15" />
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </TransitionGroup>
+                <Transition name="table-fade" mode="out-in">
+                    <tbody v-if="posts.data.length === 0" :key="listKey">
+                        <tr>
+                            <td :colspan="colSpan + 1" class="table-empty">
+                                <Icon name="chat" :size="32" class="table-empty__icon" />
+                                <template v-if="filters.search">
+                                    <div class="table-empty__text">Nessun risultato per «{{ filters.search }}»</div>
+                                    <button type="button" class="list-footer__clear" @click="clearSearch">Cancella ricerca</button>
+                                </template>
+                                <div v-else class="table-empty__text">Nessun post trovato</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tbody v-else :key="listKey">
+                        <tr v-for="p in posts.data" :key="p.id"
+                            :class="{ 'tr-clickable': p.status !== 'published' }"
+                            @click="p.status !== 'published' && router.get(route('posts.edit', p.id))">
+                            <td data-label="Titolo">{{ p.title }}</td>
+                            <td v-if="showAuthor" data-label="Autore">{{ p.author }}</td>
+                            <td data-label="Canali">
+                                <div class="ch-list">
+                                    <span v-for="c in p.channels" :key="c" class="ch-chip" :title="CH_CONFIG[c]?.label ?? c">
+                                        <ChannelIcon :id="c" :size="13" />
+                                    </span>
+                                </div>
+                            </td>
+                            <td data-label="Stato"><StatusPill :status="p.status" /></td>
+                            <td data-label="Pubblicazione">{{ formatDate(p.publishedAt) }}</td>
+                            <td class="num" data-label="Commenti">{{ p.comments }}</td>
+                            <td data-label="">
+                                <div class="row-actions">
+                                    <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" :aria-label="`Elimina ${p.title}`" @click.stop="openDelete(p)">
+                                        <Icon name="trash" :size="15" />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </Transition>
             </table>
 
             <div v-if="posts.data.length > 0" class="list-footer">
