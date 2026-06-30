@@ -106,7 +106,7 @@ function formatDate(value) {
                     </tr>
                 </thead>
                 <Transition name="table-fade" mode="out-in">
-                    <tbody v-if="posts.data.length === 0" :key="listKey">
+                    <tbody v-if="posts.data.length === 0" :key="`${listKey}-empty`">
                         <tr>
                             <td :colspan="colSpan + 1" class="table-empty">
                                 <Icon name="chat" :size="32" class="table-empty__icon" />
@@ -118,7 +118,7 @@ function formatDate(value) {
                             </td>
                         </tr>
                     </tbody>
-                    <tbody v-else :key="listKey">
+                    <tbody v-else :key="`${listKey}-rows`">
                         <tr v-for="p in posts.data" :key="p.id"
                             :class="{ 'tr-clickable': p.status !== 'published' }"
                             @click="p.status !== 'published' && router.get(route('posts.edit', p.id))">

@@ -40,6 +40,7 @@ const deleteTarget = ref(null);
 const deleting = ref(false);
 const deleteError = ref(null);
 const colSpan = computed(() => (props.isAdmin ? 8 : 7));
+const listKey = computed(() => `${props.filters.filter}-${props.filters.search}-${props.filters.sort}-${props.filters.dir}-${props.users.current_page}`);
 
 function openDelete(u) {
     deleteTarget.value = u;
@@ -112,58 +113,62 @@ function confirmDelete(id) {
                         <th></th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr v-if="users.data.length === 0">
-                        <td :colspan="colSpan" class="table-empty">
-                            <Icon name="users" :size="32" class="table-empty__icon" />
-                            <template v-if="filters.search">
-                                <div class="table-empty__text">Nessun risultato per «{{ filters.search }}»</div>
-                                <button type="button" class="list-footer__clear" @click="clearSearch">Cancella ricerca</button>
-                            </template>
-                            <div v-else class="table-empty__text">Nessun utente trovato</div>
-                        </td>
-                    </tr>
-                    <tr v-for="(u, i) in users.data" :key="u.id"
-                        class="tr-clickable"
-                        @click="router.get(route('account.edit', u.id))">
-                        <td class="user-td">
-                            <div class="user-cell">
-                                <UserAvatar :name="u.name" />
-                                <div class="user-cell__meta">
-                                    <div class="user-cell__name">{{ u.name }}</div>
-                                    <div class="user-cell__email">{{ u.email }}</div>
+                <Transition name="table-fade" mode="out-in">
+                    <tbody v-if="users.data.length === 0" :key="`${listKey}-empty`">
+                        <tr>
+                            <td :colspan="colSpan" class="table-empty">
+                                <Icon name="users" :size="32" class="table-empty__icon" />
+                                <template v-if="filters.search">
+                                    <div class="table-empty__text">Nessun risultato per «{{ filters.search }}»</div>
+                                    <button type="button" class="list-footer__clear" @click="clearSearch">Cancella ricerca</button>
+                                </template>
+                                <div v-else class="table-empty__text">Nessun utente trovato</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tbody v-else :key="`${listKey}-rows`">
+                        <tr v-for="(u, i) in users.data" :key="u.id"
+                            class="tr-clickable"
+                            @click="router.get(route('account.edit', u.id))">
+                            <td class="user-td">
+                                <div class="user-cell">
+                                    <UserAvatar :name="u.name" />
+                                    <div class="user-cell__meta">
+                                        <div class="user-cell__name">{{ u.name }}</div>
+                                        <div class="user-cell__email">{{ u.email }}</div>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td v-if="isAdmin" data-label="Ruolo"><RoleBadge :role="u.role" /></td>
-                        <td data-label="Canali">
-                            <div class="ch-list">
-                                <span v-for="c in u.channels" :key="c" class="ch-chip" :title="CH_CONFIG[c]?.label ?? c">
-                                    <ChannelIcon :id="c" :size="13" />
-                                </span>
-                            </div>
-                        </td>
-                        <td class="num" data-label="Post">{{ u.post }}</td>
-                        <td class="num" data-label="Reply">{{ u.reply }}</td>
-                        <td class="token-td" data-label="Immagini">
-                            <TokenBar v-if="u.imageTotal > 0" :used="u.immagini" :total="u.imageTotal" :index="i" />
-                            <span v-else class="num">{{ u.immagini }}</span>
-                        </td>
-                        <td class="token-td" data-label="Token">
-                            <TokenBar :used="u.tokenUsed" :total="u.tokenTotal" :index="i" />
-                        </td>
-                        <td data-label="">
-                            <div class="row-actions">
-                                <a :href="route('account.edit', u.id)" class="icon-btn icon-btn--ghost" title="Modifica" :aria-label="`Modifica ${u.name}`">
-                                    <Icon name="pencil" :size="15" />
-                                </a>
-                                <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" :aria-label="`Elimina ${u.name}`" @click.stop="openDelete(u)">
-                                    <Icon name="trash" :size="15" />
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
+                            </td>
+                            <td v-if="isAdmin" data-label="Ruolo"><RoleBadge :role="u.role" /></td>
+                            <td data-label="Canali">
+                                <div class="ch-list">
+                                    <span v-for="c in u.channels" :key="c" class="ch-chip" :title="CH_CONFIG[c]?.label ?? c">
+                                        <ChannelIcon :id="c" :size="13" />
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="num" data-label="Post">{{ u.post }}</td>
+                            <td class="num" data-label="Reply">{{ u.reply }}</td>
+                            <td class="token-td" data-label="Immagini">
+                                <TokenBar v-if="u.imageTotal > 0" :used="u.immagini" :total="u.imageTotal" :index="i" />
+                                <span v-else class="num">{{ u.immagini }}</span>
+                            </td>
+                            <td class="token-td" data-label="Token">
+                                <TokenBar :used="u.tokenUsed" :total="u.tokenTotal" :index="i" />
+                            </td>
+                            <td data-label="">
+                                <div class="row-actions">
+                                    <a :href="route('account.edit', u.id)" class="icon-btn icon-btn--ghost" title="Modifica" :aria-label="`Modifica ${u.name}`" @click.stop>
+                                        <Icon name="pencil" :size="15" />
+                                    </a>
+                                    <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" :aria-label="`Elimina ${u.name}`" @click.stop="openDelete(u)">
+                                        <Icon name="trash" :size="15" />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </Transition>
             </table>
 
             <div v-if="users.data.length > 0" class="list-footer">
