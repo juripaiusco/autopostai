@@ -90,6 +90,16 @@ function confirmDelete(id) {
 
         <div class="card table-wrap">
             <table class="table table--responsive-cards">
+                <colgroup>
+                    <col style="width: 24%">
+                    <col v-if="isAdmin" style="width: 10%">
+                    <col style="width: 10%">
+                    <col style="width: 10%">
+                    <col style="width: 10%">
+                    <col style="width: 14%">
+                    <col style="width: 14%">
+                    <col style="width: 110px">
+                </colgroup>
                 <thead>
                     <tr>
                         <SortableTh label="Account" column="name" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
@@ -187,8 +197,3 @@ function confirmDelete(id) {
         </ConfirmModal>
     </AppLayout>
 </template>
-
-<style scoped>
-.tr-clickable { cursor: pointer; }
-.tr-clickable:hover td { background: var(--g50); }
-</style>

@@ -7,6 +7,7 @@ const props = defineProps({
     form: { type: Object, required: true },
     channels: { type: Array, required: true }, // [{ id, label, limit }]
     saving: { type: Boolean, default: false },
+    mode: { type: String, default: 'create' },
 });
 
 const emit = defineEmits(['set', 'back', 'save', 'save-and-add']);
@@ -125,7 +126,7 @@ function runPreview() {
         <div class="pf-actions">
             <button type="button" class="btn btn-secondary" @click="emit('back')">← Indietro</button>
             <div class="spacer"></div>
-            <button type="button" class="btn btn-secondary" :disabled="!canSave || saving"
+            <button v-if="mode !== 'edit'" type="button" class="btn btn-secondary" :disabled="!canSave || saving"
                 title="Salva questo post e creane subito una copia, da adattare a un altro canale"
                 @click="emit('save-and-add')">
                 <span v-if="saving" class="btn-spinner" aria-hidden="true"></span>
@@ -133,7 +134,7 @@ function runPreview() {
             </button>
             <button type="button" class="btn btn-dark" :disabled="!canSave || saving" @click="emit('save')">
                 <span v-if="saving" class="btn-spinner" aria-hidden="true"></span>
-                <Icon v-else name="bookmark" :size="16" />{{ saving ? 'Salvataggio…' : 'Salva' }}
+                <Icon v-else name="bookmark" :size="16" />{{ saving ? 'Salvataggio…' : (mode === 'edit' ? 'Salva modifiche' : 'Salva') }}
             </button>
         </div>
     </div>

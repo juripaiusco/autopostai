@@ -9,9 +9,10 @@ import StepMedia from '@/Components/Posts/StepMedia.vue';
 import StepPublish from '@/Components/Posts/StepPublish.vue';
 
 const props = defineProps({
-    mode: { type: String, default: 'create' }, // 'create' (per ora l'unica)
+    mode: { type: String, default: 'create' }, // 'create' | 'edit'
     channelsAvailable: { type: Array, default: () => [] },
     prefill: { type: Object, default: null },
+    post: { type: Object, default: null },
 });
 
 const userName = computed(() => usePage().props.auth?.user?.name ?? '');
@@ -27,6 +28,22 @@ const CHANNELS_CFG = [
 const channels = computed(() => CHANNELS_CFG.filter((c) => props.channelsAvailable.includes(c.id)));
 
 function buildForm() {
+    if (props.mode === 'edit' && props.post) {
+        return {
+            title: props.post.title ?? '',
+            channels: props.post.channels ?? [],
+            ai_prompt_post: props.post.ai_prompt_post ?? '',
+            comments_enabled: props.post.comments_enabled ?? true,
+            auto_reply_enabled: props.post.auto_reply_enabled ?? false,
+            ai_prompt_comment: props.post.ai_prompt_comment ?? '',
+            ai_content: props.post.ai_content ?? '',
+            image: null,
+            imagePreviewUrl: props.post.imgUrl ?? null,
+            img_source: props.post.img_source ?? null,
+            published_at: props.post.published_at ?? '',
+        };
+    }
+
     return {
         title: props.prefill?.title ?? '',
         channels: props.prefill?.channels ?? [],
@@ -72,6 +89,13 @@ function goto(i) {
 
 function submit(action) {
     saving.value = true;
+    if (props.mode === 'edit') {
+        router.put(route('posts.update', props.post.id), { ...form, action }, {
+            forceFormData: true,
+            onFinish: () => { saving.value = false; },
+        });
+        return;
+    }
     router.post(route('posts.store'), { ...form, action }, {
         forceFormData: true,
         onFinish: () => { saving.value = false; },
@@ -80,11 +104,11 @@ function submit(action) {
 </script>
 
 <template>
-    <Head title="Nuovo post" />
+    <Head :title="mode === 'edit' ? 'Modifica post' : 'Nuovo post'" />
 
     <AppLayout :current="'posts'" :user="userName">
         <template #page-header>
-            <PageHeader :crumbs="[{ label: 'Post' }, { label: 'Nuovo post', current: true }]" />
+            <PageHeader :crumbs="[{ label: 'Post' }, { label: mode === 'edit' ? 'Modifica post' : 'Nuovo post', current: true }]" />
         </template>
 
         <div class="acc-content">
@@ -95,7 +119,7 @@ function submit(action) {
                     <div class="pf-step-content" :key="step">
                         <StepWrite v-if="step === 0" :form="form" :channels="channels" @set="set" />
                         <StepMedia v-else-if="step === 1" :form="form" @set="set" />
-                        <StepPublish v-else :form="form" :channels="channels" :saving="saving"
+                        <StepPublish v-else :form="form" :channels="channels" :saving="saving" :mode="mode"
                             @set="set" @back="back" @save="submit('save')" @save-and-add="submit('save_and_add')" />
                     </div>
                 </Transition>

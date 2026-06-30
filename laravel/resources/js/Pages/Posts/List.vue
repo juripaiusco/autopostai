@@ -84,6 +84,15 @@ function formatDate(value) {
 
         <div class="card table-wrap">
             <table class="table table--responsive-cards">
+                <colgroup>
+                    <col style="width: 28%">
+                    <col v-if="showAuthor" style="width: 14%">
+                    <col style="width: 14%">
+                    <col style="width: 12%">
+                    <col style="width: 16%">
+                    <col style="width: 10%">
+                    <col style="width: 52px">
+                </colgroup>
                 <thead>
                     <tr>
                         <SortableTh label="Titolo" column="title" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
@@ -108,7 +117,9 @@ function formatDate(value) {
                     </tr>
                 </tbody>
                 <TransitionGroup v-else name="row-list" tag="tbody">
-                    <tr v-for="(p, i) in posts.data" :key="p.id" :style="{ '--i': Math.min(i, 10) }">
+                    <tr v-for="(p, i) in posts.data" :key="p.id" :style="{ '--i': Math.min(i, 10) }"
+                        :class="{ 'tr-clickable': p.status !== 'published' }"
+                        @click="p.status !== 'published' && router.get(route('posts.edit', p.id))">
                         <td data-label="Titolo">{{ p.title }}</td>
                         <td v-if="showAuthor" data-label="Autore">{{ p.author }}</td>
                         <td data-label="Canali">
@@ -123,7 +134,7 @@ function formatDate(value) {
                         <td class="num" data-label="Commenti">{{ p.comments }}</td>
                         <td data-label="">
                             <div class="row-actions">
-                                <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" :aria-label="`Elimina ${p.title}`" @click="openDelete(p)">
+                                <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" :aria-label="`Elimina ${p.title}`" @click.stop="openDelete(p)">
                                     <Icon name="trash" :size="15" />
                                 </button>
                             </div>

@@ -125,6 +125,54 @@ class PostController extends Controller
     }
 
     /**
+     * Form di modifica di un post esistente (solo programmati/bozze, vedi destroy() per i permessi).
+     */
+    public function edit(Request $request, Post $post): Response
+    {
+        $me = $request->user();
+        $isAdmin = $me->parent_id === null;
+        $isManager = $me->child_on == 1;
+
+        $allowed = $isAdmin
+            || ($isManager && $post->user->parent_id === $me->id)
+            || $post->user_id === $me->id;
+
+        abort_unless($allowed, 403);
+
+        $userChannels = collect($me->channels ?? [])
+            ->filter(fn ($c) => !empty($c['on']))
+            ->keys()
+            ->values()
+            ->all();
+
+        $channelsAvailable = $userChannels ?: array_keys(User::CHANNELS);
+
+        $imgSource = $post->img_ai_check_on == '1' ? 'generated' : ($post->img ? 'upload' : null);
+
+        return Inertia::render('Posts/Form', [
+            'mode' => 'edit',
+            'channelsAvailable' => $channelsAvailable,
+            'post' => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'channels' => collect($post->channels ?? [])
+                    ->filter(fn ($c) => !empty($c['on']))
+                    ->keys()
+                    ->values()
+                    ->all(),
+                'ai_prompt_post' => $post->ai_prompt_post,
+                'ai_content' => $post->ai_content,
+                'ai_prompt_comment' => $post->ai_prompt_comment,
+                'comments_enabled' => $post->comments_enabled === '1',
+                'auto_reply_enabled' => $post->auto_reply_enabled === '1',
+                'imgUrl' => $post->img ? Storage::disk('public')->url($post->img) : null,
+                'img_source' => $imgSource,
+                'published_at' => $post->published_at?->format('Y-m-d\TH:i'),
+            ],
+        ]);
+    }
+
+    /**
      * Salva un nuovo post (bozza, programmato o da pubblicare).
      */
     public function store(Request $request): RedirectResponse
@@ -187,6 +235,65 @@ class PostController extends Controller
         }
 
         $request->session()->flash('toast', 'Post salvato.');
+
+        return redirect()->route('posts');
+    }
+
+    /**
+     * Aggiorna un post esistente (solo titolo/contenuti/canali/data, non lo stato già pubblicato).
+     */
+    public function update(Request $request, Post $post): RedirectResponse
+    {
+        $me = $request->user();
+        $isAdmin = $me->parent_id === null;
+        $isManager = $me->child_on == 1;
+
+        $allowed = $isAdmin
+            || ($isManager && $post->user->parent_id === $me->id)
+            || $post->user_id === $me->id;
+
+        abort_unless($allowed, 403);
+
+        $data = $request->validate([
+            'title' => ['nullable', 'string', 'max:255'],
+            'channels' => ['required', 'array', 'min:1'],
+            'channels.*' => ['string', Rule::in(array_keys(User::CHANNELS))],
+            'ai_prompt_post' => ['nullable', 'string'],
+            'comments_enabled' => ['boolean'],
+            'auto_reply_enabled' => ['boolean'],
+            'ai_prompt_comment' => ['nullable', 'string'],
+            'ai_content' => ['nullable', 'string'],
+            'image' => ['nullable', 'image', 'max:10240'],
+            'img_source' => ['nullable', 'string', Rule::in(['upload', 'generated', 'archive'])],
+            'published_at' => ['nullable', 'date'],
+        ]);
+
+        $channels = collect(User::CHANNELS)
+            ->keys()
+            ->mapWithKeys(fn ($id) => [$id => ['on' => in_array($id, $data['channels'], true)]])
+            ->all();
+
+        $img = $post->img;
+        $imgAiCheckOn = $post->img_ai_check_on;
+        if ($request->hasFile('image')) {
+            $img = Storage::disk('public')->putFile('posts', $request->file('image'));
+            $imgAiCheckOn = ($data['img_source'] ?? null) === 'generated' ? '1' : '0';
+        }
+
+        $post->update([
+            'title' => $data['title'] ?? '',
+            'ai_prompt_post' => $data['ai_prompt_post'] ?? null,
+            'ai_content' => $data['ai_content'] ?? null,
+            'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
+            'img' => $img,
+            'img_ai_check_on' => $imgAiCheckOn,
+            'comments_enabled' => !empty($data['comments_enabled']) ? '1' : '0',
+            'auto_reply_enabled' => !empty($data['auto_reply_enabled']) ? '1' : '0',
+            'channels' => $channels,
+            'published_at' => $data['published_at'] ?? null,
+        ]);
+
+        $request->session()->flash('toast', 'Post aggiornato.');
 
         return redirect()->route('posts');
     }
