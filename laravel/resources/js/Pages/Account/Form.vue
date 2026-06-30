@@ -386,7 +386,7 @@ function goToIntegration(chId) {
 
                         <div class="acc-field" style="margin-bottom:0">
                             <label class="acc-row-label" for="acc-tokens-month">Token al mese</label>
-                            <span class="acc-row-help">Numero massimo di token utilizzabili al mese.</span>
+                            <span class="acc-row-help">Numero di token utilizzabili al mese.</span>
                             <div class="acc-input-unit">
                                 <input id="acc-tokens-month" class="control" type="number" :value="form.tokensMonth" placeholder="50000"
                                     @input="set('tokensMonth', $event.target.value)" />
@@ -411,7 +411,7 @@ function goToIntegration(chId) {
 
                         <div class="acc-field" style="margin-bottom:0">
                             <label class="acc-row-label" for="acc-images-day">Immagini al giorno</label>
-                            <span class="acc-row-help">Numero massimo di immagini generabili.</span>
+                            <span class="acc-row-help">Immagini generabili al giorno.</span>
                             <div class="acc-input-unit">
                                 <input id="acc-images-day" class="control" type="number" :value="form.imagesDay" placeholder="20"
                                     @input="set('imagesDay', $event.target.value)" />
