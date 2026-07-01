@@ -82,9 +82,6 @@ function confirmDelete() {
                 <button type="button" class="btn btn-light btn-sm" style="color: var(--danger)" @click="confirmingDelete = true">
                     <Icon name="trash" :size="15" /> Elimina
                 </button>
-                <Link :href="route('posts.edit', post.id)" class="btn btn-dark btn-sm">
-                    <Icon name="pencil" :size="15" /> Modifica
-                </Link>
             </div>
         </div>
 

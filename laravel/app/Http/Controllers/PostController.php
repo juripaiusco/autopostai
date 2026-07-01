@@ -218,7 +218,7 @@ class PostController extends Controller
     /**
      * Form di modifica di un post esistente (solo programmati/bozze, vedi destroy() per i permessi).
      */
-    public function edit(Request $request, Post $post): Response
+    public function edit(Request $request, Post $post): Response|RedirectResponse
     {
         $me = $request->user();
         $isAdmin = $me->parent_id === null;
@@ -229,6 +229,10 @@ class PostController extends Controller
             || $post->user_id === $me->id;
 
         abort_unless($allowed, 403);
+
+        if ($this->status($post) === 'published') {
+            return redirect()->route('posts.show', $post);
+        }
 
         $userChannels = collect($me->channels ?? [])
             ->filter(fn ($c) => !empty($c['on']))
@@ -359,6 +363,8 @@ class PostController extends Controller
             || $post->user_id === $me->id;
 
         abort_unless($allowed, 403);
+
+        abort_if($this->status($post) === 'published', 403, 'Un post pubblicato non può essere modificato.');
 
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
