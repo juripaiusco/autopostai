@@ -7,12 +7,12 @@ import SectionCard from '@/Components/Layout/SectionCard.vue';
 import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import SecretField from '@/Components/UI/SecretField.vue';
-import NumberStepper from '@/Components/UI/NumberStepper.vue';
 import ConnectionBadge from '@/Components/UI/ConnectionBadge.vue';
 import ToggleSwitch from '@/Components/UI/ToggleSwitch.vue';
 import FieldRow from '@/Components/UI/FieldRow.vue';
 import OptionRow from '@/Components/UI/OptionRow.vue';
 import InlineUsageBar from '@/Components/UI/InlineUsageBar.vue';
+import ChannelSettingsRow from '@/Components/Domain/Account/ChannelSettingsRow.vue';
 
 const props = defineProps({
     mode: { type: String, default: 'create' }, // 'create' | 'edit'
@@ -384,104 +384,25 @@ function goToIntegration(chId) {
 
             <!-- ──────────────── Tab: Canali ──────────────── -->
             <div v-if="activeTab === 'canali'" id="acc-panel-canali" role="tabpanel" aria-labelledby="acc-tab-canali" class="acc-reveal">
-                <div class="acc-card">
-                    <div class="acc-sec-head with-aside">
-                        <div>
-                            <div class="acc-sec-title">Canali di pubblicazione</div>
-                            <div class="acc-sec-sub">Scegli come gestire la comunicazione e su quali canali può pubblicare questo account.</div>
-                        </div>
+                <SectionCard title="Canali di pubblicazione" with-aside
+                    subtitle="Scegli come gestire la comunicazione e su quali canali può pubblicare questo account.">
+                    <template #aside>
                         <span class="acc-chip">
                             <Icon name="check" :size="14" />{{ activeCh }} attivi
                         </span>
-                    </div>
+                    </template>
 
                     <div class="acc-channels">
-                        <div v-for="ch in CHANNELS" :key="ch.id"
-                            class="acc-ch" :class="{ on: form.channels[ch.id].on }">
-
-                            <!-- Channel header (toggle row) -->
-                            <div class="acc-ch-head" role="switch" :aria-checked="form.channels[ch.id].on" tabindex="0"
-                                :aria-label="'Attiva ' + ch.label"
-                                @click="set('channels.' + ch.id + '.on', !form.channels[ch.id].on)"
-                                @keydown.enter.prevent="set('channels.' + ch.id + '.on', !form.channels[ch.id].on)"
-                                @keydown.space.prevent="set('channels.' + ch.id + '.on', !form.channels[ch.id].on)">
-                                <div :class="['acc-ch-ic', ch.ic, !form.channels[ch.id].on ? 'off' : '']">
-                                    <ChannelIcon :id="ch.id" :size="20" />
-                                </div>
-                                <div class="acc-ch-grow">
-                                    <div :class="['acc-ch-name', !form.channels[ch.id].on ? 'off' : '']">{{ ch.label }}</div>
-                                    <div class="acc-ch-meta">
-                                        {{ form.channels[ch.id].on
-                                            ? (form.channels[ch.id].reply_on ? CH_COPY[ch.kind].optTitle + ' · attivo' : 'Pubblicazione attiva')
-                                            : ch.meta }}
-                                    </div>
-                                </div>
-                                <div class="acc-ch-right" @click.stop>
-                                    <ConnectionBadge v-if="form.channels[ch.id].on" :state="chConn(ch.id)" />
-                                    <span v-else class="acc-ch-off-tag">Non attivo</span>
-                                    <ToggleSwitch :model-value="form.channels[ch.id].on"
-                                        @update:model-value="set('channels.' + ch.id + '.on', $event)" />
-                                </div>
-                            </div>
-
-                            <!-- Channel body (expanded when enabled) -->
-                            <div v-if="form.channels[ch.id].on" class="acc-ch-body acc-reveal">
-
-                                <!-- Not connected warning -->
-                                <div v-if="chConn(ch.id) !== 'ok'"
-                                    class="acc-ch-opt" style="border-color:var(--st-sch-bd);background:var(--st-sch-bg)">
-                                    <div class="acc-ch-opt-row">
-                                        <div class="acc-ch-opt-txt">
-                                            <div class="acc-ch-opt-title" style="color:var(--st-sch-fg)">Canale non ancora collegato</div>
-                                            <div class="acc-ch-opt-help">Collega le credenziali in AI &amp; Integrazioni per poter pubblicare.</div>
-                                        </div>
-                                        <button type="button" class="acc-verify" @click="goToIntegration(ch.id)">
-                                            <Icon name="link" :size="15" />
-                                            Vai a Integrazioni
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Connected: what this channel can do -->
-                                <div v-else class="acc-ch-opt" style="border-color:var(--st-pub-bd);background:var(--st-pub-bg)">
-                                    <div class="acc-ch-opt-row">
-                                        <div class="acc-ch-opt-txt">
-                                            <div class="acc-ch-opt-title" style="color:var(--st-pub-fg)">Canale collegato</div>
-                                            <div class="acc-ch-opt-help">{{ ch.meta }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Comments/replies option -->
-                                <div class="acc-ch-opt">
-                                    <div class="acc-ch-opt-row">
-                                        <div class="acc-ch-opt-txt">
-                                            <div class="acc-ch-opt-title">{{ CH_COPY[ch.kind].optTitle }}</div>
-                                            <div class="acc-ch-opt-help">{{ CH_COPY[ch.kind].optHelp }}</div>
-                                        </div>
-                                        <ToggleSwitch :model-value="form.channels[ch.id].reply_on"
-                                            @update:model-value="onToggleReplyOn(ch.id, $event)" />
-                                    </div>
-
-                                    <!-- Reply count stepper (when replies enabled) -->
-                                    <div v-if="form.channels[ch.id].reply_on" class="acc-count-field acc-reveal">
-                                        <div class="acc-ch-opt-row">
-                                            <div class="acc-ch-opt-txt">
-                                                <div class="acc-ch-opt-title" style="font-weight:500;color:var(--g600)">{{ CH_COPY[ch.kind].countTitle }}</div>
-                                                <div class="acc-ch-opt-help">{{ CH_COPY[ch.kind].countHelp }}</div>
-                                            </div>
-                                            <div class="acc-count">
-                                                <NumberStepper :model-value="form.channels[ch.id].reply_n ?? 5" :min="1" :max="200"
-                                                    @update:model-value="set('channels.' + ch.id + '.reply_n', $event)" />
-                                                <!-- <span style="font-size:12.5px;color:var(--g500);white-space:nowrap">{{ CH_COPY[ch.kind].unit }}</span> -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <ChannelSettingsRow v-for="ch in CHANNELS" :key="ch.id"
+                            :channel="ch" :copy="CH_COPY[ch.kind]"
+                            :on="form.channels[ch.id].on" :reply-on="form.channels[ch.id].reply_on"
+                            :reply-n="form.channels[ch.id].reply_n" :connection-state="chConn(ch.id)"
+                            @update:on="set('channels.' + ch.id + '.on', $event)"
+                            @toggle-reply="onToggleReplyOn(ch.id, $event)"
+                            @update:reply-n="set('channels.' + ch.id + '.reply_n', $event)"
+                            @go-to-integration="goToIntegration(ch.id)" />
                     </div>
-                </div>
+                </SectionCard>
             </div>
 
             <!-- ──────────────── Tab: AI & Integrazioni ──────────────── -->
