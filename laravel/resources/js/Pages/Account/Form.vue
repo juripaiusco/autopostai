@@ -3,12 +3,16 @@ import { ref, reactive, computed } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/Layout/PageHeader.vue';
+import SectionCard from '@/Components/Layout/SectionCard.vue';
 import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import SecretField from '@/Components/UI/SecretField.vue';
 import NumberStepper from '@/Components/UI/NumberStepper.vue';
 import ConnectionBadge from '@/Components/UI/ConnectionBadge.vue';
 import ToggleSwitch from '@/Components/UI/ToggleSwitch.vue';
+import FieldRow from '@/Components/UI/FieldRow.vue';
+import OptionRow from '@/Components/UI/OptionRow.vue';
+import InlineUsageBar from '@/Components/UI/InlineUsageBar.vue';
 
 const props = defineProps({
     mode: { type: String, default: 'create' }, // 'create' | 'edit'
@@ -296,145 +300,86 @@ function goToIntegration(chId) {
             <div v-if="activeTab === 'profile'" id="acc-panel-profile" role="tabpanel" aria-labelledby="acc-tab-profile" class="acc-grid-2 acc-grid-2--equal acc-grid-2--profile acc-reveal">
 
                 <!-- Profilo Account -->
-                <div class="acc-card">
-                    <div class="acc-sec-head" :class="{ 'with-aside': mode === 'edit' }">
-                        <div>
-                            <div class="acc-sec-title">Profilo Account</div>
-                            <div class="acc-sec-sub">
-                                {{ mode === 'edit' ? 'Dati di accesso dell\'account.' : 'Sta venendo creato da ' + (account?.createdBy ?? userName) }}
-                            </div>
-                        </div>
+                <SectionCard title="Profilo Account"
+                    :subtitle="mode === 'edit' ? 'Dati di accesso dell\'account.' : 'Sta venendo creato da ' + (account?.createdBy ?? userName)"
+                    :with-aside="mode === 'edit'">
+                    <template #aside>
                         <span v-if="mode === 'edit'" class="acc-chip">
                             <Icon name="pencil" :size="14" />Modificato {{ account?.updatedAt ?? '—' }}
                         </span>
-                    </div>
+                    </template>
 
-                    <div class="acc-field">
-                        <label class="acc-row-label" for="acc-name">Nome</label>
-                        <span class="acc-row-help">Solo ad uso interno, non viene pubblicato.</span>
+                    <FieldRow id="acc-name" label="Nome" help="Solo ad uso interno, non viene pubblicato.">
                         <input id="acc-name" class="control" type="text" :value="form.name" placeholder="Es. Trattoria da Marco"
                             @input="set('name', $event.target.value)" />
-                    </div>
-                    <div class="acc-field">
-                        <label class="acc-row-label" for="acc-email">E-mail</label>
-                        <span class="acc-row-help">Serve per l'accesso. Solo ad uso interno, non viene pubblicata.</span>
+                    </FieldRow>
+                    <FieldRow id="acc-email" label="E-mail" help="Serve per l'accesso. Solo ad uso interno, non viene pubblicata.">
                         <input id="acc-email" class="control" type="email" :value="form.email" placeholder="nome@dominio.it"
                             @input="set('email', $event.target.value)" />
-                    </div>
-                    <div class="acc-field" style="margin-bottom:0">
-                        <label class="acc-row-label" for="acc-password">Password</label>
-                        <span class="acc-row-help">{{ mode === 'edit' ? 'Lascia invariato per non cambiarla.' : 'Scegli una password sicura.' }}</span>
+                    </FieldRow>
+                    <FieldRow id="acc-password" label="Password" style="margin-bottom:0"
+                        :help="mode === 'edit' ? 'Lascia invariato per non cambiarla.' : 'Scegli una password sicura.'">
                         <SecretField id="acc-password" :model-value="form.password" placeholder="Almeno 8 caratteri"
                             @update:model-value="set('password', $event)" />
-                    </div>
-                </div>
+                    </FieldRow>
+                </SectionCard>
 
                 <!-- Account Manager -->
-                <div class="acc-card">
-                    <div class="acc-sec-head">
-                        <div class="acc-sec-title">Account Manager</div>
-                        <div class="acc-sec-sub">Gestione amministrativa dell'account: limiti, piano e gerarchia.</div>
-                    </div>
+                <SectionCard title="Account Manager" subtitle="Gestione amministrativa dell'account: limiti, piano e gerarchia.">
 
                     <!-- Sub-utenti toggle -->
-                    <div class="acc-ch-opt" style="margin-bottom: 22px">
-                        <div class="acc-ch-opt-row">
-                            <div class="acc-ch-opt-txt">
-                                <div class="acc-ch-opt-title">L'account può creare sotto-utenti</div>
-                                <div class="acc-ch-opt-help">Attivalo se questo account gestisce più brand e deve poter creare account collegati.</div>
-                            </div>
+                    <OptionRow style="margin-bottom: 22px" title="L'account può creare sotto-utenti"
+                        help="Attivalo se questo account gestisce più brand e deve poter creare account collegati.">
+                        <template #control>
                             <ToggleSwitch :model-value="form.canSubusers" @update:model-value="set('canSubusers', $event)" />
-                        </div>
-                    </div>
+                        </template>
+                    </OptionRow>
 
                     <!-- Sotto-utenti / Manager, Token al mese, Immagini al giorno -->
                     <div class="acc-field-row acc-field-row--3">
-                        <div v-if="form.canSubusers" class="acc-field" style="margin-bottom:0">
-                            <label class="acc-row-label" for="acc-subusers-limit">Numero massimo sotto-utenti</label>
-                            <span class="acc-row-help">Quanti utenti si possono creare.</span>
+                        <FieldRow v-if="form.canSubusers" id="acc-subusers-limit" label="Numero massimo sotto-utenti"
+                            help="Quanti utenti si possono creare." style="margin-bottom:0">
                             <div class="acc-input-unit">
                                 <input id="acc-subusers-limit" class="control" type="number" :value="form.subusersLimit" placeholder="5"
                                     @input="set('subusersLimit', $event.target.value)" />
                                 <span class="unit">utenti</span>
                             </div>
-                            <div v-if="mode === 'edit' && account?.usage" class="acc-inline-usage">
-                                <div class="acc-inline-usage-bar">
-                                    <div class="acc-inline-usage-fill"
-                                        :style="{
-                                            width: Math.min(Math.round((account.usage.subusersActive ?? 0) / (Number(form.subusersLimit) || 1) * 100), 100) + '%',
-                                            background: 'var(--sky)'
-                                        }" />
-                                </div>
-                                <div class="acc-inline-usage-row">
-                                    <span>sotto-utenti attivi</span>
-                                    <span class="acc-inline-usage-val" style="color:var(--sky-strong)">
-                                        {{ account.usage.subusersActive ?? 0 }} / {{ Number(form.subusersLimit) || 0 }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-else class="acc-field" style="margin-bottom:0">
-                            <label class="acc-row-label" for="acc-manager">Manager assegnato</label>
-                            <span class="acc-row-help">{{ form.manager ? 'Account gestito da un manager.' : "L'account non ha ancora un manager." }}</span>
+                            <InlineUsageBar v-if="mode === 'edit' && account?.usage" label="sotto-utenti attivi"
+                                :current="account.usage.subusersActive ?? 0" :max="Number(form.subusersLimit) || 1" />
+                        </FieldRow>
+                        <FieldRow v-else id="acc-manager" label="Manager assegnato" style="margin-bottom:0"
+                            :help="form.manager ? 'Account gestito da un manager.' : &quot;L'account non ha ancora un manager.&quot;">
                             <select id="acc-manager" class="control" :value="form.parent_id" @change="set('manager', $event.target.value)">
                                 <option value="">Nessun manager</option>
                                 <option v-for="m in managers" :key="m.id" :value="m.id">{{ m.name }}</option>
                                 <option v-if="!managers.length" value="mock-1">Studio Sociale · agenzia</option>
                                 <option v-if="!managers.length" value="mock-2">Marketing interno</option>
                             </select>
-                        </div>
+                        </FieldRow>
 
-                        <div class="acc-field" style="margin-bottom:0">
-                            <label class="acc-row-label" for="acc-tokens-month">Token al mese</label>
-                            <span class="acc-row-help">Numero di token utilizzabili al mese.</span>
+                        <FieldRow id="acc-tokens-month" label="Token al mese" help="Numero di token utilizzabili al mese." style="margin-bottom:0">
                             <div class="acc-input-unit">
                                 <input id="acc-tokens-month" class="control" type="number" :value="form.tokensMonth" placeholder="50000"
                                     @input="set('tokensMonth', $event.target.value)" />
                                 <span class="unit">token</span>
                             </div>
-                            <div v-if="mode === 'edit' && account?.usage" class="acc-inline-usage">
-                                <div class="acc-inline-usage-bar">
-                                    <div class="acc-inline-usage-fill"
-                                        :style="{
-                                            width: Math.min(Math.round(account.usage.tokensUsed / (Number(form.tokensMonth) || 50000) * 100), 100) + '%',
-                                            background: 'var(--sky)'
-                                        }" />
-                                </div>
-                                <div class="acc-inline-usage-row">
-                                    <span>token usati questo mese</span>
-                                    <span class="acc-inline-usage-val" style="color:var(--sky-strong)">
-                                        {{ account.usage.tokensUsed.toLocaleString('it') }} / {{ (Number(form.tokensMonth) || 50000).toLocaleString('it') }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                            <InlineUsageBar v-if="mode === 'edit' && account?.usage" label="token usati questo mese"
+                                :current="account.usage.tokensUsed" :max="Number(form.tokensMonth) || 50000"
+                                :formatter="(n) => n.toLocaleString('it')" />
+                        </FieldRow>
 
-                        <div class="acc-field" style="margin-bottom:0">
-                            <label class="acc-row-label" for="acc-images-day">Immagini al giorno</label>
-                            <span class="acc-row-help">Immagini generabili al giorno.</span>
+                        <FieldRow id="acc-images-day" label="Immagini al giorno" help="Immagini generabili al giorno." style="margin-bottom:0">
                             <div class="acc-input-unit">
                                 <input id="acc-images-day" class="control" type="number" :value="form.imagesDay" placeholder="20"
                                     @input="set('imagesDay', $event.target.value)" />
                                 <span class="unit">img al dì</span>
                             </div>
-                            <div v-if="mode === 'edit' && account?.usage" class="acc-inline-usage">
-                                <div class="acc-inline-usage-bar">
-                                    <div class="acc-inline-usage-fill"
-                                        :style="{
-                                            width: Math.min(Math.round(account.usage.imagesUsed / (Number(form.imagesDay) || 20) * 100), 100) + '%',
-                                            background: 'var(--st-pub-bd)'
-                                        }" />
-                                </div>
-                                <div class="acc-inline-usage-row">
-                                    <span>immagini generate oggi</span>
-                                    <span class="acc-inline-usage-val" style="color:var(--st-pub-fg)">
-                                        {{ account.usage.imagesUsed }} / {{ Number(form.imagesDay) || 20 }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                            <InlineUsageBar v-if="mode === 'edit' && account?.usage" label="immagini generate oggi"
+                                :current="account.usage.imagesUsed" :max="Number(form.imagesDay) || 20"
+                                color="var(--st-pub-bd)" value-color="var(--st-pub-fg)" />
+                        </FieldRow>
                     </div>
-                </div>
+                </SectionCard>
             </div>
 
             <!-- ──────────────── Tab: Canali ──────────────── -->
