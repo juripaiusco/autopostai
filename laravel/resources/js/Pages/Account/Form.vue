@@ -5,14 +5,20 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/Layout/PageHeader.vue';
 import SectionCard from '@/Components/Layout/SectionCard.vue';
 import Icon from '@/Components/Icon.vue';
-import ChannelIcon from '@/Components/ChannelIcon.vue';
 import SecretField from '@/Components/UI/SecretField.vue';
-import ConnectionBadge from '@/Components/UI/ConnectionBadge.vue';
 import ToggleSwitch from '@/Components/UI/ToggleSwitch.vue';
 import FieldRow from '@/Components/UI/FieldRow.vue';
 import OptionRow from '@/Components/UI/OptionRow.vue';
 import InlineUsageBar from '@/Components/UI/InlineUsageBar.vue';
 import ChannelSettingsRow from '@/Components/Domain/Account/ChannelSettingsRow.vue';
+import IntegrationMenu from '@/Components/Domain/Account/IntegrationMenu.vue';
+import IntegrationPanelHeader from '@/Components/Domain/Account/IntegrationPanelHeader.vue';
+import AiFields from '@/Components/Domain/Account/AiFields.vue';
+import OpenAiFields from '@/Components/Domain/Account/OpenAiFields.vue';
+import MetaFields from '@/Components/Domain/Account/MetaFields.vue';
+import LinkedinFields from '@/Components/Domain/Account/LinkedinFields.vue';
+import WordpressFields from '@/Components/Domain/Account/WordpressFields.vue';
+import NewsletterFields from '@/Components/Domain/Account/NewsletterFields.vue';
 
 const props = defineProps({
     mode: { type: String, default: 'create' }, // 'create' | 'edit'
@@ -69,12 +75,6 @@ const INTG_TINT = {
     newsletter: { bg: 'rgba(75,85,99,.12)',          fg: 'var(--ch-nl)' },
 };
 
-const NL_PROVIDERS = [
-    { id: 'mailchimp', name: 'MailChimp',   sub: 'API key + audience' },
-    { id: 'brevo',     name: 'Brevo',       sub: 'API key + lista' },
-    { id: 'smtp',      name: 'SMTP custom', sub: 'Server email proprio' },
-];
-
 /* ------------------------------------------------------------------ */
 /* Form state                                                           */
 /* ------------------------------------------------------------------ */
@@ -126,7 +126,6 @@ function set(path, value) {
 
 const activeTab  = ref('profile');
 const activeIntg = ref('ai');
-const openNl     = ref('mailchimp');
 const toast      = ref(null);
 let toastTimer   = null;
 
@@ -212,13 +211,11 @@ function intgConn(id) {
     return form[id]?.connected ? 'ok' : 'off';
 }
 
-function nlConn(providerId) {
-    return form.newsletter[providerId]?.connected ? 'ok' : 'off';
-}
-
 function chConn(chId) {
     return intgConn(CH_TO_INTG[chId]);
 }
+
+const integrationConnStates = computed(() => Object.fromEntries(INTEGRATIONS.map(i => [i.id, intgConn(i.id)])));
 
 function onToggleReplyOn(chId, value) {
     set('channels.' + chId + '.reply_on', value);
@@ -407,316 +404,38 @@ function goToIntegration(chId) {
 
             <!-- ──────────────── Tab: AI & Integrazioni ──────────────── -->
             <div v-if="activeTab === 'imp'" id="acc-panel-imp" role="tabpanel" aria-labelledby="acc-tab-imp" class="acc-reveal">
-                <div class="acc-card">
-                    <div class="acc-sec-head">
-                        <div class="acc-sec-title">AI &amp; Integrazioni</div>
-                        <div class="acc-sec-sub">Profilo dell'AI e credenziali dei servizi. Le chiavi sono uniche, non duplicarle.</div>
-                    </div>
-
+                <SectionCard title="AI & Integrazioni" subtitle="Profilo dell'AI e credenziali dei servizi. Le chiavi sono uniche, non duplicarle.">
                     <div class="acc-imenu-wrap">
-                        <!-- Left menu -->
-                        <div class="acc-imenu">
-                            <button v-for="intg in INTEGRATIONS" :key="intg.id" type="button"
-                                class="acc-imenu-btn" :class="{ active: activeIntg === intg.id }"
-                                @click="activeIntg = intg.id">
-                                <div class="acc-imenu-ic">
-                                    <Icon v-if="intg.id === 'ai'" name="sparkles" :size="16" />
-                                    <Icon v-else-if="intg.id === 'openai'" name="key" :size="16" />
-                                    <ChannelIcon v-else :id="intg.id === 'meta' ? 'facebook' : intg.id === 'newsletter' ? 'newsletter' : intg.id" :size="16" />
-                                </div>
-                                <div class="acc-imenu-grow">
-                                    <span class="acc-imenu-name">{{ intg.name }}</span>
-                                    <span class="acc-imenu-st">
-                                        {{ intgConn(intg.id) === null ? 'Sempre attivo' : intgConn(intg.id) === 'ok' ? 'Connesso' : 'Non connesso' }}
-                                    </span>
-                                </div>
-                                <span v-if="intgConn(intg.id) !== null" class="acc-imenu-dot"
-                                    :style="{ background: intgConn(intg.id) === 'ok' ? 'var(--st-pub-bd)' : 'var(--g300)' }" />
-                            </button>
-                        </div>
+                        <IntegrationMenu :items="INTEGRATIONS" :active="activeIntg" :conn-states="integrationConnStates"
+                            @select="activeIntg = $event" />
 
                         <!-- Right panel -->
                         <div class="acc-ipanel">
-                            <div class="acc-iphead">
-                                <div class="acc-iphead-ic" :style="{ background: INTG_TINT[activeIntg].bg, color: INTG_TINT[activeIntg].fg }">
-                                    <Icon v-if="activeIntg === 'ai'" name="sparkles" :size="20" />
-                                    <Icon v-else-if="activeIntg === 'openai'" name="key" :size="20" />
-                                    <ChannelIcon v-else :id="activeIntg === 'meta' ? 'facebook' : activeIntg === 'newsletter' ? 'newsletter' : activeIntg" :size="20" />
-                                </div>
-                                <div>
-                                    <div class="acc-iphead-t">{{ INTEGRATIONS.find(i => i.id === activeIntg)?.name }}</div>
-                                    <div class="acc-iphead-s">{{ INTEGRATIONS.find(i => i.id === activeIntg)?.sub }}</div>
-                                </div>
-                                <div class="acc-iphead-r">
-                                    <ConnectionBadge v-if="intgConn(activeIntg) !== null" :state="intgConn(activeIntg)" />
-                                </div>
-                            </div>
+                            <IntegrationPanelHeader :id="activeIntg"
+                                :name="INTEGRATIONS.find(i => i.id === activeIntg)?.name"
+                                :sub="INTEGRATIONS.find(i => i.id === activeIntg)?.sub"
+                                :tint="INTG_TINT[activeIntg]" :conn-state="integrationConnStates[activeIntg]" />
 
-                            <!-- AI fields -->
-                            <div v-if="activeIntg === 'ai'" style="display:flex;flex-direction:column;gap:4px">
-                                <div class="acc-field">
-                                    <label class="acc-row-label" for="acc-ai-profile">Profilo dell'AI</label>
-                                    <span class="acc-row-help">Descrivi chi è l'AI: nome, ruolo, personalità e tono. È il prompt di sistema.</span>
-                                    <textarea id="acc-ai-profile" class="control" :value="form.ai.profile" style="min-height:150px"
-                                        placeholder="Descrivi nel modo più dettagliato possibile il profilo che deve avere l'AI…"
-                                        @input="set('ai.profile', $event.target.value)" />
-                                </div>
-                                <div class="acc-field">
-                                    <label class="acc-row-label" for="acc-ai-knows">Cosa deve sapere l'AI</label>
-                                    <span class="acc-row-help">Le informazioni concrete da conoscere: orari, prodotti, regole.</span>
-                                    <textarea id="acc-ai-knows" class="control" :value="form.ai.knows" style="min-height:130px"
-                                        placeholder="Scrivi quello che vuoi che l'AI conosca…"
-                                        @input="set('ai.knows', $event.target.value)" />
-                                </div>
-                                <div class="acc-field" style="margin-bottom:0">
-                                    <label class="acc-row-label" for="acc-ai-comment">Come deve commentare l'AI</label>
-                                    <span class="acc-row-help">Lo stile generale con cui l'AI risponde ai commenti e alle email.</span>
-                                    <textarea id="acc-ai-comment" class="control" :value="form.ai.commentStyle" style="min-height:110px"
-                                        placeholder="Scrivi come l'AI deve commentare e rispondere…"
-                                        @input="set('ai.commentStyle', $event.target.value)" />
-                                </div>
-                            </div>
+                            <AiFields v-if="activeIntg === 'ai'" :model-value="form.ai"
+                                @update="(field, value) => set('ai.' + field, value)" />
 
-                            <!-- OpenAI fields -->
-                            <div v-else-if="activeIntg === 'openai'">
-                                <div class="acc-field">
-                                    <label class="acc-row-label" for="acc-openai-key">API Key</label>
-                                    <span class="acc-row-help">La chiave segreta del tuo account OpenAI. Viene usata per generare testi e immagini.</span>
-                                    <SecretField id="acc-openai-key" :model-value="form.openai.apiKey" placeholder="sk-proj-…"
-                                        @update:model-value="set('openai.apiKey', $event)" />
-                                </div>
-                                <div class="acc-verify-row">
-                                    <ConnectionBadge :state="form.openai.connected ? 'ok' : 'off'" />
-                                    <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
-                                </div>
-                            </div>
+                            <OpenAiFields v-else-if="activeIntg === 'openai'" :model-value="form.openai"
+                                @update="(field, value) => set('openai.' + field, value)" />
 
-                            <!-- Meta fields -->
-                            <div v-else-if="activeIntg === 'meta'">
-                                <div class="acc-field">
-                                    <label class="acc-row-label" for="acc-meta-pageid">ID della pagina Facebook</label>
-                                    <span class="acc-row-help">L'ID numerico della pagina su cui pubblicare. Instagram pubblica tramite la pagina collegata.</span>
-                                    <input id="acc-meta-pageid" class="control" type="text" :value="form.meta.pageId" placeholder="es. 104882736591023"
-                                        @input="set('meta.pageId', $event.target.value)" />
-                                </div>
-                                <div class="acc-verify-row">
-                                    <ConnectionBadge :state="form.meta.connected ? 'ok' : 'off'" />
-                                    <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
-                                </div>
-                            </div>
+                            <MetaFields v-else-if="activeIntg === 'meta'" :model-value="form.meta"
+                                @update="(field, value) => set('meta.' + field, value)" />
 
-                            <!-- LinkedIn fields -->
-                            <div v-else-if="activeIntg === 'linkedin'">
-                                <div class="acc-grid-2">
-                                    <div class="acc-field">
-                                        <label class="acc-row-label" for="acc-li-clientid">Client ID</label>
-                                        <span class="acc-row-help">Dall'app LinkedIn Developers.</span>
-                                        <input id="acc-li-clientid" class="control" type="text" :value="form.linkedin.clientId" placeholder="86xxxxxxxxxx"
-                                            @input="set('linkedin.clientId', $event.target.value)" />
-                                    </div>
-                                    <div class="acc-field">
-                                        <label class="acc-row-label" for="acc-li-secret">Client Secret</label>
-                                        <span class="acc-row-help">Tienilo riservato.</span>
-                                        <SecretField id="acc-li-secret" :model-value="form.linkedin.clientSecret" placeholder="••••••••"
-                                            @update:model-value="set('linkedin.clientSecret', $event)" />
-                                    </div>
-                                </div>
-                                <div class="acc-field">
-                                    <label class="acc-row-label" for="acc-li-pageid">ID della pagina LinkedIn</label>
-                                    <span class="acc-row-help">La pagina aziendale su cui pubblicare.</span>
-                                    <input id="acc-li-pageid" class="control" type="text" :value="form.linkedin.pageId" placeholder="es. 7654321"
-                                        @input="set('linkedin.pageId', $event.target.value)" />
-                                </div>
-                                <div class="acc-field">
-                                    <label class="acc-row-label" for="acc-li-token">
-                                        Token LinkedIn <span class="acc-readonly-tag">solo lettura</span>
-                                    </label>
-                                    <span class="acc-row-help">Generato automaticamente dopo l'autorizzazione. Non modificabile a mano.</span>
-                                    <SecretField id="acc-li-token" :model-value="form.linkedin.token" :read-only="true" :copyable="true"
-                                        placeholder="Si genera dopo «Verifica connessione»" />
-                                </div>
-                                <div class="acc-verify-row">
-                                    <ConnectionBadge :state="form.linkedin.connected ? 'ok' : 'off'" />
-                                    <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
-                                    <button type="button" class="acc-verify" style="margin-left:auto"
-                                        @click="getLinkedinToken">
-                                        <Icon name="link" :size="15" />
-                                        Ottieni token
-                                    </button>
-                                </div>
-                            </div>
+                            <LinkedinFields v-else-if="activeIntg === 'linkedin'" :model-value="form.linkedin"
+                                @update="(field, value) => set('linkedin.' + field, value)" @get-token="getLinkedinToken" />
 
-                            <!-- WordPress fields -->
-                            <div v-else-if="activeIntg === 'wordpress'">
-                                <div class="acc-field">
-                                    <label class="acc-row-label" for="acc-wp-url">URL del sito</label>
-                                    <span class="acc-row-help">L'indirizzo del tuo sito WordPress.</span>
-                                    <input id="acc-wp-url" class="control" type="url" :value="form.wordpress.url" placeholder="https://iltuosito.it"
-                                        @input="set('wordpress.url', $event.target.value)" />
-                                </div>
-                                <div class="acc-grid-2">
-                                    <div class="acc-field">
-                                        <label class="acc-row-label" for="acc-wp-username">Username</label>
-                                        <span class="acc-row-help">Utente con permessi di pubblicazione.</span>
-                                        <input id="acc-wp-username" class="control" type="text" :value="form.wordpress.username" placeholder="admin"
-                                            @input="set('wordpress.username', $event.target.value)" />
-                                    </div>
-                                    <div class="acc-field">
-                                        <label class="acc-row-label" for="acc-wp-password">Application Password</label>
-                                        <span class="acc-row-help">Usa una password applicativa, non quella di accesso.</span>
-                                        <SecretField id="acc-wp-password" :model-value="form.wordpress.password" placeholder="xxxx xxxx xxxx xxxx"
-                                            @update:model-value="set('wordpress.password', $event)" />
-                                    </div>
-                                </div>
-                                <div class="acc-field">
-                                    <label class="acc-row-label" for="acc-wp-category">Categoria ID</label>
-                                    <span class="acc-row-help">L'ID della categoria in cui salvare gli articoli.</span>
-                                    <input id="acc-wp-category" class="control" type="text" :value="form.wordpress.categoryId" placeholder="es. 8"
-                                        @input="set('wordpress.categoryId', $event.target.value)" />
-                                </div>
-                                <div class="acc-verify-row">
-                                    <ConnectionBadge :state="form.wordpress.connected ? 'ok' : 'off'" />
-                                    <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
-                                </div>
-                            </div>
+                            <WordpressFields v-else-if="activeIntg === 'wordpress'" :model-value="form.wordpress"
+                                @update="(field, value) => set('wordpress.' + field, value)" />
 
-                            <!-- Newsletter fields -->
-                            <div v-else-if="activeIntg === 'newsletter'">
-                                <p class="acc-hint-inline" style="margin-bottom:14px">
-                                    <Icon name="info" :size="14" />
-                                    Collega <b style="margin:0 4px;color:var(--g700)">uno</b> dei provider che usi per le tue campagne.
-                                </p>
-
-                                <div class="acc-acc">
-                                    <div v-for="p in NL_PROVIDERS" :key="p.id"
-                                        class="acc-acc-item" :class="{ open: openNl === p.id }">
-                                        <div class="acc-acc-head" role="button" tabindex="0" :aria-expanded="openNl === p.id"
-                                            :aria-label="'Espandi ' + p.name"
-                                            @click="openNl = openNl === p.id ? '' : p.id"
-                                            @keydown.enter.prevent="openNl = openNl === p.id ? '' : p.id"
-                                            @keydown.space.prevent="openNl = openNl === p.id ? '' : p.id">
-                                            <div class="acc-acc-ic">
-                                                <Icon :name="p.id === 'smtp' ? 'settings' : 'chat'" :size="18" />
-                                            </div>
-                                            <div class="acc-acc-grow">
-                                                <div class="acc-acc-title">{{ p.name }}</div>
-                                                <div class="acc-acc-sub">{{ p.sub }}</div>
-                                            </div>
-                                            <ConnectionBadge :state="nlConn(p.id)" />
-                                            <Icon name="chevron" :size="18" class="acc-acc-chev" />
-                                        </div>
-
-                                        <div v-if="openNl === p.id" class="acc-acc-body acc-reveal">
-                                            <!-- MailChimp -->
-                                            <template v-if="p.id === 'mailchimp'">
-                                                <div class="acc-field">
-                                                    <label class="acc-row-label" for="acc-nl-mc-key">API Key</label>
-                                                    <span class="acc-row-help">Dalla sezione Account › Extra › API keys di MailChimp.</span>
-                                                    <SecretField id="acc-nl-mc-key" :model-value="form.newsletter.mailchimp.apiKey" placeholder="xxxxxxxx-us21"
-                                                        @update:model-value="set('newsletter.mailchimp.apiKey', $event)" />
-                                                </div>
-                                                <div class="acc-grid-2">
-                                                    <div class="acc-field">
-                                                        <label class="acc-row-label" for="acc-nl-mc-server">Server prefix</label>
-                                                        <span class="acc-row-help">Es. us21 (è nel dominio della tua dashboard).</span>
-                                                        <input id="acc-nl-mc-server" class="control" type="text" :value="form.newsletter.mailchimp.serverPrefix" placeholder="us21"
-                                                            @input="set('newsletter.mailchimp.serverPrefix', $event.target.value)" />
-                                                    </div>
-                                                    <div class="acc-field">
-                                                        <label class="acc-row-label" for="acc-nl-mc-audience">Audience ID</label>
-                                                        <span class="acc-row-help">La lista a cui inviare.</span>
-                                                        <input id="acc-nl-mc-audience" class="control" type="text" :value="form.newsletter.mailchimp.audienceId" placeholder="9f3c1a7b2e"
-                                                            @input="set('newsletter.mailchimp.audienceId', $event.target.value)" />
-                                                    </div>
-                                                </div>
-                                            </template>
-
-                                            <!-- Brevo -->
-                                            <template v-else-if="p.id === 'brevo'">
-                                                <div class="acc-field">
-                                                    <label class="acc-row-label" for="acc-nl-brevo-key">API Key</label>
-                                                    <span class="acc-row-help">Dalla sezione SMTP &amp; API di Brevo.</span>
-                                                    <SecretField id="acc-nl-brevo-key" :model-value="form.newsletter.brevo.apiKey" placeholder="xkeysib-…"
-                                                        @update:model-value="set('newsletter.brevo.apiKey', $event)" />
-                                                </div>
-                                                <div class="acc-grid-2">
-                                                    <div class="acc-field">
-                                                        <label class="acc-row-label" for="acc-nl-brevo-list">List ID</label>
-                                                        <span class="acc-row-help">L'ID numerico della lista.</span>
-                                                        <input id="acc-nl-brevo-list" class="control" type="text" :value="form.newsletter.brevo.listId" placeholder="es. 12"
-                                                            @input="set('newsletter.brevo.listId', $event.target.value)" />
-                                                    </div>
-                                                    <div class="acc-field">
-                                                        <label class="acc-row-label" for="acc-nl-brevo-sender">Mittente</label>
-                                                        <span class="acc-row-help">Email verificata come mittente.</span>
-                                                        <input id="acc-nl-brevo-sender" class="control" type="email" :value="form.newsletter.brevo.sender" placeholder="news@dominio.it"
-                                                            @input="set('newsletter.brevo.sender', $event.target.value)" />
-                                                    </div>
-                                                </div>
-                                            </template>
-
-                                            <!-- SMTP -->
-                                            <template v-else-if="p.id === 'smtp'">
-                                                <div class="acc-grid-2">
-                                                    <div class="acc-field">
-                                                        <label class="acc-row-label" for="acc-nl-smtp-host">Host SMTP</label>
-                                                        <span class="acc-row-help">Il server della tua casella email.</span>
-                                                        <input id="acc-nl-smtp-host" class="control" type="text" :value="form.newsletter.smtp.host" placeholder="smtp.dominio.it"
-                                                            @input="set('newsletter.smtp.host', $event.target.value)" />
-                                                    </div>
-                                                    <div class="acc-field">
-                                                        <label class="acc-row-label" for="acc-nl-smtp-port">Porta</label>
-                                                        <span class="acc-row-help">Di solito 587 (TLS) o 465 (SSL).</span>
-                                                        <input id="acc-nl-smtp-port" class="control" type="text" :value="form.newsletter.smtp.port" placeholder="587"
-                                                            @input="set('newsletter.smtp.port', $event.target.value)" />
-                                                    </div>
-                                                </div>
-                                                <div class="acc-grid-2">
-                                                    <div class="acc-field">
-                                                        <label class="acc-row-label" for="acc-nl-smtp-username">Username</label>
-                                                        <span class="acc-row-help">L'utente di autenticazione.</span>
-                                                        <input id="acc-nl-smtp-username" class="control" type="text" :value="form.newsletter.smtp.username" placeholder="news@dominio.it"
-                                                            @input="set('newsletter.smtp.username', $event.target.value)" />
-                                                    </div>
-                                                    <div class="acc-field">
-                                                        <label class="acc-row-label" for="acc-nl-smtp-password">Password</label>
-                                                        <span class="acc-row-help">La password della casella.</span>
-                                                        <SecretField id="acc-nl-smtp-password" :model-value="form.newsletter.smtp.password" placeholder="••••••••"
-                                                            @update:model-value="set('newsletter.smtp.password', $event)" />
-                                                    </div>
-                                                </div>
-                                                <div class="acc-grid-2">
-                                                    <div class="acc-field">
-                                                        <label class="acc-row-label" for="acc-nl-smtp-encryption">Cifratura</label>
-                                                        <span class="acc-row-help">Protocollo di sicurezza.</span>
-                                                        <select id="acc-nl-smtp-encryption" class="control" :value="form.newsletter.smtp.encryption"
-                                                            @change="set('newsletter.smtp.encryption', $event.target.value)">
-                                                            <option value="tls">TLS</option>
-                                                            <option value="ssl">SSL</option>
-                                                            <option value="none">Nessuna</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="acc-field">
-                                                        <label class="acc-row-label" for="acc-nl-smtp-sender">Mittente</label>
-                                                        <span class="acc-row-help">Indirizzo che vedranno gli iscritti.</span>
-                                                        <input id="acc-nl-smtp-sender" class="control" type="text" :value="form.newsletter.smtp.sender"
-                                                            placeholder="Trattoria &lt;news@dominio.it&gt;"
-                                                            @input="set('newsletter.smtp.sender', $event.target.value)" />
-                                                    </div>
-                                                </div>
-                                            </template>
-
-                                            <!-- Status row -->
-                                            <div style="display:flex;align-items:center;gap:12px;margin-top:6px;padding-top:16px;border-top:1px solid var(--g100)">
-                                                <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <NewsletterFields v-else-if="activeIntg === 'newsletter'" :model-value="form.newsletter"
+                                @update="(provider, field, value) => set('newsletter.' + provider + '.' + field, value)" />
                         </div>
                     </div>
-                </div>
+                </SectionCard>
             </div>
         </div>
 
