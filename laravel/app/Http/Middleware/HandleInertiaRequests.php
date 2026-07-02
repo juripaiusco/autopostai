@@ -35,11 +35,22 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $me = $request->user();
+        $activeUser = $me?->resolveScopedUser($request->session()->get('scoped_user_id'));
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user()?->only('id', 'name', 'email'),
+                'user' => $me?->only('id', 'name', 'email'),
             ],
+            // Scope globale "filtra per utente": condiviso su ogni pagina così
+            // la sidebar (AppLayout) può mostrare il controllo ovunque senza
+            // che ogni pagina/controller debba passarlo esplicitamente.
+            'isAdmin' => $me?->isAdmin() ?? false,
+            'isManager' => $me?->isManager() ?? false,
+            'filterableUsers' => $me?->filterableUsers() ?? [],
+            'activeUserId' => $activeUser['id'] ?? null,
+            'activeUser' => $activeUser,
             'app' => [
                 'version' => env('APP_VERSION', '0.0.0'),
                 'changelog_url' => env('APP_CHANGELOG_URL', '#'),

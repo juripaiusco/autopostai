@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\ScopeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -10,10 +12,10 @@ use Inertia\Inertia;
 ])); */
 
 Route::middleware('auth')->group(function () {
-    Route::get('/', fn () => Inertia::render('Dashboard'))
+    Route::get('/', [DashboardController::class, 'index'])
         ->name('home');
 
-    Route::get('/dashboard', fn () => Inertia::render('Dashboard'))
+    Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
 
     Route::get('/account', [AccountController::class, 'index'])
@@ -54,6 +56,9 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])
         ->name('posts.destroy');
+
+    Route::post('/scope', [ScopeController::class, 'update'])
+        ->name('scope.update');
 
     Route::get('/calendarizza', fn () => Inertia::render('Schedule'))
         ->name('schedule');

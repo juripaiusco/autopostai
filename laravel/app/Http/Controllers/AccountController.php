@@ -13,14 +13,19 @@ class AccountController extends Controller
 {
     /**
      * Lista utenti/account: l'amministratore (parent_id null) vede tutti,
-     * chi ha un parent vede solo i propri sotto-utenti.
+     * chi ha un parent vede solo i propri sotto-utenti. Con uno scope
+     * globale attivo (?user=), si naviga l'albero account come se si fosse
+     * l'utente scopato, invece che sé stessi.
      */
     public function index(Request $request): Response
     {
         $me = $request->user();
-        $isAdmin = $me->parent_id === null;
+        $isAdmin = $me->isAdmin();
+        $activeUserId = $me->resolveScopedUser($request->session()->get('scoped_user_id'))['id'] ?? null;
 
-        $scope = fn () => $isAdmin ? User::query() : User::where('parent_id', $me->id);
+        $scope = fn () => ($isAdmin && !$activeUserId)
+            ? User::query()
+            : User::where('parent_id', $activeUserId ?? $me->id);
 
         $isManagerFilter = fn ($q) => $q->where('child_on', 1);
         $isUserFilter = fn ($q) => $q->where(fn ($q2) => $q2->whereNull('child_on')->orWhere('child_on', '!=', 1));
@@ -70,7 +75,7 @@ class AccountController extends Controller
                 'id' => $u->id,
                 'name' => $u->name,
                 'email' => $u->email,
-                'role' => $u->parent_id === null ? 'amministratore' : ($u->child_on == 1 ? 'manager' : 'utente'),
+                'role' => $u->isAdmin() ? 'amministratore' : ($u->isManager() ? 'manager' : 'utente'),
                 'channels' => collect($u->channels ?? [])
                     ->filter(fn ($c) => !empty($c['on']))
                     ->keys()
@@ -100,7 +105,7 @@ class AccountController extends Controller
     public function create(Request $request): Response
     {
         $me = $request->user();
-        $isAdmin = $me->parent_id === null;
+        $isAdmin = $me->isAdmin();
 
         abort_unless($isAdmin, 403);
 
@@ -121,7 +126,7 @@ class AccountController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $me = $request->user();
-        abort_unless($me->parent_id === null, 403);
+        abort_unless($me->isAdmin(), 403);
 
         $data = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
@@ -143,7 +148,7 @@ class AccountController extends Controller
     public function edit(Request $request, User $user): Response
     {
         $me = $request->user();
-        $isAdmin = $me->parent_id === null;
+        $isAdmin = $me->isAdmin();
         abort_unless($isAdmin || $user->parent_id === $me->id, 403);
 
         $managers = User::whereNull('parent_id')->orWhere('child_on', 1)
@@ -236,7 +241,7 @@ class AccountController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $me = $request->user();
-        abort_unless($me->parent_id === null || $user->parent_id === $me->id, 403);
+        abort_unless($me->isAdmin() || $user->parent_id === $me->id, 403);
 
         $data = $request->validate([
             'name'  => ['required', 'string', 'max:255'],
@@ -312,7 +317,7 @@ class AccountController extends Controller
     public function destroy(Request $request, User $user): RedirectResponse
     {
         $me = $request->user();
-        $isAdmin = $me->parent_id === null;
+        $isAdmin = $me->isAdmin();
 
         abort_unless($isAdmin || $user->parent_id === $me->id, 403);
 

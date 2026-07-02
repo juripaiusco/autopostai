@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 
 #[Fillable(['name', 'email', 'password', 'parent_id', 'child_on', 'child_max', 'tokens_limit', 'image_model_limit'])]
 #[Hidden(['password', 'remember_token'])]
@@ -98,5 +99,53 @@ class User extends Authenticatable
             ->where('type', 'reply')
             ->whereMonth('token_logs.created_at', now()->month)
             ->whereYear('token_logs.created_at', now()->year);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->parent_id === null;
+    }
+
+    public function isManager(): bool
+    {
+        return $this->child_on == 1;
+    }
+
+    /**
+     * Utenti su cui questo utente può "filtrare"/scopare la propria vista:
+     * l'amministratore vede tutti gli altri utenti, il manager solo i propri
+     * sotto-utenti, l'utente semplice nessuno.
+     */
+    public function filterableUsers(): Collection
+    {
+        if ($this->isAdmin()) {
+            $query = static::where('id', '!=', $this->id);
+        } elseif ($this->isManager()) {
+            $query = static::where('parent_id', $this->id);
+        } else {
+            return collect();
+        }
+
+        return $query->orderBy('name')->get(['id', 'name', 'email', 'parent_id', 'child_on'])
+            ->map(fn (User $u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'role' => $u->isAdmin() ? 'amministratore' : ($u->isManager() ? 'manager' : 'utente'),
+            ])
+            ->values();
+    }
+
+    /**
+     * Valida un id di scope richiesto (es. ?user=) contro filterableUsers():
+     * ritorna la voce corrispondente, o null se non richiesto/non consentito.
+     */
+    public function resolveScopedUser(?int $requestedId): ?array
+    {
+        if ($requestedId === null) {
+            return null;
+        }
+
+        return $this->filterableUsers()->firstWhere('id', $requestedId);
     }
 }

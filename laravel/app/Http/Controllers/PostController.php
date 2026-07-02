@@ -16,19 +16,18 @@ class PostController extends Controller
     /**
      * Lista post: l'amministratore vede tutti i post, il manager (child_on=1)
      * vede solo i post dei propri sotto-utenti, l'utente vede solo i propri.
+     * Con uno scope globale attivo (?user=), la lista mostra solo i post di
+     * quell'utente, indipendentemente dal ruolo del viewer.
      */
     public function index(Request $request): Response
     {
         $me = $request->user();
-        $isAdmin = $me->parent_id === null;
-        $isManager = $me->child_on == 1;
+        $isAdmin = $me->isAdmin();
+        $isManager = $me->isManager();
         $showAuthor = $isAdmin || $isManager;
+        $activeUserId = $me->resolveScopedUser($request->session()->get('scoped_user_id'))['id'] ?? null;
 
-        $scope = match (true) {
-            $isAdmin => fn () => Post::query(),
-            $isManager => fn () => Post::whereIn('user_id', $me->children()->pluck('id')),
-            default => fn () => Post::where('user_id', $me->id),
-        };
+        $scope = fn () => Post::query()->visibleTo($me, $activeUserId);
 
         $isPublishedFilter = fn ($q) => $q->where('published', '1');
         $isScheduledFilter = fn ($q) => $q->where('published', '0')->where('published_at', '>', now());
@@ -83,7 +82,7 @@ class PostController extends Controller
                     ->keys()
                     ->values()
                     ->all(),
-                'status' => $this->status($p),
+                'status' => $p->status(),
                 'publishedAt' => $p->published_at?->toIso8601String(),
                 'comments' => $p->comments_count,
             ]);
@@ -107,8 +106,8 @@ class PostController extends Controller
     public function create(Request $request): Response
     {
         $me = $request->user();
-        $isAdmin = $me->parent_id === null;
-        $isManager = $me->child_on == 1;
+        $isAdmin = $me->isAdmin();
+        $isManager = $me->isManager();
 
         $userChannels = collect($me->channels ?? [])
             ->filter(fn ($c) => !empty($c['on']))
@@ -156,8 +155,8 @@ class PostController extends Controller
     public function show(Request $request, Post $post): Response
     {
         $me = $request->user();
-        $isAdmin = $me->parent_id === null;
-        $isManager = $me->child_on == 1;
+        $isAdmin = $me->isAdmin();
+        $isManager = $me->isManager();
 
         $allowed = $isAdmin
             || ($isManager && $post->user->parent_id === $me->id)
@@ -181,7 +180,7 @@ class PostController extends Controller
             'post' => [
                 'id' => $post->id,
                 'title' => $post->title,
-                'status' => $this->status($post),
+                'status' => $post->status(),
                 'owner' => ['name' => $post->user->name, 'email' => $post->user->email],
                 'channels' => collect($post->channels ?? [])
                     ->filter(fn ($c) => !empty($c['on']))
@@ -221,8 +220,8 @@ class PostController extends Controller
     public function edit(Request $request, Post $post): Response|RedirectResponse
     {
         $me = $request->user();
-        $isAdmin = $me->parent_id === null;
-        $isManager = $me->child_on == 1;
+        $isAdmin = $me->isAdmin();
+        $isManager = $me->isManager();
 
         $allowed = $isAdmin
             || ($isManager && $post->user->parent_id === $me->id)
@@ -230,7 +229,7 @@ class PostController extends Controller
 
         abort_unless($allowed, 403);
 
-        if ($this->status($post) === 'published') {
+        if ($post->status() === 'published') {
             return redirect()->route('posts.show', $post);
         }
 
@@ -276,8 +275,8 @@ class PostController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $me = $request->user();
-        $isAdmin = $me->parent_id === null;
-        $isManager = $me->child_on == 1;
+        $isAdmin = $me->isAdmin();
+        $isManager = $me->isManager();
 
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
@@ -355,8 +354,8 @@ class PostController extends Controller
     public function update(Request $request, Post $post): RedirectResponse
     {
         $me = $request->user();
-        $isAdmin = $me->parent_id === null;
-        $isManager = $me->child_on == 1;
+        $isAdmin = $me->isAdmin();
+        $isManager = $me->isManager();
 
         $allowed = $isAdmin
             || ($isManager && $post->user->parent_id === $me->id)
@@ -364,7 +363,7 @@ class PostController extends Controller
 
         abort_unless($allowed, 403);
 
-        abort_if($this->status($post) === 'published', 403, 'Un post pubblicato non può essere modificato.');
+        abort_if($post->status() === 'published', 403, 'Un post pubblicato non può essere modificato.');
 
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
@@ -413,8 +412,8 @@ class PostController extends Controller
     public function destroy(Request $request, Post $post): RedirectResponse
     {
         $me = $request->user();
-        $isAdmin = $me->parent_id === null;
-        $isManager = $me->child_on == 1;
+        $isAdmin = $me->isAdmin();
+        $isManager = $me->isManager();
 
         $allowed = $isAdmin
             || ($isManager && $post->user->parent_id === $me->id)
@@ -425,18 +424,5 @@ class PostController extends Controller
         $post->delete();
 
         return back();
-    }
-
-    private function status(Post $post): string
-    {
-        if ($post->published == '1') {
-            return 'published';
-        }
-
-        if ($post->published_at !== null && $post->published_at->isFuture()) {
-            return 'scheduled';
-        }
-
-        return 'draft';
     }
 }

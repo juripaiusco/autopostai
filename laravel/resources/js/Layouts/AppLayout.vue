@@ -1,8 +1,11 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import Icon from '@/Components/Icon.vue';
 import Sidebar from '@/Components/Sidebar.vue';
+import ScopeSelector from '@/Components/ScopeSelector.vue';
+import ScopeContextBar from '@/Components/ScopeContextBar.vue';
+import { useUserScope } from '@/Composables/useUserScope';
 
 // Asset statico servito da public/ — niente trasformazione asset di Vite
 // (stesso binding runtime usato in GuestLayout.vue).
@@ -15,6 +18,15 @@ defineProps({
 
 const sidebarOpen = ref(false);
 const searchQuery = ref('');
+
+// "Filtra per utente": condiviso globalmente (HandleInertiaRequests), quindi
+// disponibile identico su ogni pagina che usa questo layout, non solo Dashboard.
+const isAdmin = computed(() => usePage().props.isAdmin);
+const canFilter = computed(() => usePage().props.isAdmin || usePage().props.isManager);
+const filterableUsers = computed(() => usePage().props.filterableUsers ?? []);
+const activeUserId = computed(() => usePage().props.activeUserId ?? null);
+const activeUser = computed(() => usePage().props.activeUser ?? null);
+const { setScope } = useUserScope();
 
 // Toast globale alimentato dal flash di sessione (es. dopo un redirect post-save).
 const toast = ref(null);
@@ -37,6 +49,15 @@ watch(
         <Sidebar :current="current" :user="user" :is-open="sidebarOpen" @close="sidebarOpen = false">
             <template v-if="$slots['sidebar-footer-top']" #footer-top>
                 <slot name="sidebar-footer-top" />
+            </template>
+            <template v-if="canFilter" #user-filter>
+                <ScopeSelector
+                    :users="filterableUsers"
+                    :model-value="activeUserId"
+                    variant="sidebar"
+                    :general-sub="isAdmin ? 'Tutti gli utenti' : 'I tuoi utenti'"
+                    @update:model-value="setScope"
+                />
             </template>
         </Sidebar>
 
@@ -71,6 +92,8 @@ watch(
                     <Icon :name="sidebarOpen ? 'x' : 'menu'" :size="20" />
                 </button>
             </header>
+
+            <ScopeContextBar v-if="activeUser" :user="activeUser" @clear="setScope(null)" />
 
             <div v-if="$slots['page-header']" class="page-header-slot">
                 <slot name="page-header" />
