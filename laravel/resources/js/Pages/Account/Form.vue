@@ -220,6 +220,14 @@ function fetchWordpressCategories() {
     router.post(form.wordpress.categoriesUrl, {}, { preserveScroll: true });
 }
 
+function fetchNewsletterLists() {
+    if (props.mode === 'create') {
+        showToast('Salva prima l\'account, poi potrai caricare le liste');
+        return;
+    }
+    router.post(form.newsletter.listsUrl, {}, { preserveScroll: true });
+}
+
 /* ------------------------------------------------------------------ */
 /* Connection state helpers                                             */
 /* ------------------------------------------------------------------ */
@@ -452,10 +460,12 @@ function goToIntegration(chId) {
                                 @pick-page="pickLinkedinPage" />
 
                             <WordpressFields v-else-if="activeIntg === 'wordpress'" :model-value="form.wordpress"
-                                @update="(field, value) => set('wordpress.' + field, value)" />
+                                @update="(field, value) => set('wordpress.' + field, value)"
+                                @fetch-categories="fetchWordpressCategories" />
 
                             <NewsletterFields v-else-if="activeIntg === 'newsletter'" :model-value="form.newsletter"
-                                @update="(provider, field, value) => set('newsletter.' + provider + '.' + field, value)" />
+                                @update="(provider, field, value) => set('newsletter.' + provider + '.' + field, value)"
+                                @fetch-lists="fetchNewsletterLists" />
                         </div>
                     </div>
                 </SectionCard>

@@ -51,6 +51,8 @@ class Settings extends Model
         return [
             'linkedin_token_expires_at' => 'datetime',
             'wordpress_options' => 'array',
+            'mailchimp_options' => 'array',
+            'brevo_options' => 'array',
         ];
     }
 

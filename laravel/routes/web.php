@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LinkedInController;
+use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ScopeController;
@@ -51,6 +52,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/account/{user}/wordpress/categorie', [WordPressController::class, 'fetchCategories'])
         ->name('wordpress.categories');
+
+    Route::post('/account/{user}/newsletter/liste', [NewsletterController::class, 'fetchLists'])
+        ->name('newsletter.lists');
 
     Route::get('/posts', [PostController::class, 'index'])
         ->name('posts');

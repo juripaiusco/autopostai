@@ -9,7 +9,7 @@ const props = defineProps({
     modelValue: { type: Object, required: true }, // { mailchimp, brevo, smtp }
 });
 
-const emit = defineEmits(['update']);
+const emit = defineEmits(['update', 'fetch-lists']);
 
 const PROVIDERS = [
     { id: 'mailchimp', name: 'MailChimp', sub: 'API key + audience' },
@@ -57,16 +57,33 @@ function connState(providerId) {
                             <SecretField id="acc-nl-mc-key" :model-value="modelValue.mailchimp.apiKey" placeholder="xxxxxxxx-us21"
                                 @update:model-value="emit('update', 'mailchimp', 'apiKey', $event)" />
                         </FieldRow>
-                        <div class="acc-grid-2">
-                            <FieldRow id="acc-nl-mc-server" label="Server prefix" help="Es. us21 (è nel dominio della tua dashboard).">
-                                <input id="acc-nl-mc-server" class="control" type="text" :value="modelValue.mailchimp.serverPrefix" placeholder="us21"
-                                    @input="emit('update', 'mailchimp', 'serverPrefix', $event.target.value)" />
-                            </FieldRow>
-                            <FieldRow id="acc-nl-mc-audience" label="Audience ID" help="La lista a cui inviare.">
-                                <input id="acc-nl-mc-audience" class="control" type="text" :value="modelValue.mailchimp.audienceId" placeholder="9f3c1a7b2e"
-                                    @input="emit('update', 'mailchimp', 'audienceId', $event.target.value)" />
-                            </FieldRow>
+                        <FieldRow id="acc-nl-mc-server" label="Server prefix" help="Es. us21 (è nel dominio della tua dashboard).">
+                            <input id="acc-nl-mc-server" class="control" type="text" :value="modelValue.mailchimp.serverPrefix" placeholder="us21"
+                                @input="emit('update', 'mailchimp', 'serverPrefix', $event.target.value)" />
+                        </FieldRow>
+
+                        <div v-if="modelValue.mailchimp.lists?.length" class="acc-field">
+                            <label class="acc-row-label">Audience</label>
+                            <span class="acc-row-help">Scegli la lista a cui inviare le campagne.</span>
+                            <div class="acc-li-pages">
+                                <button
+                                    v-for="list in modelValue.mailchimp.lists"
+                                    :key="list.id"
+                                    type="button"
+                                    class="acc-li-page"
+                                    :class="{ 'acc-li-page--active': String(modelValue.mailchimp.audienceId) === String(list.id) }"
+                                    @click="emit('update', 'mailchimp', 'audienceId', list.id)"
+                                >
+                                    <span class="acc-li-page-dot" aria-hidden="true"></span>
+                                    <span class="acc-li-page-name">{{ list.name }}</span>
+                                    <Icon v-if="String(modelValue.mailchimp.audienceId) === String(list.id)" name="check" :size="16" />
+                                </button>
+                            </div>
                         </div>
+                        <FieldRow v-else id="acc-nl-mc-audience" label="Audience ID" help="La lista a cui inviare. Si popola come elenco dopo aver caricato le liste.">
+                            <input id="acc-nl-mc-audience" class="control" type="text" :value="modelValue.mailchimp.audienceId" placeholder="9f3c1a7b2e"
+                                @input="emit('update', 'mailchimp', 'audienceId', $event.target.value)" />
+                        </FieldRow>
                     </template>
 
                     <!-- Brevo -->
@@ -75,16 +92,33 @@ function connState(providerId) {
                             <SecretField id="acc-nl-brevo-key" :model-value="modelValue.brevo.apiKey" placeholder="xkeysib-…"
                                 @update:model-value="emit('update', 'brevo', 'apiKey', $event)" />
                         </FieldRow>
-                        <div class="acc-grid-2">
-                            <FieldRow id="acc-nl-brevo-list" label="List ID" help="L'ID numerico della lista.">
-                                <input id="acc-nl-brevo-list" class="control" type="text" :value="modelValue.brevo.listId" placeholder="es. 12"
-                                    @input="emit('update', 'brevo', 'listId', $event.target.value)" />
-                            </FieldRow>
-                            <FieldRow id="acc-nl-brevo-sender" label="Mittente" help="Email verificata come mittente.">
-                                <input id="acc-nl-brevo-sender" class="control" type="email" :value="modelValue.brevo.sender" placeholder="news@dominio.it"
-                                    @input="emit('update', 'brevo', 'sender', $event.target.value)" />
-                            </FieldRow>
+                        <FieldRow id="acc-nl-brevo-sender" label="Mittente" help="Email verificata come mittente.">
+                            <input id="acc-nl-brevo-sender" class="control" type="email" :value="modelValue.brevo.sender" placeholder="news@dominio.it"
+                                @input="emit('update', 'brevo', 'sender', $event.target.value)" />
+                        </FieldRow>
+
+                        <div v-if="modelValue.brevo.lists?.length" class="acc-field">
+                            <label class="acc-row-label">Lista</label>
+                            <span class="acc-row-help">Scegli la lista a cui inviare le campagne.</span>
+                            <div class="acc-li-pages">
+                                <button
+                                    v-for="list in modelValue.brevo.lists"
+                                    :key="list.id"
+                                    type="button"
+                                    class="acc-li-page"
+                                    :class="{ 'acc-li-page--active': String(modelValue.brevo.listId) === String(list.id) }"
+                                    @click="emit('update', 'brevo', 'listId', list.id)"
+                                >
+                                    <span class="acc-li-page-dot" aria-hidden="true"></span>
+                                    <span class="acc-li-page-name">{{ list.name }}</span>
+                                    <Icon v-if="String(modelValue.brevo.listId) === String(list.id)" name="check" :size="16" />
+                                </button>
+                            </div>
                         </div>
+                        <FieldRow v-else id="acc-nl-brevo-list" label="List ID" help="L'ID numerico della lista. Si popola come elenco dopo aver caricato le liste.">
+                            <input id="acc-nl-brevo-list" class="control" type="text" :value="modelValue.brevo.listId" placeholder="es. 12"
+                                @input="emit('update', 'brevo', 'listId', $event.target.value)" />
+                        </FieldRow>
                     </template>
 
                     <!-- SMTP -->
@@ -129,6 +163,10 @@ function connState(providerId) {
                     <!-- Status row -->
                     <div style="display:flex;align-items:center;gap:12px;margin-top:6px;padding-top:16px;border-top:1px solid var(--g100)">
                         <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
+                        <button v-if="p.id === 'mailchimp' || p.id === 'brevo'" type="button" class="acc-verify" style="margin-left:auto" @click="emit('fetch-lists')">
+                            <Icon name="link" :size="15" />
+                            {{ modelValue[p.id].lists?.length ? 'Aggiorna liste' : 'Carica liste' }}
+                        </button>
                     </div>
                 </div>
             </div>
