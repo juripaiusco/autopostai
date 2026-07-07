@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import Icon from '@/Components/Icon.vue';
 
 // Asset statico servito da public/ — niente trasformazione asset di Vite
@@ -17,13 +17,21 @@ const emit = defineEmits(['close']);
 
 const acctOpen = ref(false);
 
-const links = [
+// Condivisi globalmente da HandleInertiaRequests — niente sotto-utenti per
+// l'utente "semplice", quindi la voce Account ha senso solo per chi li gestisce.
+const isAdmin = computed(() => usePage().props.isAdmin);
+const isManager = computed(() => usePage().props.isManager);
+const roleLabel = computed(() => (isAdmin.value ? 'Amministratore' : isManager.value ? 'Manager' : 'Utente'));
+
+const allLinks = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', route: 'dashboard' },
     { id: 'account', label: 'Account', icon: 'users', route: 'account' },
     { id: 'posts', label: 'Posts', icon: 'chat', route: 'posts' },
     { id: 'schedule', label: 'Calendarizza', icon: 'calendar', route: 'schedule' },
     { id: 'settings', label: 'Impostazioni', icon: 'settings', route: 'settings' },
 ];
+
+const links = computed(() => allLinks.filter((l) => l.id !== 'account' || isAdmin.value || isManager.value));
 
 function handleNavigate() {
     emit('close');
@@ -41,7 +49,9 @@ function logout() {
 
     <aside class="sidebar" :class="{ 'sb-open': isOpen }">
         <div class="sb-top">
-            <img class="sb-logo" :src="logo" alt="FaPer3" />
+            <Link :href="route('dashboard')" aria-label="FaPer3 — home" @click="handleNavigate">
+                <img class="sb-logo" :src="logo" alt="FaPer3" />
+            </Link>
             <span style="font-size: 11px; line-height: 1.35; max-width: 120px; margin-left: 20px">
                 <span style="color: var(--g400); font-weight: 400">Comunica come un </span>
                 <span style="color: var(--sky); font-weight: 700">professionista.</span>
@@ -88,7 +98,7 @@ function logout() {
                     <div class="sb-avatar">{{ user.charAt(0) }}</div>
                     <div style="min-width: 0; text-align: left">
                         <div class="sb-user-name">{{ user }}</div>
-                        <div class="sb-user-role">Amministratore</div>
+                        <div class="sb-user-role">{{ roleLabel }}</div>
                     </div>
                     <span class="sb-user-caret"><Icon name="chevron" :size="16" /></span>
                 </button>

@@ -1,8 +1,10 @@
 <script setup>
 // Header pagina con breadcrumb. Lo slot #actions ospita contenuto allineato a
 // destra (badge, note, bottoni).
+import { Link } from '@inertiajs/vue3';
+
 defineProps({
-    // [{ label: 'Account' }, { label: 'Lista', current: true }]
+    // [{ label: 'Account', href: route('account') }, { label: 'Lista', current: true }]
     crumbs: { type: Array, required: true },
 });
 </script>
@@ -14,6 +16,7 @@ defineProps({
                 <template v-for="(c, i) in crumbs" :key="i">
                     <span v-if="i > 0" class="crumb-sep">›</span>
                     <b v-if="c.current">{{ c.label }}</b>
+                    <Link v-else-if="c.href" :href="c.href">{{ c.label }}</Link>
                     <span v-else>{{ c.label }}</span>
                 </template>
             </div>

@@ -65,7 +65,7 @@ function confirmDelete() {
 
     <AppLayout :current="'posts'" :user="userName">
         <template #page-header>
-            <PageHeader :crumbs="[{ label: 'Post' }, { label: post.title, current: true }]" />
+            <PageHeader :crumbs="[{ label: 'Post', href: route('posts') }, { label: post.title, current: true }]" />
         </template>
 
         <div class="ps-head">

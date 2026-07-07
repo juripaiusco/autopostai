@@ -74,7 +74,7 @@ function formatDate(value) {
 
     <AppLayout :current="'posts'" :user="userName">
         <template #page-header>
-            <PageHeader :crumbs="[{ label: 'Post' }, { label: 'Lista', current: true }]" />
+            <PageHeader :crumbs="[{ label: 'Post', href: route('posts') }, { label: 'Lista', current: true }]" />
         </template>
 
         <div class="list-toolbar">

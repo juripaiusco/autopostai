@@ -127,7 +127,7 @@ function submit(action) {
 
     <AppLayout :current="'posts'" :user="userName">
         <template #page-header>
-            <PageHeader :crumbs="[{ label: 'Post' }, { label: mode === 'edit' ? 'Modifica post' : 'Nuovo post', current: true }]" />
+            <PageHeader :crumbs="[{ label: 'Post', href: route('posts') }, { label: mode === 'edit' ? 'Modifica post' : 'Nuovo post', current: true }]" />
         </template>
 
         <div class="acc-content">

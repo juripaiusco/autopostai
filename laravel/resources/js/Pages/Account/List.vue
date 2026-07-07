@@ -70,7 +70,7 @@ function confirmDelete(id) {
 
     <AppLayout :current="'account'" :user="userName">
         <template #page-header>
-            <PageHeader :crumbs="[{ label: 'Account' }, { label: 'Lista', current: true }]">
+            <PageHeader :crumbs="[{ label: 'Account', href: route('account') }, { label: 'Lista', current: true }]">
                 <template #actions>
                     <span v-if="!isAdmin" class="page-header__note">
                         Stai vedendo i tuoi {{ counts.tutti }} sub-utenti

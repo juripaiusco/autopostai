@@ -252,7 +252,7 @@ function goToIntegration(chId) {
         </template>
 
         <template #page-header>
-            <PageHeader :crumbs="[{ label: 'Account' }, { label: title, current: true }]">
+            <PageHeader :crumbs="[{ label: 'Account', href: route('account') }, { label: title, current: true }]">
                 <template #actions>
                     <div class="acc-head-meta">
                         <span v-if="dirty" class="acc-dirty">
