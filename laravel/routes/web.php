@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ScopeController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -59,6 +60,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/scope', [ScopeController::class, 'update'])
         ->name('scope.update');
+
+    Route::get('/search', [SearchController::class, 'index'])
+        ->name('search');
 
     Route::get('/calendarizza', fn () => Inertia::render('Schedule'))
         ->name('schedule');

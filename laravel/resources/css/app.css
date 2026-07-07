@@ -399,8 +399,18 @@ tr:hover .ch-chip{ background: var(--g200); }
 .app.has-sidebar .main-col main{ flex: 1; overflow-y: auto; }
 
 .topbar{ height: 62px; background: #fff; border-bottom: 1px solid var(--g200); display: flex; align-items: center; gap: 16px; padding: 0 24px; position: sticky; top: 0; z-index: 20; }
-.topbar-search{ flex: 1; max-width: 420px; display: flex; align-items: center; gap: 10px; background: var(--g100); border-radius: 9999px; padding: 9px 16px; color: var(--g400); }
+.topbar-search{ position: relative; flex: 1; max-width: 420px; display: flex; align-items: center; gap: 10px; background: var(--g100); border-radius: 9999px; padding: 9px 16px; color: var(--g400); }
 .topbar-search input{ border: none; background: none; outline: none; font-family: var(--font-ui); font-size: 14px; color: var(--ink); width: 100%; }
+.topbar-search.ts-open{ border-radius: 20px 20px 0 0; }
+
+.ts-dropdown{ position: absolute; top: calc(100% + 4px); left: 0; right: 0; padding: 6px; max-height: 360px; overflow-y: auto; z-index: 50; animation: acctIn .15s ease-out; }
+.ts-group + .ts-group{ margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--g100); }
+.ts-group-label{ font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--g400); padding: 6px 9px 4px; }
+.ts-item{ display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 9px 11px; border-radius: var(--radius-sm); border: none; background: none; font-family: inherit; font-size: 13.5px; color: var(--g700); text-align: left; cursor: pointer; transition: background .12s ease, color .12s ease; }
+.ts-item:hover{ background: var(--g50); color: var(--ink); }
+.ts-item-title{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ts-item-meta{ flex-shrink: 0; font-size: 11.5px; color: var(--g400); text-transform: capitalize; }
+.ts-empty{ padding: 14px 11px; font-size: 13px; color: var(--g400); text-align: center; }
 .topbar-right{ margin-left: auto; display: flex; align-items: center; gap: 6px; }
 .tb-icon{ position: relative; color: var(--g400); padding: 8px; border-radius: 8px; cursor: pointer; display: flex; }
 .tb-icon:hover{ background: var(--g100); color: var(--g600); }

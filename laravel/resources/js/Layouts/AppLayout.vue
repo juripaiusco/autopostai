@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import Icon from '@/Components/Icon.vue';
 import Sidebar from '@/Components/Sidebar.vue';
+import GlobalSearch from '@/Components/GlobalSearch.vue';
 import ScopeSelector from '@/Components/ScopeSelector.vue';
 import ScopeContextBar from '@/Components/ScopeContextBar.vue';
 import { useUserScope } from '@/Composables/useUserScope';
@@ -17,7 +18,6 @@ defineProps({
 });
 
 const sidebarOpen = ref(false);
-const searchQuery = ref('');
 
 // "Filtra per utente": condiviso globalmente (HandleInertiaRequests), quindi
 // disponibile identico su ogni pagina che usa questo layout, non solo Dashboard.
@@ -67,10 +67,7 @@ watch(
                     <img class="tb-logo" :src="logo" alt="FaPer3" />
                 </Link>
 
-                <div class="topbar-search">
-                    <Icon name="search" :size="17" />
-                    <input v-model="searchQuery" placeholder="Cerca post, canali, impostazioni…" />
-                </div>
+                <GlobalSearch />
 
                 <div class="tb-credits-inline">
                     <div class="tci-row">
