@@ -46,6 +46,13 @@ class Settings extends Model
     /** @use HasFactory<SettingsFactory> */
     use HasFactory;
 
+    protected function casts(): array
+    {
+        return [
+            'linkedin_token_expires_at' => 'datetime',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

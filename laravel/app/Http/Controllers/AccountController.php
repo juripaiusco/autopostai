@@ -173,6 +173,13 @@ class AccountController extends Controller
 
         $s = $user->settings;
 
+        // Elenco pagine LinkedIn amministrate da chi ha appena autorizzato
+        // (flash di un solo giro, impostato da LinkedInController::callback()).
+        $pendingLinkedinPages = $request->session()->get('linkedin_pages');
+        $linkedinPages = ($pendingLinkedinPages && $pendingLinkedinPages['user_id'] === $user->id)
+            ? $pendingLinkedinPages['pages']
+            : [];
+
         // Quanti altri account condividono la stessa app LinkedIn (client_id +
         // secret): un refresh del token qui si propaga a tutti loro (voluto).
         $linkedinSharedWithCount = 0;
@@ -211,6 +218,8 @@ class AccountController extends Controller
                 'tokenExpiresAt' => $s?->linkedin_token_expires_at?->diffForHumans(),
                 'sharedWithCount' => $linkedinSharedWithCount,
                 'connectUrl'    => route('linkedin.redirect', $user),
+                'pageUpdateUrl' => route('linkedin.page.update', $user),
+                'availablePages' => $linkedinPages,
             ],
             'wordpress'     => [
                 'url'           => $s->wordpress_url ?? '',

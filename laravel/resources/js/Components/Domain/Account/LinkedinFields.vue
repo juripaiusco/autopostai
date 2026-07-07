@@ -5,10 +5,10 @@ import ConnectionBadge from '@/Components/UI/ConnectionBadge.vue';
 import Icon from '@/Components/Icon.vue';
 
 defineProps({
-    modelValue: { type: Object, required: true }, // { clientId, clientSecret, pageId, token, connected }
+    modelValue: { type: Object, required: true }, // { clientId, clientSecret, pageId, token, connected, availablePages }
 });
 
-const emit = defineEmits(['update', 'get-token']);
+const emit = defineEmits(['update', 'get-token', 'pick-page']);
 </script>
 
 <template>
@@ -23,7 +23,26 @@ const emit = defineEmits(['update', 'get-token']);
                     @update:model-value="emit('update', 'clientSecret', $event)" />
             </FieldRow>
         </div>
-        <FieldRow id="acc-li-pageid" label="ID della pagina LinkedIn" help="La pagina aziendale su cui pubblicare.">
+
+        <div v-if="modelValue.availablePages?.length" class="acc-field">
+            <label class="acc-row-label">Pagina LinkedIn</label>
+            <span class="acc-row-help">Scegli tra le pagine aziendali che amministri con questo account LinkedIn.</span>
+            <div class="acc-li-pages">
+                <button
+                    v-for="page in modelValue.availablePages"
+                    :key="page.id"
+                    type="button"
+                    class="acc-li-page"
+                    :class="{ 'acc-li-page--active': String(modelValue.pageId) === String(page.id) }"
+                    @click="emit('pick-page', page.id)"
+                >
+                    <span class="acc-li-page-dot" aria-hidden="true"></span>
+                    <span class="acc-li-page-name">{{ page.name }}</span>
+                    <Icon v-if="String(modelValue.pageId) === String(page.id)" name="check" :size="16" />
+                </button>
+            </div>
+        </div>
+        <FieldRow v-else id="acc-li-pageid" label="ID della pagina LinkedIn" help="La pagina aziendale su cui pubblicare. Si popola come lista dopo aver collegato LinkedIn.">
             <input id="acc-li-pageid" class="control" type="text" :value="modelValue.pageId" placeholder="es. 7654321"
                 @input="emit('update', 'pageId', $event.target.value)" />
         </FieldRow>

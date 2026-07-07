@@ -6,6 +6,7 @@ use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class LinkedInOAuthTest extends TestCase
@@ -96,5 +97,69 @@ class LinkedInOAuthTest extends TestCase
         $this->assertSame('fresh-token-123', $childB->settings->fresh()->linkedin_token);
         $this->assertSame('untouched', $unrelated->settings->fresh()->linkedin_token);
         $this->assertNotNull($childA->settings->fresh()->linkedin_token_expires_at);
+    }
+
+    public function test_callback_fetches_administered_pages_and_offers_them_on_the_next_edit_load(): void
+    {
+        Http::fake([
+            'https://www.linkedin.com/oauth/v2/accessToken' => Http::response([
+                'access_token' => 'fresh-token-123',
+                'expires_in' => 5184000,
+            ]),
+            'https://api.linkedin.com/v2/organizationAcls*' => Http::response([
+                'elements' => [
+                    ['organizationalTarget~' => ['id' => 111, 'localizedName' => 'Trattoria da Marco'], 'state' => 'APPROVED'],
+                    ['organizationalTarget~' => ['id' => 222, 'localizedName' => 'Pagina scaduta'], 'state' => 'HISTORICAL'],
+                ],
+            ]),
+        ]);
+
+        $admin = User::factory()->create(['parent_id' => null]);
+        $child = User::factory()->create(['parent_id' => $admin->id]);
+        Settings::factory()->create(['user_id' => $child->id, 'linkedin_client_id' => 'app-1', 'linkedin_client_secret' => 'secret-1']);
+
+        session(['linkedin_oauth' => ['state' => 'good-state', 'user_id' => $child->id]]);
+
+        $this->actingAs($admin)
+            ->get(route('linkedin.callback', ['state' => 'good-state', 'code' => 'auth-code']))
+            ->assertRedirect(route('account.edit', $child));
+
+        // Solo la pagina APPROVED deve arrivare alla vista.
+        $this->actingAs($admin)
+            ->get(route('account.edit', $child))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('account.linkedin.availablePages', 1)
+                ->where('account.linkedin.availablePages.0.id', '111')
+                ->where('account.linkedin.availablePages.0.name', 'Trattoria da Marco')
+            );
+    }
+
+    public function test_update_page_saves_only_for_that_account_without_propagating(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $childA = User::factory()->create(['parent_id' => $admin->id]);
+        $childB = User::factory()->create(['parent_id' => $admin->id]);
+        Settings::factory()->create(['user_id' => $childA->id, 'linkedin_client_id' => 'shared-app', 'linkedin_client_secret' => 'shared-secret']);
+        Settings::factory()->create(['user_id' => $childB->id, 'linkedin_client_id' => 'shared-app', 'linkedin_client_secret' => 'shared-secret']);
+
+        $this->actingAs($admin)
+            ->put(route('linkedin.page.update', $childA), ['pageId' => '999'])
+            ->assertRedirect();
+
+        $this->assertSame('999', $childA->settings->fresh()->linkedin_company_id);
+        $this->assertNull($childB->settings->fresh()->linkedin_company_id);
+    }
+
+    public function test_update_page_is_forbidden_for_non_owner(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $managerA = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+        $managerB = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+        $childOfB = User::factory()->create(['parent_id' => $managerB->id]);
+        Settings::factory()->create(['user_id' => $childOfB->id]);
+
+        $this->actingAs($managerA)
+            ->put(route('linkedin.page.update', $childOfB), ['pageId' => '999'])
+            ->assertForbidden();
     }
 }

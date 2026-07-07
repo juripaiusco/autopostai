@@ -91,15 +91,72 @@ class LinkedInController extends Controller
             return redirect($backTo)->with('toast', 'LinkedIn non ha confermato l\'autorizzazione. Riprova.');
         }
 
+        $accessToken = $tokenResponse->json('access_token');
+
         // Propagazione voluta: stessa app (client_id + secret) => stesso token
         // per tutti gli account collegati, cosi' un solo refresh vale per tutti.
+        // La pagina (company_id) invece NON si propaga: lo stesso token puo'
+        // amministrare piu' pagine, e ogni account puo' volerne una diversa.
         Settings::where('linkedin_client_id', $settings->linkedin_client_id)
             ->where('linkedin_client_secret', $settings->linkedin_client_secret)
             ->update([
-                'linkedin_token' => $tokenResponse->json('access_token'),
+                'linkedin_token' => $accessToken,
                 'linkedin_token_expires_at' => now()->addSeconds((int) $tokenResponse->json('expires_in', 0)),
             ]);
 
+        // Elenco pagine amministrate da chi ha appena autorizzato, per farle
+        // scegliere da una lista invece di un ID numerico scritto a mano.
+        // Flash: sopravvive solo fino al prossimo caricamento di account.edit.
+        $request->session()->flash('linkedin_pages', [
+            'user_id' => $user->id,
+            'pages' => $this->fetchAdministeredPages($accessToken),
+        ]);
+
         return redirect($backTo)->with('toast', 'LinkedIn collegato.');
+    }
+
+    public function updatePage(Request $request, User $user): RedirectResponse
+    {
+        $this->authorize('update', $user);
+
+        $data = $request->validate([
+            'pageId' => ['required', 'string'],
+        ]);
+
+        // Scelta individuale: non si propaga alle altre righe che condividono l'app.
+        Settings::updateOrCreate(['user_id' => $user->id], ['linkedin_company_id' => $data['pageId']]);
+
+        $request->session()->flash('toast', 'Pagina LinkedIn aggiornata.');
+
+        return back();
+    }
+
+    /**
+     * Pagine aziendali che l'utente appena autorizzato amministra su LinkedIn
+     * (Organization ACLs API) — usate per farle scegliere da una lista.
+     */
+    private function fetchAdministeredPages(string $accessToken): array
+    {
+        $response = Http::withToken($accessToken)
+            ->withHeaders(['X-Restli-Protocol-Version' => '2.0.0'])
+            ->get('https://api.linkedin.com/v2/organizationAcls', [
+                'q' => 'roleAssignee',
+                'role' => 'ADMINISTRATOR',
+                'projection' => '(elements*(organizationalTarget~(id,localizedName),state))',
+            ]);
+
+        if (!$response->successful()) {
+            return [];
+        }
+
+        return collect($response->json('elements', []))
+            ->filter(fn (array $el) => ($el['state'] ?? 'APPROVED') === 'APPROVED')
+            ->map(fn (array $el) => [
+                'id' => (string) ($el['organizationalTarget~']['id'] ?? ''),
+                'name' => $el['organizationalTarget~']['localizedName'] ?? 'Pagina senza nome',
+            ])
+            ->filter(fn (array $p) => $p['id'] !== '')
+            ->values()
+            ->all();
     }
 }

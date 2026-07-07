@@ -512,6 +512,31 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
 }
 .acc-hint-inline svg { width: 14px; height: 14px; color: var(--g400); }
 
+/* ---------- LinkedIn: elenco pagine amministrate (picker post-OAuth) ---------- */
+.acc-li-pages { display: flex; flex-direction: column; gap: 8px; }
+.acc-li-page {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--g200);
+    border-radius: var(--radius);
+    background: #fff;
+    font-family: var(--font-ui);
+    font-size: 13.5px;
+    color: var(--g700);
+    cursor: pointer;
+    text-align: left;
+    transition: background .12s, border-color .12s;
+}
+.acc-li-page:hover { background: var(--sky-50); border-color: var(--sky-200); }
+.acc-li-page--active { background: var(--sky-50); border-color: var(--sky); color: var(--sky-strong); font-weight: 600; }
+.acc-li-page-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--g300); flex-shrink: 0; }
+.acc-li-page--active .acc-li-page-dot { background: var(--sky); }
+.acc-li-page-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-li-page svg { margin-left: auto; color: var(--sky-strong); flex-shrink: 0; }
+
 /* ---------- Content area padding (reset container for Form) ---------- */
 .acc-content { padding-bottom: 56px; }
 

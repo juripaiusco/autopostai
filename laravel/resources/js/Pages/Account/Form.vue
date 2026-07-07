@@ -203,6 +203,14 @@ function getLinkedinToken() {
     window.location.href = form.linkedin.connectUrl;
 }
 
+function pickLinkedinPage(pageId) {
+    set('linkedin.pageId', pageId);
+    router.put(form.linkedin.pageUpdateUrl, { pageId }, {
+        preserveScroll: true,
+        onSuccess: () => showToast('Pagina LinkedIn aggiornata'),
+    });
+}
+
 /* ------------------------------------------------------------------ */
 /* Connection state helpers                                             */
 /* ------------------------------------------------------------------ */
@@ -431,7 +439,8 @@ function goToIntegration(chId) {
                                 @update="(field, value) => set('meta.' + field, value)" />
 
                             <LinkedinFields v-else-if="activeIntg === 'linkedin'" :model-value="form.linkedin"
-                                @update="(field, value) => set('linkedin.' + field, value)" @get-token="getLinkedinToken" />
+                                @update="(field, value) => set('linkedin.' + field, value)" @get-token="getLinkedinToken"
+                                @pick-page="pickLinkedinPage" />
 
                             <WordpressFields v-else-if="activeIntg === 'wordpress'" :model-value="form.wordpress"
                                 @update="(field, value) => set('wordpress.' + field, value)" />

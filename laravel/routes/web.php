@@ -45,6 +45,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/linkedin/callback', [LinkedInController::class, 'callback'])
         ->name('linkedin.callback');
 
+    Route::put('/account/{user}/linkedin/pagina', [LinkedInController::class, 'updatePage'])
+        ->name('linkedin.page.update');
+
     Route::get('/posts', [PostController::class, 'index'])
         ->name('posts');
 
