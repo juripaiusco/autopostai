@@ -84,10 +84,7 @@ function logout() {
             <div style="position: relative">
                 <div v-if="acctOpen" class="card sb-acct-menu">
                     <Link :href="route('settings')" class="sb-acct-item" @click="handleNavigate">
-                        <Icon name="users" :size="17" />Profilo
-                    </Link>
-                    <Link :href="route('settings')" class="sb-acct-item" @click="handleNavigate">
-                        <Icon name="settings" :size="17" />Impostazioni account
+                        <Icon name="settings" :size="17" />Profilo e impostazioni
                     </Link>
                     <div class="sb-acct-sep"></div>
                     <button type="button" class="sb-acct-item sb-acct-item--danger" @click="logout">

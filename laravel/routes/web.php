@@ -6,8 +6,8 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ScopeController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 /* Route::get('/', fn () => Inertia::render('Welcome', [
     'appName' => config('app.name'),
@@ -68,6 +68,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/calendarizza', [ScheduleController::class, 'index'])
         ->name('schedule');
 
-    Route::get('/impostazioni', fn () => Inertia::render('Settings'))
+    Route::get('/impostazioni', [SettingsController::class, 'edit'])
         ->name('settings');
+
+    Route::put('/impostazioni', [SettingsController::class, 'update'])
+        ->name('settings.update');
 });
