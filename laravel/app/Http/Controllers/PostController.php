@@ -154,15 +154,7 @@ class PostController extends Controller
      */
     public function show(Request $request, Post $post): Response
     {
-        $me = $request->user();
-        $isAdmin = $me->isAdmin();
-        $isManager = $me->isManager();
-
-        $allowed = $isAdmin
-            || ($isManager && $post->user->parent_id === $me->id)
-            || $post->user_id === $me->id;
-
-        abort_unless($allowed, 403);
+        $this->authorize('view', $post);
 
         $post->load([
             'user:id,name,email',
@@ -220,14 +212,9 @@ class PostController extends Controller
     public function edit(Request $request, Post $post): Response|RedirectResponse
     {
         $me = $request->user();
+        $this->authorize('update', $post);
         $isAdmin = $me->isAdmin();
         $isManager = $me->isManager();
-
-        $allowed = $isAdmin
-            || ($isManager && $post->user->parent_id === $me->id)
-            || $post->user_id === $me->id;
-
-        abort_unless($allowed, 403);
 
         if ($post->status() === 'published') {
             return redirect()->route('posts.show', $post);
@@ -353,15 +340,7 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post): RedirectResponse
     {
-        $me = $request->user();
-        $isAdmin = $me->isAdmin();
-        $isManager = $me->isManager();
-
-        $allowed = $isAdmin
-            || ($isManager && $post->user->parent_id === $me->id)
-            || $post->user_id === $me->id;
-
-        abort_unless($allowed, 403);
+        $this->authorize('update', $post);
 
         abort_if($post->status() === 'published', 403, 'Un post pubblicato non può essere modificato.');
 
@@ -411,15 +390,7 @@ class PostController extends Controller
 
     public function destroy(Request $request, Post $post): RedirectResponse
     {
-        $me = $request->user();
-        $isAdmin = $me->isAdmin();
-        $isManager = $me->isManager();
-
-        $allowed = $isAdmin
-            || ($isManager && $post->user->parent_id === $me->id)
-            || $post->user_id === $me->id;
-
-        abort_unless($allowed, 403);
+        $this->authorize('delete', $post);
 
         $post->delete();
 

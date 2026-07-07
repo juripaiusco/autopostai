@@ -61,4 +61,12 @@ class AccountIndexScopeTest extends TestCase
             ->has('users.data', 2)
         );
     }
+
+    public function test_simple_user_is_forbidden_from_account_index(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $simpleUser = User::factory()->create(['parent_id' => $admin->id]);
+
+        $this->actingAs($simpleUser)->get(route('account'))->assertForbidden();
+    }
 }

@@ -20,6 +20,7 @@ class AccountController extends Controller
     public function index(Request $request): Response
     {
         $me = $request->user();
+        $this->authorize('viewAny', User::class);
         $isAdmin = $me->isAdmin();
         $activeUserId = $me->resolveScopedUser($request->session()->get('scoped_user_id'))['id'] ?? null;
 
@@ -105,9 +106,7 @@ class AccountController extends Controller
     public function create(Request $request): Response
     {
         $me = $request->user();
-        $isAdmin = $me->isAdmin();
-
-        abort_unless($isAdmin, 403);
+        $this->authorize('create', User::class);
 
         $managers = User::whereNull('parent_id')->orWhere('child_on', 1)
             ->where('id', '!=', $me->id)
@@ -126,7 +125,7 @@ class AccountController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $me = $request->user();
-        abort_unless($me->isAdmin(), 403);
+        $this->authorize('create', User::class);
 
         $data = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
@@ -148,8 +147,8 @@ class AccountController extends Controller
     public function edit(Request $request, User $user): Response
     {
         $me = $request->user();
+        $this->authorize('view', $user);
         $isAdmin = $me->isAdmin();
-        abort_unless($isAdmin || $user->parent_id === $me->id, 403);
 
         $managers = User::whereNull('parent_id')->orWhere('child_on', 1)
             ->where('id', '!=', $user->id)
@@ -240,8 +239,7 @@ class AccountController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        $me = $request->user();
-        abort_unless($me->isAdmin() || $user->parent_id === $me->id, 403);
+        $this->authorize('update', $user);
 
         $data = $request->validate([
             'name'  => ['required', 'string', 'max:255'],
@@ -316,10 +314,7 @@ class AccountController extends Controller
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
-        $me = $request->user();
-        $isAdmin = $me->isAdmin();
-
-        abort_unless($isAdmin || $user->parent_id === $me->id, 403);
+        $this->authorize('delete', $user);
 
         $user->delete();
 
