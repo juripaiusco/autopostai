@@ -56,6 +56,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/account/{user}/newsletter/liste', [NewsletterController::class, 'fetchLists'])
         ->name('newsletter.lists');
 
+    Route::get('/posts/canali/{user}/wordpress-categorie', [WordPressController::class, 'categoriesForPost'])
+        ->name('posts.wordpress-categories');
+
+    Route::get('/posts/canali/{user}/newsletter-liste', [NewsletterController::class, 'listsForPost'])
+        ->name('posts.newsletter-lists');
+
     Route::get('/posts', [PostController::class, 'index'])
         ->name('posts');
 

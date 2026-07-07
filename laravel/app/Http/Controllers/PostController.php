@@ -101,6 +101,26 @@ class PostController extends Controller
     }
 
     /**
+     * Metadati canale per canale per l'account $user: disponibile (attivo
+     * sull'account) e replyOn (l'account consente le risposte automatiche
+     * su quel canale) — usati dal form per mostrare TUTTI i canali (anche
+     * quelli non abilitati, disattivati) e per limitare l'auto-risposta.
+     */
+    private function channelsMeta(User $user): array
+    {
+        $userChannels = $user->channels ?? [];
+
+        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($userChannels) {
+            $c = $userChannels[$id] ?? [];
+
+            return [$id => [
+                'available' => !empty($c['on']),
+                'replyOn' => !empty($c['reply_on']),
+            ]];
+        })->all();
+    }
+
+    /**
      * Form di creazione di un nuovo post (Composer).
      */
     public function create(Request $request): Response
@@ -108,14 +128,6 @@ class PostController extends Controller
         $me = $request->user();
         $isAdmin = $me->isAdmin();
         $isManager = $me->isManager();
-
-        $userChannels = collect($me->channels ?? [])
-            ->filter(fn ($c) => !empty($c['on']))
-            ->keys()
-            ->values()
-            ->all();
-
-        $channelsAvailable = $userChannels ?: array_keys(User::CHANNELS);
 
         $users = null;
         if ($isAdmin || $isManager) {
@@ -131,11 +143,7 @@ class PostController extends Controller
                     'id' => $u->id,
                     'name' => $u->name,
                     'email' => $u->email,
-                    'channelsAvailable' => collect($u->channels ?? [])
-                        ->filter(fn ($c) => !empty($c['on']))
-                        ->keys()
-                        ->values()
-                        ->all(),
+                    'channelsMeta' => $this->channelsMeta($u),
                 ])
                 ->values();
         }
@@ -143,7 +151,7 @@ class PostController extends Controller
         $prefill = $request->session()->pull('post_prefill');
 
         return Inertia::render('Posts/Form', [
-            'channelsAvailable' => $channelsAvailable,
+            'channelsMeta' => $this->channelsMeta($me),
             'users' => $users ?? [],
             'prefill' => $prefill,
         ]);
@@ -220,40 +228,92 @@ class PostController extends Controller
             return redirect()->route('posts.show', $post);
         }
 
-        $userChannels = collect($me->channels ?? [])
-            ->filter(fn ($c) => !empty($c['on']))
-            ->keys()
-            ->values()
-            ->all();
-
-        $channelsAvailable = $userChannels ?: array_keys(User::CHANNELS);
-
         $imgSource = $post->img_ai_check_on == '1' ? 'generated' : ($post->img ? 'upload' : null);
 
         return Inertia::render('Posts/Form', [
             'mode' => 'edit',
-            'channelsAvailable' => $channelsAvailable,
+            'channelsMeta' => $this->channelsMeta($post->user),
             'post' => [
                 'id' => $post->id,
                 'title' => $post->title,
+                'ownerId' => $post->user_id,
                 'owner' => $isAdmin || $isManager
                     ? ['name' => $post->user->name, 'email' => $post->user->email]
                     : null,
-                'channels' => collect($post->channels ?? [])
-                    ->filter(fn ($c) => !empty($c['on']))
-                    ->keys()
-                    ->values()
-                    ->all(),
+                'channels' => $post->channels ?? [],
                 'ai_prompt_post' => $post->ai_prompt_post,
                 'ai_content' => $post->ai_content,
                 'ai_prompt_comment' => $post->ai_prompt_comment,
-                'comments_enabled' => $post->comments_enabled === '1',
-                'auto_reply_enabled' => $post->auto_reply_enabled === '1',
                 'imgUrl' => $post->img ? Storage::disk('public')->url($post->img) : null,
                 'img_source' => $imgSource,
                 'published_at' => $post->published_at?->format('Y-m-d\TH:i'),
             ],
         ]);
+    }
+
+    /**
+     * Ricostruisce i canali selezionati per il post a partire dal payload
+     * grezzo del form: whitelist dei campi attesi per tipo di canale, non un
+     * pass-through — coerente con come AccountController tratta i canali.
+     * I canali non presenti nel payload restano semplicemente 'on' => false.
+     */
+    private function buildChannelsPayload(array $selected): array
+    {
+        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($selected) {
+            if (!array_key_exists($id, $selected)) {
+                return [$id => ['on' => false]];
+            }
+
+            $opts = is_array($selected[$id]) ? $selected[$id] : [];
+
+            if (in_array($id, ['facebook', 'instagram', 'linkedin'], true)) {
+                return [$id => [
+                    'on' => true,
+                    'comments_enabled' => !empty($opts['comments_enabled']),
+                    'auto_reply_enabled' => !empty($opts['auto_reply_enabled']),
+                ]];
+            }
+
+            if ($id === 'wordpress') {
+                $categories = collect($opts['categories'] ?? [])
+                    ->filter(fn ($c) => is_array($c) && !empty($c['id']))
+                    ->map(fn ($c) => [
+                        'id' => (string) $c['id'],
+                        'name' => (string) ($c['name'] ?? ''),
+                        'on' => !empty($c['on']),
+                    ])
+                    ->values()
+                    ->all();
+
+                return [$id => ['on' => true, 'categories' => $categories]];
+            }
+
+            if ($id === 'newsletter') {
+                $list = $opts['list'] ?? null;
+                $list = (is_array($list) && !empty($list['id'])) ? [
+                    'provider' => $list['provider'] ?? null,
+                    'id' => (string) $list['id'],
+                    'name' => (string) ($list['name'] ?? ''),
+                ] : null;
+
+                return [$id => ['on' => true, 'list' => $list]];
+            }
+
+            return [$id => ['on' => true]];
+        })->all();
+    }
+
+    /**
+     * Aggregato [commenti abilitati, auto-risposta abilitata] su ALMENO un
+     * canale — le due colonne DB restano un riassunto per Posts/Show.vue,
+     * la verita' per canale vive nel JSON channels.
+     */
+    private function commentsAggregate(array $channels): array
+    {
+        return [
+            collect($channels)->contains(fn ($c) => !empty($c['comments_enabled'])),
+            collect($channels)->contains(fn ($c) => !empty($c['auto_reply_enabled'])),
+        ];
     }
 
     /**
@@ -269,10 +329,7 @@ class PostController extends Controller
             'title' => ['nullable', 'string', 'max:255'],
             'user_id' => ['nullable', 'integer'],
             'channels' => ['required', 'array', 'min:1'],
-            'channels.*' => ['string', Rule::in(array_keys(User::CHANNELS))],
             'ai_prompt_post' => ['nullable', 'string'],
-            'comments_enabled' => ['boolean'],
-            'auto_reply_enabled' => ['boolean'],
             'ai_prompt_comment' => ['nullable', 'string'],
             'ai_content' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:10240'],
@@ -280,6 +337,9 @@ class PostController extends Controller
             'published_at' => ['nullable', 'date'],
             'action' => ['required', 'string', Rule::in(['save', 'save_and_add'])],
         ]);
+
+        $unknown = array_diff(array_keys($data['channels']), array_keys(User::CHANNELS));
+        abort_if(!empty($unknown), 422, 'Canale non valido.');
 
         $targetUserId = match (true) {
             $isAdmin => User::whereNotNull('parent_id')->whereNull('child_on')
@@ -295,10 +355,8 @@ class PostController extends Controller
             $img = Storage::disk('public')->putFile('posts', $request->file('image'));
         }
 
-        $channels = collect(User::CHANNELS)
-            ->keys()
-            ->mapWithKeys(fn ($id) => [$id => ['on' => in_array($id, $data['channels'], true)]])
-            ->all();
+        $channels = $this->buildChannelsPayload($data['channels']);
+        [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
 
         $post = Post::create([
             'user_id' => $targetUserId,
@@ -309,8 +367,8 @@ class PostController extends Controller
             'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
             'img' => $img,
             'img_ai_check_on' => ($data['img_source'] ?? null) === 'generated' ? '1' : '0',
-            'comments_enabled' => !empty($data['comments_enabled']) ? '1' : '0',
-            'auto_reply_enabled' => !empty($data['auto_reply_enabled']) ? '1' : '0',
+            'comments_enabled' => $commentsEnabled ? '1' : '0',
+            'auto_reply_enabled' => $autoReplyEnabled ? '1' : '0',
             'channels' => $channels,
             'published_at' => $data['published_at'] ?? null,
             'published' => '0',
@@ -321,8 +379,6 @@ class PostController extends Controller
                 'title' => $post->title,
                 'channels' => $data['channels'],
                 'ai_prompt_post' => $post->ai_prompt_post,
-                'comments_enabled' => $post->comments_enabled === '1',
-                'auto_reply_enabled' => $post->auto_reply_enabled === '1',
                 'ai_prompt_comment' => $post->ai_prompt_comment,
             ]);
             $request->session()->flash('toast', "Post salvato. Ne abbiamo creato una copia: adattala a un altro canale e salva.");
@@ -347,10 +403,7 @@ class PostController extends Controller
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'channels' => ['required', 'array', 'min:1'],
-            'channels.*' => ['string', Rule::in(array_keys(User::CHANNELS))],
             'ai_prompt_post' => ['nullable', 'string'],
-            'comments_enabled' => ['boolean'],
-            'auto_reply_enabled' => ['boolean'],
             'ai_prompt_comment' => ['nullable', 'string'],
             'ai_content' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:10240'],
@@ -358,10 +411,11 @@ class PostController extends Controller
             'published_at' => ['nullable', 'date'],
         ]);
 
-        $channels = collect(User::CHANNELS)
-            ->keys()
-            ->mapWithKeys(fn ($id) => [$id => ['on' => in_array($id, $data['channels'], true)]])
-            ->all();
+        $unknown = array_diff(array_keys($data['channels']), array_keys(User::CHANNELS));
+        abort_if(!empty($unknown), 422, 'Canale non valido.');
+
+        $channels = $this->buildChannelsPayload($data['channels']);
+        [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
 
         $img = $post->img;
         $imgAiCheckOn = $post->img_ai_check_on;
@@ -377,8 +431,8 @@ class PostController extends Controller
             'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
             'img' => $img,
             'img_ai_check_on' => $imgAiCheckOn,
-            'comments_enabled' => !empty($data['comments_enabled']) ? '1' : '0',
-            'auto_reply_enabled' => !empty($data['auto_reply_enabled']) ? '1' : '0',
+            'comments_enabled' => $commentsEnabled ? '1' : '0',
+            'auto_reply_enabled' => $autoReplyEnabled ? '1' : '0',
             'channels' => $channels,
             'published_at' => $data['published_at'] ?? null,
         ]);

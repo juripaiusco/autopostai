@@ -2,24 +2,29 @@
 import { ref, computed } from 'vue';
 import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
-import ToggleSwitch from '@/Components/UI/ToggleSwitch.vue';
+import SocialOptions from '@/Components/Posts/ChannelOptions/SocialOptions.vue';
+import WordpressOptions from '@/Components/Posts/ChannelOptions/WordpressOptions.vue';
+import NewsletterOptions from '@/Components/Posts/ChannelOptions/NewsletterOptions.vue';
 
 const props = defineProps({
     form: { type: Object, required: true },
-    channels: { type: Array, required: true }, // [{ id, label }]
+    channels: { type: Array, required: true }, // [{ id, label, limit, available, replyOn }]
     users: { type: Array, default: () => [] },
     mode: { type: String, default: 'create' },
     owner: { type: Object, default: null },
+    targetUserId: { type: [Number, String], default: null },
 });
 
-const emit = defineEmits(['set']);
+const emit = defineEmits(['set', 'toggle-channel', 'set-channel-option']);
 
-function toggleChannel(id) {
-    const selected = props.form.channels.includes(id);
-    emit('set', 'channels', selected
-        ? props.form.channels.filter((c) => c !== id)
-        : [...props.form.channels, id]);
+const SOCIAL_IDS = ['facebook', 'instagram', 'linkedin'];
+
+function toggleChannel(ch) {
+    if (!ch.available) return;
+    emit('toggle-channel', ch.id);
 }
+
+const selectedSocialWithAutoReply = computed(() => SOCIAL_IDS.some((id) => props.form.channels[id]?.auto_reply_enabled));
 
 const userQuery = ref('');
 const selectedUser = computed(() => props.users.find((u) => u.id === props.form.user_id) ?? null);
@@ -33,6 +38,49 @@ function userLabel(u) {
 }
 function onUserSelect(u) {
     emit('set', 'user_id', u?.id ?? null);
+}
+
+/* ------------------------------------------------------------------ */
+/* Fetch live: categorie WordPress / liste Newsletter                    */
+/* ------------------------------------------------------------------ */
+
+const wpLoading = ref(false);
+async function fetchWordpressCategories() {
+    if (!props.targetUserId) return;
+    wpLoading.value = true;
+    try {
+        const res = await fetch(route('posts.wordpress-categories', props.targetUserId), { headers: { Accept: 'application/json' } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const existing = props.form.channels.wordpress?.categories ?? [];
+        const merged = (data.categories ?? []).map((c) => ({
+            ...c,
+            on: existing.find((e) => e.id === c.id)?.on ?? false,
+        }));
+        emit('set-channel-option', 'wordpress', 'categories', merged);
+    } finally {
+        wpLoading.value = false;
+    }
+}
+
+const nlLoading = ref(false);
+const nlLists = ref([]);
+const nlProvider = ref(null);
+async function fetchNewsletterLists() {
+    if (!props.targetUserId) return;
+    nlLoading.value = true;
+    try {
+        const res = await fetch(route('posts.newsletter-lists', props.targetUserId), { headers: { Accept: 'application/json' } });
+        if (!res.ok) return;
+        const data = await res.json();
+        nlLists.value = data.lists ?? [];
+        nlProvider.value = data.provider ?? null;
+    } finally {
+        nlLoading.value = false;
+    }
+}
+function pickNewsletterList(list) {
+    emit('set-channel-option', 'newsletter', 'list', { provider: nlProvider.value, id: list.id, name: list.name });
 }
 </script>
 
@@ -76,23 +124,6 @@ function onUserSelect(u) {
 
         </div>
 
-        <div>
-            <label class="acc-row-label">Canali</label>
-            <span class="acc-row-help">Scegli dove pubblicare questo post.</span>
-            <div class="pf-channel-grid">
-                <button v-for="ch in channels" :key="ch.id" type="button"
-                    class="pf-channel-btn" :class="{ 'pf-channel-btn--on': form.channels.includes(ch.id) }"
-                    :aria-pressed="form.channels.includes(ch.id)"
-                    @click="toggleChannel(ch.id)">
-                    <ChannelIcon :id="ch.id" :size="15" />
-                    {{ ch.label }}
-                </button>
-            </div>
-            <div v-if="form.channels.length === 0" class="pf-channel-error pf-fade-in">
-                Seleziona almeno un canale per continuare.
-            </div>
-        </div>
-
         <div class="acc-field" style="margin-bottom:0">
             <label class="acc-row-label" for="post-prompt">Prompt</label>
             <span class="acc-row-help">L'AI genera il testo del post in base a queste indicazioni.</span>
@@ -102,33 +133,46 @@ function onUserSelect(u) {
             <div class="pf-counter">{{ (form.ai_prompt_post || '').length }} caratteri</div>
         </div>
 
-        <div class="pf-comments-card">
-            <div class="pf-comments-title">Commenti</div>
-
-            <div class="acc-ch-opt-row pf-check-row">
-                <div class="acc-ch-opt-txt">
-                    <div class="pf-check-title">Abilita i commenti</div>
-                    <div class="pf-check-help">Gli utenti potranno commentare il post sui canali che lo supportano.</div>
-                </div>
-                <ToggleSwitch :model-value="form.comments_enabled" @update:model-value="emit('set', 'comments_enabled', $event)" />
+        <div>
+            <label class="acc-row-label">Canali</label>
+            <span class="acc-row-help">Scegli dove pubblicare questo post. FaPer3 gestisce tutti questi canali — quelli disattivati non sono ancora collegati a questo account.</span>
+            <div class="pf-channel-grid">
+                <button v-for="ch in channels" :key="ch.id" type="button"
+                    class="pf-channel-btn" :class="{ 'pf-channel-btn--on': !!form.channels[ch.id], 'pf-channel-btn--disabled': !ch.available }"
+                    :aria-pressed="!!form.channels[ch.id]"
+                    :disabled="!ch.available"
+                    :title="ch.available ? '' : 'Non collegato per questo account'"
+                    @click="toggleChannel(ch)">
+                    <ChannelIcon :id="ch.id" :size="15" />
+                    {{ ch.label }}
+                </button>
             </div>
-
-            <div class="acc-ch-opt-row pf-check-row" :class="{ 'pf-check-row--disabled': !form.comments_enabled }">
-                <div class="acc-ch-opt-txt">
-                    <div class="pf-check-title">Abilita risposte automatiche</div>
-                    <div class="pf-check-help">L'AI risponderà ai commenti seguendo le istruzioni qui sotto. Sempre revisionabili prima dell'invio.</div>
-                </div>
-                <ToggleSwitch :model-value="form.auto_reply_enabled" :disabled="!form.comments_enabled"
-                    @update:model-value="emit('set', 'auto_reply_enabled', $event)" />
+            <div v-if="Object.keys(form.channels).length === 0" class="pf-channel-error pf-fade-in">
+                Seleziona almeno un canale per continuare.
             </div>
+        </div>
 
-            <div v-if="form.comments_enabled && form.auto_reply_enabled" class="acc-field" style="margin-top:10px;margin-bottom:0">
-                <label class="acc-row-label" for="post-comment-prompt">Prompt per le risposte</label>
-                <span class="acc-row-help">Istruzioni per l'AI. Facoltativo.</span>
-                <textarea id="post-comment-prompt" class="control" rows="3" :value="form.ai_prompt_comment"
-                    placeholder="Es. Rispondi in modo cordiale, ringrazia sempre chi commenta"
-                    @input="emit('set', 'ai_prompt_comment', $event.target.value)" />
-            </div>
+        <template v-for="ch in channels" :key="'opt-' + ch.id">
+            <SocialOptions v-if="form.channels[ch.id] && SOCIAL_IDS.includes(ch.id)"
+                :channel-id="ch.id" :label="ch.label" :model-value="form.channels[ch.id]" :reply-on="ch.replyOn"
+                @update="(field, value) => emit('set-channel-option', ch.id, field, value)" />
+
+            <WordpressOptions v-else-if="form.channels[ch.id] && ch.id === 'wordpress'"
+                :model-value="form.channels[ch.id]" :loading="wpLoading"
+                @update="(field, value) => emit('set-channel-option', 'wordpress', field, value)"
+                @fetch="fetchWordpressCategories" />
+
+            <NewsletterOptions v-else-if="form.channels[ch.id] && ch.id === 'newsletter'"
+                :model-value="form.channels[ch.id]" :lists="nlLists" :provider="nlProvider" :loading="nlLoading"
+                @fetch="fetchNewsletterLists" @pick="pickNewsletterList" />
+        </template>
+
+        <div v-if="selectedSocialWithAutoReply" class="acc-field pf-fade-in" style="margin-bottom:0">
+            <label class="acc-row-label" for="post-comment-prompt">Prompt per le risposte</label>
+            <span class="acc-row-help">Istruzioni per l'AI, usate su tutti i canali con risposta automatica attiva. Facoltativo.</span>
+            <textarea id="post-comment-prompt" class="control" rows="3" :value="form.ai_prompt_comment"
+                placeholder="Es. Rispondi in modo cordiale, ringrazia sempre chi commenta"
+                @input="emit('set', 'ai_prompt_comment', $event.target.value)" />
         </div>
     </div>
 </template>

@@ -10,7 +10,7 @@ import StepPublish from '@/Components/Posts/StepPublish.vue';
 
 const props = defineProps({
     mode: { type: String, default: 'create' }, // 'create' | 'edit'
-    channelsAvailable: { type: Array, default: () => [] },
+    channelsMeta: { type: Object, default: () => ({}) }, // { [channelId]: { available, replyOn } }
     users: { type: Array, default: () => [] },
     prefill: { type: Object, default: null },
     post: { type: Object, default: null },
@@ -28,24 +28,44 @@ const CHANNELS_CFG = [
 
 const selectedUser = computed(() => props.users.find((u) => u.id === form.user_id));
 
-const channels = computed(() => {
-    if (props.mode === 'edit') return CHANNELS_CFG.filter((c) => props.channelsAvailable.includes(c.id));
-    if (props.users.length > 0) {
-        return selectedUser.value
-            ? CHANNELS_CFG.filter((c) => selectedUser.value.channelsAvailable.includes(c.id))
-            : [];
-    }
-    return CHANNELS_CFG.filter((c) => props.channelsAvailable.includes(c.id));
+// Sempre tutti i 5 canali: quelli non abilitati sull'account restano visibili
+// ma disattivati, cosi' si vede cosa gestisce FaPer3 anche se non e' collegato.
+const activeChannelsMeta = computed(() => {
+    if (props.mode === 'edit') return props.channelsMeta;
+    if (props.users.length > 0) return selectedUser.value?.channelsMeta ?? {};
+    return props.channelsMeta;
 });
+
+const channels = computed(() => CHANNELS_CFG.map((c) => ({
+    ...c,
+    available: !!activeChannelsMeta.value[c.id]?.available,
+    replyOn: !!activeChannelsMeta.value[c.id]?.replyOn,
+})));
+
+function defaultChannelOptions(id) {
+    if (id === 'wordpress') return { categories: [] };
+    if (id === 'newsletter') return { list: null };
+    return { comments_enabled: false, auto_reply_enabled: false };
+}
+
+// Il post gia' salvato ha 'on'/'available' misti alle opzioni nel JSON grezzo:
+// qui si tiene solo cio' che serve al form (i canali selezionati -> opzioni).
+function channelsFromPost(rawChannels) {
+    const result = {};
+    for (const [id, data] of Object.entries(rawChannels ?? {})) {
+        if (!data?.on) continue;
+        const { on, ...opts } = data;
+        result[id] = { ...defaultChannelOptions(id), ...opts };
+    }
+    return result;
+}
 
 function buildForm() {
     if (props.mode === 'edit' && props.post) {
         return {
             title: props.post.title ?? '',
-            channels: props.post.channels ?? [],
+            channels: channelsFromPost(props.post.channels),
             ai_prompt_post: props.post.ai_prompt_post ?? '',
-            comments_enabled: props.post.comments_enabled ?? true,
-            auto_reply_enabled: props.post.auto_reply_enabled ?? false,
             ai_prompt_comment: props.post.ai_prompt_comment ?? '',
             ai_content: props.post.ai_content ?? '',
             image: null,
@@ -58,10 +78,8 @@ function buildForm() {
     return {
         title: props.prefill?.title ?? '',
         user_id: null,
-        channels: props.prefill?.channels ?? [],
+        channels: {},
         ai_prompt_post: props.prefill?.ai_prompt_post ?? '',
-        comments_enabled: props.prefill?.comments_enabled ?? true,
-        auto_reply_enabled: props.prefill?.auto_reply_enabled ?? false,
         ai_prompt_comment: props.prefill?.ai_prompt_comment ?? '',
         ai_content: '',
         image: null,
@@ -81,14 +99,26 @@ function set(key, value) {
     form[key] = value;
 }
 
+function toggleChannel(id) {
+    if (form.channels[id]) {
+        delete form.channels[id];
+    } else {
+        form.channels[id] = defaultChannelOptions(id);
+    }
+}
+
+function setChannelOption(id, field, value) {
+    form.channels[id] = { ...form.channels[id], [field]: value };
+}
+
 if (props.mode === 'create' && props.users.length > 0) {
-    watch(() => form.user_id, () => { form.channels = []; });
+    watch(() => form.user_id, () => { form.channels = {}; });
 }
 
 const canAdvance = computed(() => {
     if (step.value === 0) {
         if (props.mode === 'create' && props.users.length > 0 && !form.user_id) return false;
-        return form.channels.length > 0;
+        return Object.keys(form.channels).length > 0;
     }
     return true;
 });
@@ -105,6 +135,15 @@ function back() {
 function goto(i) {
     step.value = i;
 }
+
+// Account per cui si sta scrivendo — serve per gli endpoint di fetch live
+// (categorie WordPress, liste Newsletter), che leggono le credenziali di
+// QUELL'account, non necessariamente di chi sta compilando il form.
+const targetUserId = computed(() => {
+    if (props.mode === 'edit') return props.post.ownerId;
+    if (props.users.length > 0) return form.user_id;
+    return usePage().props.auth?.user?.id ?? null;
+});
 
 function submit(action) {
     saving.value = true;
@@ -137,7 +176,8 @@ function submit(action) {
                 <Transition name="pf-step" mode="out-in">
                     <div class="pf-step-content" :key="step">
                         <StepWrite v-if="step === 0" :form="form" :channels="channels" :users="users"
-                            :mode="mode" :owner="post?.owner ?? null" @set="set" />
+                            :mode="mode" :owner="post?.owner ?? null" :target-user-id="targetUserId"
+                            @set="set" @toggle-channel="toggleChannel" @set-channel-option="setChannelOption" />
                         <StepMedia v-else-if="step === 1" :form="form" @set="set" />
                         <StepPublish v-else :form="form" :channels="channels" :saving="saving" :mode="mode"
                             @set="set" @back="back" @save="submit('save')" @save-and-add="submit('save_and_add')" />

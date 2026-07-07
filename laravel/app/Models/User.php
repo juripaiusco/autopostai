@@ -148,4 +148,17 @@ class User extends Authenticatable
 
         return $this->filterableUsers()->firstWhere('id', $requestedId);
     }
+
+    /**
+     * Puo' $this creare/gestire un post per conto di $target? Diverso da
+     * UserPolicy (che regola la gestione dell'account in Account/Form,
+     * solo admin/manager): qui un utente semplice puo' sempre agire per
+     * se' stesso, oltre ad admin e al manager proprietario.
+     */
+    public function canActFor(User $target): bool
+    {
+        return $this->id === $target->id
+            || $this->isAdmin()
+            || ($this->isManager() && $target->parent_id === $this->id);
+    }
 }

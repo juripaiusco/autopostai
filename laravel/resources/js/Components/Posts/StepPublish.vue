@@ -16,20 +16,21 @@ const genLoading = ref(false);
 const editing = ref(false);
 
 const channelById = computed(() => Object.fromEntries(props.channels.map((c) => [c.id, c])));
+const selectedChannelIds = computed(() => Object.keys(props.form.channels));
 
 const charLimit = computed(() => {
-    const limits = props.form.channels.map((id) => channelById.value[id]?.limit).filter((l) => l != null);
+    const limits = selectedChannelIds.value.map((id) => channelById.value[id]?.limit).filter((l) => l != null);
     return limits.length ? Math.min(...limits) : null;
 });
 
 const limitChannel = computed(() => {
     if (charLimit.value === null) return null;
-    const id = props.form.channels.find((c) => channelById.value[c]?.limit === charLimit.value);
+    const id = selectedChannelIds.value.find((c) => channelById.value[c]?.limit === charLimit.value);
     return id ? channelById.value[id] : null;
 });
 
 const overLimit = computed(() => charLimit.value !== null && (props.form.ai_content || '').length > charLimit.value);
-const canSave = computed(() => props.form.channels.length > 0 && !overLimit.value);
+const canSave = computed(() => selectedChannelIds.value.length > 0 && !overLimit.value);
 
 let genTimer = null;
 function runPreview() {
@@ -71,10 +72,10 @@ function runPreview() {
                         <span v-else class="pf-summary-empty">Nessun prompt inserito</span>
                     </div>
                     <div class="pf-summary-channels">
-                        <span v-for="id in form.channels" :key="id" class="pf-summary-chip">
+                        <span v-for="id in selectedChannelIds" :key="id" class="pf-summary-chip">
                             <ChannelIcon :id="id" :size="11" />{{ channelById[id]?.label ?? id }}
                         </span>
-                        <span v-if="form.channels.length === 0" class="pf-summary-warn">⚠ Nessun canale selezionato</span>
+                        <span v-if="selectedChannelIds.length === 0" class="pf-summary-warn">⚠ Nessun canale selezionato</span>
                     </div>
                 </div>
             </div>

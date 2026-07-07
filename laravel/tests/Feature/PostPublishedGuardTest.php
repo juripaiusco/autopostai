@@ -46,7 +46,7 @@ class PostPublishedGuardTest extends TestCase
 
         $this->actingAs($owner)->put(route('posts.update', $post), [
             'title' => 'Nuovo titolo',
-            'channels' => ['facebook'],
+            'channels' => ['facebook' => []],
         ])->assertForbidden();
     }
 
@@ -57,7 +57,7 @@ class PostPublishedGuardTest extends TestCase
 
         $this->actingAs($owner)->put(route('posts.update', $post), [
             'title' => 'Nuovo titolo',
-            'channels' => ['facebook'],
+            'channels' => ['facebook' => []],
         ])->assertRedirect(route('posts'));
 
         $this->assertSame('Nuovo titolo', $post->fresh()->title);
