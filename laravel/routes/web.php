@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ScopeController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
@@ -64,7 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/search', [SearchController::class, 'index'])
         ->name('search');
 
-    Route::get('/calendarizza', fn () => Inertia::render('Schedule'))
+    Route::get('/calendarizza', [ScheduleController::class, 'index'])
         ->name('schedule');
 
     Route::get('/impostazioni', fn () => Inertia::render('Settings'))

@@ -606,3 +606,30 @@ tr:hover .ch-chip{ background: var(--g200); }
     .scope-ctx{ padding: 8px 14px; }
     .scope-trigger{ max-width: 190px; }
 }
+
+/* ============================================================
+   Calendarizza — griglia mensile
+   ============================================================ */
+.sched-nav{ display: flex; align-items: center; gap: 10px; }
+.sched-nav .btn{ padding: 6px 9px; }
+.sched-month-label{ font-size: 14px; font-weight: 600; color: var(--ink); min-width: 9em; text-align: center; text-transform: capitalize; }
+
+.sched-calendar{ display: flex; flex-direction: column; gap: 1px; background: var(--g100); }
+.sched-weekdays{ display: grid; grid-template-columns: repeat(7, 1fr); padding-bottom: 8px; }
+.sched-weekdays span{ font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--g400); text-align: center; }
+.sched-week{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--g100); }
+.sched-cell{ background: #fff; min-height: 96px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.sched-cell--out{ background: var(--g50); }
+.sched-cell--out .sched-cell-day{ color: var(--g300); }
+.sched-cell--today .sched-cell-day{ display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--sky); color: #fff; }
+.sched-cell-day{ font-size: 12.5px; font-weight: 600; color: var(--g600); }
+.sched-cell-posts{ display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sched-chip{ display: flex; align-items: center; gap: 5px; padding: 3px 6px; border-radius: var(--radius-sm); background: var(--sky-50); color: var(--sky-strong); font-size: 11px; font-weight: 500; text-decoration: none; overflow: hidden; }
+.sched-chip:hover{ background: var(--sky-100); }
+.sched-chip-title{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sched-chip-more{ font-size: 10.5px; color: var(--g400); padding: 0 6px; }
+
+@media (max-width: 768px){
+    .sched-cell{ min-height: 72px; }
+    .sched-weekdays span{ font-size: 9.5px; }
+}
