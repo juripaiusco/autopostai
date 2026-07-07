@@ -8,6 +8,7 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ScopeController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\WordPressController;
 use Illuminate\Support\Facades\Route;
 
 /* Route::get('/', fn () => Inertia::render('Welcome', [
@@ -47,6 +48,9 @@ Route::middleware('auth')->group(function () {
 
     Route::put('/account/{user}/linkedin/pagina', [LinkedInController::class, 'updatePage'])
         ->name('linkedin.page.update');
+
+    Route::post('/account/{user}/wordpress/categorie', [WordPressController::class, 'fetchCategories'])
+        ->name('wordpress.categories');
 
     Route::get('/posts', [PostController::class, 'index'])
         ->name('posts');

@@ -205,10 +205,19 @@ function getLinkedinToken() {
 
 function pickLinkedinPage(pageId) {
     set('linkedin.pageId', pageId);
-    router.put(form.linkedin.pageUpdateUrl, { pageId }, {
-        preserveScroll: true,
-        onSuccess: () => showToast('Pagina LinkedIn aggiornata'),
-    });
+    // Niente toast locale: il backend flasha il messaggio in sessione,
+    // mostrato dal toast globale di AppLayout dopo il reload della pagina.
+    router.put(form.linkedin.pageUpdateUrl, { pageId }, { preserveScroll: true });
+}
+
+function fetchWordpressCategories() {
+    if (props.mode === 'create') {
+        showToast('Salva prima l\'account, poi potrai caricare le categorie');
+        return;
+    }
+    // Niente toast locale qui: il messaggio (successo/errore, con conteggio)
+    // arriva dal backend via flash e lo mostra il toast globale di AppLayout.
+    router.post(form.wordpress.categoriesUrl, {}, { preserveScroll: true });
 }
 
 /* ------------------------------------------------------------------ */

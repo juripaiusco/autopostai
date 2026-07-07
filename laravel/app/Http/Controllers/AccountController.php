@@ -227,6 +227,8 @@ class AccountController extends Controller
                 'password'      => $s->wordpress_password ?? '',
                 'categoryId'    => $s->wordpress_cat_id ?? '',
                 'connected'     => !empty($s?->wordpress_url) && !empty($s?->wordpress_username),
+                'categories'    => $s?->wordpress_options['categories'] ?? [],
+                'categoriesUrl' => route('wordpress.categories', $user),
             ],
             'newsletter'    => [
                 'mailchimp'     => [
