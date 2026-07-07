@@ -9,6 +9,7 @@ defineProps({
     // Messaggio di stato flashato in sessione (es. dopo logout). Opzionale.
     status: { type: String, default: null },
     canResetPassword: { type: Boolean, default: false },
+    canRegister: { type: Boolean, default: false },
 });
 
 const showPw = ref(false);
@@ -95,7 +96,7 @@ function submit() {
             </button>
 
             <div class="auth-foot">
-                <div class="signup">Non hai un account? <a :href="route('register')">Registrati</a></div>
+                <div v-if="canRegister" class="signup">Non hai un account? <a :href="route('register')">Registrati</a></div>
                 <div class="ver">v.{{ usePage().props.app.version }}</div>
             </div>
         </form>

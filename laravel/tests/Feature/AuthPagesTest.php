@@ -15,14 +15,14 @@ class AuthPagesTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_can_view_register_page(): void
+    public function test_guest_can_view_register_page_when_no_users_exist(): void
     {
         $this->get(route('register'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Auth/Register'));
     }
 
-    public function test_registering_creates_a_new_admin_and_logs_in(): void
+    public function test_registering_creates_the_first_admin_and_logs_in(): void
     {
         $response = $this->post(route('register.store'), [
             'name' => 'Nuovo Studio',
@@ -37,6 +37,35 @@ class AuthPagesTest extends TestCase
         $user = User::whereEmail('nuovo@example.com')->firstOrFail();
         $this->assertNull($user->parent_id);
         $this->assertTrue($user->isAdmin());
+    }
+
+    public function test_register_page_redirects_to_login_once_a_user_exists(): void
+    {
+        User::factory()->create(['parent_id' => null]);
+
+        $this->get(route('register'))->assertRedirect(route('login'));
+    }
+
+    public function test_register_store_is_forbidden_once_a_user_exists(): void
+    {
+        User::factory()->create(['parent_id' => null]);
+
+        $this->post(route('register.store'), [
+            'name' => 'Intruso',
+            'email' => 'intruso@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertForbidden();
+
+        $this->assertDatabaseMissing('users', ['email' => 'intruso@example.com']);
+    }
+
+    public function test_login_page_hides_register_link_once_a_user_exists(): void
+    {
+        User::factory()->create(['parent_id' => null]);
+
+        $this->get(route('login'))
+            ->assertInertia(fn (Assert $page) => $page->where('canRegister', false));
     }
 
     public function test_guest_can_view_forgot_password_page(): void

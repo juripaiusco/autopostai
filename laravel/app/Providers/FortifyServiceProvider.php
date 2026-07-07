@@ -6,6 +6,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -33,10 +34,16 @@ class FortifyServiceProvider extends ServiceProvider
         // Viste di autenticazione costruite a mano come pagine Inertia 3 (design FaPer3).
         Fortify::loginView(fn () => Inertia::render('Auth/Login', [
             'canResetPassword' => true,
+            'canRegister' => !User::query()->exists(),
             'status' => session('status'),
         ]));
 
-        Fortify::registerView(fn () => Inertia::render('Auth/Register'));
+        // Registrazione pubblica disponibile solo per il primo admin (bootstrap
+        // a installazione vuota). Una volta che esiste almeno un utente, la
+        // rotta redirige al login — vedi anche il guard in CreateNewUser::create().
+        Fortify::registerView(fn () => User::query()->exists()
+            ? redirect()->route('login')
+            : Inertia::render('Auth/Register'));
 
         Fortify::requestPasswordResetLinkView(fn () => Inertia::render('Auth/ForgotPassword', [
             'status' => session('status'),

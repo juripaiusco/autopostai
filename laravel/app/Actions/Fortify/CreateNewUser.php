@@ -22,6 +22,12 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        // Registrazione pubblica solo per il primo admin (bootstrap): una volta
+        // che esiste almeno un utente, il form non e' nemmeno raggiungibile
+        // (vedi FortifyServiceProvider), ma il guard resta qui perche' e' questo
+        // il punto che crea davvero l'account, indipendentemente da come ci si arriva.
+        abort_if(User::query()->exists(), 403, 'Registrazione non disponibile.');
+
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
