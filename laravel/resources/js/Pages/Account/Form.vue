@@ -195,7 +195,12 @@ function showToast(msg) {
 }
 
 function getLinkedinToken() {
-    showToast('Funzione in arrivo: collegamento OAuth LinkedIn');
+    if (props.mode === 'create') {
+        showToast('Salva prima l\'account, poi potrai collegare LinkedIn');
+        return;
+    }
+    // Navigazione piena (non Inertia): si esce verso il consenso LinkedIn.
+    window.location.href = form.linkedin.connectUrl;
 }
 
 /* ------------------------------------------------------------------ */

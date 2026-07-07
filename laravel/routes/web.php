@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LinkedInController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ScopeController;
@@ -37,6 +38,12 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/account/{user}', [AccountController::class, 'destroy'])
         ->name('account.destroy');
+
+    Route::get('/account/{user}/linkedin/connetti', [LinkedInController::class, 'redirect'])
+        ->name('linkedin.redirect');
+
+    Route::get('/linkedin/callback', [LinkedInController::class, 'callback'])
+        ->name('linkedin.callback');
 
     Route::get('/posts', [PostController::class, 'index'])
         ->name('posts');

@@ -173,6 +173,16 @@ class AccountController extends Controller
 
         $s = $user->settings;
 
+        // Quanti altri account condividono la stessa app LinkedIn (client_id +
+        // secret): un refresh del token qui si propaga a tutti loro (voluto).
+        $linkedinSharedWithCount = 0;
+        if (!empty($s?->linkedin_client_id) && !empty($s?->linkedin_client_secret)) {
+            $linkedinSharedWithCount = Settings::where('linkedin_client_id', $s->linkedin_client_id)
+                ->where('linkedin_client_secret', $s->linkedin_client_secret)
+                ->where('user_id', '!=', $user->id)
+                ->count();
+        }
+
         $account = [
             'id'            => $user->id,
             'parent_id'     => $user->parent_id,
@@ -198,6 +208,9 @@ class AccountController extends Controller
                 'pageId'        => $s->linkedin_company_id ?? '',
                 'token'         => $s->linkedin_token ?? '',
                 'connected'     => !empty($s?->linkedin_token),
+                'tokenExpiresAt' => $s?->linkedin_token_expires_at?->diffForHumans(),
+                'sharedWithCount' => $linkedinSharedWithCount,
+                'connectUrl'    => route('linkedin.redirect', $user),
             ],
             'wordpress'     => [
                 'url'           => $s->wordpress_url ?? '',

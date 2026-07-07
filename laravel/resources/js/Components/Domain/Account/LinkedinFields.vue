@@ -31,16 +31,23 @@ const emit = defineEmits(['update', 'get-token']);
             <label class="acc-row-label" for="acc-li-token">
                 Token LinkedIn <span class="acc-readonly-tag">solo lettura</span>
             </label>
-            <span class="acc-row-help">Generato automaticamente dopo l'autorizzazione. Non modificabile a mano.</span>
+            <span class="acc-row-help">
+                Generato automaticamente dopo l'autorizzazione. Non modificabile a mano.
+                <template v-if="modelValue.tokenExpiresAt"> Scade {{ modelValue.tokenExpiresAt }}.</template>
+            </span>
             <SecretField id="acc-li-token" :model-value="modelValue.token" :read-only="true" :copyable="true"
-                placeholder="Si genera dopo «Verifica connessione»" />
+                placeholder="Si genera dopo «Ottieni token»" />
+        </div>
+        <div v-if="modelValue.sharedWithCount" class="acc-hint-inline" style="margin-bottom: 14px">
+            <Icon name="info" :size="14" />
+            Questa app LinkedIn è condivisa con altri {{ modelValue.sharedWithCount }} account: aggiornando il token qui, si aggiorna per tutti loro.
         </div>
         <div class="acc-verify-row">
             <ConnectionBadge :state="modelValue.connected ? 'ok' : 'off'" />
             <span class="acc-hint-inline">Le chiavi sono uniche, non duplicarle.</span>
             <button type="button" class="acc-verify" style="margin-left:auto" @click="emit('get-token')">
                 <Icon name="link" :size="15" />
-                Ottieni token
+                {{ modelValue.connected ? 'Rinnova token' : 'Ottieni token' }}
             </button>
         </div>
     </div>
