@@ -2,6 +2,7 @@
 @import './pages/account-form.css';
 @import './pages/post-form.css';
 @import './pages/post-show.css';
+@import './pages/auth.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';

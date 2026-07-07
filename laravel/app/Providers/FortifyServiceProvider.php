@@ -30,10 +30,21 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Vista di login costruita a mano come pagina Inertia 3 (design FaPer3).
+        // Viste di autenticazione costruite a mano come pagine Inertia 3 (design FaPer3).
         Fortify::loginView(fn () => Inertia::render('Auth/Login', [
-            'canResetPassword' => false,
+            'canResetPassword' => true,
             'status' => session('status'),
+        ]));
+
+        Fortify::registerView(fn () => Inertia::render('Auth/Register'));
+
+        Fortify::requestPasswordResetLinkView(fn () => Inertia::render('Auth/ForgotPassword', [
+            'status' => session('status'),
+        ]));
+
+        Fortify::resetPasswordView(fn (Request $request) => Inertia::render('Auth/ResetPassword', [
+            'email' => $request->email,
+            'token' => $request->route('token'),
         ]));
 
         Fortify::createUsersUsing(CreateNewUser::class);

@@ -161,13 +161,15 @@ return [
     |
     */
 
-    // NB: per la v2 abilitiamo solo il login (le rotte login/logout sono core e
-    // vengono registrate comunque). Registrazione, reset password, 2FA, passkeys
-    // restano disabilitati finché non li implementiamo con le relative viste.
+    // NB: registrazione e reset password abilitati con le relative viste
+    // Inertia (Auth/Register, Auth/ForgotPassword, Auth/ResetPassword).
+    // Verifica email non abilitata: richiederebbe MustVerifyEmail sul model
+    // User (mai attivato, nemmeno in v1) e un mailer reale oltre al 'log'
+    // di default. 2FA e passkeys restano disabilitati finché non richiesti.
 
     'features' => [
-        // Features::registration(),
-        // Features::resetPasswords(),
+        Features::registration(),
+        Features::resetPasswords(),
         // Features::emailVerification(),
         // Features::updateProfileInformation(),
         // Features::updatePasswords(),
