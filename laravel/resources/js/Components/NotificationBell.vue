@@ -55,7 +55,7 @@ onUnmounted(() => {
 
 <template>
     <div class="tb-notif" style="position: relative">
-        <button type="button" class="tb-icon alert" title="Notifiche" @click.stop="toggleOpen">
+        <button type="button" class="tb-icon" :class="{ alert: unread }" title="Notifiche" @click.stop="toggleOpen">
             <Icon name="bell" :size="20" />
             <i v-if="unread" class="tb-dot"></i>
         </button>
