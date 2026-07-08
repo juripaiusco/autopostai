@@ -2,11 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\PushNotificationAlert;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PushSubscriptionController extends Controller
 {
+    /**
+     * Solo le notifiche "di prodotto" (create da Notifiche > Nuova, tipo
+     * PushNotificationAlert) compaiono nella campanella. Le notifiche
+     * funzionali (es. "post inviato", quando esisteranno) useranno un'altra
+     * classe e non devono comparire qui — la campanella e' per comunicare
+     * con l'utente, non per il log delle azioni sui post.
+     */
+    private const BELL_NOTIFICATION_TYPE = PushNotificationAlert::class;
     /**
      * Il browser ha appena chiesto/ottenuto il permesso e generato una
      * PushSubscription (endpoint + chiavi) — la colleghiamo all'utente loggato.
@@ -44,7 +53,11 @@ class PushSubscriptionController extends Controller
      */
     public function checkUnread(Request $request): JsonResponse
     {
-        return response()->json(['unread' => $request->user()->unreadNotifications()->exists()]);
+        $unread = $request->user()->unreadNotifications()
+            ->where('type', self::BELL_NOTIFICATION_TYPE)
+            ->exists();
+
+        return response()->json(['unread' => $unread]);
     }
 
     /**
@@ -55,8 +68,8 @@ class PushSubscriptionController extends Controller
     {
         $me = $request->user();
 
-        $recent = $me->notifications()->latest()->limit(5)->get();
-        $me->unreadNotifications()->update(['read_at' => now()]);
+        $recent = $me->notifications()->where('type', self::BELL_NOTIFICATION_TYPE)->latest()->limit(5)->get();
+        $me->unreadNotifications()->where('type', self::BELL_NOTIFICATION_TYPE)->update(['read_at' => now()]);
 
         return response()->json([
             'notifications' => $recent->map(fn ($n) => [

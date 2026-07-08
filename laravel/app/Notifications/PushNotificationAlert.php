@@ -3,20 +3,18 @@
 namespace App\Notifications;
 
 use App\Models\PushNotification;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
 /**
- * A differenza di v1, questa e' in coda (ShouldQueue): l'invio a tanti
- * destinatari non deve bloccare la richiesta che l'ha generata.
+ * Niente ShouldQueue: l'invio parte dal comando schedulato
+ * notifications:send-pending (cron, non da una richiesta HTTP utente), quindi
+ * non c'e' nulla da "non bloccare" — e in questo ambiente non gira nessun
+ * queue:work, percio' una notifica in coda restava bloccata per sempre.
  */
-class PushNotificationAlert extends Notification implements ShouldQueue
+class PushNotificationAlert extends Notification
 {
-    use Queueable;
-
     public function __construct(private readonly PushNotification $pushNotification)
     {
     }
