@@ -4,6 +4,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import Icon from '@/Components/Icon.vue';
 import Sidebar from '@/Components/Sidebar.vue';
 import GlobalSearch from '@/Components/GlobalSearch.vue';
+import NotificationBell from '@/Components/NotificationBell.vue';
 import ScopeSelector from '@/Components/ScopeSelector.vue';
 import ScopeContextBar from '@/Components/ScopeContextBar.vue';
 import { useUserScope } from '@/Composables/useUserScope';
@@ -79,10 +80,7 @@ watch(
 
                 <div class="topbar-right">
                     <span class="tb-icon tb-chat" title="Messaggi"><Icon name="chat" :size="20" /></span>
-                    <span class="tb-icon alert" title="Novità FaPer3">
-                        <Icon name="bell" :size="20" />
-                        <i class="tb-dot"></i>
-                    </span>
+                    <NotificationBell />
                 </div>
 
                 <button class="hamburger" :aria-label="sidebarOpen ? 'Chiudi menu' : 'Apri menu'" @click="sidebarOpen = !sidebarOpen">

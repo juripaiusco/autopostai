@@ -31,6 +31,7 @@ class SettingsController extends Controller
                 'knows' => $s->ai_prompt_prefix ?? '',
                 'commentStyle' => $s->ai_comment_prefix ?? '',
             ] : null,
+            'vapidPublicKey' => config('webpush.vapid.public_key'),
         ]);
     }
 

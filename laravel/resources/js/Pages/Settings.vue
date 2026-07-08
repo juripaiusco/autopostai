@@ -8,12 +8,16 @@ import Icon from '@/Components/Icon.vue';
 import FieldRow from '@/Components/UI/FieldRow.vue';
 import SecretField from '@/Components/UI/SecretField.vue';
 import AiFields from '@/Components/Domain/Account/AiFields.vue';
+import { usePushSubscription } from '@/Composables/usePushSubscription';
 
 const props = defineProps({
     account: { type: Object, required: true },
     isSimpleUser: { type: Boolean, default: false },
     ai: { type: Object, default: null },
+    vapidPublicKey: { type: String, default: null },
 });
+
+const push = usePushSubscription(props.vapidPublicKey);
 
 const userName = computed(() => usePage().props.auth?.user?.name ?? props.account.name);
 
@@ -92,6 +96,24 @@ function save() {
                         <SecretField id="me-password" :model-value="form.password" placeholder="Almeno 8 caratteri"
                             @update:model-value="set('password', $event)" />
                     </FieldRow>
+                </SectionCard>
+
+                <SectionCard title="Notifiche push" subtitle="Ricevi le notifiche di FaPer3 anche quando non hai la pagina aperta.">
+                    <div class="acc-verify-row" style="border-top: none; padding-top: 0; margin-top: 0">
+                        <span class="acc-hint-inline">
+                            {{ push.subscribed.value ? 'Notifiche attive su questo browser.' : 'Notifiche non attive su questo browser.' }}
+                        </span>
+                        <button v-if="!push.subscribed.value" type="button" class="acc-verify" style="margin-left: auto"
+                            :disabled="push.loading.value || !push.supported" @click="push.subscribe">
+                            <span v-if="push.loading.value" class="btn-spinner" aria-hidden="true"></span>
+                            {{ push.loading.value ? 'Attivazione…' : 'Attiva notifiche' }}
+                        </button>
+                        <button v-else type="button" class="acc-verify" style="margin-left: auto" :disabled="push.loading.value" @click="push.unsubscribe">
+                            {{ push.loading.value ? 'Disattivazione…' : 'Disattiva notifiche' }}
+                        </button>
+                    </div>
+                    <div v-if="push.error.value" class="pf-channel-error" style="margin-top: 10px">{{ push.error.value }}</div>
+                    <div v-if="!push.supported" class="pf-check-help" style="margin-top: 10px">Questo browser non supporta le notifiche push.</div>
                 </SectionCard>
             </div>
 

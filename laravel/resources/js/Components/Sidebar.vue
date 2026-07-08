@@ -28,10 +28,14 @@ const allLinks = [
     { id: 'account', label: 'Account', icon: 'users', route: 'account' },
     { id: 'posts', label: 'Posts', icon: 'chat', route: 'posts' },
     { id: 'schedule', label: 'Calendarizza', icon: 'calendar', route: 'schedule' },
+    { id: 'notifications', label: 'Notifiche', icon: 'bell', route: 'notifications' },
     { id: 'settings', label: 'Impostazioni', icon: 'settings', route: 'settings' },
 ];
 
-const links = computed(() => allLinks.filter((l) => l.id !== 'account' || isAdmin.value || isManager.value));
+const links = computed(() => allLinks.filter((l) => {
+    if (l.id === 'account' || l.id === 'notifications') return isAdmin.value || isManager.value;
+    return true;
+}));
 
 function handleNavigate() {
     emit('close');

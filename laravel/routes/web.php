@@ -5,6 +5,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LinkedInController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\PushNotificationController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ScopeController;
 use App\Http\Controllers\SearchController;
@@ -97,4 +99,34 @@ Route::middleware('auth')->group(function () {
 
     Route::put('/impostazioni', [SettingsController::class, 'update'])
         ->name('settings.update');
+
+    Route::get('/notifiche', [PushNotificationController::class, 'index'])
+        ->name('notifications');
+
+    Route::get('/notifiche/crea', [PushNotificationController::class, 'create'])
+        ->name('notifications.create');
+
+    Route::post('/notifiche', [PushNotificationController::class, 'store'])
+        ->name('notifications.store');
+
+    Route::get('/notifiche/{notification}/modifica', [PushNotificationController::class, 'edit'])
+        ->name('notifications.edit');
+
+    Route::put('/notifiche/{notification}', [PushNotificationController::class, 'update'])
+        ->name('notifications.update');
+
+    Route::delete('/notifiche/{notification}', [PushNotificationController::class, 'destroy'])
+        ->name('notifications.destroy');
+
+    Route::post('/push/iscrivi', [PushSubscriptionController::class, 'store'])
+        ->name('push.subscribe');
+
+    Route::post('/push/disiscrivi', [PushSubscriptionController::class, 'destroy'])
+        ->name('push.unsubscribe');
+
+    Route::get('/push/non-lette', [PushSubscriptionController::class, 'checkUnread'])
+        ->name('push.unread');
+
+    Route::post('/push/segna-lette', [PushSubscriptionController::class, 'markRead'])
+        ->name('push.mark-read');
 });
