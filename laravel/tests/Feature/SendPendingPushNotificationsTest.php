@@ -32,7 +32,7 @@ class SendPendingPushNotificationsTest extends TestCase
         $this->assertSame(1, $n->fresh()->recipients_count);
     }
 
-    public function test_broadcasts_all_sends_to_everyone_except_creator(): void
+    public function test_broadcasts_all_sends_to_everyone_including_the_creator(): void
     {
         Notification::fake();
 
@@ -45,8 +45,8 @@ class SendPendingPushNotificationsTest extends TestCase
 
         Notification::assertSentTo($u1, PushNotificationAlert::class);
         Notification::assertSentTo($u2, PushNotificationAlert::class);
-        Notification::assertNotSentTo($admin, PushNotificationAlert::class);
-        $this->assertSame(2, $n->fresh()->recipients_count);
+        Notification::assertSentTo($admin, PushNotificationAlert::class);
+        $this->assertSame(3, $n->fresh()->recipients_count);
     }
 
     public function test_children_audience_only_reaches_creators_own_children(): void

@@ -51,8 +51,10 @@ class PushNotification extends Model
 
     /**
      * Destinatari effettivi al momento dell'invio: un utente specifico,
-     * tutti gli utenti (solo audience 'all'), oppure i soli sotto-utenti
-     * di chi ha creato la notifica (audience 'children').
+     * tutti gli utenti (audience 'all'), oppure i soli sotto-utenti di chi
+     * ha creato la notifica (audience 'children'). Chi crea la notifica e'
+     * incluso tra i destinatari: se un admin manda "a tutti" la riceve anche
+     * lui, non e' escluso in automatico.
      */
     public function resolveRecipients(): EloquentCollection
     {
@@ -61,7 +63,7 @@ class PushNotification extends Model
         }
 
         if ($this->audience === 'all') {
-            return User::query()->where('id', '!=', $this->created_by_user_id)->get();
+            return User::query()->get();
         }
 
         if ($this->audience === 'children') {
