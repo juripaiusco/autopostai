@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import Icon from '@/Components/Icon.vue';
 import ImageLightbox from '@/Components/Posts/ImageLightbox.vue';
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 
 const props = defineProps({
     form: { type: Object, required: true },
@@ -197,6 +198,34 @@ async function pickFromArchive(img) {
     genStep.value = 2;
     tab.value = 'genera';
 }
+
+const deletingImage = ref(null);
+const deletingLoading = ref(false);
+const deleteError = ref(null);
+
+function askDeleteArchive(img) {
+    deletingImage.value = img;
+    deleteError.value = null;
+}
+
+async function confirmDeleteArchive() {
+    if (!deletingImage.value) return;
+    deletingLoading.value = true;
+    deleteError.value = null;
+    try {
+        const res = await fetch(route('posts.image-archive.destroy', [props.targetUserId, deletingImage.value.filename]), {
+            method: 'DELETE',
+            headers: { 'X-XSRF-TOKEN': csrfToken(), Accept: 'application/json' },
+        });
+        if (!res.ok) throw new Error('delete failed');
+        archiveImages.value = archiveImages.value.filter((i) => i.filename !== deletingImage.value.filename);
+        deletingImage.value = null;
+    } catch (e) {
+        deleteError.value = "Eliminazione non riuscita. Riprova.";
+    } finally {
+        deletingLoading.value = false;
+    }
+}
 </script>
 
 <template>
@@ -299,6 +328,8 @@ async function pickFromArchive(img) {
                     :aria-label="img.prompt ? `Usa immagine: ${img.prompt}` : 'Usa immagine'"
                     @click="pickFromArchive(img)" @keydown.enter="pickFromArchive(img)">
                     <img :src="img.url" :alt="img.prompt ?? 'Immagine generata'" />
+                    <button type="button" class="pf-archive-item-remove" aria-label="Elimina immagine dall'archivio"
+                        @click.stop="askDeleteArchive(img)">×</button>
                 </div>
             </div>
         </div>
@@ -316,5 +347,11 @@ async function pickFromArchive(img) {
         </div>
 
         <ImageLightbox v-if="lightboxIndex !== null" :images="allPreviews" :index="lightboxIndex" @close="lightboxIndex = null" />
+
+        <ConfirmModal v-if="deletingImage" title="Eliminare questa immagine dall'archivio?" danger
+            confirm-label="Elimina" pending-label="Elimino…" :loading="deletingLoading" :error="deleteError"
+            @confirm="confirmDeleteArchive" @cancel="deletingImage = null">
+            L'immagine verrà eliminata definitivamente dall'archivio. Questa azione non può essere annullata.
+        </ConfirmModal>
     </div>
 </template>

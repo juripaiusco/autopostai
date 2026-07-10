@@ -86,4 +86,64 @@ class ImageArchiveTest extends TestCase
             'prompt' => 'Un gatto astronauta',
         ]);
     }
+
+    public function test_destroy_deletes_the_file_and_its_image_job(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+
+        Storage::disk('public')->put("dall-e/{$user->id}/with-job.png", 'fake');
+        ImageJob::factory()->create(['user_id' => $user->id, 'image_url' => 'with-job.png']);
+
+        $this->actingAs($user)
+            ->delete(route('posts.image-archive.destroy', [$user, 'with-job.png']))
+            ->assertOk();
+
+        Storage::disk('public')->assertMissing("dall-e/{$user->id}/with-job.png");
+        $this->assertDatabaseMissing('image_jobs', ['user_id' => $user->id, 'image_url' => 'with-job.png']);
+    }
+
+    public function test_destroy_deletes_an_orphan_file_with_no_image_job(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+
+        Storage::disk('public')->put("stable-diffusion/{$user->id}/orphan.jpg", 'fake');
+
+        $this->actingAs($user)
+            ->delete(route('posts.image-archive.destroy', [$user, 'orphan.jpg']))
+            ->assertOk();
+
+        Storage::disk('public')->assertMissing("stable-diffusion/{$user->id}/orphan.jpg");
+    }
+
+    public function test_destroy_returns_404_for_a_filename_that_does_not_exist(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+
+        $this->actingAs($user)
+            ->delete(route('posts.image-archive.destroy', [$user, 'nope.png']))
+            ->assertNotFound();
+    }
+
+    public function test_manager_cannot_delete_an_image_of_an_account_they_do_not_own(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $managerA = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+        $managerB = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+        $childOfB = User::factory()->create(['parent_id' => $managerB->id]);
+
+        Storage::disk('public')->put("dall-e/{$childOfB->id}/img.png", 'fake');
+
+        $this->actingAs($managerA)
+            ->delete(route('posts.image-archive.destroy', [$childOfB, 'img.png']))
+            ->assertForbidden();
+
+        Storage::disk('public')->assertExists("dall-e/{$childOfB->id}/img.png");
+    }
 }

@@ -178,10 +178,18 @@
 .pf-gen-error { margin-top: 10px; font-size: 12.5px; color: var(--danger); }
 
 /* ---------- Step 2: archive grid ---------- */
-.pf-archive-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.pf-archive-item { border-radius: var(--radius); overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: border-color .15s; }
+.pf-archive-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.pf-archive-item { position: relative; border-radius: var(--radius); overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: border-color .15s; }
 .pf-archive-item:hover, .pf-archive-item:focus-visible { border-color: var(--sky); }
 .pf-archive-item img { height: 96px; width: 100%; object-fit: cover; display: block; }
+.pf-archive-item-remove {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(0,0,0,.55); border: none; border-radius: 50%;
+    color: #fff; width: 20px; height: 20px; line-height: 1; cursor: pointer; font-size: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .15s;
+}
+.pf-archive-item:hover .pf-archive-item-remove, .pf-archive-item:focus-within .pf-archive-item-remove { opacity: 1; }
 .pf-archive-empty { text-align: center; padding: 48px 0; color: var(--g400); }
 .pf-archive-empty svg { width: 36px; height: 36px; }
 .pf-archive-empty-text { margin-top: 12px; }

@@ -71,6 +71,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/canali/{user}/genera-immagine', [ImageArchiveController::class, 'store'])
         ->name('posts.image-generate');
 
+    Route::delete('/posts/canali/{user}/archivio-immagini/{filename}', [ImageArchiveController::class, 'destroy'])
+        ->name('posts.image-archive.destroy');
+
     Route::get('/posts', [PostController::class, 'index'])
         ->name('posts');
 

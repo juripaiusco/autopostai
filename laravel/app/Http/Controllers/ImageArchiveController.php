@@ -90,4 +90,31 @@ class ImageArchiveController extends Controller
             'createdAt' => $job->created_at->toIso8601String(),
         ]);
     }
+
+    /**
+     * Elimina un'immagine dall'archivio dell'account $user: file da
+     * qualunque cartella provider dove si trovi + riga image_jobs
+     * corrispondente, se presente (le orfane non ne hanno una).
+     */
+    public function destroy(Request $request, User $user, string $filename): JsonResponse
+    {
+        abort_unless($request->user()->canActFor($user), 403);
+        abort_if(str_contains($filename, '/') || str_contains($filename, '..'), 422);
+
+        $deleted = false;
+        foreach (array_keys(self::FOLDERS) as $folder) {
+            $path = "{$folder}/{$user->id}/{$filename}";
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+                $deleted = true;
+            }
+        }
+        abort_unless($deleted, 404);
+
+        ImageJob::where('user_id', $user->id)->get()
+            ->filter(fn (ImageJob $job) => basename((string) $job->image_url) === $filename)
+            ->each(fn (ImageJob $job) => $job->delete());
+
+        return response()->json(['deleted' => true]);
+    }
 }
