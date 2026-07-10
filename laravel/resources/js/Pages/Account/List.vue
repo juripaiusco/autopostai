@@ -4,7 +4,6 @@ import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
-import RoleBadge from '@/Components/RoleBadge.vue';
 import UserAvatar from '@/Components/UserAvatar.vue';
 import TokenBar from '@/Components/TokenBar.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
@@ -39,7 +38,7 @@ const TABS = computed(() => [
 const deleteTarget = ref(null);
 const deleting = ref(false);
 const deleteError = ref(null);
-const colSpan = computed(() => (props.isAdmin ? 8 : 7));
+const colSpan = 7;
 const listKey = computed(() => `${props.filters.filter}-${props.filters.search}-${props.filters.sort}-${props.filters.dir}-${props.users.current_page}`);
 
 function openDelete(u) {
@@ -92,19 +91,17 @@ function confirmDelete(id) {
         <div class="card table-wrap">
             <table class="table table--responsive-cards">
                 <colgroup>
-                    <col style="width: 24%">
-                    <col v-if="isAdmin" style="width: 10%">
-                    <col style="width: 10%">
-                    <col style="width: 10%">
-                    <col style="width: 10%">
+                    <col style="width: 30%">
                     <col style="width: 14%">
+                    <col style="width: 10%">
+                    <col style="width: 10%">
+                    <col style="width: 10%">
                     <col style="width: 14%">
                     <col style="width: 110px">
                 </colgroup>
                 <thead>
                     <tr>
                         <SortableTh label="Account" column="name" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
-                        <th v-if="isAdmin">Ruolo</th>
                         <th>Canali</th>
                         <SortableTh label="Post" column="post" align="center" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
                         <SortableTh label="Reply" column="reply" align="center" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
@@ -132,14 +129,13 @@ function confirmDelete(id) {
                             @click="router.get(route('account.edit', u.id))">
                             <td class="user-td">
                                 <div class="user-cell">
-                                    <UserAvatar :name="u.name" />
+                                    <UserAvatar :name="u.name" :role="u.role" />
                                     <div class="user-cell__meta">
                                         <div class="user-cell__name">{{ u.name }}</div>
                                         <div class="user-cell__email">{{ u.email }}</div>
                                     </div>
                                 </div>
                             </td>
-                            <td v-if="isAdmin" data-label="Ruolo"><RoleBadge :role="u.role" /></td>
                             <td data-label="Canali">
                                 <div class="ch-list">
                                     <span v-for="c in u.channels" :key="c" class="ch-chip" :title="CH_CONFIG[c]?.label ?? c">
