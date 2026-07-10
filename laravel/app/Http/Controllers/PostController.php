@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -121,6 +122,44 @@ class PostController extends Controller
     }
 
     /**
+     * Salva i file caricati in posts/{post_id}/ con filename univoco
+     * (pattern v1: timestamp-random-nomeoriginale.ext), ritorna solo i
+     * filename nudi da accodare a Post::img (nessun path in DB, la cartella
+     * è per convenzione posts/{id}/).
+     */
+    private function storeImages(int $postId, array $files): array
+    {
+        $stored = [];
+        foreach ($files as $file) {
+            $safeName = Str::of(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME))
+                ->ascii()
+                ->replaceMatches('/[^A-Za-z0-9_-]+/', '_')
+                ->trim('_')
+                ->value();
+            $filename = date('YmdHis').'-'.Str::random(13).'-'.($safeName ?: 'img').'.'.$file->getClientOriginalExtension();
+            Storage::disk('public')->putFileAs("posts/{$postId}", $file, $filename);
+            $stored[] = $filename;
+        }
+
+        return $stored;
+    }
+
+    /**
+     * Filename nudi in Post::img -> [{filename, url}] risolti sulla cartella
+     * posts/{id}/ per la UI (form multi-immagine e vista Show).
+     */
+    private function imageUrls(Post $post): array
+    {
+        return collect($post->img ?? [])
+            ->map(fn ($filename) => [
+                'filename' => $filename,
+                'url' => Storage::disk('public')->url("posts/{$post->id}/{$filename}"),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
      * Form di creazione di un nuovo post (Composer).
      */
     public function create(Request $request): Response
@@ -176,6 +215,8 @@ class PostController extends Controller
         $totalTokens = ($post->token?->tokens_used ?? 0)
             + $post->comments->sum(fn ($c) => $c->token?->tokens_used ?? 0);
 
+        $images = $this->imageUrls($post);
+
         return Inertia::render('Posts/Show', [
             'post' => [
                 'id' => $post->id,
@@ -195,7 +236,8 @@ class PostController extends Controller
                 'autoReplyEnabled' => $post->auto_reply_enabled === '1',
                 'commentsByChannel' => $commentsByChannel,
                 'commentsTotal' => $post->comments->count(),
-                'imgUrl' => $post->img ? Storage::disk('public')->url($post->img) : null,
+                'imgUrl' => $images[0]['url'] ?? null,
+                'images' => $images,
                 'publishedAt' => $post->published_at?->toIso8601String(),
                 'createdAt' => $post->created_at?->toIso8601String(),
             ],
@@ -228,7 +270,7 @@ class PostController extends Controller
             return redirect()->route('posts.show', $post);
         }
 
-        $imgSource = $post->img_ai_check_on == '1' ? 'generated' : ($post->img ? 'upload' : null);
+        $imgSource = $post->img_ai_check_on == '1' ? 'generated' : (!empty($post->img) ? 'upload' : null);
 
         return Inertia::render('Posts/Form', [
             'mode' => 'edit',
@@ -244,7 +286,7 @@ class PostController extends Controller
                 'ai_prompt_post' => $post->ai_prompt_post,
                 'ai_content' => $post->ai_content,
                 'ai_prompt_comment' => $post->ai_prompt_comment,
-                'imgUrl' => $post->img ? Storage::disk('public')->url($post->img) : null,
+                'images' => $this->imageUrls($post),
                 'img_source' => $imgSource,
                 'published_at' => $post->published_at?->format('Y-m-d\TH:i'),
             ],
@@ -332,7 +374,8 @@ class PostController extends Controller
             'ai_prompt_post' => ['nullable', 'string'],
             'ai_prompt_comment' => ['nullable', 'string'],
             'ai_content' => ['nullable', 'string'],
-            'image' => ['nullable', 'image', 'max:10240'],
+            'images' => ['nullable', 'array'],
+            'images.*' => ['image', 'max:10240'],
             'img_source' => ['nullable', 'string', Rule::in(['upload', 'generated', 'archive'])],
             'published_at' => ['nullable', 'date'],
             'action' => ['required', 'string', Rule::in(['save', 'save_and_add'])],
@@ -350,11 +393,6 @@ class PostController extends Controller
         };
         abort_if(($isAdmin || $isManager) && !$targetUserId, 422, 'Account non valido.');
 
-        $img = null;
-        if ($request->hasFile('image')) {
-            $img = Storage::disk('public')->putFile('posts', $request->file('image'));
-        }
-
         $channels = $this->buildChannelsPayload($data['channels']);
         [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
 
@@ -365,7 +403,7 @@ class PostController extends Controller
             'ai_prompt_post' => $data['ai_prompt_post'] ?? null,
             'ai_content' => $data['ai_content'] ?? null,
             'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
-            'img' => $img,
+            'img' => null,
             'img_ai_check_on' => ($data['img_source'] ?? null) === 'generated' ? '1' : '0',
             'comments_enabled' => $commentsEnabled ? '1' : '0',
             'auto_reply_enabled' => $autoReplyEnabled ? '1' : '0',
@@ -373,6 +411,10 @@ class PostController extends Controller
             'published_at' => $data['published_at'] ?? null,
             'published' => '0',
         ]);
+
+        if ($request->hasFile('images')) {
+            $post->update(['img' => $this->storeImages($post->id, $request->file('images'))]);
+        }
 
         if ($data['action'] === 'save_and_add') {
             $request->session()->flash('post_prefill', [
@@ -406,7 +448,9 @@ class PostController extends Controller
             'ai_prompt_post' => ['nullable', 'string'],
             'ai_prompt_comment' => ['nullable', 'string'],
             'ai_content' => ['nullable', 'string'],
-            'image' => ['nullable', 'image', 'max:10240'],
+            'images' => ['nullable', 'array'],
+            'images.*' => ['image', 'max:10240'],
+            'keep_images' => ['nullable', 'string'],
             'img_source' => ['nullable', 'string', Rule::in(['upload', 'generated', 'archive'])],
             'published_at' => ['nullable', 'date'],
         ]);
@@ -417,12 +461,20 @@ class PostController extends Controller
         $channels = $this->buildChannelsPayload($data['channels']);
         [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
 
-        $img = $post->img;
-        $imgAiCheckOn = $post->img_ai_check_on;
-        if ($request->hasFile('image')) {
-            $img = Storage::disk('public')->putFile('posts', $request->file('image'));
-            $imgAiCheckOn = ($data['img_source'] ?? null) === 'generated' ? '1' : '0';
+        $existing = $post->img ?? [];
+        $keep = isset($data['keep_images']) ? (json_decode($data['keep_images'], true) ?? []) : $existing;
+        $kept = array_values(array_filter($keep, fn ($f) => in_array($f, $existing, true)));
+
+        foreach (array_diff($existing, $kept) as $removed) {
+            Storage::disk('public')->delete("posts/{$post->id}/{$removed}");
         }
+
+        $newImages = $request->hasFile('images') ? $this->storeImages($post->id, $request->file('images')) : [];
+        $img = array_merge($kept, $newImages);
+
+        $imgAiCheckOn = empty($newImages)
+            ? $post->img_ai_check_on
+            : (($data['img_source'] ?? null) === 'generated' ? '1' : '0');
 
         $post->update([
             'title' => $data['title'] ?? '',

@@ -68,8 +68,8 @@ function buildForm() {
             ai_prompt_post: props.post.ai_prompt_post ?? '',
             ai_prompt_comment: props.post.ai_prompt_comment ?? '',
             ai_content: props.post.ai_content ?? '',
-            image: null,
-            imagePreviewUrl: props.post.imgUrl ?? null,
+            existingImages: (props.post.images ?? []).map((i) => ({ filename: i.filename, url: i.url })),
+            newImages: [],
             img_source: props.post.img_source ?? null,
             published_at: props.post.published_at ?? '',
         };
@@ -82,8 +82,8 @@ function buildForm() {
         ai_prompt_post: props.prefill?.ai_prompt_post ?? '',
         ai_prompt_comment: props.prefill?.ai_prompt_comment ?? '',
         ai_content: '',
-        image: null,
-        imagePreviewUrl: null,
+        existingImages: [],
+        newImages: [],
         img_source: null,
         published_at: '',
     };
@@ -145,16 +145,28 @@ const targetUserId = computed(() => {
     return usePage().props.auth?.user?.id ?? null;
 });
 
+function buildPayload(action) {
+    const { existingImages, newImages, ...rest } = form;
+
+    return {
+        ...rest,
+        action,
+        images: newImages.map((i) => i.file),
+        keep_images: JSON.stringify(existingImages.map((i) => i.filename)),
+    };
+}
+
 function submit(action) {
     saving.value = true;
+    const payload = buildPayload(action);
     if (props.mode === 'edit') {
-        router.put(route('posts.update', props.post.id), { ...form, action }, {
+        router.put(route('posts.update', props.post.id), payload, {
             forceFormData: true,
             onFinish: () => { saving.value = false; },
         });
         return;
     }
-    router.post(route('posts.store'), { ...form, action }, {
+    router.post(route('posts.store'), payload, {
         forceFormData: true,
         onFinish: () => { saving.value = false; },
     });
@@ -171,7 +183,7 @@ function submit(action) {
 
         <div class="acc-content">
             <div class="card card-pad">
-                <StepBar :current="step" :labels="STEP_LABELS" @goto="goto" />
+                <StepBar :current="step" :labels="STEP_LABELS" :free-nav="mode === 'edit'" @goto="goto" />
 
                 <Transition name="pf-step" mode="out-in">
                     <div class="pf-step-content" :key="step">

@@ -13,9 +13,11 @@
 
 /* ---------- Hero card ---------- */
 .ps-hero { margin-bottom: 22px; overflow: hidden; display: grid; grid-template-columns: minmax(0, 320px) 1fr; }
-.ps-hero__media { background: var(--g100); aspect-ratio: 4 / 5; min-height: 320px; }
+.ps-hero__media { position: relative; background: var(--g100); aspect-ratio: 4 / 5; min-height: 320px; }
 .ps-hero__img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ps-hero__placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--g400); }
+.ps-hero__gallery { position: absolute; left: 10px; bottom: 10px; right: 10px; display: flex; gap: 6px; overflow-x: auto; }
+.ps-hero__gallery img { width: 46px; height: 46px; object-fit: cover; border-radius: var(--radius-sm); flex-shrink: 0; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
 .ps-hero__side { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 
 .ps-hero__owner { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px dashed var(--g200); }

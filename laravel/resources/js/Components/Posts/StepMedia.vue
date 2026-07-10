@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Icon from '@/Components/Icon.vue';
+import ImageLightbox from '@/Components/Posts/ImageLightbox.vue';
 
 const props = defineProps({
     form: { type: Object, required: true },
@@ -17,25 +18,42 @@ const TABS = [
     ['archivio', 'Archivio'],
 ];
 
+const totalImages = computed(() => props.form.existingImages.length + props.form.newImages.length);
+const allPreviews = computed(() => [
+    ...props.form.existingImages.map((i) => i.url),
+    ...props.form.newImages.map((i) => i.previewUrl),
+]);
+const lightboxIndex = ref(null);
+
 /* ---------------- Carica ---------------- */
-function onFile(e) {
-    const file = e.dataTransfer?.files?.[0] || e.target.files?.[0];
-    if (!file) return;
-    setImage(file, 'upload');
+function addFiles(fileList) {
+    const files = Array.from(fileList || []).filter((f) => f.type.startsWith('image/'));
+    if (!files.length) return;
+    const additions = files.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }));
+    emit('set', 'newImages', [...props.form.newImages, ...additions]);
+    emit('set', 'img_source', 'upload');
 }
 
-function setImage(file, source) {
-    if (props.form.imagePreviewUrl) URL.revokeObjectURL(props.form.imagePreviewUrl);
-    emit('set', 'image', file);
-    emit('set', 'imagePreviewUrl', URL.createObjectURL(file));
-    emit('set', 'img_source', source);
+function onDrop(e) {
+    addFiles(e.dataTransfer?.files);
 }
 
-function removeImage() {
-    if (props.form.imagePreviewUrl) URL.revokeObjectURL(props.form.imagePreviewUrl);
-    emit('set', 'image', null);
-    emit('set', 'imagePreviewUrl', null);
-    emit('set', 'img_source', null);
+function onFileChange(e) {
+    addFiles(e.target.files);
+    e.target.value = '';
+}
+
+function removeExisting(index) {
+    const arr = [...props.form.existingImages];
+    arr.splice(index, 1);
+    emit('set', 'existingImages', arr);
+}
+
+function removeNew(index) {
+    const arr = [...props.form.newImages];
+    const [removed] = arr.splice(index, 1);
+    if (removed) URL.revokeObjectURL(removed.previewUrl);
+    emit('set', 'newImages', arr);
 }
 
 /* ---------------- Genera con AI (mock) ---------------- */
@@ -87,12 +105,13 @@ function dataUrlToFile(dataUrl, filename) {
 
 function saveAndUse() {
     if (!genResultUrl.value) return;
-    const file = dataUrlToFile(genResultUrl.value, 'generata-ai.png');
-    setImage(file, 'generated');
+    const file = dataUrlToFile(genResultUrl.value, `generata-ai-${Date.now()}.png`);
+    emit('set', 'newImages', [...props.form.newImages, { file, previewUrl: genResultUrl.value }]);
+    emit('set', 'img_source', 'generated');
     genStep.value = 0;
     genPrompt.value = '';
     genResultUrl.value = null;
-    tab.value = 'archivio';
+    tab.value = 'carica';
 }
 
 function regenerate() {
@@ -111,18 +130,14 @@ function regenerate() {
 
         <!-- Carica -->
         <div v-if="tab === 'carica'">
-            <div v-if="form.imagePreviewUrl && form.img_source === 'upload'" class="pf-preview-frame">
-                <img :src="form.imagePreviewUrl" alt="Immagine caricata" />
-                <button type="button" class="pf-preview-remove" @click="removeImage">Rimuovi</button>
-            </div>
-            <div v-else class="pf-dropzone" role="button" tabindex="0" aria-label="Carica immagine"
-                @dragover.prevent @drop.prevent="onFile" @click="fileInput?.click()"
+            <div class="pf-dropzone" role="button" tabindex="0" aria-label="Carica immagini"
+                @dragover.prevent @drop.prevent="onDrop" @click="fileInput?.click()"
                 @keydown.enter.prevent="fileInput?.click()" @keydown.space.prevent="fileInput?.click()">
                 <Icon name="image" :size="46" />
-                <div class="pf-dropzone-title">Trascina qui l'immagine</div>
+                <div class="pf-dropzone-title">Trascina qui le immagini</div>
                 <div class="pf-dropzone-sub">oppure <b>sfoglia i file</b></div>
-                <div class="pf-dropzone-hint">JPG, PNG, WebP — max 10 MB</div>
-                <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="onFile" tabindex="-1" />
+                <div class="pf-dropzone-hint">JPG, PNG, WebP — max 10 MB ciascuna, puoi selezionarne più di una</div>
+                <input ref="fileInput" type="file" accept="image/*" multiple style="display:none" @change="onFileChange" tabindex="-1" />
             </div>
             <div class="pf-note">
                 <Icon name="clock" :size="15" />
@@ -182,30 +197,23 @@ function regenerate() {
         </div>
 
         <!-- Archivio -->
-        <div v-else-if="tab === 'archivio'">
-            <div v-if="!(form.img_source === 'generated' && form.imagePreviewUrl)" class="pf-archive-empty">
-                <Icon name="image" :size="36" />
-                <div class="pf-archive-empty-text">Nessuna immagine generata ancora.</div>
+        <div v-else-if="tab === 'archivio'" class="pf-archive-empty">
+            <Icon name="image" :size="36" />
+            <div class="pf-archive-empty-text">Archivio immagini generate in arrivo.</div>
+        </div>
+
+        <!-- Immagini selezionate per il post -->
+        <div v-if="totalImages > 0" class="pf-media-grid">
+            <div v-for="(img, i) in form.existingImages" :key="'existing-' + img.filename" class="pf-media-grid-item">
+                <img :src="img.url" :alt="'Immagine ' + (i + 1)" @click="lightboxIndex = i" />
+                <button type="button" class="pf-media-grid-remove" aria-label="Rimuovi immagine" @click="removeExisting(i)">×</button>
             </div>
-            <div v-else class="pf-archive-grid">
-                <div class="pf-archive-item pf-archive-item--selected">
-                    <img :src="form.imagePreviewUrl" alt="Immagine generata, selezionata per il post" />
-                </div>
+            <div v-for="(img, i) in form.newImages" :key="'new-' + i" class="pf-media-grid-item">
+                <img :src="img.previewUrl" :alt="'Nuova immagine ' + (i + 1)" @click="lightboxIndex = form.existingImages.length + i" />
+                <button type="button" class="pf-media-grid-remove" aria-label="Rimuovi immagine" @click="removeNew(i)">×</button>
             </div>
         </div>
 
-        <!-- Selezione attiva -->
-        <div v-if="form.imagePreviewUrl" class="pf-active-media pf-fade-in">
-            <div class="pf-active-media-thumb">
-                <img :src="form.imagePreviewUrl" alt="Anteprima immagine selezionata per il post" />
-            </div>
-            <div class="pf-active-media-text">
-                <div class="pf-active-media-title">Immagine selezionata per il post</div>
-                <div class="pf-active-media-sub">
-                    {{ { upload: 'Caricata dal dispositivo', generated: 'Generata con AI', archive: "Dall'archivio" }[form.img_source] || '' }}
-                </div>
-            </div>
-            <button type="button" class="pf-active-media-remove" aria-label="Rimuovi immagine" @click="removeImage">×</button>
-        </div>
+        <ImageLightbox v-if="lightboxIndex !== null" :images="allPreviews" :index="lightboxIndex" @close="lightboxIndex = null" />
     </div>
 </template>

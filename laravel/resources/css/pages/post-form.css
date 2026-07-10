@@ -98,12 +98,36 @@
 .pf-dropzone-sub b { color: var(--sky-strong); font-weight: 600; }
 .pf-dropzone-hint { margin-top: 8px; font-size: 12px; color: var(--g500); }
 
-.pf-preview-frame { position: relative; height: 240px; border-radius: var(--radius-lg); overflow: hidden; background: var(--g100); }
-.pf-preview-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pf-preview-remove {
-    position: absolute; top: 10px; right: 10px;
-    background: rgba(0,0,0,.55); border: none; border-radius: var(--radius-sm);
-    color: #fff; padding: 4px 12px; cursor: pointer; font-size: 12.5px;
+.pf-media-grid { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+.pf-media-grid-item { position: relative; height: 110px; border-radius: var(--radius); overflow: hidden; background: var(--g100); }
+.pf-media-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
+.pf-media-grid-remove {
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(0,0,0,.55); border: none; border-radius: 50%;
+    color: #fff; width: 22px; height: 22px; line-height: 1; cursor: pointer; font-size: 15px;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* ---------- Lightbox (anteprima ingrandita) ---------- */
+.lightbox-img { max-width: min(90vw, 900px); max-height: 85vh; object-fit: contain; border-radius: var(--radius); box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+.lightbox-close {
+    position: absolute; top: 18px; right: 18px; background: rgba(0,0,0,.5); border: none; border-radius: 50%;
+    color: #fff; width: 40px; height: 40px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.lightbox-nav {
+    position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,.5); border: none; border-radius: 50%;
+    color: #fff; width: 44px; height: 44px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.lightbox-nav--prev { left: 18px; }
+.lightbox-nav--prev svg { transform: rotate(90deg); }
+.lightbox-nav--next { right: 18px; }
+.lightbox-nav--next svg { transform: rotate(-90deg); }
+.lightbox-count {
+    position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,.5); color: #fff; font-size: 12.5px; font-weight: 600;
+    padding: 4px 12px; border-radius: 999px;
 }
 
 .pf-note {
@@ -159,30 +183,13 @@
 .pf-archive-empty svg { width: 36px; height: 36px; }
 .pf-archive-empty-text { margin-top: 12px; }
 
-/* ---------- Step 2: active media chip ---------- */
-.pf-active-media {
-    margin-top: 20px; padding: 11px 14px; background: var(--sky-50);
-    border-radius: var(--radius); border: 1px solid var(--sky-200);
-    display: flex; align-items: center; gap: 12px;
-}
-.pf-active-media-thumb { width: 40px; height: 40px; border-radius: var(--radius-sm); flex-shrink: 0; overflow: hidden; background: var(--g100); }
-.pf-active-media-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.pf-active-media-text { flex: 1; min-width: 0; }
-.pf-active-media-title { font-weight: 600; font-size: 13px; color: var(--sky-strong); }
-.pf-active-media-sub { font-size: 12px; color: var(--g500); margin-top: 2px; }
-.pf-active-media-remove {
-    background: none; border: none; color: var(--g400); cursor: pointer;
-    font-size: 20px; line-height: 1;
-    width: 44px; height: 44px; flex-shrink: 0;
-    display: inline-flex; align-items: center; justify-content: center;
-}
-
 /* ---------- Step 3: summary card ---------- */
 .pf-summary { background: var(--g50); border-radius: var(--radius-lg); padding: 18px 20px; }
 .pf-summary-title { font-weight: 700; font-size: 13px; color: var(--g500); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; }
 .pf-summary-row { display: flex; gap: 14px; align-items: flex-start; }
+.pf-summary-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
 .pf-summary-thumb { width: 72px; height: 72px; border-radius: var(--radius); flex-shrink: 0; overflow: hidden; background: var(--g200); }
-.pf-summary-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.pf-summary-thumb img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
 .pf-summary-grow { flex: 1; min-width: 0; }
 .pf-summary-name { font-weight: 700; color: var(--ink); font-size: 15px; margin-bottom: 5px; }
 .pf-summary-empty { color: var(--g500); }

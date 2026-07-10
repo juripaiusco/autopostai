@@ -92,6 +92,9 @@ function confirmDelete() {
                 <div v-else class="ps-hero__placeholder">
                     <Icon name="image" :size="32" />
                 </div>
+                <div v-if="post.images.length > 1" class="ps-hero__gallery">
+                    <img v-for="img in post.images.slice(1)" :key="img.filename" :src="img.url" alt="" />
+                </div>
             </div>
 
             <div class="ps-hero__side">

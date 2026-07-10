@@ -42,6 +42,7 @@ class Post extends Model
     {
         return [
             'channels' => 'array',
+            'img' => 'array',
             'published_at' => 'datetime',
             'on_hold_until' => 'datetime',
         ];

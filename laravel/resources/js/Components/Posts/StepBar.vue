@@ -2,18 +2,23 @@
 const props = defineProps({
     current: { type: Number, required: true },
     labels: { type: Array, default: () => ['Scrivi', 'Media', 'Pubblica'] },
+    freeNav: { type: Boolean, default: false }, // edit: tutti gli step cliccabili, create: solo indietro
 });
 
 const emit = defineEmits(['goto']);
 
+function isClickable(i) {
+    return props.freeNav ? i !== props.current : i < props.current;
+}
+
 function stepClass(i) {
-    if (i < props.current) return 'pf-step--done pf-step--clickable';
     if (i === props.current) return 'pf-step--active';
-    return '';
+    if (i < props.current) return isClickable(i) ? 'pf-step--done pf-step--clickable' : 'pf-step--done';
+    return isClickable(i) ? 'pf-step--clickable' : '';
 }
 
 function goto(i) {
-    if (i < props.current) emit('goto', i);
+    if (isClickable(i)) emit('goto', i);
 }
 
 function stepStatus(i) {

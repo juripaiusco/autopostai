@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
+import ImageLightbox from '@/Components/Posts/ImageLightbox.vue';
 
 const props = defineProps({
     form: { type: Object, required: true },
@@ -17,6 +18,12 @@ const editing = ref(false);
 
 const channelById = computed(() => Object.fromEntries(props.channels.map((c) => [c.id, c])));
 const selectedChannelIds = computed(() => Object.keys(props.form.channels));
+
+const allPreviews = computed(() => [
+    ...props.form.existingImages.map((i) => i.url),
+    ...props.form.newImages.map((i) => i.previewUrl),
+]);
+const lightboxIndex = ref(null);
 
 const charLimit = computed(() => {
     const limits = selectedChannelIds.value.map((id) => channelById.value[id]?.limit).filter((l) => l != null);
@@ -58,10 +65,12 @@ function runPreview() {
         <!-- Riepilogo -->
         <div class="pf-summary">
             <div class="pf-summary-title">Riepilogo</div>
-            <div class="pf-summary-row">
-                <div v-if="form.imagePreviewUrl" class="pf-summary-thumb">
-                    <img :src="form.imagePreviewUrl" alt="Anteprima immagine del post" />
+            <div v-if="allPreviews.length > 0" class="pf-summary-thumbs">
+                <div v-for="(url, i) in allPreviews" :key="i" class="pf-summary-thumb">
+                    <img :src="url" alt="Anteprima immagine del post" @click="lightboxIndex = i" />
                 </div>
+            </div>
+            <div class="pf-summary-row">
                 <div class="pf-summary-grow">
                     <div class="pf-summary-name">
                         <span v-if="form.title">{{ form.title }}</span>
@@ -138,5 +147,7 @@ function runPreview() {
                 <Icon v-else name="bookmark" :size="16" />{{ saving ? 'Salvataggio…' : (mode === 'edit' ? 'Salva modifiche' : 'Salva') }}
             </button>
         </div>
+
+        <ImageLightbox v-if="lightboxIndex !== null" :images="allPreviews" :index="lightboxIndex" @close="lightboxIndex = null" />
     </div>
 </template>
