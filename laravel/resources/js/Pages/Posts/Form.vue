@@ -190,7 +190,7 @@ function submit(action) {
                         <StepWrite v-if="step === 0" :form="form" :channels="channels" :users="users"
                             :mode="mode" :owner="post?.owner ?? null" :target-user-id="targetUserId"
                             @set="set" @toggle-channel="toggleChannel" @set-channel-option="setChannelOption" />
-                        <StepMedia v-else-if="step === 1" :form="form" @set="set" />
+                        <StepMedia v-else-if="step === 1" :form="form" :target-user-id="targetUserId" @set="set" />
                         <StepPublish v-else :form="form" :channels="channels" :saving="saving" :mode="mode"
                             @set="set" @back="back" @save="submit('save')" @save-and-add="submit('save_and_add')" />
                     </div>

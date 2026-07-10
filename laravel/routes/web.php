@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ImageArchiveController;
 use App\Http\Controllers\LinkedInController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PostController;
@@ -63,6 +64,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/posts/canali/{user}/newsletter-liste', [NewsletterController::class, 'listsForPost'])
         ->name('posts.newsletter-lists');
+
+    Route::get('/posts/canali/{user}/archivio-immagini', [ImageArchiveController::class, 'index'])
+        ->name('posts.image-archive');
+
+    Route::post('/posts/canali/{user}/genera-immagine', [ImageArchiveController::class, 'store'])
+        ->name('posts.image-generate');
 
     Route::get('/posts', [PostController::class, 'index'])
         ->name('posts');

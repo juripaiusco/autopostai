@@ -5,6 +5,7 @@ import ImageLightbox from '@/Components/Posts/ImageLightbox.vue';
 
 const props = defineProps({
     form: { type: Object, required: true },
+    targetUserId: { type: [Number, String], default: null },
 });
 
 const emit = defineEmits(['set']);
@@ -18,12 +19,34 @@ const TABS = [
     ['archivio', 'Archivio'],
 ];
 
+function selectTab(id) {
+    tab.value = id;
+    if (id === 'archivio') loadArchive();
+}
+
 const totalImages = computed(() => props.form.existingImages.length + props.form.newImages.length);
 const allPreviews = computed(() => [
     ...props.form.existingImages.map((i) => i.url),
     ...props.form.newImages.map((i) => i.previewUrl),
 ]);
 const lightboxIndex = ref(null);
+
+function csrfToken() {
+    const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+}
+
+/**
+ * Immagine gia' ospitata lato server (nuova generazione o pescata
+ * dall'archivio) -> scaricata come blob e accodata a newImages, cosi'
+ * rientra nello stesso flusso di upload di un file scelto a mano.
+ */
+async function attachHostedImage({ url, filename }) {
+    const blob = await (await fetch(url)).blob();
+    const file = new File([blob], filename, { type: blob.type || 'image/png' });
+    emit('set', 'newImages', [...props.form.newImages, { file, previewUrl: url }]);
+    emit('set', 'img_source', 'generated');
+}
 
 /* ---------------- Carica ---------------- */
 function addFiles(fileList) {
@@ -56,10 +79,13 @@ function removeNew(index) {
     emit('set', 'newImages', arr);
 }
 
-/* ---------------- Genera con AI (mock) ---------------- */
+/* ---------------- Genera con AI (mock, persistito in archivio) ---------------- */
 const genStep = ref(0); // 0=prompt 1=loading 2=result
 const genPrompt = ref('');
 const genResultUrl = ref(null);
+const genResultFilename = ref(null);
+const genFromArchive = ref(false); // true se il risultato mostrato viene dall'archivio (gia' aggiunto al post)
+const genError = ref(null);
 let genTimer = null;
 
 const PALETTES = [
@@ -69,17 +95,6 @@ const PALETTES = [
     ['#7a6a9a', '#4a3a6a'],
     ['#8a6a5a', '#5a3a2a'],
 ];
-
-function handleGenerate() {
-    if (!genPrompt.value.trim()) return;
-    genStep.value = 1;
-    clearTimeout(genTimer);
-    genTimer = setTimeout(() => {
-        const [c1, c2] = PALETTES[Math.floor(Math.random() * PALETTES.length)];
-        genResultUrl.value = gradientDataUrl(c1, c2);
-        genStep.value = 2;
-    }, 1700);
-}
 
 function gradientDataUrl(c1, c2) {
     const canvas = document.createElement('canvas');
@@ -94,29 +109,93 @@ function gradientDataUrl(c1, c2) {
     return canvas.toDataURL('image/png');
 }
 
-function dataUrlToFile(dataUrl, filename) {
-    const [meta, base64] = dataUrl.split(',');
-    const mime = meta.match(/:(.*?);/)[1];
-    const bytes = atob(base64);
-    const arr = new Uint8Array(bytes.length);
-    for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-    return new File([arr], filename, { type: mime });
+function handleGenerate() {
+    if (!genPrompt.value.trim()) return;
+    genStep.value = 1;
+    genError.value = null;
+    clearTimeout(genTimer);
+    genTimer = setTimeout(async () => {
+        try {
+            const [c1, c2] = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+            const blob = await (await fetch(gradientDataUrl(c1, c2))).blob();
+
+            const body = new FormData();
+            body.append('prompt', genPrompt.value);
+            body.append('image', blob, 'generata-ai.png');
+
+            const res = await fetch(route('posts.image-generate', props.targetUserId), {
+                method: 'POST',
+                headers: { 'X-XSRF-TOKEN': csrfToken(), Accept: 'application/json' },
+                body,
+            });
+            if (!res.ok) throw new Error('generate failed');
+            const json = await res.json();
+
+            genResultUrl.value = json.url;
+            genResultFilename.value = json.filename;
+            genFromArchive.value = false;
+            genStep.value = 2;
+            archiveLoaded.value = false; // il prossimo tab Archivio rifa' il fetch e la mostra
+        } catch (e) {
+            genError.value = "Generazione non riuscita, riprova.";
+            genStep.value = 0;
+        }
+    }, 1700);
 }
 
-function saveAndUse() {
-    if (!genResultUrl.value) return;
-    const file = dataUrlToFile(genResultUrl.value, `generata-ai-${Date.now()}.png`);
-    emit('set', 'newImages', [...props.form.newImages, { file, previewUrl: genResultUrl.value }]);
-    emit('set', 'img_source', 'generated');
+async function saveAndUse() {
+    if (!genResultUrl.value || !genResultFilename.value) return;
+    await attachHostedImage({ url: genResultUrl.value, filename: genResultFilename.value });
+    resetGenState();
+    tab.value = 'carica';
+}
+
+function resetGenState() {
     genStep.value = 0;
     genPrompt.value = '';
     genResultUrl.value = null;
-    tab.value = 'carica';
+    genResultFilename.value = null;
+    genFromArchive.value = false;
 }
 
 function regenerate() {
     genStep.value = 0;
     genResultUrl.value = null;
+    genResultFilename.value = null;
+    genFromArchive.value = false;
+}
+
+/* ---------------- Archivio ---------------- */
+const archiveImages = ref([]);
+const archiveLoading = ref(false);
+const archiveLoaded = ref(false);
+const archiveError = ref(null);
+
+async function loadArchive() {
+    if (archiveLoaded.value || archiveLoading.value) return;
+    archiveLoading.value = true;
+    archiveError.value = null;
+    try {
+        const res = await fetch(route('posts.image-archive', props.targetUserId), { headers: { Accept: 'application/json' } });
+        if (!res.ok) throw new Error('fetch failed');
+        const json = await res.json();
+        archiveImages.value = json.images;
+        archiveLoaded.value = true;
+    } catch (e) {
+        archiveError.value = "Impossibile caricare l'archivio.";
+    } finally {
+        archiveLoading.value = false;
+    }
+}
+
+async function pickFromArchive(img) {
+    await attachHostedImage({ url: img.url, filename: img.filename });
+    genPrompt.value = img.prompt ?? '';
+    genResultUrl.value = img.url;
+    genResultFilename.value = img.filename;
+    genFromArchive.value = true;
+    genStep.value = 2;
+    tab.value = 'genera';
 }
 </script>
 
@@ -125,7 +204,7 @@ function regenerate() {
         <div class="pf-tabs">
             <button v-for="[id, label] in TABS" :key="id" type="button"
                 class="pf-tab" :class="{ 'pf-tab--active': tab === id }"
-                @click="tab = id">{{ label }}</button>
+                @click="selectTab(id)">{{ label }}</button>
         </div>
 
         <!-- Carica -->
@@ -166,6 +245,7 @@ function regenerate() {
                     <textarea id="post-img-prompt" class="control" rows="4" v-model="genPrompt"
                         placeholder="Es. Una pizza margherita appena sfornata, luce calda e rustica, fotografia professionale" />
                 </div>
+                <div v-if="genError" class="pf-gen-error">{{ genError }}</div>
                 <div class="pf-gen-meta">
                     <div class="pf-gen-meta-info">
                         <Icon name="info" :size="14" />
@@ -186,9 +266,13 @@ function regenerate() {
 
             <div v-else-if="genStep === 2 && genResultUrl" class="pf-fade-in">
                 <img :src="genResultUrl" alt="Immagine generata dall'AI" class="pf-gen-result-img" />
-                <div class="pf-gen-result-prompt">"{{ genPrompt }}"</div>
+                <div v-if="genPrompt" class="pf-gen-result-prompt">"{{ genPrompt }}"</div>
+                <div v-else class="pf-gen-result-prompt pf-gen-result-prompt--empty">Prompt non disponibile per questa immagine.</div>
                 <div class="pf-gen-actions">
-                    <button type="button" class="btn btn-dark" style="flex:1" @click="saveAndUse">
+                    <div v-if="genFromArchive" class="pf-gen-added-badge">
+                        <Icon name="check" :size="15" />Già aggiunta al post
+                    </div>
+                    <button v-else type="button" class="btn btn-dark" style="flex:1" @click="saveAndUse">
                         <Icon name="bookmark" :size="16" />Salva e usa nel post
                     </button>
                     <button type="button" class="btn btn-secondary" @click="regenerate">Rifai</button>
@@ -197,9 +281,26 @@ function regenerate() {
         </div>
 
         <!-- Archivio -->
-        <div v-else-if="tab === 'archivio'" class="pf-archive-empty">
-            <Icon name="image" :size="36" />
-            <div class="pf-archive-empty-text">Archivio immagini generate in arrivo.</div>
+        <div v-else-if="tab === 'archivio'">
+            <div v-if="archiveLoading" class="pf-gen-loading">
+                <div class="pf-spinner"></div>
+                <div class="pf-gen-loading-title">Carico l'archivio…</div>
+            </div>
+            <div v-else-if="archiveError" class="pf-archive-empty">
+                <Icon name="image" :size="36" />
+                <div class="pf-archive-empty-text">{{ archiveError }}</div>
+            </div>
+            <div v-else-if="archiveImages.length === 0" class="pf-archive-empty">
+                <Icon name="image" :size="36" />
+                <div class="pf-archive-empty-text">Nessuna immagine generata ancora.</div>
+            </div>
+            <div v-else class="pf-archive-grid">
+                <div v-for="img in archiveImages" :key="img.filename" class="pf-archive-item" role="button" tabindex="0"
+                    :aria-label="img.prompt ? `Usa immagine: ${img.prompt}` : 'Usa immagine'"
+                    @click="pickFromArchive(img)" @keydown.enter="pickFromArchive(img)">
+                    <img :src="img.url" :alt="img.prompt ?? 'Immagine generata'" />
+                </div>
+            </div>
         </div>
 
         <!-- Immagini selezionate per il post -->
