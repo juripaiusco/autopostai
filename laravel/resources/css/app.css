@@ -210,15 +210,6 @@ main{ flex: 1; }
 .role-badge--manager{ background: var(--role-manager-bg); border-color: var(--role-manager-border); color: var(--role-manager-fg); }
 
 /* Barra utilizzo token/immagini */
-.token-bar{ min-width: 140px; }
-.token-bar__head{ display: flex; justify-content: flex-end; gap: 4px; font-size: 12px; color: var(--g500); margin-bottom: 5px; }
-.token-bar__used{ font-weight: 600; color: var(--ink); }
-.token-bar__used--warn{ color: var(--danger); }
-.token-bar__sep{ color: var(--g300); }
-.token-bar__track{ height: 6px; border-radius: var(--radius-full); background: var(--g200); overflow: hidden; }
-.token-bar__fill{ height: 100%; border-radius: var(--radius-full); background: var(--progress-fill); transition: width .5s var(--ease-out-quart); }
-.token-bar__fill--warn{ background: var(--danger); }
-.token-bar__fill--empty{ background: var(--g200); }
 .pill-error{ background: #fff; border-color: #fecaca; color: var(--st-err); }
 
 .table{ width: 100%; table-layout: fixed; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-collapse: collapse; overflow: hidden; }

@@ -41,3 +41,50 @@ const fillDelay = computed(() => `${Math.min(props.index, 9) * 50}ms`);
         </div>
     </div>
 </template>
+
+<style>
+/* Barra utilizzo token/immagini */
+.token-bar__head {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--g500);
+    margin-bottom: 5px;
+}
+
+.token-bar__used {
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.token-bar__used--warn {
+    color: var(--danger);
+}
+
+.token-bar__sep {
+    color: var(--g300);
+}
+
+.token-bar__track {
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--g200);
+    overflow: hidden;
+}
+
+.token-bar__fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: var(--progress-fill);
+    transition: width .5s var(--ease-out-quart);
+}
+
+.token-bar__fill--warn {
+    background: var(--danger);
+}
+
+.token-bar__fill--empty {
+    background: var(--g200);
+}
+</style>
