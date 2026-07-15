@@ -1,5 +1,4 @@
 import base64
-import os
 
 from openai import OpenAI, OpenAIError
 
@@ -7,10 +6,9 @@ from .base import ImageGenerationError, ImageProvider
 
 
 class OpenAIImageProvider(ImageProvider):
-    def __init__(self) -> None:
-        api_key = os.environ.get("OPENAI_API_KEY")
+    def __init__(self, api_key: str) -> None:
         if not api_key:
-            raise ImageGenerationError("OPENAI_API_KEY non configurata")
+            raise ImageGenerationError("Nessuna chiave OpenAI collegata per questo account")
         self._client = OpenAI(api_key=api_key)
 
     def generate(self, prompt: str) -> bytes:

@@ -96,6 +96,10 @@ class ImageArchiveController extends Controller
             return response()->json(['message' => 'Limite giornaliero di immagini generate raggiunto.'], 422);
         }
 
+        if (empty($user->settings?->openai_api_key)) {
+            return response()->json(['message' => 'Nessuna chiave OpenAI collegata per questo account. Collegala in Impostazioni AI.'], 422);
+        }
+
         $job = ImageJob::create([
             'user_id' => $user->id,
             'status' => 'pending',

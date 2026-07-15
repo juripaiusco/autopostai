@@ -15,12 +15,13 @@ app = FastAPI(title="autopostai image service")
 class GenerateImageRequest(BaseModel):
     prompt: str
     model: str
+    api_key: str
 
 
 @app.post("/generate-image")
 def generate_image(data: GenerateImageRequest):
     try:
-        provider = provider_for_model(data.model)
+        provider = provider_for_model(data.model, data.api_key)
         image_bytes = provider.generate(data.prompt)
     except ImageGenerationError as exc:
         return JSONResponse(status_code=422, content={"detail": str(exc)})

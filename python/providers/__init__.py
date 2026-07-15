@@ -6,8 +6,8 @@ PROVIDERS_BY_MODEL = {
 }
 
 
-def provider_for_model(model: str) -> ImageProvider:
+def provider_for_model(model: str, api_key: str) -> ImageProvider:
     provider_cls = PROVIDERS_BY_MODEL.get(model)
     if provider_cls is None:
         raise ImageGenerationError(f"Modello non supportato: {model}")
-    return provider_cls()
+    return provider_cls(api_key)

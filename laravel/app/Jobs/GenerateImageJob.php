@@ -36,6 +36,7 @@ class GenerateImageJob implements ShouldQueue
             $response = Http::timeout(100)->post(config('services.python.url').'/generate-image', [
                 'prompt' => $job->prompt,
                 'model' => $job->model,
+                'api_key' => $job->user->settings?->openai_api_key ?? '',
             ]);
 
             if ($response->failed()) {

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Jobs\GenerateImageJob;
 use App\Models\ImageJob;
+use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -63,6 +64,7 @@ class ImageArchiveTest extends TestCase
         Queue::fake();
         $admin = User::factory()->create(['parent_id' => null]);
         $user = User::factory()->create(['parent_id' => $admin->id, 'image_model_limit' => 5]);
+        Settings::factory()->create(['user_id' => $user->id, 'openai_api_key' => 'sk-test-key']);
 
         $response = $this->actingAs($user)->postJson(route('posts.image-generate', $user), [
             'prompt' => 'Un gatto astronauta',
@@ -103,6 +105,21 @@ class ImageArchiveTest extends TestCase
 
         $response = $this->actingAs($user)->postJson(route('posts.image-generate', $user), [
             'prompt' => 'Un altro gatto',
+            'model' => 'gpt-image-1',
+        ]);
+
+        $response->assertStatus(422);
+        Queue::assertNotPushed(GenerateImageJob::class);
+    }
+
+    public function test_start_job_rejects_when_the_account_has_no_openai_key_configured(): void
+    {
+        Queue::fake();
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id, 'image_model_limit' => 5]);
+
+        $response = $this->actingAs($user)->postJson(route('posts.image-generate', $user), [
+            'prompt' => 'Un gatto astronauta',
             'model' => 'gpt-image-1',
         ]);
 

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Jobs\GenerateImageJob;
 use App\Models\ImageJob;
+use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -19,6 +20,7 @@ class GenerateImageJobTest extends TestCase
         Storage::fake('public');
         $admin = User::factory()->create(['parent_id' => null]);
         $user = User::factory()->create(['parent_id' => $admin->id]);
+        Settings::factory()->create(['user_id' => $user->id, 'openai_api_key' => 'sk-test-key']);
         $job = ImageJob::factory()->create([
             'user_id' => $user->id,
             'status' => 'pending',
@@ -41,6 +43,8 @@ class GenerateImageJobTest extends TestCase
         $this->assertNotNull($job->image_url);
         Storage::disk('public')->assertExists("openai/{$user->id}/{$job->image_url}");
         $this->assertSame('fake-image-bytes', Storage::disk('public')->get("openai/{$user->id}/{$job->image_url}"));
+
+        Http::assertSent(fn ($request) => $request['api_key'] === 'sk-test-key');
     }
 
     public function test_handle_marks_the_job_failed_when_the_python_service_errors(): void
