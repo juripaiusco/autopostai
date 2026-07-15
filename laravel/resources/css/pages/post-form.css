@@ -137,22 +137,6 @@
 }
 .pf-note svg { color: var(--g400); width: 15px; height: 15px; flex-shrink: 0; }
 
-/* ---------- Step 2: AI image generation mini-steps ---------- */
-.pf-genstep { display: flex; align-items: center; gap: 6px; margin-bottom: 22px; flex-wrap: wrap; row-gap: 10px; }
-.pf-genstep-line { min-width: 16px; }
-.pf-genstep-item { display: flex; align-items: center; gap: 6px; }
-.pf-genstep-dot {
-    width: 20px; height: 20px; border-radius: 50%; font-size: 10.5px; font-weight: 700;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--g200); color: var(--g400);
-}
-.pf-genstep-dot--done { background: var(--ink); color: #fff; }
-.pf-genstep-dot--active { background: var(--sky); color: #fff; }
-.pf-genstep-label { font-size: 12.5px; color: var(--g500); }
-.pf-genstep-label--active { font-weight: 600; color: var(--ink); }
-.pf-genstep-line { flex: 1; height: 1px; background: var(--g100); }
-.pf-genstep-line--done { background: var(--ink); }
-
 .pf-gen-loading { text-align: center; padding: 52px 0; }
 .pf-gen-loading-title { font-weight: 700; color: var(--ink); margin-bottom: 6px; }
 .pf-gen-loading-sub { font-size: 13.5px; color: var(--g400); }

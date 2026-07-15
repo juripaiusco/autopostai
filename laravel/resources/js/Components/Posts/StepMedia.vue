@@ -258,18 +258,6 @@ async function confirmDeleteArchive() {
 
         <!-- Genera con AI -->
         <div v-else-if="tab === 'genera'">
-            <div class="pf-genstep">
-                <template v-for="(label, i) in ['Descrivi', 'Genera', 'Risultato']" :key="i">
-                    <div class="pf-genstep-item">
-                        <span class="pf-genstep-dot" :class="{ 'pf-genstep-dot--done': i < genStep, 'pf-genstep-dot--active': i === genStep }">
-                            {{ i < genStep ? '✓' : i + 1 }}
-                        </span>
-                        <span class="pf-genstep-label" :class="{ 'pf-genstep-label--active': i === genStep }">{{ label }}</span>
-                    </div>
-                    <div v-if="i < 2" class="pf-genstep-line" :class="{ 'pf-genstep-line--done': i < genStep }" />
-                </template>
-            </div>
-
             <div v-if="genStep === 0">
                 <div class="acc-field" style="margin-bottom:0">
                     <label class="acc-row-label" for="post-img-prompt">Prompt immagine</label>
