@@ -2,10 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\GenerateImageJob;
 use App\Models\ImageJob;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -13,22 +14,21 @@ class ImageArchiveTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_index_lists_images_from_both_provider_folders_and_resolves_prompt_when_available(): void
+    public function test_index_lists_images_from_the_provider_folder_and_resolves_prompt_when_available(): void
     {
         Storage::fake('public');
         $admin = User::factory()->create(['parent_id' => null]);
         $user = User::factory()->create(['parent_id' => $admin->id]);
 
-        Storage::disk('public')->put("dall-e/{$user->id}/with-job.png", 'fake');
-        Storage::disk('public')->put("dall-e/{$user->id}/orphan.png", 'fake');
-        Storage::disk('public')->put("stable-diffusion/{$user->id}/sd-orphan.jpg", 'fake');
-        Storage::disk('public')->put("dall-e/{$user->id}/.listing", 'not an image');
+        Storage::disk('public')->put("openai/{$user->id}/with-job.png", 'fake');
+        Storage::disk('public')->put("openai/{$user->id}/orphan.png", 'fake');
+        Storage::disk('public')->put("openai/{$user->id}/.listing", 'not an image');
 
         ImageJob::factory()->create([
             'user_id' => $user->id,
             'image_url' => 'with-job.png',
             'prompt' => 'Una pizza margherita',
-            'model' => 'dall-e-3',
+            'model' => 'gpt-image-1',
         ]);
 
         $response = $this->actingAs($user)->get(route('posts.image-archive', $user));
@@ -36,7 +36,7 @@ class ImageArchiveTest extends TestCase
         $response->assertOk();
         $images = collect($response->json('images'));
 
-        $this->assertCount(3, $images);
+        $this->assertCount(2, $images);
         $this->assertFalse($images->contains('filename', '.listing'));
 
         $withJob = $images->firstWhere('filename', 'with-job.png');
@@ -44,9 +44,6 @@ class ImageArchiveTest extends TestCase
 
         $orphan = $images->firstWhere('filename', 'orphan.png');
         $this->assertNull($orphan['prompt']);
-
-        $sdOrphan = $images->firstWhere('filename', 'sd-orphan.jpg');
-        $this->assertNull($sdOrphan['prompt']);
     }
 
     public function test_manager_cannot_view_archive_of_an_account_they_do_not_own(): void
@@ -61,30 +58,96 @@ class ImageArchiveTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_store_saves_the_file_and_creates_an_image_job_with_the_prompt(): void
+    public function test_start_job_creates_a_pending_image_job_and_dispatches_generation(): void
+    {
+        Queue::fake();
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id, 'image_model_limit' => 5]);
+
+        $response = $this->actingAs($user)->postJson(route('posts.image-generate', $user), [
+            'prompt' => 'Un gatto astronauta',
+            'model' => 'gpt-image-1',
+        ]);
+
+        $response->assertOk();
+        $jobId = $response->json('job_id');
+
+        $this->assertDatabaseHas('image_jobs', [
+            'id' => $jobId,
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'prompt' => 'Un gatto astronauta',
+            'model' => 'gpt-image-1',
+        ]);
+
+        Queue::assertPushed(GenerateImageJob::class, fn (GenerateImageJob $job) => $job->imageJobId === $jobId);
+    }
+
+    public function test_start_job_rejects_an_unknown_model(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id, 'image_model_limit' => 5]);
+
+        $this->actingAs($user)->postJson(route('posts.image-generate', $user), [
+            'prompt' => 'Un gatto astronauta',
+            'model' => 'not-a-real-model',
+        ])->assertStatus(422);
+    }
+
+    public function test_start_job_is_blocked_once_the_daily_quota_is_reached(): void
+    {
+        Queue::fake();
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id, 'image_model_limit' => 1]);
+        ImageJob::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->postJson(route('posts.image-generate', $user), [
+            'prompt' => 'Un altro gatto',
+            'model' => 'gpt-image-1',
+        ]);
+
+        $response->assertStatus(422);
+        Queue::assertNotPushed(GenerateImageJob::class);
+    }
+
+    public function test_status_reports_pending_running_and_completed(): void
     {
         Storage::fake('public');
         $admin = User::factory()->create(['parent_id' => null]);
         $user = User::factory()->create(['parent_id' => $admin->id]);
 
-        $response = $this->actingAs($user)->post(route('posts.image-generate', $user), [
-            'prompt' => 'Un gatto astronauta',
-            'image' => UploadedFile::fake()->image('generata.png'),
-        ]);
+        $pending = ImageJob::factory()->create(['user_id' => $user->id, 'status' => 'pending', 'image_url' => null]);
+        $this->actingAs($user)
+            ->getJson(route('posts.image-status', [$user, $pending]))
+            ->assertOk()
+            ->assertJson(['status' => 'pending']);
 
-        $response->assertOk();
-        $json = $response->json();
-
-        $this->assertSame('Un gatto astronauta', $json['prompt']);
-        $this->assertSame('dall-e-3', $json['model']);
-
-        Storage::disk('public')->assertExists("dall-e/{$user->id}/{$json['filename']}");
-
-        $this->assertDatabaseHas('image_jobs', [
+        $completed = ImageJob::factory()->create([
             'user_id' => $user->id,
-            'image_url' => $json['filename'],
-            'prompt' => 'Un gatto astronauta',
+            'status' => 'completed',
+            'image_url' => 'done.png',
+            'model' => 'gpt-image-1',
         ]);
+        Storage::disk('public')->put("openai/{$user->id}/done.png", 'fake');
+
+        $response = $this->actingAs($user)->getJson(route('posts.image-status', [$user, $completed]));
+        $response->assertOk();
+        $this->assertSame('completed', $response->json('status'));
+        $this->assertSame('done.png', $response->json('filename'));
+        $this->assertStringContainsString("openai/{$user->id}/done.png", $response->json('url'));
+    }
+
+    public function test_manager_cannot_check_status_of_a_job_belonging_to_an_account_they_do_not_own(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $managerA = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+        $managerB = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+        $childOfB = User::factory()->create(['parent_id' => $managerB->id]);
+        $job = ImageJob::factory()->create(['user_id' => $childOfB->id]);
+
+        $this->actingAs($managerA)
+            ->getJson(route('posts.image-status', [$childOfB, $job]))
+            ->assertForbidden();
     }
 
     public function test_destroy_deletes_the_file_and_its_image_job(): void
@@ -93,14 +156,14 @@ class ImageArchiveTest extends TestCase
         $admin = User::factory()->create(['parent_id' => null]);
         $user = User::factory()->create(['parent_id' => $admin->id]);
 
-        Storage::disk('public')->put("dall-e/{$user->id}/with-job.png", 'fake');
+        Storage::disk('public')->put("openai/{$user->id}/with-job.png", 'fake');
         ImageJob::factory()->create(['user_id' => $user->id, 'image_url' => 'with-job.png']);
 
         $this->actingAs($user)
             ->delete(route('posts.image-archive.destroy', [$user, 'with-job.png']))
             ->assertOk();
 
-        Storage::disk('public')->assertMissing("dall-e/{$user->id}/with-job.png");
+        Storage::disk('public')->assertMissing("openai/{$user->id}/with-job.png");
         $this->assertDatabaseMissing('image_jobs', ['user_id' => $user->id, 'image_url' => 'with-job.png']);
     }
 
@@ -110,13 +173,13 @@ class ImageArchiveTest extends TestCase
         $admin = User::factory()->create(['parent_id' => null]);
         $user = User::factory()->create(['parent_id' => $admin->id]);
 
-        Storage::disk('public')->put("stable-diffusion/{$user->id}/orphan.jpg", 'fake');
+        Storage::disk('public')->put("openai/{$user->id}/orphan.png", 'fake');
 
         $this->actingAs($user)
-            ->delete(route('posts.image-archive.destroy', [$user, 'orphan.jpg']))
+            ->delete(route('posts.image-archive.destroy', [$user, 'orphan.png']))
             ->assertOk();
 
-        Storage::disk('public')->assertMissing("stable-diffusion/{$user->id}/orphan.jpg");
+        Storage::disk('public')->assertMissing("openai/{$user->id}/orphan.png");
     }
 
     public function test_destroy_returns_404_for_a_filename_that_does_not_exist(): void
@@ -138,12 +201,12 @@ class ImageArchiveTest extends TestCase
         $managerB = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
         $childOfB = User::factory()->create(['parent_id' => $managerB->id]);
 
-        Storage::disk('public')->put("dall-e/{$childOfB->id}/img.png", 'fake');
+        Storage::disk('public')->put("openai/{$childOfB->id}/img.png", 'fake');
 
         $this->actingAs($managerA)
             ->delete(route('posts.image-archive.destroy', [$childOfB, 'img.png']))
             ->assertForbidden();
 
-        Storage::disk('public')->assertExists("dall-e/{$childOfB->id}/img.png");
+        Storage::disk('public')->assertExists("openai/{$childOfB->id}/img.png");
     }
 }

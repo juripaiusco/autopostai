@@ -80,68 +80,70 @@ function removeNew(index) {
     emit('set', 'newImages', arr);
 }
 
-/* ---------------- Genera con AI (mock, persistito in archivio) ---------------- */
+/* ---------------- Genera con AI (job async + polling) ---------------- */
 const genStep = ref(0); // 0=prompt 1=loading 2=result
 const genPrompt = ref('');
 const genResultUrl = ref(null);
 const genResultFilename = ref(null);
 const genFromArchive = ref(false); // true se il risultato mostrato viene dall'archivio (gia' aggiunto al post)
 const genError = ref(null);
-let genTimer = null;
+let pollTimer = null;
 
-const PALETTES = [
-    ['#b07a4a', '#7a4a1a'],
-    ['#6a8aaa', '#3a5a7a'],
-    ['#6a9a6a', '#3a6a3a'],
-    ['#7a6a9a', '#4a3a6a'],
-    ['#8a6a5a', '#5a3a2a'],
-];
+const GEN_MODEL = 'gpt-image-1';
 
-function gradientDataUrl(c1, c2) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 800;
-    canvas.height = 600;
-    const ctx = canvas.getContext('2d');
-    const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    grad.addColorStop(0, c1);
-    grad.addColorStop(1, c2);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/png');
+function stopPolling() {
+    clearTimeout(pollTimer);
+    pollTimer = null;
 }
 
-function handleGenerate() {
-    if (!genPrompt.value.trim()) return;
-    genStep.value = 1;
-    genError.value = null;
-    clearTimeout(genTimer);
-    genTimer = setTimeout(async () => {
-        try {
-            const [c1, c2] = PALETTES[Math.floor(Math.random() * PALETTES.length)];
-            const blob = await (await fetch(gradientDataUrl(c1, c2))).blob();
+async function pollJobStatus(jobId) {
+    try {
+        const res = await fetch(route('posts.image-status', [props.targetUserId, jobId]), { headers: { Accept: 'application/json' } });
+        if (!res.ok) throw new Error('status failed');
+        const json = await res.json();
 
-            const body = new FormData();
-            body.append('prompt', genPrompt.value);
-            body.append('image', blob, 'generata-ai.png');
-
-            const res = await fetch(route('posts.image-generate', props.targetUserId), {
-                method: 'POST',
-                headers: { 'X-XSRF-TOKEN': csrfToken(), Accept: 'application/json' },
-                body,
-            });
-            if (!res.ok) throw new Error('generate failed');
-            const json = await res.json();
-
+        if (json.status === 'completed') {
             genResultUrl.value = json.url;
             genResultFilename.value = json.filename;
             genFromArchive.value = false;
             genStep.value = 2;
             archiveLoaded.value = false; // il prossimo tab Archivio rifa' il fetch e la mostra
-        } catch (e) {
+            return;
+        }
+        if (json.status === 'failed') {
             genError.value = "Generazione non riuscita, riprova.";
             genStep.value = 0;
+            return;
         }
-    }, 1700);
+        pollTimer = setTimeout(() => pollJobStatus(jobId), 3000);
+    } catch (e) {
+        genError.value = "Generazione non riuscita, riprova.";
+        genStep.value = 0;
+    }
+}
+
+async function handleGenerate() {
+    if (!genPrompt.value.trim()) return;
+    genStep.value = 1;
+    genError.value = null;
+    stopPolling();
+    try {
+        const res = await fetch(route('posts.image-generate', props.targetUserId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': csrfToken(), Accept: 'application/json' },
+            body: JSON.stringify({ prompt: genPrompt.value, model: GEN_MODEL }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+            genError.value = json.message ?? "Generazione non riuscita, riprova.";
+            genStep.value = 0;
+            return;
+        }
+        pollJobStatus(json.job_id);
+    } catch (e) {
+        genError.value = "Generazione non riuscita, riprova.";
+        genStep.value = 0;
+    }
 }
 
 async function saveAndUse() {
@@ -152,6 +154,7 @@ async function saveAndUse() {
 }
 
 function resetGenState() {
+    stopPolling();
     genStep.value = 0;
     genPrompt.value = '';
     genResultUrl.value = null;
@@ -160,6 +163,7 @@ function resetGenState() {
 }
 
 function regenerate() {
+    stopPolling();
     genStep.value = 0;
     genResultUrl.value = null;
     genResultFilename.value = null;
@@ -278,7 +282,7 @@ async function confirmDeleteArchive() {
                 <div class="pf-gen-meta">
                     <div class="pf-gen-meta-info">
                         <Icon name="info" :size="14" />
-                        Modello: <strong class="pf-gen-meta-strong">DALL·E 3</strong>
+                        Modello: <strong class="pf-gen-meta-strong">gpt-image-1 (OpenAI)</strong>
                         <span class="pf-gen-meta-soon">· scelta modello in arrivo</span>
                     </div>
                     <button type="button" class="btn btn-dark" :disabled="!genPrompt.trim()" @click="handleGenerate">

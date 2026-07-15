@@ -68,8 +68,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/posts/canali/{user}/archivio-immagini', [ImageArchiveController::class, 'index'])
         ->name('posts.image-archive');
 
-    Route::post('/posts/canali/{user}/genera-immagine', [ImageArchiveController::class, 'store'])
+    Route::post('/posts/canali/{user}/genera-immagine', [ImageArchiveController::class, 'startJob'])
         ->name('posts.image-generate');
+
+    Route::get('/posts/canali/{user}/stato-immagine/{job}', [ImageArchiveController::class, 'status'])
+        ->name('posts.image-status');
 
     Route::delete('/posts/canali/{user}/archivio-immagini/{filename}', [ImageArchiveController::class, 'destroy'])
         ->name('posts.image-archive.destroy');

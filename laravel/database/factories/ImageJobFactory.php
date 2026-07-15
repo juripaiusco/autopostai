@@ -18,7 +18,7 @@ class ImageJobFactory extends Factory
             'status'     => 'completed',
             'image_url'  => 'https://picsum.photos/seed/' . $this->faker->word() . '/800/600',
             'prompt'     => $this->faker->sentence(),
-            'model'      => 'dall-e-3',
+            'model'      => 'gpt-image-1',
             'created_at' => now(),
             'updated_at' => now(),
         ];
