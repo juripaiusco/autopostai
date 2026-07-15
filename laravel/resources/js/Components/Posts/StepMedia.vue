@@ -200,7 +200,6 @@ async function pickFromArchive(img) {
     genResultFilename.value = img.filename;
     genFromArchive.value = true;
     genStep.value = 2;
-    tab.value = 'genera';
 }
 
 const deletingImage = ref(null);
