@@ -47,6 +47,31 @@ class ImageArchiveTest extends TestCase
         $this->assertNull($orphan['prompt']);
     }
 
+    public function test_index_returns_the_image_with_prompt_to_the_account_that_generated_it_for_another(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+
+        Storage::disk('public')->put("openai/{$admin->id}/shared.png", 'fake');
+
+        ImageJob::factory()->create([
+            'user_id' => $user->id,
+            'created_by_user_id' => $admin->id,
+            'image_url' => 'shared.png',
+            'prompt' => 'Un gatto astronauta',
+            'model' => 'gpt-image-1',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('posts.image-archive', $admin));
+
+        $response->assertOk();
+        $image = collect($response->json('images'))->firstWhere('filename', 'shared.png');
+
+        $this->assertNotNull($image);
+        $this->assertSame('Un gatto astronauta', $image['prompt']);
+    }
+
     public function test_manager_cannot_view_archive_of_an_account_they_do_not_own(): void
     {
         $admin = User::factory()->create(['parent_id' => null]);
@@ -83,6 +108,26 @@ class ImageArchiveTest extends TestCase
         ]);
 
         Queue::assertPushed(GenerateImageJob::class, fn (GenerateImageJob $job) => $job->imageJobId === $jobId);
+    }
+
+    public function test_start_job_records_the_acting_user_as_creator_when_generating_for_another_account(): void
+    {
+        Queue::fake();
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id, 'image_model_limit' => 5]);
+        Settings::factory()->create(['user_id' => $user->id, 'openai_api_key' => 'sk-test-key']);
+
+        $response = $this->actingAs($admin)->postJson(route('posts.image-generate', $user), [
+            'prompt' => 'Un gatto astronauta',
+            'model' => 'gpt-image-1',
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('image_jobs', [
+            'id' => $response->json('job_id'),
+            'user_id' => $user->id,
+            'created_by_user_id' => $admin->id,
+        ]);
     }
 
     public function test_start_job_rejects_an_unknown_model(): void
@@ -182,6 +227,28 @@ class ImageArchiveTest extends TestCase
 
         Storage::disk('public')->assertMissing("openai/{$user->id}/with-job.png");
         $this->assertDatabaseMissing('image_jobs', ['user_id' => $user->id, 'image_url' => 'with-job.png']);
+    }
+
+    public function test_destroy_from_the_target_archive_does_not_affect_the_creators_copy(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+
+        Storage::disk('public')->put("openai/{$user->id}/shared.png", 'fake');
+        Storage::disk('public')->put("openai/{$admin->id}/shared.png", 'fake');
+        ImageJob::factory()->create([
+            'user_id' => $user->id,
+            'created_by_user_id' => $admin->id,
+            'image_url' => 'shared.png',
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('posts.image-archive.destroy', [$user, 'shared.png']))
+            ->assertOk();
+
+        Storage::disk('public')->assertMissing("openai/{$user->id}/shared.png");
+        Storage::disk('public')->assertExists("openai/{$admin->id}/shared.png");
     }
 
     public function test_destroy_deletes_an_orphan_file_with_no_image_job(): void

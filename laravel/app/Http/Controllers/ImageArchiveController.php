@@ -39,7 +39,9 @@ class ImageArchiveController extends Controller
     {
         abort_unless($request->user()->canActFor($user), 403);
 
-        $jobsByFilename = ImageJob::where('user_id', $user->id)->get()
+        $jobsByFilename = ImageJob::where('user_id', $user->id)
+            ->orWhere('created_by_user_id', $user->id)
+            ->get()
             ->keyBy(fn (ImageJob $job) => basename((string) $job->image_url));
 
         $images = collect(array_unique(array_values(self::FOLDERS)))
@@ -102,6 +104,7 @@ class ImageArchiveController extends Controller
 
         $job = ImageJob::create([
             'user_id' => $user->id,
+            'created_by_user_id' => $request->user()->id,
             'status' => 'pending',
             'prompt' => $data['prompt'],
             'model' => $data['model'],

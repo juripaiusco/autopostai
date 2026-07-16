@@ -50,7 +50,12 @@ class GenerateImageJob implements ShouldQueue
 
             $filename = Str::uuid().'.png';
             $folder = ImageArchiveController::folderForModel($job->model);
-            Storage::disk('public')->put("{$folder}/{$job->user_id}/{$filename}", $bytes);
+            $sourcePath = "{$folder}/{$job->user_id}/{$filename}";
+            Storage::disk('public')->put($sourcePath, $bytes);
+
+            if ($job->created_by_user_id && $job->created_by_user_id !== $job->user_id) {
+                Storage::disk('public')->copy($sourcePath, "{$folder}/{$job->created_by_user_id}/{$filename}");
+            }
 
             $job->update(['status' => 'completed', 'image_url' => $filename]);
         } catch (\Throwable $e) {

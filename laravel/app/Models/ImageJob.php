@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'status', 'image_url', 'prompt', 'model'])]
+#[Fillable(['user_id', 'created_by_user_id', 'status', 'image_url', 'prompt', 'model'])]
 class ImageJob extends Model
 {
     use HasFactory;
@@ -15,5 +15,10 @@ class ImageJob extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 }

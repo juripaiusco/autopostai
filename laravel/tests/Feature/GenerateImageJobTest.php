@@ -47,6 +47,66 @@ class GenerateImageJobTest extends TestCase
         Http::assertSent(fn ($request) => $request['api_key'] === 'sk-test-key');
     }
 
+    public function test_handle_copies_the_image_into_the_creator_folder_when_generated_on_behalf_of_another_account(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+        Settings::factory()->create(['user_id' => $user->id, 'openai_api_key' => 'sk-test-key']);
+        $job = ImageJob::factory()->create([
+            'user_id' => $user->id,
+            'created_by_user_id' => $admin->id,
+            'status' => 'pending',
+            'image_url' => null,
+            'model' => 'gpt-image-1',
+            'prompt' => 'Un gatto astronauta',
+        ]);
+
+        Http::fake([
+            '*/generate-image' => Http::response([
+                'image_base64' => base64_encode('fake-image-bytes'),
+                'mime_type' => 'image/png',
+            ]),
+        ]);
+
+        (new GenerateImageJob($job->id))->handle();
+
+        $job->refresh();
+        Storage::disk('public')->assertExists("openai/{$user->id}/{$job->image_url}");
+        Storage::disk('public')->assertExists("openai/{$admin->id}/{$job->image_url}");
+        $this->assertSame(
+            Storage::disk('public')->get("openai/{$user->id}/{$job->image_url}"),
+            Storage::disk('public')->get("openai/{$admin->id}/{$job->image_url}")
+        );
+    }
+
+    public function test_handle_does_not_duplicate_the_file_when_the_creator_is_the_target_account(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+        Settings::factory()->create(['user_id' => $user->id, 'openai_api_key' => 'sk-test-key']);
+        $job = ImageJob::factory()->create([
+            'user_id' => $user->id,
+            'created_by_user_id' => $user->id,
+            'status' => 'pending',
+            'image_url' => null,
+            'model' => 'gpt-image-1',
+        ]);
+
+        Http::fake([
+            '*/generate-image' => Http::response([
+                'image_base64' => base64_encode('fake-image-bytes'),
+                'mime_type' => 'image/png',
+            ]),
+        ]);
+
+        (new GenerateImageJob($job->id))->handle();
+
+        $job->refresh();
+        $this->assertCount(1, Storage::disk('public')->allFiles('openai'));
+    }
+
     public function test_handle_marks_the_job_failed_when_the_python_service_errors(): void
     {
         Storage::fake('public');
