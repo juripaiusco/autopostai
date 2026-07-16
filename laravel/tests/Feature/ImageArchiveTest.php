@@ -108,6 +108,23 @@ class ImageArchiveTest extends TestCase
         $this->assertFalse($filenames->contains('not-mine.png'));
     }
 
+    public function test_index_includes_legacy_provider_folders_no_longer_used_for_generation(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+
+        Storage::disk('public')->put("dall-e/{$admin->id}/old.png", 'fake');
+        Storage::disk('public')->put("stable-diffusion/{$admin->id}/older.png", 'fake');
+
+        $response = $this->actingAs($admin)->get(route('posts.image-archive', $admin));
+
+        $response->assertOk();
+        $filenames = collect($response->json('images'))->pluck('filename');
+
+        $this->assertTrue($filenames->contains('old.png'));
+        $this->assertTrue($filenames->contains('older.png'));
+    }
+
     public function test_manager_cannot_view_archive_of_an_account_they_do_not_own(): void
     {
         $admin = User::factory()->create(['parent_id' => null]);
@@ -303,6 +320,20 @@ class ImageArchiveTest extends TestCase
 
         Storage::disk('public')->assertMissing("openai/{$admin->id}/admin-owned.png");
         Storage::disk('public')->assertExists("openai/{$user->id}/target-owned.png");
+    }
+
+    public function test_destroy_deletes_a_file_in_a_legacy_provider_folder(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+
+        Storage::disk('public')->put("dall-e/{$admin->id}/old.png", 'fake');
+
+        $this->actingAs($admin)
+            ->delete(route('posts.image-archive.destroy', [$admin, 'old.png']))
+            ->assertOk();
+
+        Storage::disk('public')->assertMissing("dall-e/{$admin->id}/old.png");
     }
 
     public function test_destroy_deletes_an_orphan_file_with_no_image_job(): void

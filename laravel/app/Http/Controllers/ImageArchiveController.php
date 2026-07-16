@@ -24,9 +24,27 @@ class ImageArchiveController extends Controller
         'gpt-image-1' => 'openai',
     ];
 
+    /**
+     * Cartelle di provider non più generabili (es. `dall-e`, rimosso
+     * dall'API OpenAI il 12/05/2026) i cui file storici restano su disco e
+     * vanno comunque mostrati/cancellabili nell'archivio, pur non essendo
+     * più un target valido per una nuova generazione.
+     */
+    private const LEGACY_FOLDERS = ['dall-e', 'stable-diffusion'];
+
     public static function folderForModel(string $model): string
     {
         return self::FOLDERS[$model] ?? 'openai';
+    }
+
+    /**
+     * Tutte le cartelle di storage da considerare quando si legge/cancella
+     * l'archivio (provider attivi + legacy), a differenza di FOLDERS che
+     * serve solo a scegliere la cartella di una NUOVA generazione.
+     */
+    private static function archiveFolders(): array
+    {
+        return array_unique(array_merge(array_values(self::FOLDERS), self::LEGACY_FOLDERS));
     }
 
     /**
@@ -51,7 +69,7 @@ class ImageArchiveController extends Controller
             ->get()
             ->keyBy(fn (ImageJob $job) => basename((string) $job->image_url));
 
-        $images = collect(array_unique(array_values(self::FOLDERS)))
+        $images = collect(self::archiveFolders())
             ->crossJoin($folderUserIds)
             ->flatMap(function (array $pair) use ($jobsByFilename) {
                 [$folder, $folderUserId] = $pair;
@@ -165,7 +183,7 @@ class ImageArchiveController extends Controller
         $folderUserIds = collect([$user->id, $request->user()->id])->unique()->values();
 
         $deleted = false;
-        foreach (array_unique(array_values(self::FOLDERS)) as $folder) {
+        foreach (self::archiveFolders() as $folder) {
             foreach ($folderUserIds as $folderUserId) {
                 $path = "{$folder}/{$folderUserId}/{$filename}";
                 if (Storage::disk('public')->exists($path)) {
