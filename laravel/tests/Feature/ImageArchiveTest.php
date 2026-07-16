@@ -72,6 +72,42 @@ class ImageArchiveTest extends TestCase
         $this->assertSame('Un gatto astronauta', $image['prompt']);
     }
 
+    public function test_index_merges_the_actors_own_images_with_the_targets_when_composing_for_a_sub_account(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+
+        Storage::disk('public')->put("openai/{$user->id}/target-owned.png", 'fake');
+        Storage::disk('public')->put("openai/{$admin->id}/admin-owned.png", 'fake');
+
+        $response = $this->actingAs($admin)->get(route('posts.image-archive', $user));
+
+        $response->assertOk();
+        $filenames = collect($response->json('images'))->pluck('filename');
+
+        $this->assertTrue($filenames->contains('target-owned.png'));
+        $this->assertTrue($filenames->contains('admin-owned.png'));
+    }
+
+    public function test_index_shows_only_own_images_to_a_plain_user_even_if_their_parent_has_others(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+
+        Storage::disk('public')->put("openai/{$user->id}/mine.png", 'fake');
+        Storage::disk('public')->put("openai/{$admin->id}/not-mine.png", 'fake');
+
+        $response = $this->actingAs($user)->get(route('posts.image-archive', $user));
+
+        $response->assertOk();
+        $filenames = collect($response->json('images'))->pluck('filename');
+
+        $this->assertTrue($filenames->contains('mine.png'));
+        $this->assertFalse($filenames->contains('not-mine.png'));
+    }
+
     public function test_manager_cannot_view_archive_of_an_account_they_do_not_own(): void
     {
         $admin = User::factory()->create(['parent_id' => null]);
@@ -229,7 +265,7 @@ class ImageArchiveTest extends TestCase
         $this->assertDatabaseMissing('image_jobs', ['user_id' => $user->id, 'image_url' => 'with-job.png']);
     }
 
-    public function test_destroy_from_the_target_archive_does_not_affect_the_creators_copy(): void
+    public function test_destroy_removes_both_copies_when_the_image_exists_in_the_target_and_the_actors_folder(): void
     {
         Storage::fake('public');
         $admin = User::factory()->create(['parent_id' => null]);
@@ -248,7 +284,25 @@ class ImageArchiveTest extends TestCase
             ->assertOk();
 
         Storage::disk('public')->assertMissing("openai/{$user->id}/shared.png");
-        Storage::disk('public')->assertExists("openai/{$admin->id}/shared.png");
+        Storage::disk('public')->assertMissing("openai/{$admin->id}/shared.png");
+        $this->assertDatabaseMissing('image_jobs', ['user_id' => $user->id, 'image_url' => 'shared.png']);
+    }
+
+    public function test_destroy_removes_an_image_that_exists_only_in_the_actors_own_folder_without_touching_the_target(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+
+        Storage::disk('public')->put("openai/{$admin->id}/admin-owned.png", 'fake');
+        Storage::disk('public')->put("openai/{$user->id}/target-owned.png", 'fake');
+
+        $this->actingAs($admin)
+            ->delete(route('posts.image-archive.destroy', [$user, 'admin-owned.png']))
+            ->assertOk();
+
+        Storage::disk('public')->assertMissing("openai/{$admin->id}/admin-owned.png");
+        Storage::disk('public')->assertExists("openai/{$user->id}/target-owned.png");
     }
 
     public function test_destroy_deletes_an_orphan_file_with_no_image_job(): void

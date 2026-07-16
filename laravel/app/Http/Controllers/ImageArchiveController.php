@@ -30,23 +30,33 @@ class ImageArchiveController extends Controller
     }
 
     /**
-     * Archivio immagini AI dell'account $user: unione di storage/app/public/
-     * {folder}/{user->id}/*, incrociata con image_jobs per recuperare il
-     * prompt quando disponibile (alcuni file possono non avere una riga
-     * corrispondente — restano comunque selezionabili, senza prompt).
+     * Archivio immagini AI visibile a $request->user() nel contesto del post
+     * dell'account $user: unione di storage/app/public/{folder}/{id}/* per
+     * $user e per l'attore loggato (coincidono per un utente semplice, che
+     * può agire solo per sé stesso — vede quindi solo le proprie), incrociata
+     * con image_jobs per recuperare il prompt quando disponibile (alcuni file
+     * possono non avere una riga corrispondente — restano comunque
+     * selezionabili, senza prompt).
      */
     public function index(Request $request, User $user): JsonResponse
     {
         abort_unless($request->user()->canActFor($user), 403);
 
-        $jobsByFilename = ImageJob::where('user_id', $user->id)
-            ->orWhere('created_by_user_id', $user->id)
+        $folderUserIds = collect([$user->id, $request->user()->id])->unique()->values();
+
+        $jobsByFilename = ImageJob::where(function ($query) use ($folderUserIds) {
+                $query->whereIn('user_id', $folderUserIds)
+                    ->orWhereIn('created_by_user_id', $folderUserIds);
+            })
             ->get()
             ->keyBy(fn (ImageJob $job) => basename((string) $job->image_url));
 
         $images = collect(array_unique(array_values(self::FOLDERS)))
-            ->flatMap(function (string $folder) use ($user, $jobsByFilename) {
-                return collect(Storage::disk('public')->files("{$folder}/{$user->id}"))
+            ->crossJoin($folderUserIds)
+            ->flatMap(function (array $pair) use ($jobsByFilename) {
+                [$folder, $folderUserId] = $pair;
+
+                return collect(Storage::disk('public')->files("{$folder}/{$folderUserId}"))
                     ->filter(fn ($path) => in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), self::IMAGE_EXTENSIONS, true))
                     ->map(function ($path) use ($jobsByFilename) {
                         $filename = basename($path);
@@ -62,6 +72,7 @@ class ImageArchiveController extends Controller
                         ];
                     });
             })
+            ->unique('filename')
             ->sortByDesc('sortKey')
             ->map(fn ($img) => collect($img)->except('sortKey')->all())
             ->values();
@@ -137,26 +148,35 @@ class ImageArchiveController extends Controller
     }
 
     /**
-     * Elimina un'immagine dall'archivio dell'account $user: file da
-     * qualunque cartella provider dove si trovi + riga image_jobs
-     * corrispondente, se presente (le orfane non ne hanno una).
+     * Elimina un'immagine dall'archivio visibile a $request->user() nel
+     * contesto del post dell'account $user: cerca il file in qualunque
+     * cartella provider di $user o dell'attore (stessa coppia di id usata da
+     * index()) e lo cancella ovunque lo trovi — se l'immagine è una copia
+     * duplicata presente in entrambe le cartelle, vengono rimosse entrambe,
+     * dato che l'azione avviene nella stessa vista unificata. Rimuove anche
+     * la riga image_jobs corrispondente, se presente (le orfane non ne hanno
+     * una).
      */
     public function destroy(Request $request, User $user, string $filename): JsonResponse
     {
         abort_unless($request->user()->canActFor($user), 403);
         abort_if(str_contains($filename, '/') || str_contains($filename, '..'), 422);
 
+        $folderUserIds = collect([$user->id, $request->user()->id])->unique()->values();
+
         $deleted = false;
         foreach (array_unique(array_values(self::FOLDERS)) as $folder) {
-            $path = "{$folder}/{$user->id}/{$filename}";
-            if (Storage::disk('public')->exists($path)) {
-                Storage::disk('public')->delete($path);
-                $deleted = true;
+            foreach ($folderUserIds as $folderUserId) {
+                $path = "{$folder}/{$folderUserId}/{$filename}";
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                    $deleted = true;
+                }
             }
         }
         abort_unless($deleted, 404);
 
-        ImageJob::where('user_id', $user->id)->get()
+        ImageJob::whereIn('user_id', $folderUserIds)->get()
             ->filter(fn (ImageJob $job) => basename((string) $job->image_url) === $filename)
             ->each(fn (ImageJob $job) => $job->delete());
 
