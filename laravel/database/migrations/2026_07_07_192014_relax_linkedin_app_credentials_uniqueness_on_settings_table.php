@@ -7,9 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
-     */
-    /**
      * Piu' account possono condividere volutamente la stessa app LinkedIn
      * (client_id/secret) per evitare di dover ri-autorizzare il token per
      * ognuno: quando l'admin/manager aggiorna il token, si propaga a tutti
@@ -19,8 +16,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            $table->dropUnique('settings_linkedin_client_id_unique');
-            $table->dropUnique('settings_linkedin_client_secret_unique');
+            // Colonne, non nomi indice letterali: con DB_PREFIX impostato
+            // (es. DB su hosting condiviso) il nome reale dell'indice include
+            // il prefisso (Blueprint::createIndexName()) e un confronto per
+            // stringa fissa fallirebbe silenziosamente.
+            if (Schema::hasIndex('settings', ['linkedin_client_id'], 'unique')) {
+                $table->dropUnique(['linkedin_client_id']);
+            }
+
+            if (Schema::hasIndex('settings', ['linkedin_client_secret'], 'unique')) {
+                $table->dropUnique(['linkedin_client_secret']);
+            }
+
             $table->timestamp('linkedin_token_expires_at')->nullable()->after('linkedin_token');
         });
     }
