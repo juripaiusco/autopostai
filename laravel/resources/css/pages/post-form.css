@@ -91,7 +91,12 @@
 .pf-media-wrap { display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: stretch; }
 @media (max-width: 860px) { .pf-media-wrap { grid-template-columns: 1fr; } }
 
-.pf-media-left { height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--g300) transparent; }
+.pf-media-left {
+    height: 400px; overflow-y: auto;
+    border: 1px solid var(--g100); border-radius: var(--radius-lg);
+    padding: 14px; background: var(--g50);
+    scrollbar-width: thin; scrollbar-color: var(--g300) transparent;
+}
 @media (max-width: 860px) { .pf-media-left { height: auto; max-height: 400px; } }
 
 .pf-media-right {
