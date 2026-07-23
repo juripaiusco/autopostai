@@ -102,6 +102,7 @@ function buildForm(account) {
                 mailchimp: { apiKey: '', serverPrefix: '', audienceId: '', connected: false },
                 brevo:     { apiKey: '', listId: '', sender: '', connected: false },
                 smtp:      { host: '', port: '587', username: '', password: '', encryption: 'tls', sender: '', connected: false },
+                template:  { content: '', cta: '' },
             },
             usage: null,
         };

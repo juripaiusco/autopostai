@@ -6,7 +6,7 @@ import ConnectionBadge from '@/Components/UI/ConnectionBadge.vue';
 import Icon from '@/Components/Icon.vue';
 
 const props = defineProps({
-    modelValue: { type: Object, required: true }, // { mailchimp, brevo, smtp }
+    modelValue: { type: Object, required: true }, // { mailchimp, brevo, smtp, template }
 });
 
 const emit = defineEmits(['update', 'fetch-lists']);
@@ -17,7 +17,7 @@ const PROVIDERS = [
     { id: 'smtp',      name: 'SMTP custom', sub: 'Server email proprio' },
 ];
 
-const open = ref('mailchimp');
+const open = ref('');
 
 function connState(providerId) {
     return props.modelValue[providerId]?.connected ? 'ok' : 'off';
@@ -26,6 +26,27 @@ function connState(providerId) {
 
 <template>
     <div>
+        <div class="acc-nl-template">
+            <div class="acc-nl-template-head">
+                <Icon name="chat" :size="16" />
+                <span class="acc-nl-template-title">Template email</span>
+            </div>
+            <FieldRow id="acc-nl-template-content" label="HTML del modello"
+                help="Il codice HTML usato come modello per generare il contenuto della newsletter.">
+                <textarea id="acc-nl-template-content" class="control acc-nl-template-ta" :value="modelValue.template?.content"
+                    style="min-height:220px"
+                    placeholder="<html>…</html>"
+                    @input="emit('update', 'template', 'content', $event.target.value)" />
+            </FieldRow>
+            <FieldRow id="acc-nl-template-cta" label="Call to action" style="margin-bottom:0"
+                help="Il blocco HTML della call-to-action inserito nel modello.">
+                <textarea id="acc-nl-template-cta" class="control acc-nl-template-ta" :value="modelValue.template?.cta"
+                    style="min-height:90px"
+                    placeholder="<a href=…>Scopri di più</a>"
+                    @input="emit('update', 'template', 'cta', $event.target.value)" />
+            </FieldRow>
+        </div>
+
         <p class="acc-hint-inline" style="margin-bottom:14px">
             <Icon name="info" :size="14" />
             Collega <b style="margin:0 4px;color:var(--g700)">uno</b> dei provider che usi per le tue campagne.

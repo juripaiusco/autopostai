@@ -33,6 +33,10 @@ class AccountNewsletterSettingsTest extends TestCase
                         'encryption' => 'tls',
                         'sender' => 'newsletter@example.com',
                     ],
+                    'template' => [
+                        'content' => '<html><body>{{ post }}</body></html>',
+                        'cta' => '<a href="{{ link }}">Scopri di più</a>',
+                    ],
                 ],
             ])
             ->assertRedirect();
@@ -53,11 +57,16 @@ class AccountNewsletterSettingsTest extends TestCase
         $this->assertSame('tls', $settings->nl_smtp_encryption);
         $this->assertSame('newsletter@example.com', $settings->nl_smtp_sender);
 
+        $this->assertSame('<html><body>{{ post }}</body></html>', $settings->nl_template);
+        $this->assertSame('<a href="{{ link }}">Scopri di più</a>', $settings->nl_template_cta);
+
         $this->actingAs($admin)
             ->get(route('account.edit', $child))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('account.newsletter.smtp.host', 'smtp.example.com')
                 ->where('account.newsletter.smtp.connected', true)
+                ->where('account.newsletter.template.content', '<html><body>{{ post }}</body></html>')
+                ->where('account.newsletter.template.cta', '<a href="{{ link }}">Scopri di più</a>')
             );
     }
 }

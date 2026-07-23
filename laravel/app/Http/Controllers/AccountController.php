@@ -318,6 +318,7 @@ class AccountController extends Controller
         $mailchimp = $newsletter['mailchimp'] ?? [];
         $brevo = $newsletter['brevo'] ?? [];
         $smtp = $newsletter['smtp'] ?? [];
+        $template = $newsletter['template'] ?? [];
 
         Settings::updateOrCreate(
             ['user_id' => $user->id],
@@ -353,6 +354,9 @@ class AccountController extends Controller
                 'nl_smtp_password' => $smtp['password'] ?? null,
                 'nl_smtp_encryption' => $smtp['encryption'] ?? null,
                 'nl_smtp_sender' => $smtp['sender'] ?? null,
+
+                'nl_template' => $template['content'] ?? null,
+                'nl_template_cta' => $template['cta'] ?? null,
             ]
         );
 
