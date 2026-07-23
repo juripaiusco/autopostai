@@ -96,7 +96,7 @@ return [
             'password' => env('DB_LEGACY_PASSWORD', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-            'prefix' => '',
+            'prefix' => env('DB_LEGACY_PREFIX', ''),
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
