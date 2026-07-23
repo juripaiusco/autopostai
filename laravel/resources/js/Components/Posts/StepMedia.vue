@@ -233,107 +233,123 @@ async function confirmDeleteArchive() {
 
 <template>
     <div>
-        <div class="pf-tabs">
+        <div class="pf-tabs" role="tablist">
             <button v-for="[id, label] in TABS" :key="id" type="button"
                 class="pf-tab" :class="{ 'pf-tab--active': tab === id }"
+                role="tab" :id="'pf-tab-' + id" :aria-selected="tab === id" :aria-controls="'pf-panel-' + id"
                 @click="selectTab(id)">{{ label }}</button>
         </div>
 
-        <!-- Carica -->
-        <div v-if="tab === 'carica'">
-            <div class="pf-dropzone" role="button" tabindex="0" aria-label="Carica immagini"
-                @dragover.prevent @drop.prevent="onDrop" @click="fileInput?.click()"
-                @keydown.enter.prevent="fileInput?.click()" @keydown.space.prevent="fileInput?.click()">
-                <Icon name="image" :size="46" />
-                <div class="pf-dropzone-title">Trascina qui le immagini</div>
-                <div class="pf-dropzone-sub">oppure <b>sfoglia i file</b></div>
-                <div class="pf-dropzone-hint">JPG, PNG, WebP — max 10 MB ciascuna, puoi selezionarne più di una</div>
-                <input ref="fileInput" type="file" accept="image/*" multiple style="display:none" @change="onFileChange" tabindex="-1" />
-            </div>
-            <div class="pf-note">
-                <Icon name="clock" :size="15" />
-                Il supporto <strong>video</strong> (Reels, Stories) è in arrivo.
-            </div>
-        </div>
-
-        <!-- Genera con AI -->
-        <div v-else-if="tab === 'genera'">
-            <div v-if="genStep === 0">
-                <div class="acc-field" style="margin-bottom:0">
-                    <label class="acc-row-label" for="post-img-prompt">Prompt immagine</label>
-                    <span class="acc-row-help">Descrivi l'immagine che vuoi generare. Più sei specifico, meglio sarà il risultato.</span>
-                    <textarea id="post-img-prompt" class="control" rows="4" v-model="genPrompt"
-                        placeholder="Es. Una pizza margherita appena sfornata, luce calda e rustica, fotografia professionale" />
-                </div>
-                <div v-if="genError" class="pf-gen-error">{{ genError }}</div>
-                <div class="pf-gen-meta">
-                    <div class="pf-gen-meta-info">
-                        <Icon name="info" :size="14" />
-                        Modello: <strong class="pf-gen-meta-strong">gpt-image-1 (OpenAI)</strong>
-                        <span class="pf-gen-meta-soon">· scelta modello in arrivo</span>
+        <div class="pf-media-wrap">
+            <div class="pf-media-left" role="tabpanel" :id="'pf-panel-' + tab" :aria-labelledby="'pf-tab-' + tab">
+                <!-- Carica -->
+                <div v-if="tab === 'carica'">
+                    <div class="pf-dropzone" role="button" tabindex="0" aria-label="Carica immagini"
+                        @dragover.prevent @drop.prevent="onDrop" @click="fileInput?.click()"
+                        @keydown.enter.prevent="fileInput?.click()" @keydown.space.prevent="fileInput?.click()">
+                        <Icon name="image" :size="46" />
+                        <div class="pf-dropzone-title">Trascina qui le immagini</div>
+                        <div class="pf-dropzone-sub">oppure <b>sfoglia i file</b></div>
+                        <div class="pf-dropzone-hint">JPG, PNG, WebP — max 10 MB ciascuna, puoi selezionarne più di una</div>
+                        <input ref="fileInput" type="file" accept="image/*" multiple style="display:none" @change="onFileChange" tabindex="-1" />
                     </div>
-                    <button type="button" class="btn btn-dark" :disabled="!genPrompt.trim()" @click="handleGenerate">
-                        <Icon name="sparkles" :size="16" />Genera immagine
-                    </button>
-                </div>
-            </div>
-
-            <div v-else-if="genStep === 1" class="pf-gen-loading">
-                <div class="pf-spinner"></div>
-                <div class="pf-gen-loading-title">Generazione in corso…</div>
-                <div class="pf-gen-loading-sub">"{{ genPrompt }}"</div>
-            </div>
-
-            <div v-else-if="genStep === 2 && genResultUrl" class="pf-fade-in">
-                <img :src="genResultUrl" alt="Immagine generata dall'AI" class="pf-gen-result-img" />
-                <div v-if="genPrompt" class="pf-gen-result-prompt">"{{ genPrompt }}"</div>
-                <div v-else class="pf-gen-result-prompt pf-gen-result-prompt--empty">Prompt non disponibile per questa immagine.</div>
-                <div class="pf-gen-actions">
-                    <div v-if="genFromArchive" class="pf-gen-added-badge">
-                        <Icon name="check" :size="15" />Già aggiunta al post
+                    <div class="pf-note">
+                        <Icon name="clock" :size="15" />
+                        Il supporto <strong>video</strong> (Reels, Stories) è in arrivo.
                     </div>
-                    <button v-else type="button" class="btn btn-dark" style="flex:1" @click="saveAndUse">
-                        <Icon name="bookmark" :size="16" />Salva e usa nel post
-                    </button>
-                    <button type="button" class="btn btn-secondary" @click="regenerate">Rifai</button>
+                </div>
+
+                <!-- Genera con AI -->
+                <div v-else-if="tab === 'genera'">
+                    <div v-if="genStep === 0">
+                        <div class="acc-field" style="margin-bottom:0">
+                            <label class="acc-row-label" for="post-img-prompt">Prompt immagine</label>
+                            <span class="acc-row-help">Descrivi l'immagine che vuoi generare. Più sei specifico, meglio sarà il risultato.</span>
+                            <textarea id="post-img-prompt" class="control" rows="4" v-model="genPrompt"
+                                placeholder="Es. Una pizza margherita appena sfornata, luce calda e rustica, fotografia professionale" />
+                        </div>
+                        <div v-if="genError" class="pf-gen-error">{{ genError }}</div>
+                        <div class="pf-gen-meta">
+                            <div class="pf-gen-meta-info">
+                                <Icon name="info" :size="14" />
+                                Modello: <strong class="pf-gen-meta-strong">gpt-image-1 (OpenAI)</strong>
+                                <span class="pf-gen-meta-soon">· scelta modello in arrivo</span>
+                            </div>
+                            <button type="button" class="btn btn-dark" :disabled="!genPrompt.trim()" @click="handleGenerate">
+                                <Icon name="sparkles" :size="16" />Genera immagine
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-else-if="genStep === 1" class="pf-gen-loading">
+                        <div class="pf-spinner"></div>
+                        <div class="pf-gen-loading-title">Generazione in corso…</div>
+                        <div class="pf-gen-loading-sub">"{{ genPrompt }}"</div>
+                    </div>
+
+                    <div v-else-if="genStep === 2 && genResultUrl" class="pf-fade-in">
+                        <img :src="genResultUrl" alt="Immagine generata dall'AI" class="pf-gen-result-img" />
+                        <div v-if="genPrompt" class="pf-gen-result-prompt">"{{ genPrompt }}"</div>
+                        <div v-else class="pf-gen-result-prompt pf-gen-result-prompt--empty">Prompt non disponibile per questa immagine.</div>
+                        <div class="pf-gen-actions">
+                            <div v-if="genFromArchive" class="pf-gen-added-badge">
+                                <Icon name="check" :size="15" />Già aggiunta al post
+                            </div>
+                            <button v-else type="button" class="btn btn-dark" style="flex:1" @click="saveAndUse">
+                                <Icon name="bookmark" :size="16" />Salva e usa nel post
+                            </button>
+                            <button type="button" class="btn btn-secondary" @click="regenerate">Rifai</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Archivio -->
+                <div v-else-if="tab === 'archivio'">
+                    <div v-if="archiveLoading" class="pf-gen-loading">
+                        <div class="pf-spinner"></div>
+                        <div class="pf-gen-loading-title">Carico l'archivio…</div>
+                    </div>
+                    <div v-else-if="archiveError" class="pf-archive-empty">
+                        <Icon name="image" :size="36" />
+                        <div class="pf-archive-empty-text">{{ archiveError }}</div>
+                    </div>
+                    <div v-else-if="archiveImages.length === 0" class="pf-archive-empty">
+                        <Icon name="image" :size="36" />
+                        <div class="pf-archive-empty-text">Nessuna immagine generata ancora.</div>
+                    </div>
+                    <div v-else class="pf-archive-grid">
+                        <div v-for="img in archiveImages" :key="img.filename" class="pf-archive-item" role="button" tabindex="0"
+                            :aria-label="img.prompt ? `Usa immagine: ${img.prompt}` : 'Usa immagine'"
+                            @click="pickFromArchive(img)" @keydown.enter.prevent="pickFromArchive(img)" @keydown.space.prevent="pickFromArchive(img)">
+                            <img :src="img.url" :alt="img.prompt ?? 'Immagine generata'" loading="lazy" />
+                            <button type="button" class="pf-archive-item-remove" aria-label="Elimina immagine dall'archivio"
+                                @click.stop="askDeleteArchive(img)" @keydown.stop>×</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Archivio -->
-        <div v-else-if="tab === 'archivio'">
-            <div v-if="archiveLoading" class="pf-gen-loading">
-                <div class="pf-spinner"></div>
-                <div class="pf-gen-loading-title">Carico l'archivio…</div>
-            </div>
-            <div v-else-if="archiveError" class="pf-archive-empty">
-                <Icon name="image" :size="36" />
-                <div class="pf-archive-empty-text">{{ archiveError }}</div>
-            </div>
-            <div v-else-if="archiveImages.length === 0" class="pf-archive-empty">
-                <Icon name="image" :size="36" />
-                <div class="pf-archive-empty-text">Nessuna immagine generata ancora.</div>
-            </div>
-            <div v-else class="pf-archive-grid">
-                <div v-for="img in archiveImages" :key="img.filename" class="pf-archive-item" role="button" tabindex="0"
-                    :aria-label="img.prompt ? `Usa immagine: ${img.prompt}` : 'Usa immagine'"
-                    @click="pickFromArchive(img)" @keydown.enter="pickFromArchive(img)">
-                    <img :src="img.url" :alt="img.prompt ?? 'Immagine generata'" />
-                    <button type="button" class="pf-archive-item-remove" aria-label="Elimina immagine dall'archivio"
-                        @click.stop="askDeleteArchive(img)">×</button>
+            <!-- Immagini selezionate per il post -->
+            <div class="pf-media-right">
+                <div class="pf-media-right-title">Immagini selezionate</div>
+                <div v-if="totalImages > 0" class="pf-media-grid">
+                    <div v-for="(img, i) in form.existingImages" :key="'existing-' + img.filename" class="pf-media-grid-item">
+                        <img :src="img.url" :alt="'Immagine ' + (i + 1)" role="button" tabindex="0" loading="lazy"
+                            :aria-label="'Apri anteprima immagine ' + (i + 1)"
+                            @click="lightboxIndex = i" @keydown.enter.prevent="lightboxIndex = i" @keydown.space.prevent="lightboxIndex = i" />
+                        <button type="button" class="pf-media-grid-remove" aria-label="Rimuovi immagine" @click="removeExisting(i)">×</button>
+                    </div>
+                    <div v-for="(img, i) in form.newImages" :key="'new-' + i" class="pf-media-grid-item">
+                        <img :src="img.previewUrl" :alt="'Nuova immagine ' + (i + 1)" role="button" tabindex="0" loading="lazy"
+                            :aria-label="'Apri anteprima nuova immagine ' + (i + 1)"
+                            @click="lightboxIndex = form.existingImages.length + i" @keydown.enter.prevent="lightboxIndex = form.existingImages.length + i" @keydown.space.prevent="lightboxIndex = form.existingImages.length + i" />
+                        <button type="button" class="pf-media-grid-remove" aria-label="Rimuovi immagine" @click="removeNew(i)">×</button>
+                    </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Immagini selezionate per il post -->
-        <div v-if="totalImages > 0" class="pf-media-grid">
-            <div v-for="(img, i) in form.existingImages" :key="'existing-' + img.filename" class="pf-media-grid-item">
-                <img :src="img.url" :alt="'Immagine ' + (i + 1)" @click="lightboxIndex = i" />
-                <button type="button" class="pf-media-grid-remove" aria-label="Rimuovi immagine" @click="removeExisting(i)">×</button>
-            </div>
-            <div v-for="(img, i) in form.newImages" :key="'new-' + i" class="pf-media-grid-item">
-                <img :src="img.previewUrl" :alt="'Nuova immagine ' + (i + 1)" @click="lightboxIndex = form.existingImages.length + i" />
-                <button type="button" class="pf-media-grid-remove" aria-label="Rimuovi immagine" @click="removeNew(i)">×</button>
+                <div v-else class="pf-media-empty">
+                    <Icon name="image" :size="30" />
+                    <div>Le immagini che aggiungi appariranno qui</div>
+                </div>
             </div>
         </div>
 

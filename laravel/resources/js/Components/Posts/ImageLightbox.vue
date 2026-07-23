@@ -10,6 +10,7 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const current = ref(props.index);
+const closeBtn = ref(null);
 
 function prev() {
     current.value = (current.value - 1 + props.images.length) % props.images.length;
@@ -25,13 +26,16 @@ function onKeydown(e) {
     if (e.key === 'ArrowRight') next();
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown));
+onMounted(() => {
+    window.addEventListener('keydown', onKeydown);
+    closeBtn.value?.focus();
+});
 onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>
-    <div class="overlay" @click="emit('close')">
-        <button type="button" class="lightbox-close" aria-label="Chiudi anteprima" @click="emit('close')">
+    <div class="overlay" role="dialog" aria-modal="true" aria-label="Anteprima immagine" @click="emit('close')">
+        <button ref="closeBtn" type="button" class="lightbox-close" aria-label="Chiudi anteprima" @click="emit('close')">
             <Icon name="x" :size="22" />
         </button>
         <button v-if="images.length > 1" type="button" class="lightbox-nav lightbox-nav--prev" aria-label="Immagine precedente" @click.stop="prev">

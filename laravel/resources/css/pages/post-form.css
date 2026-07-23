@@ -85,6 +85,25 @@
 }
 .pf-tab--active { font-weight: 700; color: var(--ink); border-bottom-color: var(--sky); }
 
+/* Layout a due colonne: input della tab attiva a sinistra, immagini
+   selezionate per il post a destra, sempre alla stessa altezza cosi' il
+   pulsante Avanti non si sposta cambiando tab o aggiungendo immagini. */
+.pf-media-wrap { display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: stretch; }
+@media (max-width: 860px) { .pf-media-wrap { grid-template-columns: 1fr; } }
+
+.pf-media-left { height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--g300) transparent; }
+@media (max-width: 860px) { .pf-media-left { height: auto; max-height: 400px; } }
+
+.pf-media-right {
+    height: 400px; overflow-y: auto;
+    border: 1px solid var(--g100); border-radius: var(--radius-lg);
+    padding: 14px; background: var(--g50);
+    scrollbar-width: thin; scrollbar-color: var(--g300) transparent;
+}
+.pf-media-right-title { font-size: 12px; font-weight: 700; color: var(--g500); margin-bottom: 12px; }
+.pf-media-empty { text-align: center; padding: 60px 0; color: var(--g500); }
+.pf-media-empty svg { width: 30px; height: 30px; margin-bottom: 10px; color: var(--g500); }
+
 .pf-dropzone {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     height: 220px; border: 3px dashed var(--g200); border-radius: var(--radius-lg);
@@ -94,11 +113,11 @@
 .pf-dropzone:hover { border-color: var(--sky); }
 .pf-dropzone svg { width: 46px; height: 46px; color: var(--g300); }
 .pf-dropzone-title { margin-top: 14px; font-size: 14.5px; font-weight: 500; color: var(--g600); }
-.pf-dropzone-sub { margin-top: 5px; font-size: 13px; color: var(--g400); }
+.pf-dropzone-sub { margin-top: 5px; font-size: 13px; color: var(--g500); }
 .pf-dropzone-sub b { color: var(--sky-strong); font-weight: 600; }
 .pf-dropzone-hint { margin-top: 8px; font-size: 12px; color: var(--g500); }
 
-.pf-media-grid { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+.pf-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
 .pf-media-grid-item { position: relative; height: 110px; border-radius: var(--radius); overflow: hidden; background: var(--g100); }
 .pf-media-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
 .pf-media-grid-remove {
@@ -135,11 +154,11 @@
     border-radius: var(--radius); font-size: 12.5px; color: var(--g500);
     display: flex; gap: 8px; align-items: center;
 }
-.pf-note svg { color: var(--g400); width: 15px; height: 15px; flex-shrink: 0; }
+.pf-note svg { color: var(--g500); width: 15px; height: 15px; flex-shrink: 0; }
 
 .pf-gen-loading { text-align: center; padding: 52px 0; }
 .pf-gen-loading-title { font-weight: 700; color: var(--ink); margin-bottom: 6px; }
-.pf-gen-loading-sub { font-size: 13.5px; color: var(--g400); }
+.pf-gen-loading-sub { font-size: 13.5px; color: var(--g500); }
 
 .pf-spinner {
     width: 50px; height: 50px; margin: 0 auto 18px; border-radius: 50%;
@@ -154,15 +173,15 @@
 .pf-gen-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; gap: 12px; flex-wrap: wrap; }
 .pf-gen-meta-info { font-size: 12.5px; color: var(--g500); display: flex; gap: 6px; align-items: center; }
 .pf-gen-meta-strong { color: var(--g600); }
-.pf-gen-meta-soon { color: var(--g400); }
+.pf-gen-meta-soon { color: var(--g500); }
 .pf-gen-result-prompt { font-size: 12.5px; color: var(--g500); margin-bottom: 18px; font-style: italic; line-height: 1.5; }
-.pf-gen-result-prompt--empty { font-style: normal; color: var(--g400); }
+.pf-gen-result-prompt--empty { font-style: normal; color: var(--g500); }
 .pf-gen-actions { display: flex; gap: 10px; align-items: center; }
 .pf-gen-added-badge { flex: 1; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--sky-strong); }
 .pf-gen-error { margin-top: 10px; font-size: 12.5px; color: var(--danger); }
 
 /* ---------- Step 2: archive grid ---------- */
-.pf-archive-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.pf-archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
 .pf-archive-item { position: relative; border-radius: var(--radius); overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: border-color .15s; }
 .pf-archive-item:hover, .pf-archive-item:focus-visible { border-color: var(--sky); }
 .pf-archive-item img { height: 96px; width: 100%; object-fit: cover; display: block; }
@@ -174,7 +193,10 @@
     opacity: 0; transition: opacity .15s;
 }
 .pf-archive-item:hover .pf-archive-item-remove, .pf-archive-item:focus-within .pf-archive-item-remove { opacity: 1; }
-.pf-archive-empty { text-align: center; padding: 48px 0; color: var(--g400); }
+/* Niente hover reale sul touch: senza questo, il bottone elimina non
+   diventerebbe mai visibile/raggiungibile su mobile. */
+@media (hover: none) { .pf-archive-item-remove { opacity: 1; } }
+.pf-archive-empty { text-align: center; padding: 48px 0; color: var(--g500); }
 .pf-archive-empty svg { width: 36px; height: 36px; }
 .pf-archive-empty-text { margin-top: 12px; }
 
