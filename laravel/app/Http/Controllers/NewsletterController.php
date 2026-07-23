@@ -22,7 +22,7 @@ class NewsletterController extends Controller
         $this->authorize('update', $user);
 
         $settings = $user->settings;
-        abort_if(empty($settings?->mailchimp_api) && empty($settings?->brevo_api), 422, 'Configura prima MailChimp o Brevo per questo account.');
+        abort_if(empty($settings?->nl_mailchimp_api) && empty($settings?->nl_brevo_api), 422, 'Configura prima MailChimp o Brevo per questo account.');
 
         [$lists, $error] = $this->fetchAndCacheLists($settings);
 
@@ -54,10 +54,10 @@ class NewsletterController extends Controller
 
     private function providerOf(?Settings $settings): ?string
     {
-        if (!empty($settings?->mailchimp_api)) {
+        if (!empty($settings?->nl_mailchimp_api)) {
             return 'mailchimp';
         }
-        if (!empty($settings?->brevo_api)) {
+        if (!empty($settings?->nl_brevo_api)) {
             return 'brevo';
         }
         return null;
@@ -68,11 +68,11 @@ class NewsletterController extends Controller
      */
     private function fetchAndCacheLists(?Settings $settings): array
     {
-        if (!empty($settings?->mailchimp_api)) {
+        if (!empty($settings?->nl_mailchimp_api)) {
             return $this->fetchMailchimpLists($settings);
         }
 
-        if (!empty($settings?->brevo_api)) {
+        if (!empty($settings?->nl_brevo_api)) {
             return $this->fetchBrevoLists($settings);
         }
 
@@ -81,12 +81,12 @@ class NewsletterController extends Controller
 
     private function fetchMailchimpLists(Settings $settings): array
     {
-        if (empty($settings->mailchimp_datacenter)) {
+        if (empty($settings->nl_mailchimp_datacenter)) {
             return [[], 'Configura prima il Server prefix MailChimp.'];
         }
 
-        $response = Http::withBasicAuth('anystring', $settings->mailchimp_api)
-            ->get("https://{$settings->mailchimp_datacenter}.api.mailchimp.com/3.0/lists", ['count' => 100]);
+        $response = Http::withBasicAuth('anystring', $settings->nl_mailchimp_api)
+            ->get("https://{$settings->nl_mailchimp_datacenter}.api.mailchimp.com/3.0/lists", ['count' => 100]);
 
         if (!$response->successful()) {
             return [[], 'MailChimp non ha risposto correttamente. Controlla API Key e Server prefix.'];
@@ -98,14 +98,14 @@ class NewsletterController extends Controller
             ->values()
             ->all();
 
-        $settings->update(['mailchimp_options' => ['lists' => $lists]]);
+        $settings->update(['nl_mailchimp_options' => ['lists' => $lists]]);
 
         return [$lists, null];
     }
 
     private function fetchBrevoLists(Settings $settings): array
     {
-        $response = Http::withHeaders(['api-key' => $settings->brevo_api, 'accept' => 'application/json'])
+        $response = Http::withHeaders(['api-key' => $settings->nl_brevo_api, 'accept' => 'application/json'])
             ->get('https://api.brevo.com/v3/contacts/lists', ['limit' => 100]);
 
         if (!$response->successful()) {
@@ -118,7 +118,7 @@ class NewsletterController extends Controller
             ->values()
             ->all();
 
-        $settings->update(['brevo_options' => ['lists' => $lists]]);
+        $settings->update(['nl_brevo_options' => ['lists' => $lists]]);
 
         return [$lists, null];
     }

@@ -232,21 +232,33 @@ class AccountController extends Controller
             ],
             'newsletter'    => [
                 'mailchimp'     => [
-                    'apiKey'        => $s->mailchimp_api ?? '',
-                    'serverPrefix'  => $s->mailchimp_datacenter ?? '',
-                    'audienceId'    => $s->mailchimp_list_id ?? '',
-                    'connected'     => !empty($s?->mailchimp_api),
-                    'lists'         => $s?->mailchimp_options['lists'] ?? [],
+                    'apiKey'        => $s->nl_mailchimp_api ?? '',
+                    'serverPrefix'  => $s->nl_mailchimp_datacenter ?? '',
+                    'audienceId'    => $s->nl_mailchimp_list_id ?? '',
+                    'connected'     => !empty($s?->nl_mailchimp_api),
+                    'lists'         => $s?->nl_mailchimp_options['lists'] ?? [],
                 ],
                 'brevo'     => [
-                    'apiKey'    => $s->brevo_api ?? '',
-                    'listId'    => $s->brevo_list_id ?? '',
-                    'sender'    => $s->brevo_from_email ?? '',
-                    'connected' => !empty($s?->brevo_api),
-                    'lists'     => $s?->brevo_options['lists'] ?? [],
+                    'apiKey'    => $s->nl_brevo_api ?? '',
+                    'listId'    => $s->nl_brevo_list_id ?? '',
+                    'sender'    => $s->nl_brevo_from_email ?? '',
+                    'connected' => !empty($s?->nl_brevo_api),
+                    'lists'     => $s?->nl_brevo_options['lists'] ?? [],
                 ],
-            'smtp'          => ['host' => '', 'port' => '587', 'username' => '', 'password' => '', 'encryption' => 'tls', 'sender' => '', 'connected' => false],
-            'listsUrl'      => route('newsletter.lists', $user),
+                'smtp'      => [
+                    'host'          => $s->nl_smtp_host ?? '',
+                    'port'          => $s->nl_smtp_port ?? '587',
+                    'username'      => $s->nl_smtp_username ?? '',
+                    'password'      => $s->nl_smtp_password ?? '',
+                    'encryption'    => $s->nl_smtp_encryption ?? 'tls',
+                    'sender'        => $s->nl_smtp_sender ?? '',
+                    'connected'     => !empty($s?->nl_smtp_host),
+                ],
+                'template'      => [
+                    'content'   => $s->nl_template ?? '',
+                    'cta'       => $s->nl_template_cta ?? '',
+                ],
+                'listsUrl'      => route('newsletter.lists', $user),
             ],
             'updatedAt' => $user->updated_at?->diffForHumans() ?? '—',
             'createdBy' => $me->name,
@@ -305,6 +317,7 @@ class AccountController extends Controller
         $newsletter = $request->input('newsletter', []);
         $mailchimp = $newsletter['mailchimp'] ?? [];
         $brevo = $newsletter['brevo'] ?? [];
+        $smtp = $newsletter['smtp'] ?? [];
 
         Settings::updateOrCreate(
             ['user_id' => $user->id],
@@ -326,13 +339,20 @@ class AccountController extends Controller
                 'wordpress_password' => $wordpress['password'] ?? null,
                 'wordpress_cat_id' => $wordpress['categoryId'] ?? null,
 
-                'mailchimp_api' => $mailchimp['apiKey'] ?? null,
-                'mailchimp_datacenter' => $mailchimp['serverPrefix'] ?? null,
-                'mailchimp_list_id' => $mailchimp['audienceId'] ?? null,
+                'nl_mailchimp_api' => $mailchimp['apiKey'] ?? null,
+                'nl_mailchimp_datacenter' => $mailchimp['serverPrefix'] ?? null,
+                'nl_mailchimp_list_id' => $mailchimp['audienceId'] ?? null,
 
-                'brevo_api' => $brevo['apiKey'] ?? null,
-                'brevo_list_id' => $brevo['listId'] ?? null,
-                'brevo_from_email' => $brevo['sender'] ?? null,
+                'nl_brevo_api' => $brevo['apiKey'] ?? null,
+                'nl_brevo_list_id' => $brevo['listId'] ?? null,
+                'nl_brevo_from_email' => $brevo['sender'] ?? null,
+
+                'nl_smtp_host' => $smtp['host'] ?? null,
+                'nl_smtp_port' => $smtp['port'] ?? null,
+                'nl_smtp_username' => $smtp['username'] ?? null,
+                'nl_smtp_password' => $smtp['password'] ?? null,
+                'nl_smtp_encryption' => $smtp['encryption'] ?? null,
+                'nl_smtp_sender' => $smtp['sender'] ?? null,
             ]
         );
 

@@ -63,7 +63,7 @@ class PostChannelFetchTest extends TestCase
 
         $admin = User::factory()->create(['parent_id' => null]);
         $user = User::factory()->create(['parent_id' => $admin->id]);
-        Settings::factory()->create(['user_id' => $user->id, 'brevo_api' => 'fake-key']);
+        Settings::factory()->create(['user_id' => $user->id, 'nl_brevo_api' => 'fake-key']);
 
         $this->actingAs($user)
             ->getJson(route('posts.newsletter-lists', $user))
@@ -82,7 +82,7 @@ class PostChannelFetchTest extends TestCase
         $admin = User::factory()->create(['parent_id' => null]);
         $manager = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
         $child = User::factory()->create(['parent_id' => $manager->id]);
-        Settings::factory()->create(['user_id' => $child->id, 'mailchimp_api' => 'fake-key', 'mailchimp_datacenter' => 'us1']);
+        Settings::factory()->create(['user_id' => $child->id, 'nl_mailchimp_api' => 'fake-key', 'nl_mailchimp_datacenter' => 'us1']);
 
         $this->actingAs($manager)
             ->getJson(route('posts.newsletter-lists', $child))

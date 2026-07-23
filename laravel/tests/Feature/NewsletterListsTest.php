@@ -30,7 +30,7 @@ class NewsletterListsTest extends TestCase
         $managerA = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
         $managerB = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
         $childOfB = User::factory()->create(['parent_id' => $managerB->id]);
-        Settings::factory()->create(['user_id' => $childOfB->id, 'mailchimp_api' => 'key-b']);
+        Settings::factory()->create(['user_id' => $childOfB->id, 'nl_mailchimp_api' => 'key-b']);
 
         $this->actingAs($managerA)
             ->post(route('newsletter.lists', $childOfB))
@@ -52,15 +52,15 @@ class NewsletterListsTest extends TestCase
         $child = User::factory()->create(['parent_id' => $admin->id]);
         Settings::factory()->create([
             'user_id' => $child->id,
-            'mailchimp_api' => 'fake-key',
-            'mailchimp_datacenter' => 'us21',
+            'nl_mailchimp_api' => 'fake-key',
+            'nl_mailchimp_datacenter' => 'us21',
         ]);
 
         $this->actingAs($admin)
             ->post(route('newsletter.lists', $child))
             ->assertRedirect();
 
-        $lists = $child->settings->fresh()->mailchimp_options['lists'];
+        $lists = $child->settings->fresh()->nl_mailchimp_options['lists'];
         $this->assertSame([
             ['id' => 'abc123', 'name' => 'Clienti VIP'],
             ['id' => 'def456', 'name' => 'Newsletter generale'],
@@ -85,7 +85,7 @@ class NewsletterListsTest extends TestCase
 
         $admin = User::factory()->create(['parent_id' => null]);
         $child = User::factory()->create(['parent_id' => $admin->id]);
-        Settings::factory()->create(['user_id' => $child->id, 'brevo_api' => 'fake-brevo-key']);
+        Settings::factory()->create(['user_id' => $child->id, 'nl_brevo_api' => 'fake-brevo-key']);
 
         $this->actingAs($admin)
             ->post(route('newsletter.lists', $child))
@@ -93,7 +93,7 @@ class NewsletterListsTest extends TestCase
 
         $this->assertSame(
             [['id' => '12', 'name' => 'Lista principale']],
-            $child->settings->fresh()->brevo_options['lists']
+            $child->settings->fresh()->nl_brevo_options['lists']
         );
     }
 
@@ -107,8 +107,8 @@ class NewsletterListsTest extends TestCase
         $child = User::factory()->create(['parent_id' => $admin->id]);
         Settings::factory()->create([
             'user_id' => $child->id,
-            'mailchimp_api' => 'bad-key',
-            'mailchimp_datacenter' => 'us5',
+            'nl_mailchimp_api' => 'bad-key',
+            'nl_mailchimp_datacenter' => 'us5',
         ]);
 
         $this->actingAs($admin)
