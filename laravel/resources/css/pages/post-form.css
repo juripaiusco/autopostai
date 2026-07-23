@@ -76,7 +76,7 @@
 .pf-counter { text-align: right; font-size: 11.5px; color: var(--g400); margin-top: 4px; }
 
 /* ---------- Step 2: media tabs ---------- */
-.pf-tabs { display: flex; border-bottom: 1px solid var(--g100); margin-bottom: 24px; }
+.pf-tabs { display: flex; align-items: stretch; height: 42px; box-sizing: border-box; border-bottom: 1px solid var(--g100); margin-bottom: 14px; flex-shrink: 0; }
 .pf-tab {
     padding: 9px 18px; border: none; background: none; cursor: pointer;
     font-size: 14px; font-weight: 400; color: var(--g500);
@@ -92,12 +92,14 @@
 @media (max-width: 860px) { .pf-media-wrap { grid-template-columns: 1fr; } }
 
 .pf-media-left {
-    height: 400px; overflow-y: auto;
+    height: 400px; display: flex; flex-direction: column;
     border: 1px solid var(--g100); border-radius: var(--radius-lg);
     padding: 14px; background: var(--g50);
-    scrollbar-width: thin; scrollbar-color: var(--g300) transparent;
 }
 @media (max-width: 860px) { .pf-media-left { height: auto; max-height: 400px; } }
+
+/* Solo il contenuto della tab attiva scorre — le tab restano fisse in alto */
+.pf-media-panel { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--g300) transparent; }
 
 .pf-media-right {
     height: 400px; overflow-y: auto;
@@ -105,7 +107,11 @@
     padding: 14px; background: var(--g50);
     scrollbar-width: thin; scrollbar-color: var(--g300) transparent;
 }
-.pf-media-right-title { font-size: 12px; font-weight: 700; color: var(--g500); margin-bottom: 12px; }
+.pf-media-right-title {
+    height: 42px; box-sizing: border-box; display: flex; align-items: center;
+    font-size: 12px; font-weight: 700; color: var(--g500);
+    margin-bottom: 14px; border-bottom: 1px solid var(--g100);
+}
 .pf-media-empty { text-align: center; padding: 60px 0; color: var(--g500); }
 .pf-media-empty svg { width: 30px; height: 30px; margin-bottom: 10px; color: var(--g500); }
 

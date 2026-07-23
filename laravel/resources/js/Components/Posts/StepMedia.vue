@@ -233,15 +233,16 @@ async function confirmDeleteArchive() {
 
 <template>
     <div>
-        <div class="pf-tabs" role="tablist">
-            <button v-for="[id, label] in TABS" :key="id" type="button"
-                class="pf-tab" :class="{ 'pf-tab--active': tab === id }"
-                role="tab" :id="'pf-tab-' + id" :aria-selected="tab === id" :aria-controls="'pf-panel-' + id"
-                @click="selectTab(id)">{{ label }}</button>
-        </div>
-
         <div class="pf-media-wrap">
-            <div class="pf-media-left" role="tabpanel" :id="'pf-panel-' + tab" :aria-labelledby="'pf-tab-' + tab">
+            <div class="pf-media-left">
+                <div class="pf-tabs" role="tablist">
+                    <button v-for="[id, label] in TABS" :key="id" type="button"
+                        class="pf-tab" :class="{ 'pf-tab--active': tab === id }"
+                        role="tab" :id="'pf-tab-' + id" :aria-selected="tab === id" :aria-controls="'pf-panel-' + id"
+                        @click="selectTab(id)">{{ label }}</button>
+                </div>
+
+                <div class="pf-media-panel" role="tabpanel" :id="'pf-panel-' + tab" :aria-labelledby="'pf-tab-' + tab">
                 <!-- Carica -->
                 <div v-if="tab === 'carica'">
                     <div class="pf-dropzone" role="button" tabindex="0" aria-label="Carica immagini"
@@ -326,6 +327,7 @@ async function confirmDeleteArchive() {
                                 @click.stop="askDeleteArchive(img)" @keydown.stop>×</button>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
 
