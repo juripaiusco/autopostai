@@ -1,9 +1,9 @@
 """Client Meta Graph API (Facebook + Instagram).
 
-Porting di `services/meta.py` di v1. Differenza v2: il token utente e' quello
-per-account (`settings.meta_token`, modello BYOK) invece di una variabile
-d'ambiente globale `META_USER_ACCESS_TOKEN`. Da quel token si ricava il page
-access token e, per Instagram, l'id del business account collegato alla pagina.
+Porting di `services/meta.py` di v1, stesso modello: un token utente GLOBALE
+(`config.META_USER_ACCESS_TOKEN`, da python/.env — l'app Meta dell'admin condivisa
+alle pagine via Business Manager) da cui si ricava il page access token per ogni
+`meta_page_id` e, per Instagram, l'id del business account collegato alla pagina.
 """
 
 from __future__ import annotations

@@ -31,16 +31,27 @@ def run(conn: Connection) -> None:
 
     post_repo = PostRepository(conn)
     push_repo = PushNotificationRepository(conn)
-    content_service = ContentService(post_repo, TokenLogRepository(conn))
+    token_repo = TokenLogRepository(conn)
+    content_service = ContentService(post_repo, token_repo)
 
     posts = post_repo.due_posts(now)
     log.info("posts_send: %d post da valutare", len(posts))
 
     for post in posts:
-        _send_one(post, post_repo, push_repo, content_service, now)
+        _send_one(post, post_repo, push_repo, token_repo, content_service, now)
 
 
-def _send_one(post, post_repo, push_repo, content_service, now) -> None:
+def _send_one(post, post_repo, push_repo, token_repo, content_service, now) -> None:
+    # Limite token: se il post richiede generazione (nessun ai_content in cache) e
+    # l'account ha esaurito la quota, il post viene abbandonato senza pubblicare
+    # (fedele a v1). Se ai_content e' gia' presente non si spende nulla, quindi
+    # nessun blocco: il controllo scattava solo dentro ai_generate, mai sul contenuto
+    # gia' generato.
+    if not post.get("ai_content") and token_repo.is_over_limit(post["user_id"]):
+        post_repo.abandon_over_limit(post["id"])
+        log.info("posts_send: post %s abbandonato (limite token superato)", post["id"])
+        return
+
     channels = Channels.parse(post["channels"])
     resolver = _url_resolver(post_repo, post["user_id"])
 

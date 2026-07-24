@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from decimal import Decimal
 
 from sqlalchemy.engine import Connection
 
@@ -56,7 +55,7 @@ def run(conn: Connection) -> None:
 
     if not complete and _elapsed_days(post["published_at"], now_dt) >= config.TASK_COMPLETE_MAX_WAIT_DAYS:
         complete = True
-    if not complete and _token_limit_exceeded(token_repo, post["user_id"]):
+    if not complete and token_repo.is_over_limit(post["user_id"]):
         complete = True
 
     post_repo.save_channels(post["id"], channels.to_dict())
@@ -117,10 +116,3 @@ def _elapsed_days(published_at, now_dt: datetime) -> int:
     if published_at.tzinfo is None:
         published_at = config.LOCAL_TIMEZONE.localize(published_at)
     return (now_dt - published_at).days
-
-
-def _token_limit_exceeded(token_repo: TokenLogRepository, user_id: int) -> bool:
-    usage = token_repo.usage_this_month(user_id)
-    if not usage:
-        return False
-    return Decimal(usage["tokens_used_total"] or 0) >= Decimal(usage["tokens_limit"] or 0)

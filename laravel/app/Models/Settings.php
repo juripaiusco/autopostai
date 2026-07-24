@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'ai_comment_prefix',
     'openai_api_key',
     'meta_page_id',
-    'meta_token',
     'linkedin_person_id',
     'linkedin_company_id',
     'linkedin_client_id',

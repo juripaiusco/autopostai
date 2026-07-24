@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 import pytz
 
+from publisher import config
 from publisher.comments.base import CommentFetcher, FetchedComment
 from publisher.integrations.meta import Meta
 
@@ -12,7 +13,7 @@ class InstagramCommentFetcher(CommentFetcher):
     key = "instagram"
 
     def fetch(self) -> list[FetchedComment]:
-        meta = Meta(page_id=self.post["meta_page_id"], user_access_token=self.post["meta_token"])
+        meta = Meta(page_id=self.post["meta_page_id"], user_access_token=config.META_USER_ACCESS_TOKEN)
         data = meta.ig_get_comments(self.remote_post_id)
         if data.get("error") is not None:
             return []

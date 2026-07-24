@@ -53,6 +53,10 @@ STORAGE_PATH = _env("STORAGE_PATH", "/var/www/html/laravel/storage/app/public")
 OPENAI_MODEL = _env("OPENAI_MODEL", "gpt-4o-mini")
 OPENAI_BASE_URL = _env("OPENAI_API_URL")  # None => default SDK ufficiale
 META_API_BASE_URL = _env("META_API_BASE_URL", "https://graph.facebook.com/v21.0")
+# Token Meta GLOBALE (non per-account): un'unica app Meta gestita dall'admin,
+# condivisa alle pagine via Business Manager. Da qui si ricava il page access
+# token per ogni meta_page_id. Vive in python/.env (gitignored), come v1.
+META_USER_ACCESS_TOKEN = _env("META_USER_ACCESS_TOKEN")
 LINKEDIN_BASE_URL = _env("LINKEDIN_BASE_URL", "https://api.linkedin.com/v2")
 MAILCHIMP_BASE_URL = _env("MAILCHIMP_BASE_URL", "https://[DATACENTER].api.mailchimp.com/3.0")
 BREVO_BASE_URL = _env("BREVO_BASE_URL", "https://api.brevo.com/v3")

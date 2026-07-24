@@ -51,9 +51,9 @@ def _delete_on_channel(key: str, post: dict, remote_id: str) -> str | None:
         return remote_id
 
     if key == "facebook":
-        return Meta(post["meta_page_id"], post["meta_token"]).fb_delete(remote_id)
+        return Meta(post["meta_page_id"], config.META_USER_ACCESS_TOKEN).fb_delete(remote_id)
     if key == "instagram":
-        return Meta(post["meta_page_id"], post["meta_token"]).ig_delete(remote_id)
+        return Meta(post["meta_page_id"], config.META_USER_ACCESS_TOKEN).ig_delete(remote_id)
     if key == "linkedin":
         return LinkedIn(token=post["linkedin_token"], company_id=post["linkedin_company_id"]).delete(remote_id)
     if key == "wordpress":

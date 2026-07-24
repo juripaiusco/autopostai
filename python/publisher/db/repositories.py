@@ -6,6 +6,7 @@ query vive in un posto solo e i valori passano come bind param `:nome`.
 """
 
 import json
+from decimal import Decimal
 
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
@@ -42,7 +43,6 @@ class PostRepository:
                         s.ai_prompt_prefix       AS ai_prompt_prefix,
                         s.openai_api_key         AS openai_api_key,
                         s.meta_page_id           AS meta_page_id,
-                        s.meta_token             AS meta_token,
                         s.linkedin_person_id     AS linkedin_person_id,
                         s.linkedin_company_id    AS linkedin_company_id,
                         s.linkedin_client_id     AS linkedin_client_id,
@@ -106,6 +106,16 @@ class PostRepository:
             {"id": post_id},
         )
 
+    def abandon_over_limit(self, post_id: int) -> None:
+        """Post abbandonato perche' l'account ha esaurito i token: marcato
+        published=1 + task_complete=1 cosi' non viene piu' processato (fedele a v1,
+        dove ai_generate faceva lo stesso quando il limite era superato)."""
+        posts = config.table("posts")
+        self.conn.execute(
+            text(f"UPDATE {posts} SET published = 1, task_complete = 1 WHERE id = :id"),
+            {"id": post_id},
+        )
+
     def due_for_comment_monitoring(self, now: str) -> dict | None:
         """Un post pubblicato, non ancora task_complete, fuori dal backoff
         (on_hold_until), con il conteggio commenti per canale social — un post per
@@ -132,7 +142,6 @@ class PostRepository:
                         s.ai_comment_prefix      AS ai_comment_prefix,
                         s.openai_api_key         AS openai_api_key,
                         s.meta_page_id           AS meta_page_id,
-                        s.meta_token             AS meta_token,
                         s.linkedin_company_id    AS linkedin_company_id,
                         s.linkedin_token         AS linkedin_token,
                         s.nl_brevo_api           AS nl_brevo_api,
@@ -201,7 +210,6 @@ class PostRepository:
                         p.user_id                 AS user_id,
                         p.channels                AS channels,
                         s.meta_page_id             AS meta_page_id,
-                        s.meta_token               AS meta_token,
                         s.linkedin_company_id      AS linkedin_company_id,
                         s.linkedin_token           AS linkedin_token,
                         s.wordpress_url            AS wordpress_url,
@@ -284,6 +292,14 @@ class TokenLogRepository:
         ).mappings().first()
 
         return dict(row) if row else None
+
+    def is_over_limit(self, user_id: int) -> bool:
+        """True se l'account ha esaurito i token del mese. Fedele a v1:
+        used >= limit, e tokens_limit = 0 (o NULL) significa BLOCCATO (0 >= 0)."""
+        usage = self.usage_this_month(user_id)
+        if not usage:
+            return False
+        return Decimal(usage["tokens_used_total"] or 0) >= Decimal(usage["tokens_limit"] or 0)
 
     def log(self, user_id: int, ref_type: str, reference_id: int, tokens_used: int, now: str) -> None:
         token_logs = config.table("token_logs")
@@ -395,7 +411,6 @@ class CommentRepository:
                         s.ai_comment_prefix       AS ai_comment_prefix,
                         s.openai_api_key          AS openai_api_key,
                         s.meta_page_id            AS meta_page_id,
-                        s.meta_token              AS meta_token,
                         s.linkedin_company_id     AS linkedin_company_id,
                         s.linkedin_token          AS linkedin_token
                     FROM {comments} c
