@@ -34,20 +34,26 @@ def _wrap(code: str, text: str) -> str:
     return f"{code}{text}{_RESET}" if use_color() else text
 
 
-def banner_start(task_name: str) -> float:
-    """Stampa l'intestazione del blocco task e ritorna il timestamp di inizio
-    (da passare a banner_end per calcolare la durata)."""
+#: prefisso di indentazione delle righe di log di un task, cosi' risultano
+#: visivamente "dentro" il blocco aperto da task_start() senza dover far
+#: combaciare larghezze di bordi (fonte del disallineamento con le vecchie box
+#: a larghezza variabile, diversa per ogni nome task).
+LOG_INDENT = "    "
+
+
+def task_start(task_name: str) -> float:
+    """Intestazione del blocco task (riga singola, a bandiera): ritorna il
+    timestamp di inizio, da passare a task_end() per calcolare la durata."""
     started = time.monotonic()
     stamp = time.strftime("%Y-%m-%d %H:%M:%S")
-    line = f"┏━━━ {task_name} — {stamp} ━━━┓"
-    print(_wrap(_CYAN + _BOLD, line))
+    print(_wrap(_CYAN + _BOLD, f"▶ {task_name}  {stamp}"))
     return started
 
 
-def banner_end(task_name: str, started: float) -> None:
+def task_end(task_name: str, started: float) -> None:
     elapsed = time.monotonic() - started
-    line = f"┗━━━ {task_name} — fine ({elapsed:.2f}s) ━━━┛"
-    print(_wrap(_CYAN + _BOLD, line))
+    print(_wrap(_CYAN, f"{LOG_INDENT}↳ {task_name} completato ({elapsed:.2f}s)"))
+    print()  # riga vuota: separa visivamente un blocco dal successivo
 
 
 class ColorFormatter(logging.Formatter):

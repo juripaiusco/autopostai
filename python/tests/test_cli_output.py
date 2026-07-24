@@ -23,13 +23,24 @@ def test_use_color_false_when_no_color_env_set_even_on_tty(monkeypatch):
     assert cli_output.use_color() is False
 
 
-def test_banner_start_end_print_task_name(monkeypatch, capsys):
+def test_task_start_end_print_task_name(monkeypatch, capsys):
     monkeypatch.setattr(cli_output.sys.stdout, "isatty", lambda: False)
-    started = cli_output.banner_start("posts_send")
-    cli_output.banner_end("posts_send", started)
+    started = cli_output.task_start("posts_send")
+    cli_output.task_end("posts_send", started)
     out = capsys.readouterr().out
     assert "posts_send" in out
     assert "\033[" not in out  # niente ANSI grezzo quando i colori sono spenti
+
+
+def test_task_end_indents_so_it_reads_as_nested_under_the_header(monkeypatch, capsys):
+    # Niente piu' box a larghezza variabile (bug precedente): l'header e' a
+    # bandiera, il footer e' indentato con lo stesso prefisso dei log del task.
+    monkeypatch.setattr(cli_output.sys.stdout, "isatty", lambda: False)
+    started = cli_output.task_start("task_complete")
+    cli_output.task_end("task_complete", started)
+    lines = [l for l in capsys.readouterr().out.splitlines() if l]
+    assert lines[0].startswith("▶ task_complete")
+    assert lines[1].startswith(cli_output.LOG_INDENT)
 
 
 def test_color_formatter_wraps_error_lines_when_color_enabled(monkeypatch):

@@ -43,19 +43,22 @@ def main() -> None:
     # stesso stream, altrimenti l'ordine si mischia quando entrambi finiscono
     # nello stesso file/terminale (buffering separato tra i due stream).
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(cli_output.ColorFormatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+    # Indentate: le righe di log leggono come "dentro" il blocco aperto da
+    # cli_output.task_start(), senza dover far combaciare larghezze di bordi.
+    fmt = cli_output.LOG_INDENT + "%(asctime)s %(levelname)s %(name)s: %(message)s"
+    handler.setFormatter(cli_output.ColorFormatter(fmt))
     logging.basicConfig(level=logging.DEBUG if config.DEBUG else logging.INFO, handlers=[handler])
     log = logging.getLogger("publisher")
     log.info("worker start (dry_run=%s)", config.DRY_RUN)
 
     with connection() as conn:
         for name, run in TASKS:
-            started = cli_output.banner_start(name)
+            started = cli_output.task_start(name)
             try:
                 run(conn)
             except Exception:  # noqa: BLE001 — un task non deve far cadere gli altri
                 log.exception("task '%s' fallito", name)
-            cli_output.banner_end(name, started)
+            cli_output.task_end(name, started)
 
     log.info("worker end")
 
