@@ -298,10 +298,17 @@ class PostController extends Controller
      * grezzo del form: whitelist dei campi attesi per tipo di canale, non un
      * pass-through — coerente con come AccountController tratta i canali.
      * I canali non presenti nel payload restano semplicemente 'on' => false.
+     *
+     * $accountChannels e' lo snapshot di User::channels dell'account target:
+     * il tetto di risposte automatiche (reply_n) e' una preferenza account-level
+     * (impostata in Account) ma viene CONGELATO nel post al salvataggio, cosi'
+     * il worker di pubblicazione applica le regole leggendo solo il post, senza
+     * dover risalire all'account (comportamento voluto, coerente con v1 dove
+     * tutto lo stato di pubblicazione viveva nel post).
      */
-    private function buildChannelsPayload(array $selected): array
+    private function buildChannelsPayload(array $selected, array $accountChannels = []): array
     {
-        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($selected) {
+        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($selected, $accountChannels) {
             if (!array_key_exists($id, $selected)) {
                 return [$id => ['on' => false]];
             }
@@ -313,6 +320,7 @@ class PostController extends Controller
                     'on' => true,
                     'comments_enabled' => !empty($opts['comments_enabled']),
                     'auto_reply_enabled' => !empty($opts['auto_reply_enabled']),
+                    'reply_n' => $accountChannels[$id]['reply_n'] ?? null,
                 ]];
             }
 
@@ -393,7 +401,8 @@ class PostController extends Controller
         };
         abort_if(($isAdmin || $isManager) && !$targetUserId, 422, 'Account non valido.');
 
-        $channels = $this->buildChannelsPayload($data['channels']);
+        $targetChannels = $targetUserId === $me->id ? $me->channels : (User::find($targetUserId)?->channels ?? []);
+        $channels = $this->buildChannelsPayload($data['channels'], $targetChannels ?? []);
         [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
 
         $post = Post::create([
@@ -458,7 +467,7 @@ class PostController extends Controller
         $unknown = array_diff(array_keys($data['channels']), array_keys(User::CHANNELS));
         abort_if(!empty($unknown), 422, 'Canale non valido.');
 
-        $channels = $this->buildChannelsPayload($data['channels']);
+        $channels = $this->buildChannelsPayload($data['channels'], $post->user?->channels ?? []);
         [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
 
         $existing = $post->img ?? [];

@@ -51,3 +51,41 @@ def test_set_result_writes_back_into_raw():
     channels.entry("facebook").set_result("fb1", "http://fb", None)
     assert channels.to_dict()["facebook"]["id"] == "fb1"
     assert channels.to_dict()["facebook"]["url"] == "http://fb"
+
+
+def _social(reply_n=None, on=True, comments_enabled=True):
+    return Channels.parse({"facebook": {"on": on, "comments_enabled": comments_enabled, "reply_n": reply_n}}).entry(
+        "facebook"
+    )
+
+
+def test_needs_comment_fetch_true_below_cap():
+    assert _social(reply_n=5).needs_comment_fetch(3) is True
+
+
+def test_needs_comment_fetch_false_at_or_above_cap():
+    assert _social(reply_n=5).needs_comment_fetch(5) is False
+
+
+def test_needs_comment_fetch_false_without_cap_configured():
+    assert _social(reply_n=None).needs_comment_fetch(0) is False
+
+
+def test_needs_comment_fetch_false_when_comments_disabled():
+    assert _social(reply_n=5, comments_enabled=False).needs_comment_fetch(0) is False
+
+
+def test_social_monitoring_complete_off_channel():
+    assert _social(on=False).social_monitoring_complete(0) is True
+
+
+def test_social_monitoring_complete_no_cap():
+    assert _social(reply_n=None).social_monitoring_complete(0) is True
+
+
+def test_social_monitoring_complete_under_cap_is_not_complete():
+    assert _social(reply_n=5).social_monitoring_complete(2) is False
+
+
+def test_social_monitoring_complete_cap_reached():
+    assert _social(reply_n=5).social_monitoring_complete(5) is True

@@ -57,6 +57,47 @@ class ChannelEntry:
     def newsletter_list_id(self):
         return (self.data.get("list") or {}).get("id")
 
+    @property
+    def comments_enabled(self) -> bool:
+        return self.data.get("comments_enabled") is True
+
+    @property
+    def auto_reply_enabled(self) -> bool:
+        return self.data.get("auto_reply_enabled") is True
+
+    @property
+    def reply_n(self) -> int | None:
+        """Tetto di commenti/risposte per questo canale, congelato nel post alla
+        creazione (arriva da users.channels — vedi PostController::buildChannelsPayload).
+        None/0 => nessun cap configurato, il canale non richiede monitoraggio continuo."""
+        value = self.data.get("reply_n")
+        return int(value) if value not in (None, "") else None
+
+    @property
+    def monitoring_needed(self) -> bool:
+        """Il canale richiede polling commenti/reply se acceso, con commenti abilitati
+        e un cap configurato (> 0). Senza cap non si sa quando fermarsi: come v1,
+        si considera 'non da monitorare' invece di interrogare le API all'infinito."""
+        return self.is_on and self.comments_enabled and bool(self.reply_n)
+
+    def needs_comment_fetch(self, current_count: int) -> bool:
+        """True se vale la pena interrogare il provider per nuovi commenti
+        (sotto al cap configurato)."""
+        return self.monitoring_needed and current_count < (self.reply_n or 0)
+
+    def social_monitoring_complete(self, current_count: int) -> bool:
+        """True quando il canale (facebook/instagram/linkedin) non richiede piu'
+        controlli: spento, commenti disabilitati, nessun cap configurato, o cap
+        raggiunto. Porting di v1 task_complete.py, adattato allo split
+        comments_enabled/reply_n di v2."""
+        if not self.is_on:
+            return True
+        if not self.comments_enabled:
+            return True
+        if not self.reply_n:
+            return True
+        return current_count >= self.reply_n
+
 
 class Channels:
     """Wrapper sul dizionario channels con iterazione tipizzata."""

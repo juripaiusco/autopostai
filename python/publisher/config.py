@@ -60,6 +60,14 @@ BREVO_BASE_URL = _env("BREVO_BASE_URL", "https://api.brevo.com/v3")
 # --- Tunable (ex magic-number sparsi in v1) --------------------------------
 LINKEDIN_MAX_IMAGES = 9
 INSTAGRAM_MAX_IMAGES = 10
+# Oltre questa finestra dalla pubblicazione, un post smette di essere monitorato
+# per nuovi commenti anche se il cap non e' stato raggiunto (safety valve, v1).
+TASK_COMPLETE_MAX_WAIT_DAYS = 14
+# Backoff esponenziale del polling commenti: 2^tentativi minuti, fino a 1 giorno.
+TASK_COMPLETE_MAX_BACKOFF_MINUTES = 24 * 60
+# Batch scansionato da reply_send per trovare il primo commento idoneo
+# (canale con auto_reply_enabled attivo) senza restare bloccati in testa alla coda.
+REPLY_SEND_BATCH_SIZE = 20
 
 # --- Modalita' -------------------------------------------------------------
 # DRY_RUN: esegue tutta l'orchestrazione (query, parsing channels, scrittura DB,

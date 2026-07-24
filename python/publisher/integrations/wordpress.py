@@ -79,6 +79,16 @@ class WordPress:
         body = resp.json()
         return {"id": body.get("id"), "url": body.get("source_url")}
 
+    def update(self, post_id: str, title: str, content: str) -> str | None:
+        resp = requests.post(
+            f"{self.url}/wp-json/wp/v2/posts/{post_id}",
+            headers=self._headers(),
+            auth=self.auth,
+            json={"title": title, "content": content, "status": "publish"},
+        )
+        resp.raise_for_status()
+        return resp.json().get("id")
+
     def delete(self, post_id: str) -> str | None:
         resp = requests.delete(f"{self.url}/wp-json/wp/v2/posts/{post_id}", headers=self._headers(), auth=self.auth)
         resp.raise_for_status()

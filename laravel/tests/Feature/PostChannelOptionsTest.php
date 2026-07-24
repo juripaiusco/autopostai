@@ -101,6 +101,55 @@ class PostChannelOptionsTest extends TestCase
         $this->assertSame('0', $post->auto_reply_enabled);
     }
 
+    public function test_storing_a_post_freezes_the_account_reply_cap_into_the_post_channels(): void
+    {
+        // reply_n vive nell'account (Account/Form.vue) ma va congelato nel post
+        // al salvataggio: il worker di pubblicazione legge solo il post, non risale
+        // all'account per ogni controllo.
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create([
+            'parent_id' => $admin->id,
+            'channels' => ['facebook' => ['on' => true, 'reply_on' => true, 'reply_n' => 7]],
+        ]);
+
+        $this->actingAs($user)->post(route('posts.store'), [
+            'channels' => ['facebook' => ['comments_enabled' => true, 'auto_reply_enabled' => true]],
+            'action' => 'save',
+        ])->assertRedirect(route('posts'));
+
+        $post = Post::latest('id')->firstOrFail();
+
+        $this->assertSame(7, $post->channels['facebook']['reply_n']);
+    }
+
+    public function test_editing_a_post_refreshes_the_reply_cap_from_the_current_account_setting(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create([
+            'parent_id' => $admin->id,
+            'channels' => ['facebook' => ['on' => true, 'reply_on' => true, 'reply_n' => 3]],
+        ]);
+
+        $post = Post::factory()->create([
+            'user_id' => $user->id,
+            'created_by_user_id' => $user->id,
+            'published' => '0',
+            'published_at' => null,
+            'channels' => ['facebook' => ['on' => true, 'comments_enabled' => true, 'auto_reply_enabled' => true, 'reply_n' => 3]],
+        ]);
+
+        // L'account alza il tetto DOPO la creazione del post ('channels' non e'
+        // mass-assignable su User, si scrive per property diretta come fa AccountController).
+        $user->channels = ['facebook' => ['on' => true, 'reply_on' => true, 'reply_n' => 10]];
+        $user->save();
+
+        $this->actingAs($user)->put(route('posts.update', $post), [
+            'channels' => ['facebook' => ['comments_enabled' => true, 'auto_reply_enabled' => true]],
+        ])->assertRedirect(route('posts'));
+
+        $this->assertSame(10, $post->fresh()->channels['facebook']['reply_n']);
+    }
+
     public function test_unknown_channel_key_is_rejected(): void
     {
         $admin = User::factory()->create(['parent_id' => null]);

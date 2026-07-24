@@ -131,3 +131,32 @@ class Meta:
         # L'API Instagram non permette di eliminare i post: v1 si limitava a
         # ricopiare l'id. Manteniamo lo stesso comportamento.
         return post_id
+
+    # --- Commenti (facebook + instagram condividono l'endpoint Graph) -----
+    def fb_get_comments(self, post_id: str) -> dict:
+        resp = requests.get(
+            f"{self.base_url}/{post_id}/comments",
+            params={"access_token": self.page_access_token()},
+        )
+        return resp.json()
+
+    def fb_reply_comment(self, comment_id: str, message: str) -> str | None:
+        resp = requests.post(
+            f"{self.base_url}/{comment_id}/comments",
+            data={"message": message, "access_token": self.page_access_token()},
+        )
+        return resp.json().get("id")
+
+    def ig_get_comments(self, post_id: str) -> dict:
+        resp = requests.get(
+            f"{self.base_url}/{post_id}/comments",
+            params={"fields": "text,from,timestamp", "access_token": self.page_access_token()},
+        )
+        return resp.json()
+
+    def ig_reply_comment(self, comment_id: str, message: str) -> str | None:
+        resp = requests.post(
+            f"{self.base_url}/{comment_id}/replies",
+            data={"message": message, "access_token": self.page_access_token()},
+        )
+        return resp.json().get("id")

@@ -106,12 +106,184 @@ class PostRepository:
             {"id": post_id},
         )
 
+    def due_for_comment_monitoring(self, now: str) -> dict | None:
+        """Un post pubblicato, non ancora task_complete, fuori dal backoff
+        (on_hold_until), con il conteggio commenti per canale social — un post per
+        run, come v1. Usato sia da comments_get che da task_complete."""
+        posts = config.table("posts")
+        settings = config.table("settings")
+        comments = config.table("comments")
+
+        row = self.conn.execute(
+            text(
+                f"""
+                SELECT  p.id                     AS id,
+                        p.user_id                AS user_id,
+                        p.created_by_user_id     AS created_by_user_id,
+                        p.ai_prompt_post         AS ai_prompt_post,
+                        p.img                    AS img,
+                        p.img_ai_check_on        AS img_ai_check_on,
+                        p.channels               AS channels,
+                        p.check_attempts         AS check_attempts,
+                        p.on_hold_until          AS on_hold_until,
+                        p.published_at           AS published_at,
+                        s.ai_personality         AS ai_personality,
+                        s.ai_prompt_prefix       AS ai_prompt_prefix,
+                        s.ai_comment_prefix      AS ai_comment_prefix,
+                        s.openai_api_key         AS openai_api_key,
+                        s.meta_page_id           AS meta_page_id,
+                        s.meta_token             AS meta_token,
+                        s.linkedin_company_id    AS linkedin_company_id,
+                        s.linkedin_token         AS linkedin_token,
+                        s.nl_brevo_api           AS nl_brevo_api,
+                        SUM(CASE WHEN c.channel = 'facebook' THEN 1 ELSE 0 END)  AS facebook_comments_count,
+                        SUM(CASE WHEN c.channel = 'instagram' THEN 1 ELSE 0 END) AS instagram_comments_count,
+                        SUM(CASE WHEN c.channel = 'linkedin' THEN 1 ELSE 0 END)  AS linkedin_comments_count
+                    FROM {posts} p
+                    INNER JOIN {settings} s ON s.user_id = p.user_id
+                    LEFT JOIN {comments} c ON c.post_id = p.id
+                WHERE p.published = 1
+                    AND p.task_complete = 0
+                    AND (p.on_hold_until IS NULL OR p.on_hold_until <= :now)
+                    AND p.deleted_at IS NULL
+                GROUP BY p.id
+                LIMIT 1
+                """
+            ),
+            {"now": now},
+        ).mappings().first()
+
+        return dict(row) if row else None
+
+    def due_for_update(self) -> dict | None:
+        """Un post con updated=2 (modificato, in attesa di risync), un post per run."""
+        posts = config.table("posts")
+        settings = config.table("settings")
+
+        row = self.conn.execute(
+            text(
+                f"""
+                SELECT  p.id                 AS id,
+                        p.user_id            AS user_id,
+                        p.ai_content         AS ai_content,
+                        p.channels           AS channels,
+                        s.wordpress_url      AS wordpress_url,
+                        s.wordpress_username AS wordpress_username,
+                        s.wordpress_password AS wordpress_password
+                    FROM {posts} p
+                    INNER JOIN {settings} s ON s.user_id = p.user_id
+                WHERE p.updated = '2'
+                    AND p.deleted_at IS NULL
+                LIMIT 1
+                """
+            )
+        ).mappings().first()
+
+        return dict(row) if row else None
+
+    def set_updated(self, post_id: int, value: str) -> None:
+        posts = config.table("posts")
+        self.conn.execute(
+            text(f"UPDATE {posts} SET updated = :value WHERE id = :id"),
+            {"value": value, "id": post_id},
+        )
+
+    def due_for_deletion(self, now: str) -> list[dict]:
+        """Post pubblicati, soft-deleted (deleted_at passato), non ancora rimossi
+        dai canali remoti (deleted=0)."""
+        posts = config.table("posts")
+        settings = config.table("settings")
+
+        rows = self.conn.execute(
+            text(
+                f"""
+                SELECT  p.id                      AS id,
+                        p.user_id                 AS user_id,
+                        p.channels                AS channels,
+                        s.meta_page_id             AS meta_page_id,
+                        s.meta_token               AS meta_token,
+                        s.linkedin_company_id      AS linkedin_company_id,
+                        s.linkedin_token           AS linkedin_token,
+                        s.wordpress_url            AS wordpress_url,
+                        s.wordpress_username       AS wordpress_username,
+                        s.wordpress_password       AS wordpress_password,
+                        s.nl_mailchimp_api         AS nl_mailchimp_api,
+                        s.nl_mailchimp_datacenter  AS nl_mailchimp_datacenter,
+                        s.nl_brevo_api             AS nl_brevo_api
+                    FROM {posts} p
+                    INNER JOIN {settings} s ON s.user_id = p.user_id
+                WHERE p.published = 1
+                    AND p.deleted = 0
+                    AND p.deleted_at IS NOT NULL
+                    AND p.deleted_at <= :now
+                """
+            ),
+            {"now": now},
+        ).mappings().all()
+
+        return [dict(r) for r in rows]
+
+    def set_deleted(self, post_id: int, value: str) -> None:
+        posts = config.table("posts")
+        self.conn.execute(
+            text(f"UPDATE {posts} SET deleted = :value WHERE id = :id"),
+            {"value": value, "id": post_id},
+        )
+
+    def set_task_complete(self, post_id: int) -> None:
+        posts = config.table("posts")
+        self.conn.execute(
+            text(f"UPDATE {posts} SET task_complete = 1 WHERE id = :id"),
+            {"id": post_id},
+        )
+
+    def set_hold(self, post_id: int, on_hold_until: str) -> None:
+        posts = config.table("posts")
+        self.conn.execute(
+            text(
+                f"""
+                UPDATE {posts}
+                SET on_hold_until = :hold, check_attempts = check_attempts + 1
+                WHERE id = :id
+                """
+            ),
+            {"hold": on_hold_until, "id": post_id},
+        )
+
 
 class TokenLogRepository:
     """Traccia i token LLM consumati (tabella token_logs, come v1)."""
 
     def __init__(self, conn: Connection):
         self.conn = conn
+
+    def usage_this_month(self, user_id: int) -> dict | None:
+        """Token limite mensile dell'utente e quanti ne ha gia' usati (dal 1 del mese)."""
+        users = config.table("users")
+        token_logs = config.table("token_logs")
+
+        row = self.conn.execute(
+            text(
+                f"""
+                SELECT  u.id AS id,
+                        u.tokens_limit AS tokens_limit,
+                        COALESCE(SUM(
+                            CASE
+                                WHEN tl.created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                                 AND tl.created_at < DATE_FORMAT(NOW() + INTERVAL 1 MONTH, '%Y-%m-01')
+                                THEN tl.tokens_used ELSE 0
+                            END
+                        ), 0) AS tokens_used_total
+                    FROM {users} u
+                    LEFT JOIN {token_logs} tl ON tl.user_id = u.id
+                WHERE u.id = :user_id
+                GROUP BY u.id
+                """
+            ),
+            {"user_id": user_id},
+        ).mappings().first()
+
+        return dict(row) if row else None
 
     def log(self, user_id: int, ref_type: str, reference_id: int, tokens_used: int, now: str) -> None:
         token_logs = config.table("token_logs")
@@ -129,6 +301,129 @@ class TokenLogRepository:
                 "tokens": tokens_used,
                 "now": now,
             },
+        )
+
+
+class CommentRepository:
+    """Commenti fetchati dai canali social e le relative risposte automatiche."""
+
+    def __init__(self, conn: Connection):
+        self.conn = conn
+
+    def exists(self, post_id: int, channel: str, message_id: str) -> bool:
+        comments = config.table("comments")
+        row = self.conn.execute(
+            text(
+                f"SELECT 1 FROM {comments} WHERE post_id = :post_id AND channel = :channel AND message_id = :mid LIMIT 1"
+            ),
+            {"post_id": post_id, "channel": channel, "mid": message_id},
+        ).first()
+        return row is not None
+
+    def save(
+        self,
+        post_id: int,
+        channel: str,
+        from_id: str | None,
+        from_name: str | None,
+        message_id: str,
+        message: str,
+        message_created_time: str,
+        now: str,
+    ) -> None:
+        # Dedup a livello applicativo (exists()) invece di un vincolo UNIQUE nello
+        # schema: coerente con lo schema v2 attuale (nessun indice unico su
+        # post_id+channel+message_id), come faceva l'INSERT IGNORE di v1.
+        if self.exists(post_id, channel, message_id):
+            return
+
+        comments = config.table("comments")
+        self.conn.execute(
+            text(
+                f"""
+                INSERT INTO {comments}
+                    (post_id, channel, from_id, from_name, message_id, message, message_created_time, created_at, updated_at)
+                VALUES
+                    (:post_id, :channel, :from_id, :from_name, :mid, :message, :created_time, :now, :now)
+                """
+            ),
+            {
+                "post_id": post_id,
+                "channel": channel,
+                "from_id": from_id,
+                "from_name": from_name,
+                "mid": message_id,
+                "message": message,
+                "created_time": message_created_time,
+                "now": now,
+            },
+        )
+
+    def due_for_reply(self, limit: int = 20) -> list[dict]:
+        """Commenti senza risposta, coi dati del post per decidere se rispondere.
+
+        A differenza di v1 (LIMIT 1 secco, un solo toggle reply_on) qui si legge un
+        piccolo batch: il canale del primo commento potrebbe avere auto_reply_enabled
+        spento (si traccia ma non si risponde), e con LIMIT 1 quel commento
+        bloccherebbe la coda per sempre. Il task elabora il primo commento
+        idoneo nel batch e si ferma li' (un reply per run, come v1).
+        """
+        comments = config.table("comments")
+        posts = config.table("posts")
+        users = config.table("users")
+        settings = config.table("settings")
+
+        rows = self.conn.execute(
+            text(
+                f"""
+                SELECT  c.id                     AS id,
+                        c.post_id                AS post_id,
+                        c.channel                AS channel,
+                        c.from_id                AS from_id,
+                        c.from_name               AS from_name,
+                        c.message_id              AS message_id,
+                        c.message                 AS message,
+                        p.user_id                AS user_id,
+                        p.ai_prompt_post          AS ai_prompt_post,
+                        p.ai_content              AS ai_content,
+                        p.ai_prompt_comment       AS ai_prompt_comment,
+                        p.img                     AS img,
+                        p.img_ai_check_on         AS img_ai_check_on,
+                        p.channels                AS channels,
+                        s.ai_personality          AS ai_personality,
+                        s.ai_prompt_prefix        AS ai_prompt_prefix,
+                        s.ai_comment_prefix       AS ai_comment_prefix,
+                        s.openai_api_key          AS openai_api_key,
+                        s.meta_page_id            AS meta_page_id,
+                        s.meta_token              AS meta_token,
+                        s.linkedin_company_id     AS linkedin_company_id,
+                        s.linkedin_token          AS linkedin_token
+                    FROM {comments} c
+                    INNER JOIN {posts} p ON p.id = c.post_id
+                    INNER JOIN {users} u ON u.id = p.user_id
+                    INNER JOIN {settings} s ON s.user_id = u.id
+                WHERE c.reply IS NULL
+                    AND p.deleted_at IS NULL
+                ORDER BY c.id
+                LIMIT :limit
+                """
+            ),
+            {"limit": limit},
+        ).mappings().all()
+
+        return [dict(r) for r in rows]
+
+    def mark_replied(self, comment_id: int, reply_id: str, reply_text: str, now: str) -> None:
+        comments = config.table("comments")
+        self.conn.execute(
+            text(
+                f"""
+                UPDATE {comments}
+                SET reply_id = :reply_id, reply = :reply, reply_created_time = :now
+                WHERE id = :id
+                """
+            ),
+            {"reply_id": reply_id, "reply": reply_text, "now": now, "id": comment_id},
         )
 
 

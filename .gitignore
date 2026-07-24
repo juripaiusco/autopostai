@@ -8,3 +8,5 @@ _config.sh
 /public/assets
 .editorconfig
 .env*
+__pycache__/
+*.pyc
