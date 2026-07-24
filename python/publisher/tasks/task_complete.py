@@ -41,7 +41,7 @@ def run(conn: Connection) -> None:
 
     post = post_repo.due_for_comment_monitoring(now)
     if post is None:
-        log.debug("task_complete: nessun post da valutare")
+        log.info("task_complete: nessun post da valutare")
         return
 
     channels = Channels.parse(post["channels"])
@@ -67,7 +67,7 @@ def run(conn: Connection) -> None:
         max_backoff = timedelta(minutes=config.TASK_COMPLETE_MAX_BACKOFF_MINUTES)
         next_wait = min(timedelta(minutes=2 ** (post["check_attempts"] or 0)), max_backoff)
         post_repo.set_hold(post["id"], (now_dt + next_wait).strftime("%Y-%m-%d %H:%M:%S"))
-        log.debug("task_complete: post %s in attesa, prossimo controllo tra %s", post["id"], next_wait)
+        log.info("task_complete: post %s in attesa, prossimo controllo tra %s", post["id"], next_wait)
 
 
 def _all_channels_complete(channels: Channels, counts: dict, post: dict) -> bool:

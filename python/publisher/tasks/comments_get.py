@@ -31,8 +31,10 @@ def run(conn: Connection) -> None:
 
     post = post_repo.due_for_comment_monitoring(now)
     if post is None:
-        log.debug("comments_get: nessun post da monitorare")
+        log.info("comments_get: nessun post da monitorare")
         return
+
+    log.info("comments_get: post %s selezionato per il monitoraggio commenti", post["id"])
 
     channels = Channels.parse(post["channels"])
     counts = {

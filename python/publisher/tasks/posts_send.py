@@ -57,6 +57,7 @@ def _send_one(post, post_repo, push_repo, token_repo, content_service, now) -> N
 
     for entry in channels.publishable():
         publisher = PUBLISHERS[entry.key](post, url_resolver=resolver)
+        log.info("posts_send: post %s canale '%s' - generazione contenuto e invio", post["id"], entry.key)
         try:
             content = content_service.resolve(post, publisher, resolver)
             result = publisher.simulate() if config.DRY_RUN else publisher.publish(content)
@@ -64,6 +65,7 @@ def _send_one(post, post_repo, push_repo, token_repo, content_service, now) -> N
             log.exception("posts_send: canale '%s' fallito per il post %s", entry.key, post["id"])
             continue
         entry.set_result(result.remote_id, result.url, result.gallery_html)
+        log.info("posts_send: post %s canale '%s' - pubblicato (id=%s)", post["id"], entry.key, result.remote_id)
 
     post_repo.save_channels(post["id"], channels.to_dict())
 

@@ -25,9 +25,10 @@ def run(conn: Connection) -> None:
 
     post = post_repo.due_for_update()
     if post is None:
-        log.debug("posts_update: nessun post da aggiornare")
+        log.info("posts_update: nessun post da aggiornare")
         return
 
+    log.info("posts_update: post %s selezionato per il risync", post["id"])
     channels = Channels.parse(post["channels"])
 
     # TODO(facebook/instagram): v1 aveva gia' questi update commentati (l'API
@@ -39,11 +40,13 @@ def run(conn: Connection) -> None:
         try:
             new_id = _wordpress_update(post, entry.data["id"], title, body)
             entry.data["id_update"] = new_id
+            log.info("posts_update: post %s canale 'wordpress' - aggiornato (id=%s)", post["id"], new_id)
         except Exception:  # noqa: BLE001
             log.exception("posts_update: update WordPress fallito per il post %s", post["id"])
 
     post_repo.save_channels(post["id"], channels.to_dict())
-    _ctrl_updated(post_repo, post["id"], channels)
+    updated = _ctrl_updated(post_repo, post["id"], channels)
+    log.info("posts_update: post %s - updated=%s", post["id"], updated)
 
 
 def _wordpress_update(post: dict, post_id: str, title: str, body: str) -> str | None:
@@ -53,7 +56,7 @@ def _wordpress_update(post: dict, post_id: str, title: str, body: str) -> str | 
     return wp.update(post_id, title, body)
 
 
-def _ctrl_updated(post_repo: PostRepository, post_id: int, channels: Channels) -> None:
+def _ctrl_updated(post_repo: PostRepository, post_id: int, channels: Channels) -> str:
     """updated=1 solo se OGNI canale acceso ha id_update coincidente con id
     (porting di ctrl_posts_update). Canali senza update implementato (facebook/
     instagram, se accesi) restano senza id_update per sempre: come in v1, quei
@@ -64,4 +67,6 @@ def _ctrl_updated(post_repo: PostRepository, post_id: int, channels: Channels) -
         if entry and entry.is_on and entry.data.get("id") != entry.data.get("id_update"):
             all_updated = False
 
-    post_repo.set_updated(post_id, "1" if all_updated else "0")
+    value = "1" if all_updated else "0"
+    post_repo.set_updated(post_id, value)
+    return value

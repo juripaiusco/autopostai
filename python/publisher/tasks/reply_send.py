@@ -39,6 +39,7 @@ def run(conn: Connection) -> None:
             continue
 
         replier = replier_cls(comment)
+        log.info("reply_send: commento %s (canale %s) - generazione risposta e invio", comment["id"], comment["channel"])
         try:
             reply_text = content_service.generate_reply(comment, replier.build_prompt())
             result = replier.simulate(reply_text) if config.DRY_RUN else replier.send(reply_text)
@@ -54,4 +55,4 @@ def run(conn: Connection) -> None:
         log.info("reply_send: risposto al commento %s (canale %s)", comment["id"], comment["channel"])
         return  # un solo reply per run, come v1
 
-    log.debug("reply_send: nessun commento idoneo nel batch")
+    log.info("reply_send: nessun commento idoneo nel batch")

@@ -14,8 +14,9 @@ altri sono scheletri no-op finche' non verranno portati.
 from __future__ import annotations
 
 import logging
+import sys
 
-from publisher import config
+from publisher import cli_output, config
 from publisher.db.engine import connection
 from publisher.tasks import (
     comments_get,
@@ -38,19 +39,23 @@ TASKS = [
 
 
 def main() -> None:
-    logging.basicConfig(
-        level=logging.DEBUG if config.DEBUG else logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
+    # stdout, non lo stderr di default: banner (print) e log condividono lo
+    # stesso stream, altrimenti l'ordine si mischia quando entrambi finiscono
+    # nello stesso file/terminale (buffering separato tra i due stream).
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(cli_output.ColorFormatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+    logging.basicConfig(level=logging.DEBUG if config.DEBUG else logging.INFO, handlers=[handler])
     log = logging.getLogger("publisher")
     log.info("worker start (dry_run=%s)", config.DRY_RUN)
 
     with connection() as conn:
         for name, run in TASKS:
+            started = cli_output.banner_start(name)
             try:
                 run(conn)
             except Exception:  # noqa: BLE001 — un task non deve far cadere gli altri
                 log.exception("task '%s' fallito", name)
+            cli_output.banner_end(name, started)
 
     log.info("worker end")
 

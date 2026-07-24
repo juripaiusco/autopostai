@@ -27,7 +27,13 @@ log = logging.getLogger(__name__)
 def run(conn: Connection) -> None:
     post_repo = PostRepository(conn)
 
-    for post in post_repo.due_for_deletion(_now()):
+    posts = post_repo.due_for_deletion(_now())
+    if not posts:
+        log.info("posts_delete: nessun post da eliminare")
+        return
+
+    for post in posts:
+        log.info("posts_delete: post %s selezionato per la rimozione", post["id"])
         channels = Channels.parse(post["channels"])
 
         for key in CHANNEL_KEYS:
@@ -39,11 +45,13 @@ def run(conn: Connection) -> None:
 
             try:
                 entry.data["id_del"] = _delete_on_channel(key, post, entry.data["id"])
+                log.info("posts_delete: post %s canale '%s' - rimosso (id=%s)", post["id"], key, entry.data["id_del"])
             except Exception:  # noqa: BLE001
                 log.exception("posts_delete: delete '%s' fallita per il post %s", key, post["id"])
 
         post_repo.save_channels(post["id"], channels.to_dict())
-        _ctrl_deleted(post_repo, post["id"], channels)
+        deleted = _ctrl_deleted(post_repo, post["id"], channels)
+        log.info("posts_delete: post %s - deleted=%s", post["id"], deleted)
 
 
 def _delete_on_channel(key: str, post: dict, remote_id: str) -> str | None:
@@ -68,14 +76,16 @@ def _delete_on_channel(key: str, post: dict, remote_id: str) -> str | None:
     return None
 
 
-def _ctrl_deleted(post_repo: PostRepository, post_id: int, channels: Channels) -> None:
+def _ctrl_deleted(post_repo: PostRepository, post_id: int, channels: Channels) -> str:
     all_deleted = True
     for key in CHANNEL_KEYS:
         entry = channels.entry(key)
         if entry and entry.is_on and entry.data.get("id") != entry.data.get("id_del"):
             all_deleted = False
 
-    post_repo.set_deleted(post_id, "1" if all_deleted else "0")
+    value = "1" if all_deleted else "0"
+    post_repo.set_deleted(post_id, value)
+    return value
 
 
 def _now() -> str:
