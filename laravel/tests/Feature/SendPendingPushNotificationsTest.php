@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\PushNotification;
 use App\Models\User;
+use App\Notifications\PostPublishedAlert;
 use App\Notifications\PushNotificationAlert;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -78,5 +79,53 @@ class SendPendingPushNotificationsTest extends TestCase
         $this->artisan('notifications:send-pending');
 
         Notification::assertNothingSent();
+    }
+
+    public function test_post_published_kind_uses_dedicated_notification_class(): void
+    {
+        Notification::fake();
+
+        $creator = User::factory()->create(['parent_id' => null]);
+        $n = PushNotification::factory()->create([
+            'created_by_user_id' => $creator->id,
+            'user_id' => $creator->id,
+            'audience' => null,
+            'kind' => 'post_published',
+        ]);
+
+        $this->artisan('notifications:send-pending')->assertExitCode(0);
+
+        Notification::assertSentTo($creator, PostPublishedAlert::class);
+        Notification::assertNotSentTo($creator, PushNotificationAlert::class);
+        $this->assertNotNull($n->fresh()->sent_at);
+    }
+
+    public function test_post_published_alert_is_not_bell_visible(): void
+    {
+        // Il canale 'database' e' cio' che rende una notifica visibile in campanella.
+        // PostPublishedAlert deve usare SOLO WebPush, quindi via() non contiene 'database'.
+        $creator = User::factory()->create(['parent_id' => null]);
+        $n = PushNotification::factory()->create([
+            'created_by_user_id' => $creator->id,
+            'user_id' => $creator->id,
+            'kind' => 'post_published',
+        ]);
+
+        $channels = (new PostPublishedAlert($n))->via($creator);
+
+        $this->assertNotContains('database', $channels);
+    }
+
+    public function test_default_kind_stays_bell_visible(): void
+    {
+        // Regressione: una riga senza kind esplicito resta 'alert' e usa il canale database.
+        $creator = User::factory()->create(['parent_id' => null]);
+        $n = PushNotification::factory()->create([
+            'created_by_user_id' => $creator->id,
+            'user_id' => $creator->id,
+        ]);
+
+        $this->assertSame('alert', $n->fresh()->kind);
+        $this->assertContains('database', (new PushNotificationAlert($n))->via($creator));
     }
 }

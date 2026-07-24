@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\PushNotification;
+use App\Notifications\PostPublishedAlert;
 use App\Notifications\PushNotificationAlert;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -17,8 +18,12 @@ class SendPendingPushNotifications extends Command
      * Execute the console command.
      *
      * Nessun endpoint HTTP pubblico per questo invio: sia la UI (Notifications/Form)
-     * sia il futuro servizio Python creano/scrivono righe 'push_notifications' con
-     * sent_at nullo — questo comando (schedulato ogni minuto) le processa e le manda.
+     * sia il servizio Python di pubblicazione creano/scrivono righe 'push_notifications'
+     * con sent_at nullo — questo comando (schedulato ogni minuto) le processa e le manda.
+     *
+     * La colonna 'kind' sceglie la classe Notification, cosi' i due tipi non si mischiano:
+     *  - 'post_published' => PostPublishedAlert (solo WebPush, NON in campanella)
+     *  - tutto il resto    => PushNotificationAlert (database + WebPush, in campanella)
      */
     public function handle(): void
     {
@@ -33,9 +38,13 @@ class SendPendingPushNotifications extends Command
         foreach ($pending as $notification) {
             $recipients = $notification->resolveRecipients();
 
+            $notificationClass = $notification->kind === 'post_published'
+                ? PostPublishedAlert::class
+                : PushNotificationAlert::class;
+
             /** @var Notifiable $recipient */
             foreach ($recipients as $recipient) {
-                $recipient->notify(new PushNotificationAlert($notification));
+                $recipient->notify(new $notificationClass($notification));
             }
 
             $notification->update([

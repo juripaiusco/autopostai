@@ -1,0 +1,172 @@
+"""Repository: tutte le query centralizzate e PARAMETRIZZATE.
+
+In v1 la stessa grande SELECT posts+settings era copiaincollata in 6 file e i
+valori venivano interpolati con f-string (superficie di SQL-injection). Qui la
+query vive in un posto solo e i valori passano come bind param `:nome`.
+"""
+
+import json
+
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
+
+from publisher import config
+
+
+class PostRepository:
+    def __init__(self, conn: Connection):
+        self.conn = conn
+
+    def due_posts(self, now: str) -> list[dict]:
+        """Post schedulati e ancora da pubblicare, con le credenziali dell'account.
+
+        Filtro identico a v1: non pubblicato, non anteprima, orario di
+        pubblicazione raggiunto, non soft-deleted.
+        """
+        posts = config.table("posts")
+        settings = config.table("settings")
+
+        rows = self.conn.execute(
+            text(
+                f"""
+                SELECT  p.id                     AS id,
+                        p.user_id                AS user_id,
+                        p.created_by_user_id     AS created_by_user_id,
+                        p.title                  AS title,
+                        p.ai_prompt_post         AS ai_prompt_post,
+                        p.ai_content             AS ai_content,
+                        p.img                    AS img,
+                        p.img_ai_check_on        AS img_ai_check_on,
+                        p.channels               AS channels,
+                        s.ai_personality         AS ai_personality,
+                        s.ai_prompt_prefix       AS ai_prompt_prefix,
+                        s.openai_api_key         AS openai_api_key,
+                        s.meta_page_id           AS meta_page_id,
+                        s.meta_token             AS meta_token,
+                        s.linkedin_person_id     AS linkedin_person_id,
+                        s.linkedin_company_id    AS linkedin_company_id,
+                        s.linkedin_client_id     AS linkedin_client_id,
+                        s.linkedin_client_secret AS linkedin_client_secret,
+                        s.linkedin_token         AS linkedin_token,
+                        s.wordpress_url          AS wordpress_url,
+                        s.wordpress_username     AS wordpress_username,
+                        s.wordpress_password     AS wordpress_password,
+                        s.wordpress_cat_id       AS wordpress_cat_id,
+                        s.nl_mailchimp_api        AS nl_mailchimp_api,
+                        s.nl_mailchimp_datacenter AS nl_mailchimp_datacenter,
+                        s.nl_mailchimp_list_id    AS nl_mailchimp_list_id,
+                        s.nl_mailchimp_from_name  AS nl_mailchimp_from_name,
+                        s.nl_mailchimp_from_email AS nl_mailchimp_from_email,
+                        s.nl_brevo_api            AS nl_brevo_api,
+                        s.nl_brevo_list_id        AS nl_brevo_list_id,
+                        s.nl_brevo_from_name      AS nl_brevo_from_name,
+                        s.nl_brevo_from_email     AS nl_brevo_from_email,
+                        s.nl_template             AS nl_template,
+                        s.nl_template_cta         AS nl_template_cta
+                    FROM {posts} p
+                    INNER JOIN {settings} s ON s.user_id = p.user_id
+                WHERE p.published = 0
+                    AND p.preview = 0
+                    AND p.published_at <= :now
+                    AND p.deleted_at IS NULL
+                """
+            ),
+            {"now": now},
+        ).mappings().all()
+
+        return [dict(r) for r in rows]
+
+    def channels_of(self, post_id: int) -> dict | None:
+        """Solo il JSON channels di un post (per la risoluzione degli shortcode url)."""
+        posts = config.table("posts")
+        row = self.conn.execute(
+            text(f"SELECT user_id, channels FROM {posts} WHERE id = :id"),
+            {"id": post_id},
+        ).mappings().first()
+        return dict(row) if row else None
+
+    def save_channels(self, post_id: int, channels: dict) -> None:
+        posts = config.table("posts")
+        self.conn.execute(
+            text(f"UPDATE {posts} SET channels = :channels WHERE id = :id"),
+            {"channels": json.dumps(channels), "id": post_id},
+        )
+
+    def save_ai_content(self, post_id: int, content: str) -> None:
+        posts = config.table("posts")
+        self.conn.execute(
+            text(f"UPDATE {posts} SET ai_content = :content WHERE id = :id"),
+            {"content": content, "id": post_id},
+        )
+
+    def mark_published(self, post_id: int) -> None:
+        posts = config.table("posts")
+        self.conn.execute(
+            text(f"UPDATE {posts} SET published = 1 WHERE id = :id"),
+            {"id": post_id},
+        )
+
+
+class TokenLogRepository:
+    """Traccia i token LLM consumati (tabella token_logs, come v1)."""
+
+    def __init__(self, conn: Connection):
+        self.conn = conn
+
+    def log(self, user_id: int, ref_type: str, reference_id: int, tokens_used: int, now: str) -> None:
+        token_logs = config.table("token_logs")
+        self.conn.execute(
+            text(
+                f"""
+                INSERT INTO {token_logs} (user_id, type, reference_id, tokens_used, created_at, updated_at)
+                VALUES (:user_id, :type, :reference_id, :tokens, :now, :now)
+                """
+            ),
+            {
+                "user_id": user_id,
+                "type": ref_type,
+                "reference_id": reference_id,
+                "tokens": tokens_used,
+                "now": now,
+            },
+        )
+
+
+class PushNotificationRepository:
+    """Accodamento notifiche pending (pattern pending-row Laravel).
+
+    Non firmiamo/inviamo WebPush qui: inseriamo solo una riga con sent_at NULL;
+    la firma VAPID e l'invio li fa il comando Laravel `notifications:send-pending`.
+    kind='post_published' fa scegliere al comando la classe PostPublishedAlert
+    (solo WebPush, NON in campanella).
+    """
+
+    def __init__(self, conn: Connection):
+        self.conn = conn
+
+    def user_has_subscription(self, user_id: int) -> bool:
+        subs = config.table("push_subscriptions")
+        row = self.conn.execute(
+            text(
+                f"""
+                SELECT 1 FROM {subs}
+                WHERE subscribable_type = :type AND subscribable_id = :uid
+                LIMIT 1
+                """
+            ),
+            {"type": "App\\Models\\User", "uid": user_id},
+        ).first()
+        return row is not None
+
+    def enqueue_post_published(self, user_id: int, title: str, url: str, now: str) -> None:
+        push = config.table("push_notifications")
+        self.conn.execute(
+            text(
+                f"""
+                INSERT INTO {push}
+                    (created_by_user_id, user_id, kind, title, body, url, created_at, updated_at)
+                VALUES (:uid, :uid, 'post_published', :title, :body, :url, :now, :now)
+                """
+            ),
+            {"uid": user_id, "title": title, "body": "Post inviato", "url": url, "now": now},
+        )

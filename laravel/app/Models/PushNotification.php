@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['created_by_user_id', 'user_id', 'audience', 'title', 'body', 'url', 'sent_at', 'recipients_count'])]
+#[Fillable(['created_by_user_id', 'user_id', 'audience', 'kind', 'title', 'body', 'url', 'sent_at', 'recipients_count'])]
 class PushNotification extends Model
 {
     use HasFactory;

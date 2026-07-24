@@ -1,5 +1,15 @@
+# Servizio immagini (FastAPI) + worker di pubblicazione condividono le dipendenze.
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 openai==1.59.6
 python-dotenv==1.0.1
 pydantic==2.10.4
+
+# Worker di pubblicazione (publisher/): DB direct + client provider.
+SQLAlchemy==2.0.36
+PyMySQL==1.1.1
+requests==2.32.3
+pytz==2024.2
+Markdown==3.7
+tiktoken==0.8.0
+pillow==11.0.0
