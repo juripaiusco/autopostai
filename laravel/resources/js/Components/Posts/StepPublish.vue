@@ -9,12 +9,19 @@ const props = defineProps({
     channels: { type: Array, required: true }, // [{ id, label, limit }]
     saving: { type: Boolean, default: false },
     mode: { type: String, default: 'create' },
+    targetUserId: { type: [Number, String], default: null },
 });
 
 const emit = defineEmits(['set', 'back', 'save', 'save-and-add']);
 
 const genLoading = ref(false);
+const genError = ref(null);
 const editing = ref(false);
+
+function csrfToken() {
+    const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+}
 
 const channelById = computed(() => Object.fromEntries(props.channels.map((c) => [c.id, c])));
 const selectedChannelIds = computed(() => Object.keys(props.form.channels));
@@ -39,17 +46,37 @@ const limitChannel = computed(() => {
 const overLimit = computed(() => charLimit.value !== null && (props.form.ai_content || '').length > charLimit.value);
 const canSave = computed(() => selectedChannelIds.value.length > 0 && !overLimit.value);
 
-let genTimer = null;
-function runPreview() {
+// Solo WordPress e Newsletter hanno un formato di prompt differenziato
+// (Markdown, vedi publisher/publishing/{wordpress,newsletter}.py::build_prompt);
+// gli altri canali condividono lo stesso ai_prompt_post cosi' com'e'.
+const primaryChannel = computed(() => {
+    if (selectedChannelIds.value.includes('wordpress')) return 'wordpress';
+    if (selectedChannelIds.value.includes('newsletter')) return 'newsletter';
+    return null;
+});
+
+async function runPreview() {
     genLoading.value = true;
+    genError.value = null;
     editing.value = false;
     emit('set', 'ai_content', '');
-    clearTimeout(genTimer);
-    genTimer = setTimeout(() => {
+    try {
+        const res = await fetch(route('posts.generate-text', props.targetUserId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': csrfToken(), Accept: 'application/json' },
+            body: JSON.stringify({ ai_prompt_post: props.form.ai_prompt_post, channel: primaryChannel.value }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+            genError.value = json.message ?? 'Generazione non riuscita, riprova.';
+            return;
+        }
+        emit('set', 'ai_content', json.content ?? '');
+    } catch (e) {
+        genError.value = 'Generazione non riuscita, riprova.';
+    } finally {
         genLoading.value = false;
-        emit('set', 'ai_content',
-            "Benvenuta estate! ☀️\n\nAbbiamo rinnovato il menù con piatti freschi e profumati per accompagnarti nelle serate più calde dell'anno.\n\nVieni a scoprire le novità — ti aspettiamo con il sorriso e una buona bottiglia fresca. 🍷\n\n#menùestivo #cucinaitaliana #trattoria");
-    }, 1700);
+    }
 }
 </script>
 
@@ -101,6 +128,10 @@ function runPreview() {
                     <Icon name="sparkles" :size="14" />
                     {{ genLoading ? 'Generazione…' : 'Genera anteprima' }}
                 </button>
+            </div>
+            <div v-if="genError" class="pf-ai-warn pf-fade-in" style="margin-bottom:8px">
+                <Icon name="warning" :size="14" />
+                <span>{{ genError }}</span>
             </div>
             <div class="pf-ai-box">
                 <div v-if="genLoading" class="pf-ai-loading">

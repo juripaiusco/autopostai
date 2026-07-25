@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImageArchiveController;
 use App\Http\Controllers\LinkedInController;
 use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\PostContentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PushNotificationController;
 use App\Http\Controllers\PushSubscriptionController;
@@ -73,6 +74,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/posts/canali/{user}/stato-immagine/{job}', [ImageArchiveController::class, 'status'])
         ->name('posts.image-status');
+
+    Route::post('/posts/canali/{user}/genera-testo', [PostContentController::class, 'generateText'])
+        ->name('posts.generate-text');
 
     Route::delete('/posts/canali/{user}/archivio-immagini/{filename}', [ImageArchiveController::class, 'destroy'])
         ->name('posts.image-archive.destroy');
