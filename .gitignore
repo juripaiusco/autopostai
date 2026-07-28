@@ -10,3 +10,4 @@ _config.sh
 .env*
 __pycache__/
 *.pyc
+.docker_image_hash
