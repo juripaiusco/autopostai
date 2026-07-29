@@ -61,42 +61,68 @@ test('hasSmtpCustomActive is false when a mailchimp/brevo list is configured ins
     expect($user->hasSmtpCustomActive())->toBeFalse();
 });
 
-test('contacts route is blocked and hidden from sidebar when smtp custom is not active', function () {
-    $user = User::factory()->create(['parent_id' => null, 'child_on' => 1]);
+test('plain user cannot reach contacts even with their own smtp custom active', function () {
+    $manager = User::factory()->create(['parent_id' => null]);
+    $plain = User::factory()->create(['parent_id' => $manager->id]);
+    Settings::factory()->create(['user_id' => $plain->id, 'nl_smtp_host' => 'smtp.test.it']);
+    withNewsletterChannel($plain, true);
 
-    $this->actingAs($user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
-        ->where('contactsEnabled', false)
-    );
-
-    $this->actingAs($user)->get(route('contacts'))->assertForbidden();
+    $this->actingAs($plain)->get(route('contacts'))->assertForbidden();
 });
 
-test('contacts route is reachable and shared prop is true when smtp custom is active', function () {
-    $user = User::factory()->create(['parent_id' => null]);
-    Settings::factory()->create(['user_id' => $user->id, 'nl_smtp_host' => 'smtp.test.it']);
-    withNewsletterChannel($user, true);
-
-    $this->actingAs($user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
-        ->where('contactsEnabled', true)
-    );
-
-    $this->actingAs($user)->get(route('contacts'))->assertOk();
-});
-
-test('admin scoped to a user with smtp custom active can reach contacts, scoped elsewhere cannot', function () {
+test('admin can always reach contacts, regardless of their own smtp custom setting', function () {
     $admin = User::factory()->create(['parent_id' => null]);
-    $enabled = User::factory()->create(['parent_id' => null]);
-    $disabled = User::factory()->create(['parent_id' => null]);
-    Settings::factory()->create(['user_id' => $enabled->id, 'nl_smtp_host' => 'smtp.test.it']);
-    withNewsletterChannel($enabled, true);
+
+    $this->actingAs($admin)->get(route('contacts'))->assertOk();
+});
+
+test('manager can always reach contacts, regardless of their own smtp custom setting', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $manager = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+
+    $this->actingAs($manager)->get(route('contacts'))->assertOk();
+});
+
+test('admin scoped to a user with smtp custom active can reach contacts', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $target = User::factory()->create(['parent_id' => null]);
+    Settings::factory()->create(['user_id' => $target->id, 'nl_smtp_host' => 'smtp.test.it']);
+    withNewsletterChannel($target, true);
 
     $this->actingAs($admin)
-        ->withSession(['scoped_user_id' => $enabled->id])
+        ->withSession(['scoped_user_id' => $target->id])
+        ->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->where('contactsEnabled', true));
+
+    $this->actingAs($admin)
+        ->withSession(['scoped_user_id' => $target->id])
         ->get(route('contacts'))
         ->assertOk();
+});
+
+test('admin scoped to a user using mailchimp/brevo cannot reach contacts', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $target = User::factory()->create(['parent_id' => null]);
+    Settings::factory()->create(['user_id' => $target->id, 'nl_mailchimp_api' => 'mc-key']);
+    withNewsletterChannel($target, true);
 
     $this->actingAs($admin)
-        ->withSession(['scoped_user_id' => $disabled->id])
+        ->withSession(['scoped_user_id' => $target->id])
+        ->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->where('contactsEnabled', false));
+
+    $this->actingAs($admin)
+        ->withSession(['scoped_user_id' => $target->id])
+        ->get(route('contacts'))
+        ->assertForbidden();
+});
+
+test('admin scoped to a user with no newsletter provider configured cannot reach contacts', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $target = User::factory()->create(['parent_id' => null]);
+
+    $this->actingAs($admin)
+        ->withSession(['scoped_user_id' => $target->id])
         ->get(route('contacts'))
         ->assertForbidden();
 });

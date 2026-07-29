@@ -10,18 +10,18 @@ use Inertia\Response;
 class ContactController extends Controller
 {
     /**
-     * Modulo visibile solo per gli account con provider newsletter smtp_custom
-     * attivo — stesso controllo usato per la voce sidebar (contactsEnabled in
-     * HandleInertiaRequests), ripetuto qui lato server per non essere
-     * raggiungibile via URL diretto quando nascosto in UI.
+     * Stesso controllo di User::canViewContacts() usato per la voce sidebar,
+     * ripetuto qui lato server per non essere raggiungibile via URL diretto
+     * quando nascosto in UI: ruolo admin/manager (come Account) + se c'è uno
+     * scope attivo su un utente specifico, quell'utente deve avere smtp_custom
+     * attivo (con Mailchimp/Brevo i contatti interni non hanno senso).
      */
     public function index(Request $request): Response
     {
         $me = $request->user();
         $scopedUserId = $me->resolveScopedUser($request->session()->get('scoped_user_id'))['id'] ?? null;
-        $contactsUser = $scopedUserId ? User::find($scopedUserId) : $me;
 
-        abort_unless($contactsUser?->hasSmtpCustomActive(), 403);
+        abort_unless($me->canViewContacts($scopedUserId), 403);
 
         return Inertia::render('Contacts/Index');
     }

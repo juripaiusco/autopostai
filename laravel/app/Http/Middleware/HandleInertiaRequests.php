@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,11 +38,6 @@ class HandleInertiaRequests extends Middleware
         $me = $request->user();
         $activeUser = $me?->resolveScopedUser($request->session()->get('scoped_user_id'));
 
-        // Modulo Contatti: riflette l'account attualmente visualizzato (scope
-        // attivo), non l'utente loggato — stesso concetto di channelsMeta()
-        // per il compose dei post.
-        $contactsUser = isset($activeUser['id']) ? User::find($activeUser['id']) : $me;
-
         return [
             ...parent::share($request),
             'auth' => [
@@ -57,7 +51,7 @@ class HandleInertiaRequests extends Middleware
             'filterableUsers' => $me?->filterableUsers() ?? [],
             'activeUserId' => $activeUser['id'] ?? null,
             'activeUser' => $activeUser,
-            'contactsEnabled' => $contactsUser?->hasSmtpCustomActive() ?? false,
+            'contactsEnabled' => $me?->canViewContacts($activeUser['id'] ?? null) ?? false,
             'app' => [
                 'version' => env('APP_VERSION', '0.0.0'),
                 'changelog_url' => env('APP_CHANGELOG_URL', '#'),
