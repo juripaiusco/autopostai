@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/Layout/PageHeader.vue';
@@ -113,6 +113,32 @@ function buildForm(account) {
 const form = reactive(buildForm(props.account));
 const dirty = ref(false);
 
+function syncServerState(acc) {
+    if (!acc) return;
+    form.openai.connected = acc.openai.connected;
+    form.meta.connected = acc.meta.connected;
+    Object.assign(form.linkedin, {
+        connected: acc.linkedin.connected,
+        tokenExpiresAt: acc.linkedin.tokenExpiresAt,
+        sharedWithCount: acc.linkedin.sharedWithCount,
+        availablePages: acc.linkedin.availablePages,
+        connectUrl: acc.linkedin.connectUrl,
+        pageUpdateUrl: acc.linkedin.pageUpdateUrl,
+    });
+    Object.assign(form.wordpress, {
+        connected: acc.wordpress.connected,
+        categories: acc.wordpress.categories,
+        categoriesUrl: acc.wordpress.categoriesUrl,
+    });
+    Object.assign(form.newsletter.mailchimp, { connected: acc.newsletter.mailchimp.connected, lists: acc.newsletter.mailchimp.lists });
+    Object.assign(form.newsletter.brevo,     { connected: acc.newsletter.brevo.connected,     lists: acc.newsletter.brevo.lists });
+    form.newsletter.smtp.connected = acc.newsletter.smtp.connected;
+    form.newsletter.listsUrl = acc.newsletter.listsUrl;
+    form.usage = acc.usage;
+}
+
+watch(() => props.account, syncServerState);
+
 function set(path, value) {
     const keys = path.split('.');
     let obj = form;
@@ -147,7 +173,7 @@ const completion = computed(() => {
         !!form.imagesDay,
         CHANNELS.some(c => form.channels[c.id].on),
         !!(form.ai.profile && form.ai.profile.length > 30),
-        !!form.openai.apiKey,
+        !!form.openai.connected,
         !!(form.meta.connected || form.linkedin.connected || form.wordpress.connected ||
            form.newsletter.mailchimp.connected || form.newsletter.brevo.connected || form.newsletter.smtp.connected),
     ];
