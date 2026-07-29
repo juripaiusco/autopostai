@@ -162,4 +162,16 @@ class User extends Authenticatable
             || $this->isAdmin()
             || ($this->isManager() && $target->parent_id === $this->id);
     }
+
+    /**
+     * Modulo Contatti (canale newsletter, provider SMTP custom) visibile solo
+     * se il canale è acceso in Account > Canali E il provider risolto per
+     * questo account è smtp_custom (nessuna lista esterna Mailchimp/Brevo).
+     */
+    public function hasSmtpCustomActive(): bool
+    {
+        $on = !empty(($this->channels['newsletter'] ?? [])['on'] ?? null);
+
+        return $on && $this->settings?->newsletterProvider() === 'smtp_custom';
+    }
 }

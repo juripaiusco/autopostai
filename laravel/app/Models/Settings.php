@@ -64,4 +64,26 @@ class Settings extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Provider newsletter attivo: "chi ha una API key impostata vince" (stessa
+     * regola di v1) — precedenza mailchimp > brevo > smtp custom (nessuna
+     * lista esterna, destinatari = contacts interni). Unica fonte di verità,
+     * usata sia da NewsletterController (fetch liste) sia dalla visibilità
+     * del modulo Contatti in sidebar.
+     */
+    public function newsletterProvider(): ?string
+    {
+        if (!empty($this->nl_mailchimp_api)) {
+            return 'mailchimp';
+        }
+        if (!empty($this->nl_brevo_api)) {
+            return 'brevo';
+        }
+        if (!empty($this->nl_smtp_host)) {
+            return 'smtp_custom';
+        }
+
+        return null;
+    }
 }

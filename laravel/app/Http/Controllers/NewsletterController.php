@@ -54,13 +54,7 @@ class NewsletterController extends Controller
 
     private function providerOf(?Settings $settings): ?string
     {
-        if (!empty($settings?->nl_mailchimp_api)) {
-            return 'mailchimp';
-        }
-        if (!empty($settings?->nl_brevo_api)) {
-            return 'brevo';
-        }
-        return null;
+        return $settings?->newsletterProvider();
     }
 
     /**

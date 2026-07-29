@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImageArchiveController;
 use App\Http\Controllers\LinkedInController;
@@ -101,6 +102,9 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])
         ->name('posts.destroy');
+
+    Route::get('/contatti', [ContactController::class, 'index'])
+        ->name('contacts');
 
     Route::post('/scope', [ScopeController::class, 'update'])
         ->name('scope.update');

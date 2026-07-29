@@ -21,12 +21,14 @@ const acctOpen = ref(false);
 // l'utente "semplice", quindi la voce Account ha senso solo per chi li gestisce.
 const isAdmin = computed(() => usePage().props.isAdmin);
 const isManager = computed(() => usePage().props.isManager);
+const contactsEnabled = computed(() => usePage().props.contactsEnabled);
 const roleLabel = computed(() => (isAdmin.value ? 'Amministratore' : isManager.value ? 'Manager' : 'Utente'));
 
 const allLinks = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', route: 'dashboard' },
     { id: 'account', label: 'Account', icon: 'users', route: 'account' },
     { id: 'posts', label: 'Posts', icon: 'chat', route: 'posts' },
+    { id: 'contacts', label: 'Contatti', icon: 'contacts', route: 'contacts' },
     { id: 'schedule', label: 'Calendarizza', icon: 'calendar', route: 'schedule' },
     { id: 'notifications', label: 'Notifiche', icon: 'bell', route: 'notifications' },
     { id: 'settings', label: 'Impostazioni', icon: 'settings', route: 'settings' },
@@ -34,6 +36,7 @@ const allLinks = [
 
 const links = computed(() => allLinks.filter((l) => {
     if (l.id === 'account' || l.id === 'notifications') return isAdmin.value || isManager.value;
+    if (l.id === 'contacts') return contactsEnabled.value;
     return true;
 }));
 
