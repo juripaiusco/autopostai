@@ -106,6 +106,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/contatti', [ContactController::class, 'index'])
         ->name('contacts');
 
+    Route::get('/contatti/crea', [ContactController::class, 'create'])
+        ->name('contacts.create');
+
+    Route::post('/contatti', [ContactController::class, 'store'])
+        ->name('contacts.store');
+
+    Route::get('/contatti/{contact}/modifica', [ContactController::class, 'edit'])
+        ->name('contacts.edit');
+
+    Route::put('/contatti/{contact}', [ContactController::class, 'update'])
+        ->name('contacts.update');
+
+    Route::delete('/contatti/{contact}', [ContactController::class, 'destroy'])
+        ->name('contacts.destroy');
+
     Route::post('/scope', [ScopeController::class, 'update'])
         ->name('scope.update');
 

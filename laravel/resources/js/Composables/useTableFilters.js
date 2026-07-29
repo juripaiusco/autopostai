@@ -20,12 +20,13 @@ export function useTableFilters({ routeName, filters, debounce = 350 }) {
     const search = ref(get().search);
 
     function reload(extra = {}) {
-        const f = get();
+        // Spread di tutti i filtri correnti come base (non solo filter/search/
+        // sort/dir): cosi' una pagina con filtri extra (es. Contatti: tag)
+        // li porta avanti automaticamente ad ogni reload senza doverli
+        // ripetere in ogni chiamata.
         router.get(route(routeName), {
-            filter: f.filter,
+            ...get(),
             search: search.value,
-            sort: f.sort,
-            dir: f.dir,
             ...extra,
         }, { preserveState: true, preserveScroll: true, replace: true });
     }
