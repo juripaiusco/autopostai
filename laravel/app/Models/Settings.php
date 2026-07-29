@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'user_id',
@@ -44,6 +45,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'nl_smtp_password',
     'nl_smtp_encryption',
     'nl_smtp_sender',
+    'contacts_api_key_hash',
+    'contacts_api_key_last_four',
+    'contacts_api_key_created_at',
 ])]
 class Settings extends Model
 {
@@ -57,6 +61,7 @@ class Settings extends Model
             'wordpress_options' => 'array',
             'nl_mailchimp_options' => 'array',
             'nl_brevo_options' => 'array',
+            'contacts_api_key_created_at' => 'datetime',
         ];
     }
 
@@ -85,5 +90,24 @@ class Settings extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Genera una nuova API key per la registrazione contatti server-to-server
+     * (Step 5): si salva solo l'hash (stesso principio di Sanctum), il
+     * plaintext ritornato qui è l'unica volta in cui è leggibile — va
+     * mostrato una tantum a chi configura il sistema esterno.
+     */
+    public function generateContactsApiKey(): string
+    {
+        $plaintext = Str::random(40);
+
+        $this->update([
+            'contacts_api_key_hash' => hash('sha256', $plaintext),
+            'contacts_api_key_last_four' => substr($plaintext, -4),
+            'contacts_api_key_created_at' => now(),
+        ]);
+
+        return $plaintext;
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ContactsApiKeyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImageArchiveController;
 use App\Http\Controllers\LinkedInController;
@@ -60,6 +61,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/account/{user}/newsletter/liste', [NewsletterController::class, 'fetchLists'])
         ->name('newsletter.lists');
+
+    Route::post('/account/{user}/contatti/api-key', [ContactsApiKeyController::class, 'regenerate'])
+        ->name('contacts.api-key.regenerate');
 
     Route::get('/posts/canali/{user}/wordpress-categorie', [WordPressController::class, 'categoriesForPost'])
         ->name('posts.wordpress-categories');

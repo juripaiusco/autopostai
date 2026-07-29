@@ -186,6 +186,10 @@ class AccountController extends Controller
             ? $pendingLinkedinPages['pages']
             : [];
 
+        // Stesso pattern one-shot: la API key contatti si vede in chiaro solo
+        // nella risposta immediata alla (ri)generazione (ContactsApiKeyController).
+        $plaintextApiKey = $request->session()->get('contacts_api_key_plaintext');
+
         // Quanti altri account condividono la stessa app LinkedIn (client_id +
         // secret): un refresh del token qui si propaga a tutti loro (voluto).
         $linkedinSharedWithCount = 0;
@@ -265,6 +269,13 @@ class AccountController extends Controller
                     'cta'       => $s->nl_template_cta ?? '',
                 ],
                 'listsUrl'      => route('newsletter.lists', $user),
+            ],
+            'contactsApi'   => [
+                'active'        => $user->hasSmtpCustomActive(),
+                'lastFour'      => $s?->contacts_api_key_last_four,
+                'createdAt'     => $s?->contacts_api_key_created_at?->diffForHumans(),
+                'plaintext'     => $plaintextApiKey,
+                'regenerateUrl' => route('contacts.api-key.regenerate', $user),
             ],
             'updatedAt' => $user->updated_at?->diffForHumans() ?? '—',
             'createdBy' => $me->name,

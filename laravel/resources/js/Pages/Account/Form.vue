@@ -255,6 +255,10 @@ function fetchNewsletterLists() {
     router.post(form.newsletter.listsUrl, {}, { preserveScroll: true });
 }
 
+function regenerateApiKey() {
+    router.post(props.account.contactsApi.regenerateUrl, {}, { preserveScroll: true });
+}
+
 /* ------------------------------------------------------------------ */
 /* Connection state helpers                                             */
 /* ------------------------------------------------------------------ */
@@ -495,6 +499,29 @@ function goToIntegration(chId) {
                                 @fetch-lists="fetchNewsletterLists" />
                         </div>
                     </div>
+                </SectionCard>
+
+                <SectionCard v-if="activeIntg === 'newsletter' && mode === 'edit' && account?.contactsApi?.active"
+                    title="API contatti" subtitle="Chiave per registrare contatti da un sistema esterno via API (server-to-server)."
+                    style="margin-top: 16px">
+                    <div v-if="account.contactsApi.plaintext" class="acc-hint-inline" style="margin-bottom: 12px; align-items: flex-start">
+                        <Icon name="key" :size="14" />
+                        <span>
+                            <b style="display: block; color: var(--g700)">Copiala ora: non sarà più mostrata in chiaro.</b>
+                            <code style="user-select: all">{{ account.contactsApi.plaintext }}</code>
+                        </span>
+                    </div>
+                    <div v-else-if="account.contactsApi.lastFour" class="acc-hint-inline" style="margin-bottom: 12px">
+                        <Icon name="key" :size="14" />
+                        Chiave attiva, termina con <b>{{ account.contactsApi.lastFour }}</b><span v-if="account.contactsApi.createdAt"> — generata {{ account.contactsApi.createdAt }}</span>.
+                    </div>
+                    <div v-else class="acc-hint-inline" style="margin-bottom: 12px">
+                        <Icon name="info" :size="14" />Nessuna chiave generata ancora.
+                    </div>
+
+                    <button type="button" class="btn btn-secondary btn-sm" @click="regenerateApiKey">
+                        {{ account.contactsApi.lastFour ? 'Rigenera chiave' : 'Genera chiave' }}
+                    </button>
                 </SectionCard>
             </div>
         </div>
