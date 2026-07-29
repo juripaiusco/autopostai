@@ -61,10 +61,34 @@ test('hasSmtpCustomActive is false when a mailchimp/brevo list is configured ins
     expect($user->hasSmtpCustomActive())->toBeFalse();
 });
 
-test('plain user cannot reach contacts even with their own smtp custom active', function () {
+test('plain user can reach contacts when their own smtp custom is active', function () {
     $manager = User::factory()->create(['parent_id' => null]);
     $plain = User::factory()->create(['parent_id' => $manager->id]);
     Settings::factory()->create(['user_id' => $plain->id, 'nl_smtp_host' => 'smtp.test.it']);
+    withNewsletterChannel($plain, true);
+
+    $this->actingAs($plain)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
+        ->where('contactsEnabled', true)
+    );
+
+    $this->actingAs($plain)->get(route('contacts'))->assertOk();
+});
+
+test('plain user cannot reach contacts without their own smtp custom active', function () {
+    $manager = User::factory()->create(['parent_id' => null]);
+    $plain = User::factory()->create(['parent_id' => $manager->id]);
+
+    $this->actingAs($plain)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
+        ->where('contactsEnabled', false)
+    );
+
+    $this->actingAs($plain)->get(route('contacts'))->assertForbidden();
+});
+
+test('plain user cannot reach contacts when only mailchimp/brevo is configured for them', function () {
+    $manager = User::factory()->create(['parent_id' => null]);
+    $plain = User::factory()->create(['parent_id' => $manager->id]);
+    Settings::factory()->create(['user_id' => $plain->id, 'nl_brevo_api' => 'brevo-key']);
     withNewsletterChannel($plain, true);
 
     $this->actingAs($plain)->get(route('contacts'))->assertForbidden();

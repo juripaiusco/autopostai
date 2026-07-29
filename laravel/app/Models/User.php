@@ -176,24 +176,25 @@ class User extends Authenticatable
     }
 
     /**
-     * Visibilità del modulo Contatti: stesso permesso di ruolo di Account
-     * (admin o manager — un utente semplice non configura mai da sé i canali).
-     * In più, se c'è uno scope attivo su un utente specifico, quell'utente
-     * deve avere smtp_custom attivo: con Mailchimp/Brevo i destinatari sono
-     * la lista esterna, non i contatti interni, quindi la sezione non ha
-     * senso. In "vista generale" (nessuno scope) resta visibile per il ruolo,
-     * come Account, senza controllare nessun account specifico.
+     * Visibilità del modulo Contatti. Admin/manager: come Account, sempre
+     * visibile in "vista generale" (nessuno scope); se c'è uno scope attivo
+     * su un utente specifico, quell'utente deve avere smtp_custom attivo —
+     * con Mailchimp/Brevo i destinatari sono la lista esterna, non i
+     * contatti interni, quindi la sezione non ha senso. Utente semplice
+     * (nessuno scope possibile): visibile se il SUO account ha smtp_custom
+     * attivo — è lui il proprietario dei contatti anche se le credenziali
+     * SMTP gliele ha configurate l'admin/manager per suo conto.
      */
     public function canViewContacts(?int $scopedUserId = null): bool
     {
-        if (!($this->isAdmin() || $this->isManager())) {
-            return false;
+        if ($this->isAdmin() || $this->isManager()) {
+            if ($scopedUserId === null) {
+                return true;
+            }
+
+            return static::find($scopedUserId)?->hasSmtpCustomActive() ?? false;
         }
 
-        if ($scopedUserId === null) {
-            return true;
-        }
-
-        return static::find($scopedUserId)?->hasSmtpCustomActive() ?? false;
+        return $this->hasSmtpCustomActive();
     }
 }
