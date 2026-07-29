@@ -284,6 +284,7 @@ class AccountController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        $me = $request->user();
         $this->authorize('update', $user);
 
         $data = $request->validate([
@@ -307,6 +308,22 @@ class AccountController extends Controller
         $user->child_max = $canSubusers ? ($request->input('subusersLimit') ?: null) : null;
         $user->tokens_limit = $request->input('tokensMonth') ?: null;
         $user->image_model_limit = $request->input('imagesDay') ?: null;
+
+        // "Manager assegnato": stesso bug, mai letto dal controller. Solo
+        // l'admin può riassegnare (un manager può editare solo i propri figli,
+        // non spostarli altrove), e solo verso un manager/admin valido — mai
+        // a vuoto, altrimenti parent_id=null renderebbe l'account admin
+        // (isAdmin() lo deduce da parent_id===null).
+        if ($me->isAdmin() && !$canSubusers) {
+            $managerId = $request->input('manager');
+            if ($managerId !== null && $managerId !== '') {
+                $newParent = User::where(fn ($q) => $q->whereNull('parent_id')->orWhere('child_on', 1))
+                    ->where('id', '!=', $user->id)
+                    ->find($managerId);
+                abort_if(!$newParent, 422, 'Manager non valido.');
+                $user->parent_id = $newParent->id;
+            }
+        }
 
         $incoming = $request->input('channels', []);
         $channels = $user->channels ?? [];

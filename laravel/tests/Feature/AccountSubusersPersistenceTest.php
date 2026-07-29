@@ -57,3 +57,63 @@ test('updating an account to check canSubusers persists child_on, unchecking cle
     expect($child->child_on)->toBeNull();
     expect($child->isManager())->toBeFalse();
 });
+
+test('admin reassigning the manager dropdown persists the new parent_id', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $managerA = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+    $managerB = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+    $plain = User::factory()->create(['parent_id' => $managerA->id]);
+
+    $this->actingAs($admin)->put(route('account.update', $plain), [
+        'name' => $plain->name,
+        'email' => $plain->email,
+        'canSubusers' => false,
+        'manager' => (string) $managerB->id,
+    ])->assertRedirect();
+
+    expect($plain->fresh()->parent_id)->toBe($managerB->id);
+});
+
+test('manager cannot reassign the manager dropdown for their own child', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $managerA = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+    $managerB = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+    $plain = User::factory()->create(['parent_id' => $managerA->id]);
+
+    $this->actingAs($managerA)->put(route('account.update', $plain), [
+        'name' => $plain->name,
+        'email' => $plain->email,
+        'canSubusers' => false,
+        'manager' => (string) $managerB->id,
+    ])->assertRedirect();
+
+    expect($plain->fresh()->parent_id)->toBe($managerA->id);
+});
+
+test('an empty manager selection never nulls parent_id (would otherwise promote to admin)', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $managerA = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
+    $plain = User::factory()->create(['parent_id' => $managerA->id]);
+
+    $this->actingAs($admin)->put(route('account.update', $plain), [
+        'name' => $plain->name,
+        'email' => $plain->email,
+        'canSubusers' => false,
+        'manager' => '',
+    ])->assertRedirect();
+
+    expect($plain->fresh()->parent_id)->toBe($managerA->id);
+});
+
+test('an invalid manager id is rejected', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $plain = User::factory()->create(['parent_id' => $admin->id]);
+    $unrelatedPlain = User::factory()->create(['parent_id' => $admin->id]);
+
+    $this->actingAs($admin)->put(route('account.update', $plain), [
+        'name' => $plain->name,
+        'email' => $plain->email,
+        'canSubusers' => false,
+        'manager' => (string) $unrelatedPlain->id,
+    ])->assertStatus(422);
+});
