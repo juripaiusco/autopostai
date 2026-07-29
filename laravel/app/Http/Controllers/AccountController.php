@@ -133,12 +133,18 @@ class AccountController extends Controller
             'password' => ['required', 'string', 'min:8'],
         ]);
 
+        $canSubusers = $request->boolean('canSubusers');
+
         User::create([
             'name'      => $data['name'],
             'email'     => $data['email'],
             'password'  => bcrypt($data['password']),
             'parent_id' => $me->id,
             'channels'  => $request->input('channels', []),
+            'child_on'  => $canSubusers ? 1 : null,
+            'child_max' => $canSubusers ? ($request->input('subusersLimit') ?: null) : null,
+            'tokens_limit' => $request->input('tokensMonth') ?: null,
+            'image_model_limit' => $request->input('imagesDay') ?: null,
         ]);
 
         return redirect()->route('account');
@@ -291,6 +297,16 @@ class AccountController extends Controller
         if (!empty($request->input('password'))) {
             $user->password = bcrypt($request->input('password'));
         }
+
+        // "L'account può creare sotto-utenti": prima di questo fix canSubusers/
+        // subusersLimit/tokensMonth/imagesDay non venivano mai letti dal
+        // controller e restavano non salvati (child_on/child_max/tokens_limit/
+        // image_model_limit invariati).
+        $canSubusers = $request->boolean('canSubusers');
+        $user->child_on = $canSubusers ? 1 : null;
+        $user->child_max = $canSubusers ? ($request->input('subusersLimit') ?: null) : null;
+        $user->tokens_limit = $request->input('tokensMonth') ?: null;
+        $user->image_model_limit = $request->input('imagesDay') ?: null;
 
         $incoming = $request->input('channels', []);
         $channels = $user->channels ?? [];
