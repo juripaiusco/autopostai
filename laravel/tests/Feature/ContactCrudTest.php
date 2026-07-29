@@ -22,15 +22,29 @@ function makeSmtpCustomAccount(User $parent): User
     return $account->fresh();
 }
 
-test('create shows only accounts with smtp custom active as eligible', function () {
+test('create shows only accounts with smtp custom active as eligible, even when there is just one', function () {
     $admin = User::factory()->create(['parent_id' => null]);
     $eligible = makeSmtpCustomAccount($admin);
     $ineligible = User::factory()->create(['parent_id' => $admin->id]);
 
+    // Il picker (come in Post::create) deve comparire anche con un solo
+    // account eligibile: niente soglia "> 1" che lo nasconderebbe.
     $this->actingAs($admin)->get(route('contacts.create'))->assertInertia(fn (Assert $page) => $page
         ->component('Contacts/Form')
         ->has('accounts', 1)
         ->where('accounts.0.id', $eligible->id)
+        ->where('defaultUserId', $eligible->id)
+    );
+});
+
+test('create gives a plain user no account picker, defaulting to themselves', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $account = makeSmtpCustomAccount($admin);
+
+    $this->actingAs($account)->get(route('contacts.create'))->assertInertia(fn (Assert $page) => $page
+        ->component('Contacts/Form')
+        ->has('accounts', 0)
+        ->where('defaultUserId', $account->id)
     );
 });
 

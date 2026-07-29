@@ -97,7 +97,7 @@ function save() {
         </template>
 
         <div class="acc-content" style="max-width: 40rem">
-            <SectionCard v-if="mode === 'create' && accounts.length > 1" title="Account" subtitle="A quale account appartiene questo contatto.">
+            <SectionCard v-if="mode === 'create' && accounts.length > 0" title="Account" subtitle="A quale account appartiene questo contatto.">
                 <div class="acc-field pf-combobox" style="margin-bottom: 0">
                     <label class="acc-row-label" for="ct-account">Account</label>
                     <Combobox :model-value="selectedAccount" @update:model-value="(a) => (form.user_id = a?.id ?? null)">

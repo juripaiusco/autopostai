@@ -98,19 +98,27 @@ class ContactController extends Controller
 
         abort_unless($me->canViewContacts($scopedUserId), 403);
 
-        $accounts = $this->eligibleAccounts($me)->map(fn (User $u) => [
-            'id' => $u->id,
-            'name' => $u->name,
-            'email' => $u->email,
-            'tags' => ContactTag::where('user_id', $u->id)->orderBy('name')->pluck('name'),
-        ])->values();
+        // Il selettore account (come in Post::create) ha senso solo per chi
+        // gestisce contatti per conto di altri (admin/manager). Un utente
+        // semplice gestisce solo sé stesso: nessuna scelta da fare.
+        $isOrchestrator = $me->isAdmin() || $me->isManager();
+        $accounts = collect();
 
-        abort_if($accounts->isEmpty(), 422, 'Nessun account con SMTP custom attivo su cui creare contatti.');
+        if ($isOrchestrator) {
+            $accounts = $this->eligibleAccounts($me)->map(fn (User $u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'tags' => ContactTag::where('user_id', $u->id)->orderBy('name')->pluck('name'),
+            ])->values();
+
+            abort_if($accounts->isEmpty(), 422, 'Nessun account con SMTP custom attivo su cui creare contatti.');
+        }
 
         return Inertia::render('Contacts/Form', [
             'mode' => 'create',
             'accounts' => $accounts,
-            'defaultUserId' => $scopedUserId ?? $accounts->first()['id'],
+            'defaultUserId' => $scopedUserId ?? ($isOrchestrator ? $accounts->first()['id'] : $me->id),
             'contact' => null,
         ]);
     }
