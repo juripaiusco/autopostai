@@ -77,41 +77,55 @@ def _process_one(post, post_repo, contact_repo, token_repo, content_service, now
     sent = 0
     bounced = 0
     for contact in contacts:
-        contact_html = _inject_unsubscribe(html, contact["id"])
+        # La riga va creata PRIMA di inviare: il pixel di tracking apertura
+        # (Step 8) dentro l'html porta l'id di questa riga, quindi deve
+        # esistere gia' quando l'email parte.
+        send_id = contact_repo.create_placeholder(contact["id"], post["id"], now)
+        contact_html = _finalize_html(html, contact["id"], send_id)
         try:
             if not config.DRY_RUN:
                 client.send(contact["email"], subject, contact_html, post["nl_smtp_sender"], post["nl_smtp_username"])
-            contact_repo.record_send(contact["id"], post["id"], "sent", now)
+            contact_repo.mark_sent(send_id, now)
             sent += 1
         except Exception as e:  # noqa: BLE001 — un bounce non deve bloccare gli altri contatti
-            contact_repo.record_send(contact["id"], post["id"], "bounced", now, error_message=str(e))
-            contact_repo.mark_bounced(contact["id"])
+            contact_repo.mark_send_bounced(send_id, contact["id"], now, str(e))
             bounced += 1
 
     log.info("newsletter_send: post %s - batch inviato (%d ok, %d bounce)", post["id"], sent, bounced)
 
-    if not entry.already_published:
+    # Step 8: l'aggregato in channels.newsletter.stats si ricalcola ad ogni
+    # batch (non solo al primo) — stessa struttura/naming per ogni provider
+    # newsletter, cosi' il frontend che gia' legge channels non ha bisogno di
+    # logica dedicata. entry.data e' lo stesso dict di channels_dict['newsletter']
+    # (riferimento, non copia): set_result() qui sotto si riflette in entrambi.
+    first_batch = not entry.already_published
+    if first_batch:
         entry.set_result(f"smtp-{post['id']}", None)
-        post_repo.save_channels(post["id"], channels.to_dict())
-        if channels.all_on_published():
-            post_repo.mark_published(post["id"])
-            log.info("newsletter_send: post %s pubblicato (primo batch inviato)", post["id"])
+
+    channels_dict = channels.to_dict()
+    channels_dict["newsletter"]["stats"] = contact_repo.stats_for_post(post["id"])
+    post_repo.save_channels(post["id"], channels_dict)
+
+    if first_batch and channels.all_on_published():
+        post_repo.mark_published(post["id"])
+        log.info("newsletter_send: post %s pubblicato (primo batch inviato)", post["id"])
 
 
-def _inject_unsubscribe(html: str, contact_id: int) -> str:
-    """Link firmato per-contatto (Step 7): sostituisce il token [unsubscribe]
-    se il template account lo usa, altrimenti aggiunge un footer minimo di
-    default — l'unsubscribe non deve dipendere dal fatto che l'utente ricordi
-    di inserire il token nel proprio template."""
+def _finalize_html(html: str, contact_id: int, send_id: int) -> str:
+    """Link di disiscrizione per-contatto (Step 7) + pixel di tracking
+    apertura per-invio (Step 8), entrambi aggiunti allo stesso html condiviso
+    del batch prima di spedirlo a QUESTO contatto."""
     url = unsubscribe_url(contact_id)
     if "[unsubscribe]" in html:
-        return html.replace("[unsubscribe]", url)
+        html = html.replace("[unsubscribe]", url)
+    else:
+        html += (
+            '<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:24px">'
+            f'<a href="{url}" style="color:#9ca3af">Disiscriviti</a></p>'
+        )
 
-    footer = (
-        '<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:24px">'
-        f'<a href="{url}" style="color:#9ca3af">Disiscriviti</a></p>'
-    )
-    return html + footer
+    pixel = f'<img src="{config.APP_URL}/pixel/{send_id}.gif" width="1" height="1" alt="" style="display:none">'
+    return html + pixel
 
 
 def _url_resolver(post_repo: PostRepository, requesting_user_id: int):

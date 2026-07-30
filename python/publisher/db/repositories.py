@@ -569,36 +569,41 @@ class ContactRepository:
 
         return [dict(r) for r in rows]
 
-    def has_any_sends(self, post_id: int) -> bool:
+    def create_placeholder(self, contact_id: int, post_id: int, now: str) -> int:
+        """Riserva la riga (status='queued') PRIMA di inviare: serve l'id per
+        comporre il pixel di tracking apertura (Step 8) dentro l'html, quindi
+        l'id deve esistere prima che l'invio parta, non dopo."""
         email_sends = config.table("email_sends")
-        row = self.conn.execute(
-            text(f"SELECT 1 FROM {email_sends} WHERE post_id = :post_id LIMIT 1"),
-            {"post_id": post_id},
-        ).first()
-        return row is not None
+        return self.conn.execute(
+            text(
+                f"""
+                INSERT INTO {email_sends} (contact_id, post_id, status, created_at, updated_at)
+                VALUES (:contact_id, :post_id, 'queued', :now, :now)
+                """
+            ),
+            {"contact_id": contact_id, "post_id": post_id, "now": now},
+        ).lastrowid
 
-    def record_send(self, contact_id: int, post_id: int, status: str, now: str, error_message: str | None = None) -> None:
+    def mark_sent(self, send_id: int, now: str) -> None:
         email_sends = config.table("email_sends")
-        sent_at = now if status == "sent" else None
-        bounced_at = now if status == "bounced" else None
+        self.conn.execute(
+            text(f"UPDATE {email_sends} SET status = 'sent', sent_at = :now WHERE id = :id"),
+            {"now": now, "id": send_id},
+        )
+
+    def mark_send_bounced(self, send_id: int, contact_id: int, now: str, error_message: str) -> None:
+        email_sends = config.table("email_sends")
         self.conn.execute(
             text(
                 f"""
-                INSERT INTO {email_sends}
-                    (contact_id, post_id, status, sent_at, bounced_at, error_message, created_at, updated_at)
-                VALUES (:contact_id, :post_id, :status, :sent_at, :bounced_at, :error_message, :now, :now)
+                UPDATE {email_sends}
+                SET status = 'bounced', bounced_at = :now, error_message = :error_message
+                WHERE id = :id
                 """
             ),
-            {
-                "contact_id": contact_id,
-                "post_id": post_id,
-                "status": status,
-                "sent_at": sent_at,
-                "bounced_at": bounced_at,
-                "error_message": error_message,
-                "now": now,
-            },
+            {"now": now, "id": send_id, "error_message": error_message},
         )
+        self.mark_bounced(contact_id)
 
     def mark_bounced(self, contact_id: int) -> None:
         contacts = config.table("contacts")
@@ -606,3 +611,15 @@ class ContactRepository:
             text(f"UPDATE {contacts} SET status = 'bounced' WHERE id = :id"),
             {"id": contact_id},
         )
+
+    def stats_for_post(self, post_id: int) -> dict:
+        """Conteggio per stato degli invii di un post — scritto in
+        channels.newsletter.stats da newsletter_send.py (Step 8). Bucket per
+        stato (non cumulativo): un invio compare in una sola voce alla volta."""
+        email_sends = config.table("email_sends")
+        rows = self.conn.execute(
+            text(f"SELECT status, COUNT(*) AS n FROM {email_sends} WHERE post_id = :post_id GROUP BY status"),
+            {"post_id": post_id},
+        ).mappings().all()
+        counts = {r["status"]: r["n"] for r in rows}
+        return {s: int(counts.get(s, 0)) for s in ("queued", "sent", "delivered", "opened", "clicked", "bounced")}

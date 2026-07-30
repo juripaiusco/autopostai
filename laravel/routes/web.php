@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContactsApiKeyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmailTrackingController;
 use App\Http\Controllers\ImageArchiveController;
 use App\Http\Controllers\LinkedInController;
 use App\Http\Controllers\NewsletterController;
@@ -178,3 +179,8 @@ Route::middleware('auth')->group(function () {
 Route::get('/disiscrivi/{contact}', [UnsubscribeController::class, 'show'])
     ->middleware('signed')
     ->name('newsletter.unsubscribe');
+
+// Pixel di tracking apertura (Step 8): pubblica come sopra, ma senza firma —
+// un id indovinato marca al più un "aperto" falso, nessuna azione distruttiva.
+Route::get('/pixel/{emailSend}.gif', [EmailTrackingController::class, 'pixel'])
+    ->name('newsletter.pixel');

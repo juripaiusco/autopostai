@@ -1,11 +1,14 @@
-"""Unit test del link di disiscrizione (Step 7): HMAC + iniezione nel corpo email."""
+"""Unit test del link di disiscrizione (Step 7): solo HMAC/URL.
+
+L'iniezione nell'html (insieme al pixel di tracking, Step 8) e' in
+test_newsletter_html_finalization.py.
+"""
 
 import hashlib
 import hmac
 
 from publisher import config
 from publisher.integrations.unsubscribe import unsubscribe_url
-from publisher.tasks.newsletter_send import _inject_unsubscribe
 
 
 def test_unsubscribe_url_matches_laravel_signed_route_algorithm(monkeypatch):
@@ -31,20 +34,3 @@ def test_unsubscribe_url_is_a_valid_hmac_for_any_key(monkeypatch):
     expected = hmac.new(b"base64:whatever==", base.encode(), hashlib.sha256).hexdigest()
 
     assert url == f"{base}?signature={expected}"
-
-
-def test_inject_unsubscribe_replaces_the_token_when_present():
-    html = "<html><body>Ciao [unsubscribe] mondo</body></html>"
-    result = _inject_unsubscribe(html, 7)
-
-    assert "[unsubscribe]" not in result
-    assert "/disiscrivi/7?signature=" in result
-
-
-def test_inject_unsubscribe_appends_a_default_footer_when_token_missing():
-    html = "<html><body>Nessun token qui</body></html>"
-    result = _inject_unsubscribe(html, 7)
-
-    assert result.startswith(html)
-    assert "/disiscrivi/7?signature=" in result
-    assert "Disiscriviti" in result

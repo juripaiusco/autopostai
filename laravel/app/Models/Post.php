@@ -71,6 +71,37 @@ class Post extends Model
             ->where('type', 'post');
     }
 
+    public function emailSends(): HasMany
+    {
+        return $this->hasMany(EmailSend::class);
+    }
+
+    /**
+     * Ricalcola channels.newsletter.stats dai conteggi per stato in
+     * email_sends (Step 8) — stessa struttura scritta anche da
+     * publisher/tasks/newsletter_send.py (Python), che possiede il resto del
+     * canale (id/provider/queued_at): qui si tocca solo la sotto-chiave
+     * 'stats', gli altri campi restano quelli che Python ha già scritto.
+     */
+    public function refreshNewsletterStats(): void
+    {
+        $channels = $this->channels ?? [];
+        if (!isset($channels['newsletter'])) {
+            return;
+        }
+
+        $counts = $this->emailSends()
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $channels['newsletter']['stats'] = collect(['queued', 'sent', 'delivered', 'opened', 'clicked', 'bounced'])
+            ->mapWithKeys(fn ($status) => [$status => (int) ($counts[$status] ?? 0)])
+            ->all();
+
+        $this->update(['channels' => $channels]);
+    }
+
     public function status(): string
     {
         if ($this->published == '1') {
