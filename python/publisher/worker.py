@@ -20,6 +20,7 @@ from publisher import cli_output, config
 from publisher.db.engine import connection
 from publisher.tasks import (
     comments_get,
+    newsletter_send,
     posts_delete,
     posts_send,
     posts_update,
@@ -27,9 +28,10 @@ from publisher.tasks import (
     task_complete,
 )
 
-# Ordine identico a v1 main.py.
+# Ordine identico a v1 main.py, + newsletter_send (v2, non ha equivalente v1).
 TASKS = [
     ("posts_send", posts_send.run),
+    ("newsletter_send", newsletter_send.run),
     ("comments_get", comments_get.run),
     ("reply_send", reply_send.run),
     ("task_complete", task_complete.run),

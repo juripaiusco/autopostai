@@ -14,6 +14,12 @@ class NewsletterPublisher(ChannelPublisher):
     Il provider e la lista arrivano dal canale (`newsletter.list.provider/id`);
     se manca la lista si usa il default dell'account. Template e CTA sono unificati
     a livello account (`nl_template` / `nl_template_cta`).
+
+    smtp_custom NON passa da publish() (una singola chiamata = un id, non
+    adatto a un invio spalmato su piu' contatti/run): publisher/tasks/
+    newsletter_send.py usa solo render() per ottenere oggetto/html, poi manda
+    da se' via SmtpClient — vedi domain/channels.py: ChannelEntry.needs_publish
+    esclude esplicitamente smtp_custom dal ciclo generico.
     """
 
     key = "newsletter"
@@ -40,9 +46,15 @@ class NewsletterPublisher(ChannelPublisher):
         resolver = self.url_resolver or (lambda *_: "")
         return shortcodes.parse_cta(html, self.post.get("nl_template_cta") or "", resolver)
 
-    def publish(self, content: str) -> PublishResult:
+    def render(self, content: str) -> tuple[str, str]:
+        """Oggetto + html pronti (template account, immagine, CTA espansa).
+        Punto di ingresso condiviso fra publish() (mailchimp/brevo) e
+        newsletter_send.py (smtp_custom)."""
         subject, body = split_markdown(content)
-        html = self._assemble_html(body)
+        return subject, self._assemble_html(body)
+
+    def publish(self, content: str) -> PublishResult:
+        subject, html = self.render(content)
 
         entry = Channels.parse(self.post["channels"]).entry("newsletter")
         provider = (entry.newsletter_provider() if entry else None) or self._infer_provider()

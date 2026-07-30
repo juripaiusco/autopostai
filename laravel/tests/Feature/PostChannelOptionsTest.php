@@ -150,6 +150,25 @@ class PostChannelOptionsTest extends TestCase
         $this->assertSame(10, $post->fresh()->channels['facebook']['reply_n']);
     }
 
+    public function test_storing_a_post_for_an_smtp_custom_account_writes_provider_without_a_list(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create([
+            'parent_id' => $admin->id,
+            'channels' => ['newsletter' => ['on' => true]],
+        ]);
+        \App\Models\Settings::factory()->create(['user_id' => $user->id, 'nl_smtp_host' => 'smtp.test.it']);
+
+        $this->actingAs($user)->post(route('posts.store'), [
+            'channels' => ['newsletter' => []],
+            'action' => 'save',
+        ])->assertRedirect(route('posts'));
+
+        $post = Post::latest('id')->firstOrFail();
+
+        $this->assertSame(['on' => true, 'provider' => 'smtp_custom'], $post->channels['newsletter']);
+    }
+
     public function test_unknown_channel_key_is_rejected(): void
     {
         $admin = User::factory()->create(['parent_id' => null]);

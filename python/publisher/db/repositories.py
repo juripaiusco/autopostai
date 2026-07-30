@@ -76,6 +76,54 @@ class PostRepository:
 
         return [dict(r) for r in rows]
 
+    def due_smtp_custom_posts(self, now: str) -> list[dict]:
+        """Post con newsletter smtp_custom accesa, dovuti alla pubblicazione.
+
+        A differenza di due_posts(): niente filtro su `published` — un invio
+        smtp_custom si spalma su piu' run (batch da 4 contatti a tick,
+        publisher/tasks/newsletter_send.py), quindi va ripescato anche dopo
+        che il post e' gia' stato marcato pubblicato (primo batch inviato).
+        Il task si ferma da solo quando non restano piu' contatti da servire.
+        """
+        posts = config.table("posts")
+        settings = config.table("settings")
+
+        rows = self.conn.execute(
+            text(
+                f"""
+                SELECT  p.id                  AS id,
+                        p.user_id             AS user_id,
+                        p.title                AS title,
+                        p.ai_prompt_post       AS ai_prompt_post,
+                        p.ai_content           AS ai_content,
+                        p.img                  AS img,
+                        p.img_ai_check_on      AS img_ai_check_on,
+                        p.channels             AS channels,
+                        s.ai_personality       AS ai_personality,
+                        s.ai_prompt_prefix     AS ai_prompt_prefix,
+                        s.openai_api_key       AS openai_api_key,
+                        s.nl_template          AS nl_template,
+                        s.nl_template_cta      AS nl_template_cta,
+                        s.nl_smtp_host         AS nl_smtp_host,
+                        s.nl_smtp_port         AS nl_smtp_port,
+                        s.nl_smtp_username     AS nl_smtp_username,
+                        s.nl_smtp_password     AS nl_smtp_password,
+                        s.nl_smtp_encryption   AS nl_smtp_encryption,
+                        s.nl_smtp_sender       AS nl_smtp_sender
+                    FROM {posts} p
+                    INNER JOIN {settings} s ON s.user_id = p.user_id
+                WHERE p.preview = 0
+                    AND p.published_at <= :now
+                    AND p.deleted_at IS NULL
+                    AND JSON_EXTRACT(p.channels, '$.newsletter.on') = true
+                    AND JSON_UNQUOTE(JSON_EXTRACT(p.channels, '$.newsletter.provider')) = 'smtp_custom'
+                """
+            ),
+            {"now": now},
+        ).mappings().all()
+
+        return [dict(r) for r in rows]
+
     def channels_of(self, post_id: int) -> dict | None:
         """Solo il JSON channels di un post (per la risoluzione degli shortcode url)."""
         posts = config.table("posts")
@@ -479,4 +527,82 @@ class PushNotificationRepository:
                 """
             ),
             {"uid": user_id, "title": title, "body": "Post inviato", "url": url, "now": now},
+        )
+
+
+class ContactRepository:
+    """Contatti newsletter (smtp_custom) e il relativo log invii (email_sends)."""
+
+    def __init__(self, conn: Connection):
+        self.conn = conn
+
+    def sendable_for_post(self, user_id: int, post_id: int, limit: int) -> list[dict]:
+        """Contatti attivi, non in suppression list, non ancora processati per
+        QUESTO post (nessuna riga email_sends esistente) — i piu' vecchi prima,
+        cosi' un batch limitato avanza sempre sui prossimi al giro successivo."""
+        contacts = config.table("contacts")
+        suppression = config.table("suppression_list")
+        email_sends = config.table("email_sends")
+
+        rows = self.conn.execute(
+            text(
+                f"""
+                SELECT c.id AS id, c.email AS email
+                    FROM {contacts} c
+                WHERE c.user_id = :user_id
+                    AND c.status = 'active'
+                    AND c.deleted_at IS NULL
+                    AND NOT EXISTS (
+                        SELECT 1 FROM {suppression} sl
+                        WHERE sl.user_id = c.user_id AND sl.email = c.email
+                    )
+                    AND NOT EXISTS (
+                        SELECT 1 FROM {email_sends} es
+                        WHERE es.contact_id = c.id AND es.post_id = :post_id
+                    )
+                ORDER BY c.id
+                LIMIT :limit
+                """
+            ),
+            {"user_id": user_id, "post_id": post_id, "limit": limit},
+        ).mappings().all()
+
+        return [dict(r) for r in rows]
+
+    def has_any_sends(self, post_id: int) -> bool:
+        email_sends = config.table("email_sends")
+        row = self.conn.execute(
+            text(f"SELECT 1 FROM {email_sends} WHERE post_id = :post_id LIMIT 1"),
+            {"post_id": post_id},
+        ).first()
+        return row is not None
+
+    def record_send(self, contact_id: int, post_id: int, status: str, now: str, error_message: str | None = None) -> None:
+        email_sends = config.table("email_sends")
+        sent_at = now if status == "sent" else None
+        bounced_at = now if status == "bounced" else None
+        self.conn.execute(
+            text(
+                f"""
+                INSERT INTO {email_sends}
+                    (contact_id, post_id, status, sent_at, bounced_at, error_message, created_at, updated_at)
+                VALUES (:contact_id, :post_id, :status, :sent_at, :bounced_at, :error_message, :now, :now)
+                """
+            ),
+            {
+                "contact_id": contact_id,
+                "post_id": post_id,
+                "status": status,
+                "sent_at": sent_at,
+                "bounced_at": bounced_at,
+                "error_message": error_message,
+                "now": now,
+            },
+        )
+
+    def mark_bounced(self, contact_id: int) -> None:
+        contacts = config.table("contacts")
+        self.conn.execute(
+            text(f"UPDATE {contacts} SET status = 'bounced' WHERE id = :id"),
+            {"id": contact_id},
         )

@@ -9,9 +9,14 @@ esistono finche' il worker non li scrive dopo la pubblicazione.
 Shape (da PostController::buildChannelsPayload di Laravel):
     facebook/instagram/linkedin : {on, comments_enabled, auto_reply_enabled}
     wordpress                   : {on, categories:[{id,name,on}]}
-    newsletter                  : {on, list:{provider,id,name}}
+    newsletter (mailchimp/brevo): {on, provider, list:{provider,id,name}}
+    newsletter (smtp_custom)    : {on, provider:'smtp_custom'} — niente lista
+                                  esterna, destinatari = tabella Contact interna
     non selezionato             : {on:false}
 Dopo la pubblicazione il worker aggiunge: id, url (+ gallery_html per wordpress).
+Per newsletter smtp_custom l'id e' sintetico (non un id remoto reale): lo
+assegna publisher/tasks/newsletter_send.py al primo batch di contatti inviato,
+non publish() — l'invio si spalma su piu' run, non e' una singola chiamata API.
 """
 
 from __future__ import annotations
@@ -39,6 +44,11 @@ class ChannelEntry:
 
     @property
     def needs_publish(self) -> bool:
+        # newsletter smtp_custom non passa dal ciclo generico publish() (una
+        # singola chiamata = un id): l'invio si spalma su piu' run a batch,
+        # se ne occupa interamente publisher/tasks/newsletter_send.py.
+        if self.key == "newsletter" and self.newsletter_provider() == "smtp_custom":
+            return False
         return self.is_on and not self.already_published
 
     def set_result(self, remote_id, url, gallery_html=None) -> None:
@@ -52,7 +62,10 @@ class ChannelEntry:
         return [c["id"] for c in self.data.get("categories", []) if c.get("on") is True]
 
     def newsletter_provider(self) -> str | None:
-        return (self.data.get("list") or {}).get("provider")
+        # v2: provider esplicito in cima al canale (PostController::buildChannelsPayload).
+        # Fallback su list.provider per compatibilita' con righe scritte prima
+        # di quella modifica (mailchimp/brevo lo duplicavano li' soltanto).
+        return self.data.get("provider") or (self.data.get("list") or {}).get("provider")
 
     def newsletter_list_id(self):
         return (self.data.get("list") or {}).get("id")

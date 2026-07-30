@@ -72,6 +72,9 @@ TASK_COMPLETE_MAX_BACKOFF_MINUTES = 24 * 60
 # Batch scansionato da reply_send per trovare il primo commento idoneo
 # (canale con auto_reply_enabled attivo) senza restare bloccati in testa alla coda.
 REPLY_SEND_BATCH_SIZE = 20
+# Newsletter smtp_custom: throttling 20 contatti/5 minuti per account, spalmato
+# sul tick da 1 minuto del worker (20/5 = 4 per tick, publisher/tasks/newsletter_send.py).
+NEWSLETTER_SMTP_BATCH_SIZE = 4
 
 # --- Modalita' -------------------------------------------------------------
 # DRY_RUN: esegue tutta l'orchestrazione (query, parsing channels, scrittura DB,

@@ -306,9 +306,9 @@ class PostController extends Controller
      * dover risalire all'account (comportamento voluto, coerente con v1 dove
      * tutto lo stato di pubblicazione viveva nel post).
      */
-    private function buildChannelsPayload(array $selected, array $accountChannels = []): array
+    private function buildChannelsPayload(array $selected, array $accountChannels = [], ?string $newsletterProvider = null): array
     {
-        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($selected, $accountChannels) {
+        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($selected, $accountChannels, $newsletterProvider) {
             if (!array_key_exists($id, $selected)) {
                 return [$id => ['on' => false]];
             }
@@ -339,14 +339,23 @@ class PostController extends Controller
             }
 
             if ($id === 'newsletter') {
+                // smtp_custom non ha lista esterna: i destinatari sono i
+                // Contact interni, letti direttamente dal worker Python (come
+                // fa già con Mailchimp/Brevo) — l'id/url reali li scrive lui
+                // una volta inviato davvero, stesso ciclo di vita degli altri
+                // provider, nessuno stato aggiuntivo da anticipare qui.
+                if ($newsletterProvider === 'smtp_custom') {
+                    return [$id => ['on' => true, 'provider' => 'smtp_custom']];
+                }
+
                 $list = $opts['list'] ?? null;
                 $list = (is_array($list) && !empty($list['id'])) ? [
-                    'provider' => $list['provider'] ?? null,
+                    'provider' => $list['provider'] ?? $newsletterProvider,
                     'id' => (string) $list['id'],
                     'name' => (string) ($list['name'] ?? ''),
                 ] : null;
 
-                return [$id => ['on' => true, 'list' => $list]];
+                return [$id => ['on' => true, 'provider' => $newsletterProvider, 'list' => $list]];
             }
 
             return [$id => ['on' => true]];
@@ -401,8 +410,8 @@ class PostController extends Controller
         };
         abort_if(($isAdmin || $isManager) && !$targetUserId, 422, 'Account non valido.');
 
-        $targetChannels = $targetUserId === $me->id ? $me->channels : (User::find($targetUserId)?->channels ?? []);
-        $channels = $this->buildChannelsPayload($data['channels'], $targetChannels ?? []);
+        $targetUser = $targetUserId === $me->id ? $me : User::find($targetUserId);
+        $channels = $this->buildChannelsPayload($data['channels'], $targetUser?->channels ?? [], $targetUser?->settings?->newsletterProvider());
         [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
 
         $post = Post::create([
@@ -467,7 +476,7 @@ class PostController extends Controller
         $unknown = array_diff(array_keys($data['channels']), array_keys(User::CHANNELS));
         abort_if(!empty($unknown), 422, 'Canale non valido.');
 
-        $channels = $this->buildChannelsPayload($data['channels'], $post->user?->channels ?? []);
+        $channels = $this->buildChannelsPayload($data['channels'], $post->user?->channels ?? [], $post->user?->settings?->newsletterProvider());
         [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
 
         $existing = $post->img ?? [];

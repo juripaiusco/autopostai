@@ -46,6 +46,39 @@ def test_newsletter_provider_and_list():
     assert entry.newsletter_list_id() == "5"
 
 
+def test_newsletter_provider_prefers_top_level_over_list():
+    # v2: PostController::buildChannelsPayload scrive 'provider' in cima al
+    # canale; il fallback su list.provider resta solo per righe pre-esistenti.
+    entry = Channels.parse({"newsletter": {"on": True, "provider": "smtp_custom"}}).entry("newsletter")
+    assert entry.newsletter_provider() == "smtp_custom"
+
+
+def test_smtp_custom_newsletter_never_needs_publish():
+    # Non passa dal ciclo generico publish() (una chiamata = un id): se ne
+    # occupa interamente publisher/tasks/newsletter_send.py, a batch.
+    entry = Channels.parse({"newsletter": {"on": True, "provider": "smtp_custom"}}).entry("newsletter")
+    assert entry.needs_publish is False
+    assert entry.is_on is True
+
+
+def test_smtp_custom_newsletter_excluded_from_publishable():
+    channels = Channels.parse({
+        "facebook": {"on": True},
+        "newsletter": {"on": True, "provider": "smtp_custom"},
+    })
+    assert [e.key for e in channels.publishable()] == ["facebook"]
+
+
+def test_all_on_published_still_false_for_smtp_custom_without_id():
+    # all_on_published() guarda already_published (id), non needs_publish:
+    # un canale smtp_custom non ancora processato blocca comunque il post.
+    channels = Channels.parse({"newsletter": {"on": True, "provider": "smtp_custom"}})
+    assert channels.all_on_published() is False
+
+    channels.entry("newsletter").set_result("smtp-1", None)
+    assert channels.all_on_published() is True
+
+
 def test_set_result_writes_back_into_raw():
     channels = Channels.parse(_sample())
     channels.entry("facebook").set_result("fb1", "http://fb", None)
