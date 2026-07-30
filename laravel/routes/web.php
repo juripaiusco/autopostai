@@ -15,6 +15,7 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ScopeController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UnsubscribeController;
 use App\Http\Controllers\WordPressController;
 use Illuminate\Support\Facades\Route;
 
@@ -170,3 +171,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/push/segna-lette', [PushSubscriptionController::class, 'markRead'])
         ->name('push.mark-read');
 });
+
+// Pubblica, nessun login: la firma della route (signed URL) è l'unica
+// autorizzazione — destinata ai destinatari delle newsletter, non agli
+// utenti autenticati dell'app.
+Route::get('/disiscrivi/{contact}', [UnsubscribeController::class, 'show'])
+    ->middleware('signed')
+    ->name('newsletter.unsubscribe');

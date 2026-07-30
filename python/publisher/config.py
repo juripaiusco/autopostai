@@ -48,6 +48,12 @@ APP_URL = _env("APP_URL", "http://localhost")
 # Radice del disco `public` di Laravel dove vivono le immagini dei post
 # (posts/{id}/{file}). Montata nel container del publisher.
 STORAGE_PATH = _env("STORAGE_PATH", "/var/www/html/laravel/storage/app/public")
+# Stessa chiave di Laravel (config('app.key'), usata AS-IS con il prefisso
+# "base64:" incluso — Laravel non la decodifica per le signed URL, vedi
+# RoutingServiceProvider::setKeyResolver) — serve a generare link di
+# disiscrizione firmati verificabili dalla route Laravel `signed` senza
+# dover chiamare Laravel per ogni contatto (publisher/integrations/unsubscribe.py).
+APP_KEY = _env("APP_KEY")
 
 # --- Provider esterni (base URL, con default sensati) ----------------------
 OPENAI_MODEL = _env("OPENAI_MODEL", "gpt-4o-mini")

@@ -22,6 +22,7 @@ from publisher.content import ContentService
 from publisher.db.repositories import ContactRepository, PostRepository, TokenLogRepository
 from publisher.domain.channels import Channels
 from publisher.integrations.smtp import SmtpClient
+from publisher.integrations.unsubscribe import unsubscribe_url
 from publisher.publishing.newsletter import NewsletterPublisher
 
 log = logging.getLogger(__name__)
@@ -76,9 +77,10 @@ def _process_one(post, post_repo, contact_repo, token_repo, content_service, now
     sent = 0
     bounced = 0
     for contact in contacts:
+        contact_html = _inject_unsubscribe(html, contact["id"])
         try:
             if not config.DRY_RUN:
-                client.send(contact["email"], subject, html, post["nl_smtp_sender"], post["nl_smtp_username"])
+                client.send(contact["email"], subject, contact_html, post["nl_smtp_sender"], post["nl_smtp_username"])
             contact_repo.record_send(contact["id"], post["id"], "sent", now)
             sent += 1
         except Exception as e:  # noqa: BLE001 — un bounce non deve bloccare gli altri contatti
@@ -94,6 +96,22 @@ def _process_one(post, post_repo, contact_repo, token_repo, content_service, now
         if channels.all_on_published():
             post_repo.mark_published(post["id"])
             log.info("newsletter_send: post %s pubblicato (primo batch inviato)", post["id"])
+
+
+def _inject_unsubscribe(html: str, contact_id: int) -> str:
+    """Link firmato per-contatto (Step 7): sostituisce il token [unsubscribe]
+    se il template account lo usa, altrimenti aggiunge un footer minimo di
+    default — l'unsubscribe non deve dipendere dal fatto che l'utente ricordi
+    di inserire il token nel proprio template."""
+    url = unsubscribe_url(contact_id)
+    if "[unsubscribe]" in html:
+        return html.replace("[unsubscribe]", url)
+
+    footer = (
+        '<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:24px">'
+        f'<a href="{url}" style="color:#9ca3af">Disiscriviti</a></p>'
+    )
+    return html + footer
 
 
 def _url_resolver(post_repo: PostRepository, requesting_user_id: int):
