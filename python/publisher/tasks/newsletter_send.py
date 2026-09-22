@@ -53,6 +53,11 @@ def _process_one(post, post_repo, contact_repo, token_repo, content_service, now
         post["user_id"], post["id"], config.NEWSLETTER_SMTP_BATCH_SIZE, tag_id=entry.newsletter_tag_id()
     )
     if not contacts:
+        log.info(
+            "newsletter_send: post %s - 0 destinatari (user %s, tag_id %s) - tag senza contatti attivi, "
+            "tutti soppressi o gia' processati",
+            post["id"], post["user_id"], entry.newsletter_tag_id(),
+        )
         return
 
     # Stesso guard di posts_send.py: se il contenuto va ancora generato e
