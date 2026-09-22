@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 
 const props = defineProps({
     used: { type: Number, required: true },
-    total: { type: Number, required: true },
+    total: { type: Number, default: 0 },
     index: { type: Number, default: 0 },
 });
 
