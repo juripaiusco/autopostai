@@ -110,7 +110,7 @@ function save() {
                     <label class="acc-row-label" for="pn-user">Destinatario</label>
                     <Combobox :model-value="selectedUser" @update:model-value="(u) => (form.user_id = u?.id ?? null)">
                         <div class="pf-combobox-wrap">
-                            <ComboboxInput id="pn-user" class="control" :display-value="recipientLabel"
+                            <ComboboxInput id="pn-user" class="control" autocomplete="off" :display-value="recipientLabel"
                                 placeholder="Cerca account…" @change="userQuery = $event.target.value" />
                             <ComboboxButton class="pf-combobox-btn" aria-label="Apri lista account">▾</ComboboxButton>
                             <ComboboxOptions class="pf-combobox-options">

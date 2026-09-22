@@ -111,7 +111,7 @@ function pickNewsletterTag(tagId) {
                 <span class="acc-row-help">Il post verrà pubblicato con i canali collegati a questo account.</span>
                 <Combobox v-if="mode === 'create' && users.length > 0" :model-value="selectedUser" @update:model-value="onUserSelect">
                     <div class="pf-combobox-wrap">
-                        <ComboboxInput id="post-user" class="control"
+                        <ComboboxInput id="post-user" class="control" autocomplete="off"
                             :display-value="userLabel"
                             placeholder="Seleziona l'account"
                             @change="userQuery = $event.target.value" />
