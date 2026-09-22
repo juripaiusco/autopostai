@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ContactTag;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -110,13 +111,15 @@ class PostController extends Controller
     private function channelsMeta(User $user): array
     {
         $userChannels = $user->channels ?? [];
+        $newsletterProvider = $user->settings?->newsletterProvider();
 
-        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($userChannels) {
+        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($userChannels, $newsletterProvider) {
             $c = $userChannels[$id] ?? [];
 
             return [$id => [
                 'available' => !empty($c['on']),
                 'replyOn' => !empty($c['reply_on']),
+                'provider' => $id === 'newsletter' ? $newsletterProvider : null,
             ]];
         })->all();
     }
@@ -306,9 +309,9 @@ class PostController extends Controller
      * dover risalire all'account (comportamento voluto, coerente con v1 dove
      * tutto lo stato di pubblicazione viveva nel post).
      */
-    private function buildChannelsPayload(array $selected, array $accountChannels = [], ?string $newsletterProvider = null): array
+    private function buildChannelsPayload(array $selected, array $accountChannels = [], ?string $newsletterProvider = null, ?int $targetUserId = null): array
     {
-        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($selected, $accountChannels, $newsletterProvider) {
+        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($selected, $accountChannels, $newsletterProvider, $targetUserId) {
             if (!array_key_exists($id, $selected)) {
                 return [$id => ['on' => false]];
             }
@@ -345,7 +348,14 @@ class PostController extends Controller
                 // una volta inviato davvero, stesso ciclo di vita degli altri
                 // provider, nessuno stato aggiuntivo da anticipare qui.
                 if ($newsletterProvider === 'smtp_custom') {
-                    return [$id => ['on' => true, 'provider' => 'smtp_custom']];
+                    $tagId = $opts['tag_id'] ?? null;
+                    if ($tagId !== null) {
+                        $tagId = (int) $tagId;
+                        $validTag = $targetUserId && ContactTag::where('id', $tagId)->where('user_id', $targetUserId)->exists();
+                        abort_unless($validTag, 422, 'Tag non valido per questo account.');
+                    }
+
+                    return [$id => ['on' => true, 'provider' => 'smtp_custom', 'tag_id' => $tagId]];
                 }
 
                 $list = $opts['list'] ?? null;
@@ -411,7 +421,7 @@ class PostController extends Controller
         abort_if(($isAdmin || $isManager) && !$targetUserId, 422, 'Account non valido.');
 
         $targetUser = $targetUserId === $me->id ? $me : User::find($targetUserId);
-        $channels = $this->buildChannelsPayload($data['channels'], $targetUser?->channels ?? [], $targetUser?->settings?->newsletterProvider());
+        $channels = $this->buildChannelsPayload($data['channels'], $targetUser?->channels ?? [], $targetUser?->settings?->newsletterProvider(), $targetUser?->id);
         [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
 
         $post = Post::create([
@@ -476,7 +486,7 @@ class PostController extends Controller
         $unknown = array_diff(array_keys($data['channels']), array_keys(User::CHANNELS));
         abort_if(!empty($unknown), 422, 'Canale non valido.');
 
-        $channels = $this->buildChannelsPayload($data['channels'], $post->user?->channels ?? [], $post->user?->settings?->newsletterProvider());
+        $channels = $this->buildChannelsPayload($data['channels'], $post->user?->channels ?? [], $post->user?->settings?->newsletterProvider(), $post->user?->id);
         [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
 
         $existing = $post->img ?? [];

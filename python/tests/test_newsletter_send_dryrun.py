@@ -164,6 +164,40 @@ def test_newsletter_send_throttles_to_batch_size_per_tick():
 
 
 @pytest.mark.skipif(not config.DRY_RUN, reason="richiede PUBLISHER_DRY_RUN=1")
+def test_newsletter_send_filters_by_tag_when_tag_id_is_set():
+    engine = get_engine()
+    conn = engine.connect()
+    trans = conn.begin()
+    try:
+        user_id = _make_account(conn)
+        tagged = _make_contact(conn, user_id)
+        untagged = _make_contact(conn, user_id)
+
+        tag_id = conn.execute(
+            text("INSERT INTO contact_tags (user_id, name, created_at, updated_at) VALUES (:uid, 'vip', NOW(), NOW())"),
+            {"uid": user_id},
+        ).lastrowid
+        conn.execute(
+            text("INSERT INTO contact_contact_tag (contact_id, contact_tag_id) VALUES (:cid, :tid)"),
+            {"cid": tagged, "tid": tag_id},
+        )
+
+        channels = json.dumps({"newsletter": {"on": True, "provider": "smtp_custom", "tag_id": tag_id}})
+        post_id = _make_post(conn, user_id, channels=channels)
+
+        newsletter_send.run(conn)
+
+        sent_contact_ids = conn.execute(
+            text("SELECT contact_id FROM email_sends WHERE post_id = :pid"), {"pid": post_id}
+        ).scalars().all()
+        assert sent_contact_ids == [tagged]
+        assert untagged not in sent_contact_ids
+    finally:
+        trans.rollback()
+        conn.close()
+
+
+@pytest.mark.skipif(not config.DRY_RUN, reason="richiede PUBLISHER_DRY_RUN=1")
 def test_newsletter_send_ignores_mailchimp_and_brevo_providers():
     engine = get_engine()
     conn = engine.connect()

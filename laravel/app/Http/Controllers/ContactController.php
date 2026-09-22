@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Contact;
 use App\Models\ContactTag;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -243,6 +244,20 @@ class ContactController extends Controller
         }
 
         return $query->get()->filter(fn (User $u) => $u->hasSmtpCustomActive())->values();
+    }
+
+    /**
+     * Tag dell'account, per il selettore al compose del post (canale
+     * newsletter smtp_custom) — stessa autorizzazione di ogni altra fetch
+     * live da quella pagina (User::canActFor, vedi NewsletterController::listsForPost).
+     */
+    public function tagsForPost(Request $request, User $user): JsonResponse
+    {
+        abort_unless($request->user()->canActFor($user), 403);
+
+        return response()->json([
+            'tags' => ContactTag::where('user_id', $user->id)->orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     private function tagsQueryFor(User $me, ?int $scopedUserId)

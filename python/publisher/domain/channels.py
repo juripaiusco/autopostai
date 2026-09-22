@@ -10,8 +10,10 @@ Shape (da PostController::buildChannelsPayload di Laravel):
     facebook/instagram/linkedin : {on, comments_enabled, auto_reply_enabled}
     wordpress                   : {on, categories:[{id,name,on}]}
     newsletter (mailchimp/brevo): {on, provider, list:{provider,id,name}}
-    newsletter (smtp_custom)    : {on, provider:'smtp_custom'} — niente lista
-                                  esterna, destinatari = tabella Contact interna
+    newsletter (smtp_custom)    : {on, provider:'smtp_custom', tag_id:int|None} —
+                                  niente lista esterna, destinatari = tabella
+                                  Contact interna, opzionalmente filtrati per tag
+                                  (tag_id assente/None = tutti i contatti attivi)
     non selezionato             : {on:false}
 Dopo la pubblicazione il worker aggiunge: id, url (+ gallery_html per wordpress).
 Per newsletter smtp_custom l'id e' sintetico (non un id remoto reale): lo
@@ -69,6 +71,12 @@ class ChannelEntry:
 
     def newsletter_list_id(self):
         return (self.data.get("list") or {}).get("id")
+
+    def newsletter_tag_id(self):
+        """Tag opzionale per filtrare i destinatari (solo smtp_custom).
+        None = nessun filtro, invio a tutti i contatti attivi (comportamento
+        storico, invariato di default)."""
+        return self.data.get("tag_id")
 
     @property
     def comments_enabled(self) -> bool:

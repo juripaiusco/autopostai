@@ -166,7 +166,43 @@ class PostChannelOptionsTest extends TestCase
 
         $post = Post::latest('id')->firstOrFail();
 
-        $this->assertSame(['on' => true, 'provider' => 'smtp_custom'], $post->channels['newsletter']);
+        $this->assertSame(['on' => true, 'provider' => 'smtp_custom', 'tag_id' => null], $post->channels['newsletter']);
+    }
+
+    public function test_storing_a_post_for_an_smtp_custom_account_with_a_valid_tag_persists_it(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create([
+            'parent_id' => $admin->id,
+            'channels' => ['newsletter' => ['on' => true]],
+        ]);
+        \App\Models\Settings::factory()->create(['user_id' => $user->id, 'nl_smtp_host' => 'smtp.test.it']);
+        $tag = \App\Models\ContactTag::create(['user_id' => $user->id, 'name' => 'clienti']);
+
+        $this->actingAs($user)->post(route('posts.store'), [
+            'channels' => ['newsletter' => ['tag_id' => $tag->id]],
+            'action' => 'save',
+        ])->assertRedirect(route('posts'));
+
+        $post = Post::latest('id')->firstOrFail();
+
+        $this->assertSame(['on' => true, 'provider' => 'smtp_custom', 'tag_id' => $tag->id], $post->channels['newsletter']);
+    }
+
+    public function test_storing_a_post_for_an_smtp_custom_account_rejects_a_tag_from_another_account(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create([
+            'parent_id' => $admin->id,
+            'channels' => ['newsletter' => ['on' => true]],
+        ]);
+        \App\Models\Settings::factory()->create(['user_id' => $user->id, 'nl_smtp_host' => 'smtp.test.it']);
+        $otherTag = \App\Models\ContactTag::create(['user_id' => $admin->id, 'name' => 'altro-account']);
+
+        $this->actingAs($user)->post(route('posts.store'), [
+            'channels' => ['newsletter' => ['tag_id' => $otherTag->id]],
+            'action' => 'save',
+        ])->assertStatus(422);
     }
 
     public function test_unknown_channel_key_is_rejected(): void

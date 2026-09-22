@@ -536,13 +536,16 @@ class ContactRepository:
     def __init__(self, conn: Connection):
         self.conn = conn
 
-    def sendable_for_post(self, user_id: int, post_id: int, limit: int) -> list[dict]:
+    def sendable_for_post(self, user_id: int, post_id: int, limit: int, tag_id: int | None = None) -> list[dict]:
         """Contatti attivi, non in suppression list, non ancora processati per
         QUESTO post (nessuna riga email_sends esistente) — i piu' vecchi prima,
-        cosi' un batch limitato avanza sempre sui prossimi al giro successivo."""
+        cosi' un batch limitato avanza sempre sui prossimi al giro successivo.
+        Se tag_id e' valorizzato, restringe ai contatti che hanno quel tag
+        (filtro opzionale impostato in compose sul canale newsletter smtp_custom)."""
         contacts = config.table("contacts")
         suppression = config.table("suppression_list")
         email_sends = config.table("email_sends")
+        contact_tag = config.table("contact_contact_tag")
 
         rows = self.conn.execute(
             text(
@@ -560,11 +563,18 @@ class ContactRepository:
                         SELECT 1 FROM {email_sends} es
                         WHERE es.contact_id = c.id AND es.post_id = :post_id
                     )
+                    AND (
+                        :tag_id IS NULL
+                        OR EXISTS (
+                            SELECT 1 FROM {contact_tag} cct
+                            WHERE cct.contact_id = c.id AND cct.contact_tag_id = :tag_id
+                        )
+                    )
                 ORDER BY c.id
                 LIMIT :limit
                 """
             ),
-            {"user_id": user_id, "post_id": post_id, "limit": limit},
+            {"user_id": user_id, "post_id": post_id, "limit": limit, "tag_id": tag_id},
         ).mappings().all()
 
         return [dict(r) for r in rows]

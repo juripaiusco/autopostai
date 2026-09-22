@@ -65,7 +65,7 @@ async function fetchWordpressCategories() {
 
 const nlLoading = ref(false);
 const nlLists = ref([]);
-const nlProvider = ref(null);
+const nlProvider = computed(() => props.channels.find((c) => c.id === 'newsletter')?.provider ?? null);
 async function fetchNewsletterLists() {
     if (!props.targetUserId) return;
     nlLoading.value = true;
@@ -74,13 +74,30 @@ async function fetchNewsletterLists() {
         if (!res.ok) return;
         const data = await res.json();
         nlLists.value = data.lists ?? [];
-        nlProvider.value = data.provider ?? null;
     } finally {
         nlLoading.value = false;
     }
 }
 function pickNewsletterList(list) {
     emit('set-channel-option', 'newsletter', 'list', { provider: nlProvider.value, id: list.id, name: list.name });
+}
+
+const nlTagsLoading = ref(false);
+const nlTags = ref([]);
+async function fetchNewsletterTags() {
+    if (!props.targetUserId) return;
+    nlTagsLoading.value = true;
+    try {
+        const res = await fetch(route('posts.newsletter-tags', props.targetUserId), { headers: { Accept: 'application/json' } });
+        if (!res.ok) return;
+        const data = await res.json();
+        nlTags.value = data.tags ?? [];
+    } finally {
+        nlTagsLoading.value = false;
+    }
+}
+function pickNewsletterTag(tagId) {
+    emit('set-channel-option', 'newsletter', 'tag_id', tagId);
 }
 </script>
 
@@ -164,7 +181,9 @@ function pickNewsletterList(list) {
 
             <NewsletterOptions v-else-if="form.channels[ch.id] && ch.id === 'newsletter'"
                 :model-value="form.channels[ch.id]" :lists="nlLists" :provider="nlProvider" :loading="nlLoading"
-                @fetch="fetchNewsletterLists" @pick="pickNewsletterList" />
+                :tags="nlTags" :tags-loading="nlTagsLoading"
+                @fetch="fetchNewsletterLists" @pick="pickNewsletterList"
+                @fetch-tags="fetchNewsletterTags" @pick-tag="pickNewsletterTag" />
         </template>
 
         <div v-if="selectedSocialWithAutoReply" class="acc-field pf-fade-in" style="margin-bottom:0">

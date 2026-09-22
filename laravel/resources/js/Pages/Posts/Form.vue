@@ -40,11 +40,12 @@ const channels = computed(() => CHANNELS_CFG.map((c) => ({
     ...c,
     available: !!activeChannelsMeta.value[c.id]?.available,
     replyOn: !!activeChannelsMeta.value[c.id]?.replyOn,
+    provider: activeChannelsMeta.value[c.id]?.provider ?? null,
 })));
 
 function defaultChannelOptions(id) {
     if (id === 'wordpress') return { categories: [] };
-    if (id === 'newsletter') return { list: null };
+    if (id === 'newsletter') return { list: null, tag_id: null };
     return { comments_enabled: false, auto_reply_enabled: false };
 }
 

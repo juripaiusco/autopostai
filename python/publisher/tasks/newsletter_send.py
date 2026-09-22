@@ -49,7 +49,9 @@ def _process_one(post, post_repo, contact_repo, token_repo, content_service, now
     if not entry or not entry.is_on or entry.newsletter_provider() != "smtp_custom":
         return
 
-    contacts = contact_repo.sendable_for_post(post["user_id"], post["id"], config.NEWSLETTER_SMTP_BATCH_SIZE)
+    contacts = contact_repo.sendable_for_post(
+        post["user_id"], post["id"], config.NEWSLETTER_SMTP_BATCH_SIZE, tag_id=entry.newsletter_tag_id()
+    )
     if not contacts:
         return
 

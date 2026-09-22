@@ -3,17 +3,55 @@ import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 
 defineProps({
-    modelValue: { type: Object, required: true }, // { list: {provider, id, name} | null }
+    modelValue: { type: Object, required: true }, // { list: {provider, id, name} | null, tag_id: number | null }
     lists: { type: Array, default: () => [] }, // candidati appena scaricati (non persistiti finché non scelti)
     provider: { type: String, default: null },
     loading: { type: Boolean, default: false },
+    tags: { type: Array, default: () => [] }, // tag dell'account, per smtp_custom
+    tagsLoading: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['pick', 'fetch']);
+const emit = defineEmits(['pick', 'fetch', 'pick-tag', 'fetch-tags']);
 </script>
 
 <template>
-    <div class="pf-comments-card">
+    <div class="pf-comments-card" v-if="provider === 'smtp_custom'">
+        <div class="pf-comments-title" style="display:flex;align-items:center;gap:6px">
+            <ChannelIcon id="newsletter" :size="14" />Newsletter
+            <span class="pf-check-help" style="margin:0">(SMTP)</span>
+        </div>
+        <div class="pf-check-help" style="margin-bottom:10px">
+            Scegli a chi inviare: tutti i contatti attivi, oppure solo quelli con un tag specifico.
+        </div>
+
+        <div class="acc-li-pages">
+            <button type="button" class="acc-li-page" :class="{ 'acc-li-page--active': !modelValue.tag_id }" @click="emit('pick-tag', null)">
+                <span class="acc-li-page-dot" aria-hidden="true"></span>
+                <span class="acc-li-page-name">Tutti i contatti attivi</span>
+                <Icon v-if="!modelValue.tag_id" name="check" :size="16" />
+            </button>
+            <button
+                v-for="tag in tags"
+                :key="tag.id"
+                type="button"
+                class="acc-li-page"
+                :class="{ 'acc-li-page--active': modelValue.tag_id === tag.id }"
+                @click="emit('pick-tag', tag.id)"
+            >
+                <span class="acc-li-page-dot" aria-hidden="true"></span>
+                <span class="acc-li-page-name">{{ tag.name }}</span>
+                <Icon v-if="modelValue.tag_id === tag.id" name="check" :size="16" />
+            </button>
+        </div>
+        <div v-if="!tags.length" class="pf-check-help" style="margin-bottom:10px">Nessun tag caricato ancora.</div>
+
+        <button type="button" class="btn btn-secondary btn-sm" style="margin-top:12px" :disabled="tagsLoading" @click="emit('fetch-tags')">
+            <span v-if="tagsLoading" class="btn-spinner" aria-hidden="true"></span>
+            {{ tagsLoading ? 'Caricamento…' : 'Carica tag' }}
+        </button>
+    </div>
+
+    <div class="pf-comments-card" v-else>
         <div class="pf-comments-title" style="display:flex;align-items:center;gap:6px">
             <ChannelIcon id="newsletter" :size="14" />Newsletter
             <span v-if="provider" class="pf-check-help" style="margin:0">({{ provider === 'mailchimp' ? 'MailChimp' : 'Brevo' }})</span>

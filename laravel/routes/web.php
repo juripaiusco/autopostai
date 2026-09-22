@@ -73,6 +73,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/posts/canali/{user}/newsletter-liste', [NewsletterController::class, 'listsForPost'])
         ->name('posts.newsletter-lists');
 
+    Route::get('/posts/canali/{user}/newsletter-tag', [ContactController::class, 'tagsForPost'])
+        ->name('posts.newsletter-tags');
+
     Route::get('/posts/canali/{user}/archivio-immagini', [ImageArchiveController::class, 'index'])
         ->name('posts.image-archive');
 
