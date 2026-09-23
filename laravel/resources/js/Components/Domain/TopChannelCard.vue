@@ -3,24 +3,26 @@ import { computed, ref, onMounted } from 'vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import { CH_CONFIG } from '@/data/dashboardMock';
 
+// data: [{ id, posts, comments, replies }] — ultimi 90 giorni.
 const props = defineProps({ data: { type: Array, required: true } });
 
-const sorted = computed(() => [...props.data].sort((a, b) => b.views - a.views));
+const sorted = computed(() => props.data.filter((d) => d.posts > 0).sort((a, b) => b.posts - a.posts));
 
 const top = computed(() => {
     const ch = sorted.value[0];
+    if (!ch) return null;
     const cfg = CH_CONFIG[ch.id];
     return {
         ...ch,
         cfg,
-        vpp: ch.posts > 0 ? Math.round(ch.views / ch.posts) : 0,
-        rank: props.data.length,
+        cpp: ch.posts > 0 ? Math.round((ch.comments / ch.posts) * 10) / 10 : 0,
+        rank: sorted.value.length,
     };
 });
 
 const others = computed(() => sorted.value.slice(1, 4));
 
-const totalViews = computed(() => props.data.reduce((s, d) => s + d.views, 0));
+const totalPosts = computed(() => props.data.reduce((s, d) => s + d.posts, 0));
 
 const ready = ref(false);
 
@@ -32,7 +34,8 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="top-ch">
+    <p v-if="!top" class="muted" style="font-size: 13px; margin: 0">Nessuna pubblicazione negli ultimi 90 giorni.</p>
+    <div v-else class="top-ch">
 
         <!-- Hero: canale vincente -->
         <div class="top-ch__hero">
@@ -46,9 +49,9 @@ onMounted(() => {
             </div>
             <div class="top-ch__views-block">
                 <span class="top-ch__views" :style="{ color: top.cfg.color }">
-                    {{ top.views.toLocaleString('it-IT') }}
+                    {{ top.posts.toLocaleString('it-IT') }}
                 </span>
-                <span class="top-ch__views-sub">views</span>
+                <span class="top-ch__views-sub">pubblicazioni</span>
             </div>
         </div>
 
@@ -58,20 +61,20 @@ onMounted(() => {
                 <div class="top-ch__share-fill"
                      :style="{
                          background: top.cfg.color,
-                         width: ready ? `${((top.views / totalViews) * 100).toFixed(1)}%` : '0%',
+                         width: ready ? `${((top.posts / totalPosts) * 100).toFixed(1)}%` : '0%',
                          transition: `width 700ms cubic-bezier(0.16, 1, 0.3, 1) 80ms`,
                      }" />
             </div>
             <span class="top-ch__share-pct" :style="{ color: top.cfg.color }">
-                {{ ((top.views / totalViews) * 100).toFixed(1) }}% del totale
+                {{ ((top.posts / totalPosts) * 100).toFixed(1) }}% del totale
             </span>
         </div>
 
         <!-- Metriche -->
         <div class="top-ch__stats">
             <div class="top-ch__stat">
-                <span class="top-ch__stat-val">{{ top.vpp.toLocaleString('it-IT') }}</span>
-                <span class="top-ch__stat-lbl">views / post</span>
+                <span class="top-ch__stat-val">{{ top.cpp.toLocaleString('it-IT') }}</span>
+                <span class="top-ch__stat-lbl">commenti / post</span>
             </div>
             <div class="top-ch__stat-sep"></div>
             <div class="top-ch__stat">
@@ -80,8 +83,8 @@ onMounted(() => {
             </div>
             <div class="top-ch__stat-sep"></div>
             <div class="top-ch__stat">
-                <span class="top-ch__stat-val">{{ top.unique.toLocaleString('it-IT') }}</span>
-                <span class="top-ch__stat-lbl">utenti unici</span>
+                <span class="top-ch__stat-val">{{ top.replies.toLocaleString('it-IT') }}</span>
+                <span class="top-ch__stat-lbl">risposte AI</span>
             </div>
         </div>
 
@@ -97,12 +100,12 @@ onMounted(() => {
                     <div class="top-ch__other-bar"
                          :style="{
                              background: CH_CONFIG[ch.id].color,
-                             width: ready ? `${((ch.views / top.views) * 100).toFixed(1)}%` : '0%',
+                             width: ready ? `${((ch.posts / top.posts) * 100).toFixed(1)}%` : '0%',
                              transition: `width 550ms cubic-bezier(0.16, 1, 0.3, 1) ${(i + 1) * 70 + 200}ms`,
                              opacity: 0.55,
                          }" />
                 </div>
-                <span class="top-ch__other-views">{{ ch.views.toLocaleString('it-IT') }}</span>
+                <span class="top-ch__other-views">{{ ch.posts.toLocaleString('it-IT') }}</span>
             </div>
         </div>
 

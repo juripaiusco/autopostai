@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Services\DashboardMetrics;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,10 +38,8 @@ class DashboardController extends Controller
     /**
      * Dashboard: isAdmin/isManager/filterableUsers/activeUser sono condivisi
      * globalmente da HandleInertiaRequests (la sidebar li usa su ogni
-     * pagina). Qui serve solo risolvere lo scope per la propria query sui
-     * post. Solo il conteggio post e la tabella "Ultimi post" riflettono lo
-     * scope scelto con dati reali; il resto della dashboard resta sul mock
-     * statico finché non esiste una pipeline di analytics (v. CLAUDE.md).
+     * pagina). Qui serve solo risolvere lo scope: metriche (DashboardMetrics,
+     * solo dati interni) e "Ultimi post" rispettano lo scope scelto.
      */
     public function index(Request $request): Response
     {
@@ -48,8 +47,6 @@ class DashboardController extends Controller
         $activeUserId = $me->resolveScopedUser($request->session()->get('scoped_user_id'))['id'] ?? null;
 
         $postScope = fn () => Post::query()->visibleTo($me, $activeUserId);
-
-        $postsCount = $postScope()->count();
 
         $recentPosts = $postScope()
             ->with('user:id,name')
@@ -67,14 +64,14 @@ class DashboardController extends Controller
                     ->all(),
                 'status' => $p->status(),
                 'date' => $p->published_at ? $this->formatDateIt($p->published_at) : '—',
-                'views' => 0,
                 'comments' => $p->comments_count,
                 'thumb' => self::THUMBS[$p->id % count(self::THUMBS)],
             ])
             ->values();
 
         return Inertia::render('Dashboard', [
-            'postsCount' => $postsCount,
+            'metrics' => (new DashboardMetrics($me, $activeUserId))->toArray(),
+            'periodDays' => DashboardMetrics::PERIOD_DAYS,
             'recentPosts' => $recentPosts,
         ]);
     }

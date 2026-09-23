@@ -7,7 +7,8 @@ const props = defineProps({
     label: { type: String, required: true },
     value: { type: [Number, String], required: true },
     sub: { type: String, required: true },
-    trend: { type: Number, required: true },
+    // null = periodo precedente vuoto: nessuna percentuale da mostrare.
+    trend: { type: Number, default: null },
     color: { type: String, default: 'var(--sky)' },
     sparkData: { type: Array, default: null },
     index: { type: Number, default: 0 },
@@ -56,7 +57,7 @@ onMounted(() => {
             <MiniSparkline v-if="sparkData" :data="sparkData" :color="color" :index="index" />
         </div>
         <div class="stat-sub">
-            <span :style="{ display: 'inline-flex', alignItems: 'center', gap: '3px',
+            <span v-if="trend !== null" :style="{ display: 'inline-flex', alignItems: 'center', gap: '3px',
                             fontSize: '12.5px', fontWeight: 600,
                             color: up ? 'var(--st-pub-fg)' : 'var(--g500)' }">
                 <span style="font-size: 8.5px">{{ up ? '▲' : '▼' }}</span>{{ Math.abs(trend) }}%

@@ -10,9 +10,9 @@ const props = defineProps({
     posts: { type: Array, required: true },
 });
 
-const HEADERS = ['', 'Titolo', 'Canali', 'Data', 'Views', 'Commenti', ''];
+const HEADERS = ['', 'Titolo', 'Canali', 'Data', 'Commenti', ''];
 function alignFor(h) {
-    if (h === 'Views' || h === 'Commenti') return 'right';
+    if (h === 'Commenti') return 'right';
     if (h === '') return 'center';
     return 'left';
 }
@@ -84,10 +84,6 @@ function cancelDelete() {
                         </div>
                     </td>
                     <td style="color: var(--g500); font-size: 13px; white-space: nowrap">{{ p.date }}</td>
-                    <td style="text-align: right; font-weight: 600; color: var(--ink)">
-                        <span v-if="p.views > 0">{{ p.views.toLocaleString('it-IT') }}</span>
-                        <span v-else style="color: var(--g300)">—</span>
-                    </td>
                     <td style="text-align: right; color: var(--g600)">
                         <span v-if="p.comments > 0">{{ p.comments }}</span>
                         <span v-else style="color: var(--g300)">—</span>

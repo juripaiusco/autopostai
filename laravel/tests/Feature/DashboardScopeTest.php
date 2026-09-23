@@ -17,7 +17,10 @@ class DashboardScopeTest extends TestCase
         return Post::factory()->create(array_merge([
             'user_id' => $owner->id,
             'created_by_user_id' => $owner->id,
-            'channels' => ['facebook' => ['on' => true]],
+            // Pubblicato di recente: conta nelle metriche della dashboard.
+            'channels' => ['facebook' => ['on' => true, 'id' => '1_'.fake()->unique()->numberBetween(1, 99999)]],
+            'published' => '1',
+            'published_at' => now()->subDays(3),
         ], $overrides));
     }
 
@@ -43,7 +46,7 @@ class DashboardScopeTest extends TestCase
             ->get(route('dashboard'));
         $response->assertInertia(fn (Assert $page) => $page
             ->where('activeUserId', $orphanUser->id)
-            ->where('postsCount', 1)
+            ->where('metrics.stats.posts.value', 1)
             ->has('recentPosts', 1)
             ->where('recentPosts.0.id', $post->id)
         );
@@ -64,7 +67,7 @@ class DashboardScopeTest extends TestCase
             ->where('isManager', true)
             ->has('filterableUsers', 1)
             ->where('filterableUsers.0.id', $child->id)
-            ->where('postsCount', 1)
+            ->where('metrics.stats.posts.value', 1)
         );
 
         // Scoping to the manager's own child works.
@@ -73,7 +76,7 @@ class DashboardScopeTest extends TestCase
             ->get(route('dashboard'));
         $response->assertInertia(fn (Assert $page) => $page
             ->where('activeUserId', $child->id)
-            ->where('postsCount', 1)
+            ->where('metrics.stats.posts.value', 1)
             ->where('recentPosts.0.id', $childPost->id)
         );
 
@@ -83,7 +86,7 @@ class DashboardScopeTest extends TestCase
             ->get(route('dashboard'));
         $response->assertInertia(fn (Assert $page) => $page
             ->where('activeUserId', null)
-            ->where('postsCount', 1)
+            ->where('metrics.stats.posts.value', 1)
         );
     }
 
@@ -105,7 +108,7 @@ class DashboardScopeTest extends TestCase
             ->where('isManager', false)
             ->has('filterableUsers', 0)
             ->where('activeUserId', null)
-            ->where('postsCount', 1)
+            ->where('metrics.stats.posts.value', 1)
             ->where('recentPosts.0.id', $ownPost->id)
         );
     }

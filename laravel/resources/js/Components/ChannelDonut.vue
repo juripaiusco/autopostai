@@ -3,21 +3,22 @@ import { computed, ref, onMounted } from 'vue';
 import { CH_CONFIG, fmtNum } from '@/data/dashboardMock';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 
+// data: [{ id, posts }] — uscite (post×canale) per canale negli ultimi 90 giorni.
 const props = defineProps({ data: { type: Array, required: true } });
 
 const R = 70, CX = 90, CY = 90;
 const C = 2 * Math.PI * R;
 const SEG_GAP = 2.5;
 
-const sorted = computed(() => [...props.data].sort((a, b) => b.views - a.views));
-const total = computed(() => sorted.value.reduce((s, d) => s + d.views, 0));
+const sorted = computed(() => props.data.filter((d) => d.posts > 0).sort((a, b) => b.posts - a.posts));
+const total = computed(() => sorted.value.reduce((s, d) => s + d.posts, 0));
 
 const ready = ref(false);
 
 const arcs = computed(() => {
     let acc = 0;
     return sorted.value.map((d) => {
-        const len = (d.views / total.value) * C;
+        const len = (d.posts / total.value) * C;
         const visLen = Math.max(len - SEG_GAP, 0);
         const arc = { id: d.id, color: CH_CONFIG[d.id].color, visLen, offset: -acc };
         acc += len;
@@ -29,8 +30,8 @@ const legend = computed(() => sorted.value.map((d) => ({
     id: d.id,
     label: CH_CONFIG[d.id].label,
     color: CH_CONFIG[d.id].color,
-    pct: ((d.views / total.value) * 100).toFixed(1),
-    views: d.views,
+    pct: ((d.posts / total.value) * 100).toFixed(1),
+    posts: d.posts,
 })));
 
 onMounted(() => {
@@ -44,7 +45,7 @@ onMounted(() => {
 <template>
     <div class="donut-layout">
         <div class="donut-svg-wrap">
-            <svg viewBox="0 0 180 180" class="donut-svg" aria-label="Distribuzione views per canale">
+            <svg viewBox="0 0 180 180" class="donut-svg" aria-label="Distribuzione pubblicazioni per canale">
                 <circle :cx="CX" :cy="CY" :r="R" fill="none" stroke="var(--g100)" stroke-width="22" />
                 <circle
                     v-for="(arc, i) in arcs"
@@ -62,11 +63,12 @@ onMounted(() => {
                 <text :x="CX" :y="CY - 8" text-anchor="middle" font-size="22" font-weight="700"
                       fill="var(--ink)" font-family="Figtree, sans-serif">{{ fmtNum(total) }}</text>
                 <text :x="CX" :y="CY + 11" text-anchor="middle" font-size="10.5"
-                      fill="var(--g400)" font-family="Figtree, sans-serif">views totali</text>
+                      fill="var(--g400)" font-family="Figtree, sans-serif">pubblicazioni</text>
             </svg>
         </div>
 
         <div class="donut-legend">
+            <p v-if="!legend.length" class="muted" style="font-size: 13px; margin: 0">Nessuna pubblicazione negli ultimi 90 giorni.</p>
             <div v-for="(d, i) in legend" :key="d.id" class="donut-row">
                 <div class="donut-row__head">
                     <div class="donut-row__badge"
@@ -74,7 +76,7 @@ onMounted(() => {
                         <ChannelIcon :id="d.id" :size="15" :style="{ color: d.color }" />
                     </div>
                     <span class="donut-row__name">{{ d.label }}</span>
-                    <span class="donut-row__views">{{ d.views.toLocaleString('it-IT') }}</span>
+                    <span class="donut-row__views">{{ d.posts.toLocaleString('it-IT') }}</span>
                     <span class="donut-row__pct" :style="{ color: d.color }">{{ d.pct }}%</span>
                 </div>
                 <div class="donut-row__track">

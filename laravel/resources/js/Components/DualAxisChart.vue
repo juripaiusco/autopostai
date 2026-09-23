@@ -4,6 +4,8 @@ import { bezierPath } from '@/data/chartHelpers';
 import { fmtNum } from '@/data/dashboardMock';
 import Icon from '@/Components/Icon.vue';
 
+// data: [{ month, posts, comments }] — pubblicazioni (asse sx) e commenti
+// ricevuti (asse dx) per mese, dati reali da DashboardMetrics.
 const props = defineProps({
     data: { type: Array, required: true },
 });
@@ -18,19 +20,20 @@ const clipRect = ref(null);
 const hover = ref(null);
 
 const n = computed(() => props.data.length);
-const maxV = computed(() => Math.max(...props.data.map((d) => d.views)) * 1.12);
-const maxC = computed(() => Math.max(...props.data.map((d) => d.comments)) * 1.18);
+// Math.max(1, …): con tutti i mesi a zero niente divisione per zero.
+const maxV = computed(() => Math.max(1, ...props.data.map((d) => d.posts)) * 1.12);
+const maxC = computed(() => Math.max(1, ...props.data.map((d) => d.comments)) * 1.18);
 
 const xOf = (i) => PL + (i / (n.value - 1)) * IW;
 const yV = (v) => PT + IH - (v / maxV.value) * IH;
 const yC = (c) => PT + IH - (c / maxC.value) * IH;
 
-const viewsPts = computed(() => props.data.map((d, i) => [xOf(i), yV(d.views)]));
+const postsPts = computed(() => props.data.map((d, i) => [xOf(i), yV(d.posts)]));
 const commentsPts = computed(() => props.data.map((d, i) => [xOf(i), yC(d.comments)]));
 
-const viewsLine = computed(() => bezierPath(viewsPts.value));
+const postsLine = computed(() => bezierPath(postsPts.value));
 const commentsLine = computed(() => bezierPath(commentsPts.value));
-const areaPath = computed(() => `${viewsLine.value} L${xOf(n.value - 1)},${PT + IH} L${PL},${PT + IH} Z`);
+const areaPath = computed(() => `${postsLine.value} L${xOf(n.value - 1)},${PT + IH} L${PL},${PT + IH} Z`);
 
 const vTicks = computed(() => [0, 0.25, 0.5, 0.75, 1].map((f) => ({
     y: PT + IH * (1 - f),
@@ -81,9 +84,9 @@ const tooltipLeft = computed(() => Math.min(Math.max((xOf(hover.value) / W) * 10
         <div class="chart-legend">
             <div class="chart-legend-item">
                 <div class="stat-icon-badge" style="background: color-mix(in srgb, var(--sky) 14%, white); width: 26px; height: 26px">
-                    <Icon name="eye" :size="14" style="color: var(--sky)" />
+                    <Icon name="calendar" :size="14" style="color: var(--sky)" />
                 </div>
-                <span class="chart-legend-label">Views</span>
+                <span class="chart-legend-label">Pubblicazioni</span>
                 <span class="chart-legend-axis">asse sx</span>
             </div>
             <div class="chart-legend-item">
@@ -119,7 +122,7 @@ const tooltipLeft = computed(() => Math.min(Math.max((xOf(hover.value) / W) * 10
                   :x="W - PR + 8" :y="t.y + 4" text-anchor="start"
                   font-size="10.5" fill="color-mix(in srgb, var(--primary) 60%, var(--g400))">{{ t.labelC }}</text>
             <text :x="PL - 8" :y="PT - 6" text-anchor="end"
-                  font-size="9.5" fill="var(--sky-strong)" font-weight="600">views</text>
+                  font-size="9.5" fill="var(--sky-strong)" font-weight="600">post</text>
             <text :x="W - PR + 8" :y="PT - 6" text-anchor="start"
                   font-size="9.5" fill="var(--primary)" font-weight="600">comm.</text>
             <text v-for="(d, i) in data" :key="'m' + i"
@@ -128,7 +131,7 @@ const tooltipLeft = computed(() => Math.min(Math.max((xOf(hover.value) / W) * 10
 
             <!-- Chart data: clip-revealed left to right -->
             <path :d="areaPath" fill="url(#dualFill)" clip-path="url(#chartReveal)" />
-            <path :d="viewsLine" fill="none" stroke="var(--sky)" stroke-width="2.5"
+            <path :d="postsLine" fill="none" stroke="var(--sky)" stroke-width="2.5"
                   stroke-linecap="round" stroke-linejoin="round" clip-path="url(#chartReveal)" />
             <path :d="commentsLine" fill="none" stroke="var(--primary)" stroke-width="2"
                   stroke-linecap="round" stroke-linejoin="round"
@@ -137,7 +140,7 @@ const tooltipLeft = computed(() => Math.min(Math.max((xOf(hover.value) / W) * 10
             <template v-if="hover !== null">
                 <line :x1="xOf(hover)" :x2="xOf(hover)" :y1="PT" :y2="PT + IH"
                       stroke="var(--g200)" stroke-width="1" stroke-dasharray="4 3" />
-                <circle :cx="viewsPts[hover][0]" :cy="viewsPts[hover][1]"
+                <circle :cx="postsPts[hover][0]" :cy="postsPts[hover][1]"
                         r="4.5" fill="#fff" stroke="var(--sky)" stroke-width="2.5" />
                 <circle :cx="commentsPts[hover][0]" :cy="commentsPts[hover][1]"
                         r="4" fill="#fff" stroke="var(--primary)" stroke-width="2" />
@@ -145,11 +148,11 @@ const tooltipLeft = computed(() => Math.min(Math.max((xOf(hover.value) / W) * 10
         </svg>
 
         <div v-if="hd" class="dual-tooltip" :style="{ left: tooltipLeft }">
-            <div class="dual-tooltip__month">{{ hd.month }} 2025–26</div>
+            <div class="dual-tooltip__month">{{ hd.month }}</div>
             <div class="dual-tooltip__row">
-                <Icon name="eye" :size="12" style="color: #7dd3fc; flex-shrink: 0" />
-                <span style="color: #94a3b8">Views</span>
-                <b style="color: #fff; margin-left: auto">{{ hd.views.toLocaleString('it-IT') }}</b>
+                <Icon name="calendar" :size="12" style="color: #7dd3fc; flex-shrink: 0" />
+                <span style="color: #94a3b8">Pubblicazioni</span>
+                <b style="color: #fff; margin-left: auto">{{ hd.posts.toLocaleString('it-IT') }}</b>
             </div>
             <div class="dual-tooltip__row">
                 <Icon name="chat" :size="12" style="color: #93c5fd; flex-shrink: 0" />

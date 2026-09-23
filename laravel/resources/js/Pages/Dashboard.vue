@@ -10,10 +10,13 @@ import PostsTable from '@/Components/PostsTable.vue';
 import WidgetHeader from '@/Components/Layout/WidgetHeader.vue';
 import TopChannelCard from '@/Components/Domain/TopChannelCard.vue';
 import ChannelMetricsPanel from '@/Components/Domain/ChannelMetricsPanel.vue';
-import { GLOBAL_METRICS, CHANNEL_METRICS, MONTHLY_DATA } from '@/data/dashboardMock';
 
-defineProps({
-    postsCount: { type: Number, required: true },
+// Metriche vere da dati interni (App\Services\DashboardMetrics, fase 1):
+// niente visualizzazioni/utenti unici finché non arrivano gli insights delle
+// piattaforme (fase 2).
+const props = defineProps({
+    metrics: { type: Object, required: true },
+    periodDays: { type: Number, required: true },
     recentPosts: { type: Array, required: true },
 });
 
@@ -27,13 +30,8 @@ const isAdmin = computed(() => usePage().props.isAdmin);
 const isManager = computed(() => usePage().props.isManager);
 const activeUser = computed(() => usePage().props.activeUser);
 
-const g = GLOBAL_METRICS;
-
-/* Sparkline seeds (7 settimane) */
-const vSpark = [18, 22, 19, 28, 31, 36, 41];
-const uSpark = [8, 10, 9, 13, 15, 17, 20];
-const cSpark = [89, 95, 112, 141, 178, 267, 334];
-const pSpark = [8, 11, 9, 14, 13, 16, 15];
+const s = computed(() => props.metrics.stats);
+const period = computed(() => `ultimi ${props.periodDays} giorni`);
 
 </script>
 
@@ -53,41 +51,41 @@ const pSpark = [8, 11, 9, 14, 13, 16, 15];
                             {{ activeUser.role === 'manager' ? 'Manager' : 'Admin' }}
                         </span>
                     </h1>
-                    <p class="muted" style="margin: 6px 0 0">Dati utente · {{ activeUser.email }} · ultimi 90 giorni</p>
+                    <p class="muted" style="margin: 6px 0 0">Dati utente · {{ activeUser.email }} · {{ period }}</p>
                 </div>
             </div>
             <div v-else>
                 <h1>Ciao, {{ userName.split(' ')[0] }} 👋</h1>
-                <p class="muted">{{ isAdmin ? 'Riepilogo di tutti gli utenti' : isManager ? 'Riepilogo dei tuoi utenti' : 'Riepilogo' }} · ultimi 90 giorni · aggiornato adesso</p>
+                <p class="muted">{{ isAdmin ? 'Riepilogo di tutti gli utenti' : isManager ? 'Riepilogo dei tuoi utenti' : 'Riepilogo' }} · {{ period }} · aggiornato adesso</p>
             </div>
         </div>
 
         <div class="stat-grid">
-            <DashStatWidget :index="0" icon="calendar" label="Post inviati" :value="postsCount" :sub="activeUser ? 'pubblicati dall\'utente' : 'su tutti i canali'" :trend="-4" color="var(--g500)" :spark-data="pSpark" />
-            <DashStatWidget :index="1" icon="eye" label="Views totali" :value="g.views" sub="vs periodo precedente" :trend="14" color="var(--sky)" :spark-data="vSpark" />
-            <DashStatWidget :index="2" icon="users" label="Utenti unici" :value="g.unique" sub="audience raggiunta" :trend="9" color="var(--sky-strong)" :spark-data="uSpark" />
-            <DashStatWidget :index="3" icon="chat" label="Commenti" :value="g.comments" sub="interazioni ricevute" :trend="22" color="var(--primary)" :spark-data="cSpark" />
+            <DashStatWidget :index="0" icon="calendar" label="Post pubblicati" :value="s.posts.value" sub="vs periodo precedente" :trend="s.posts.trend" color="var(--g500)" :spark-data="s.posts.spark" />
+            <DashStatWidget :index="1" icon="send" label="Uscite sui canali" :value="s.outputs.value" sub="post × canale" :trend="s.outputs.trend" color="var(--sky)" :spark-data="s.outputs.spark" />
+            <DashStatWidget :index="2" icon="chat" label="Commenti ricevuti" :value="s.comments.value" sub="interazioni sui social" :trend="s.comments.trend" color="var(--primary)" :spark-data="s.comments.spark" />
+            <DashStatWidget :index="3" icon="sparkles" label="Risposte AI" :value="s.replies.value" sub="inviate in automatico" :trend="s.replies.trend" color="var(--sky-strong)" :spark-data="s.replies.spark" />
         </div>
 
         <div class="card card-pad dash-card">
-            <WidgetHeader title="Andamento comunicazione" sub="Views e commenti — ultimi 12 mesi" />
-            <DualAxisChart :data="MONTHLY_DATA" />
+            <WidgetHeader title="Andamento comunicazione" sub="Pubblicazioni e commenti — ultimi 12 mesi" />
+            <DualAxisChart :data="metrics.monthly" />
         </div>
 
         <div class="dash-grid">
             <div class="card card-pad card-col">
-                <WidgetHeader title="Distribuzione per canale" sub="% views per piattaforma" />
+                <WidgetHeader title="Distribuzione per canale" :sub="`% pubblicazioni per piattaforma · ${period}`" />
                 <div class="donut-wrap">
-                    <ChannelDonut :data="CHANNEL_METRICS" />
+                    <ChannelDonut :data="metrics.channels" />
                 </div>
             </div>
             <div class="card card-pad card-col">
-                <WidgetHeader title="Canale più attivo" sub="Views · ultimi 90 giorni" />
-                <TopChannelCard :data="CHANNEL_METRICS" />
+                <WidgetHeader title="Canale più attivo" :sub="`Pubblicazioni · ${period}`" />
+                <TopChannelCard :data="metrics.channels" />
             </div>
         </div>
 
-        <ChannelMetricsPanel :data="CHANNEL_METRICS" />
+        <ChannelMetricsPanel :data="metrics.channels" />
 
         <div class="card card-clip">
             <div class="card-pad card-pad--flush">

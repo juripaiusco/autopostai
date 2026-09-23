@@ -3,19 +3,20 @@ import { computed } from 'vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import { CH_CONFIG } from '@/data/dashboardMock';
 
-// Pannello "Metriche per canale": barre views + tabella dettaglio, data-driven da
-// CHANNEL_METRICS. Icone e colori brand da ChannelIcon + CH_CONFIG.
+// Pannello "Metriche per canale": barre pubblicazioni + tabella dettaglio.
+// data: [{ id, posts, comments, replies, opens }] da DashboardMetrics (opens
+// solo per newsletter: aperture SMTP tracciate dal pixel).
 const props = defineProps({ data: { type: Array, required: true } });
 
 const fmt = (n) => n.toLocaleString('it-IT');
 
-const maxViews = computed(() => Math.max(...props.data.map((c) => c.views)));
+const maxPosts = computed(() => Math.max(...props.data.map((c) => c.posts)));
 
 const rows = computed(() => props.data.map((c) => ({
     ...c,
     cfg: CH_CONFIG[c.id],
-    pct: maxViews.value > 0 ? (c.views / maxViews.value) * 100 : 0,
-    vpp: c.posts > 0 ? Math.round(c.views / c.posts) : 0,
+    pct: maxPosts.value > 0 ? (c.posts / maxPosts.value) * 100 : 0,
+    cpp: c.posts > 0 ? Math.round((c.comments / c.posts) * 10) / 10 : 0,
 })));
 </script>
 
@@ -23,13 +24,13 @@ const rows = computed(() => props.data.map((c) => ({
     <div class="card dash-card card-clip channel-metrics">
         <div class="channel-metrics__head">
             <div class="channel-metrics__title">Metriche per canale</div>
-            <div class="channel-metrics__sub">Views · utenti unici · commenti · ritorno medio — ultimi 90 giorni</div>
+            <div class="channel-metrics__sub">Pubblicazioni · commenti · risposte AI · commenti per post — ultimi 90 giorni</div>
         </div>
 
         <div class="channel-metrics__body">
             <!-- Barre views -->
             <div class="cm-bars">
-                <div class="cm-bars__head">Views</div>
+                <div class="cm-bars__head">Pubblicazioni</div>
                 <div v-for="ch in rows" :key="ch.id" class="cm-bar-row">
                     <span
                         class="cm-bar-icon"
@@ -41,7 +42,7 @@ const rows = computed(() => props.data.map((c) => ({
                     <div class="cm-bar-track">
                         <div class="cm-bar-fill" :style="{ width: `${ch.pct.toFixed(2)}%`, background: ch.cfg.color }" />
                     </div>
-                    <span class="cm-bar-value">{{ fmt(ch.views) }}</span>
+                    <span class="cm-bar-value">{{ fmt(ch.posts) }}</span>
                 </div>
             </div>
 
@@ -51,20 +52,31 @@ const rows = computed(() => props.data.map((c) => ({
                     <thead>
                         <tr>
                             <th>Canale</th>
-                            <th>Utenti unici</th>
                             <th>Commenti</th>
-                            <th>Views / post</th>
+                            <th>Risposte AI</th>
+                            <th>Commenti / post</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="ch in rows" :key="ch.id">
                             <td>{{ ch.cfg.label }}</td>
-                            <td>{{ fmt(ch.unique) }}</td>
-                            <td>
-                                <span v-if="ch.comments > 0">{{ fmt(ch.comments) }}</span>
+                            <!-- Newsletter: niente commenti, al loro posto le aperture (solo SMTP) -->
+                            <td v-if="ch.opens !== null" colspan="3">
+                                <span v-if="ch.opens > 0">{{ fmt(ch.opens) }} aperture</span>
                                 <span v-else class="cm-empty">—</span>
+                                <span class="cm-empty" style="margin-left: 6px">(solo SMTP)</span>
                             </td>
-                            <td class="cm-vpp">{{ fmt(ch.vpp) }}</td>
+                            <template v-else>
+                                <td>
+                                    <span v-if="ch.comments > 0">{{ fmt(ch.comments) }}</span>
+                                    <span v-else class="cm-empty">—</span>
+                                </td>
+                                <td>
+                                    <span v-if="ch.replies > 0">{{ fmt(ch.replies) }}</span>
+                                    <span v-else class="cm-empty">—</span>
+                                </td>
+                                <td class="cm-vpp">{{ fmt(ch.cpp) }}</td>
+                            </template>
                         </tr>
                     </tbody>
                 </table>
