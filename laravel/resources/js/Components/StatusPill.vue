@@ -7,6 +7,9 @@ const STATUS = {
     done: { cls: 'pill-done', label: 'Completato' },
     draft: { cls: 'pill-draft', label: 'Bozza' },
     error: { cls: 'pill-error pill--pulse-error', label: 'Errore' },
+    // Post uscito solo su alcuni canali: non più modificabile, gli altri
+    // canali sono falliti e il worker li ritenta.
+    partial: { cls: 'pill-error pill--pulse-error', label: 'Parziale' },
     // Stati contatto (stessi token colore: verde=attivo, ambra=in attesa,
     // rosso=errore, grigio=inattivo) — riusati, non duplicati in un pill dedicato.
     active: { cls: 'pill-published', label: 'Attivo' },
@@ -15,7 +18,7 @@ const STATUS = {
     unsubscribed: { cls: 'pill-draft', label: 'Disiscritto' },
 };
 
-const ERROR_LIKE = ['error', 'bounced'];
+const ERROR_LIKE = ['error', 'bounced', 'partial'];
 
 const props = defineProps({
     status: { type: String, required: true },

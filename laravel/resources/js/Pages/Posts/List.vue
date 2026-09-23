@@ -121,7 +121,7 @@ function formatDate(value) {
                     <tbody v-else :key="`${listKey}-rows`">
                         <tr v-for="p in posts.data" :key="p.id"
                             class="tr-clickable"
-                            @click="router.get(p.status === 'published' ? route('posts.show', p.id) : route('posts.edit', p.id))">
+                            @click="router.get(['published', 'partial'].includes(p.status) ? route('posts.show', p.id) : route('posts.edit', p.id))">
                             <td data-label="Titolo">{{ p.title }}</td>
                             <td v-if="showAuthor" data-label="Autore">{{ p.author }}</td>
                             <td data-label="Canali">

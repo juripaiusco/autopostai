@@ -225,6 +225,14 @@ class PostController extends Controller
                 'id' => $post->id,
                 'title' => $post->title,
                 'status' => $post->status(),
+                // Stato per canale: in un post parziale i canali con id sono
+                // usciti, gli altri sono falliti (il worker li ritenta).
+                'channelStatus' => collect($post->channels ?? [])
+                    ->filter(fn ($c) => !empty($c['on']))
+                    ->map(fn ($c) => !empty($c['id'])
+                        ? 'published'
+                        : ($post->status() === 'partial' ? 'error' : $post->status()))
+                    ->all(),
                 'owner' => ['name' => $post->user->name, 'email' => $post->user->email],
                 'channels' => collect($post->channels ?? [])
                     ->filter(fn ($c) => !empty($c['on']))
@@ -270,7 +278,7 @@ class PostController extends Controller
         $isAdmin = $me->isAdmin();
         $isManager = $me->isManager();
 
-        if ($post->status() === 'published') {
+        if (!$post->isEditable()) {
             return redirect()->route('posts.show', $post);
         }
 
@@ -469,7 +477,7 @@ class PostController extends Controller
     {
         $this->authorize('update', $post);
 
-        abort_if($post->status() === 'published', 403, 'Un post pubblicato non può essere modificato.');
+        abort_if(!$post->isEditable(), 403, 'Un post pubblicato (anche solo su alcuni canali) non può essere modificato.');
 
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
@@ -487,7 +495,10 @@ class PostController extends Controller
         $unknown = array_diff(array_keys($data['channels']), array_keys(User::CHANNELS));
         abort_if(!empty($unknown), 422, 'Canale non valido.');
 
-        $channels = $this->buildChannelsPayload($data['channels'], $post->user?->channels ?? [], $post->user?->settings?->newsletterProvider(), $post->user?->id);
+        $channels = $this->preserveWorkerKeys(
+            $this->buildChannelsPayload($data['channels'], $post->user?->channels ?? [], $post->user?->settings?->newsletterProvider(), $post->user?->id),
+            $post->fresh()->channels ?? [],
+        );
         [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
 
         $existing = $post->img ?? [];
@@ -521,6 +532,28 @@ class PostController extends Controller
         $request->session()->flash('toast', 'Post aggiornato.');
 
         return redirect()->route('posts');
+    }
+
+    /**
+     * Rimette nel payload del form le chiavi scritte dal worker (id remoti,
+     * url, stats...). Il controllo isEditable() blocca già i post con canali
+     * pubblicati; questo chiude la finestra in cui il worker pubblica mentre
+     * il form è aperto (letto con fresh(), non dal model caricato a inizio
+     * richiesta). Un canale spento nel form non eredita nulla.
+     */
+    private function preserveWorkerKeys(array $channels, array $current): array
+    {
+        foreach ($channels as $id => $channel) {
+            if (empty($channel['on']) || !is_array($current[$id] ?? null)) {
+                continue;
+            }
+            $channels[$id] = array_merge(
+                $channel,
+                array_intersect_key($current[$id], array_flip(Post::WORKER_CHANNEL_KEYS)),
+            );
+        }
+
+        return $channels;
     }
 
     public function destroy(Request $request, Post $post): RedirectResponse

@@ -163,7 +163,7 @@ function confirmDelete() {
                 v-for="id in post.channels"
                 :key="id"
                 :channel-id="id"
-                :status="post.status"
+                :status="post.channelStatus?.[id] ?? post.status"
                 :published-at="post.publishedAt"
                 :excerpt="excerpt"
                 :comments-count="post.commentsByChannel[id] ?? 0"

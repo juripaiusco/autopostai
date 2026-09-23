@@ -38,6 +38,13 @@ class Post extends Model
     /** @use HasFactory<PostFactory> */
     use HasFactory, SoftDeletes;
 
+    /**
+     * Chiavi del JSON channels scritte dal worker Python dopo le azioni
+     * remote (id/url del post pubblicato, rimozione, update, stats newsletter).
+     * Il form non le conosce: vanno preservate quando Laravel riscrive channels.
+     */
+    public const WORKER_CHANNEL_KEYS = ['id', 'url', 'gallery_html', 'id_del', 'id_update', 'stats', 'completed_at'];
+
     protected function casts(): array
     {
         return [
@@ -102,10 +109,34 @@ class Post extends Model
         $this->update(['channels' => $channels]);
     }
 
+    /**
+     * Almeno un canale acceso ha già un id remoto: il worker lo ha pubblicato.
+     * Con published=0 significa che un altro canale è fallito (il worker
+     * marca published=1 solo quando tutti i canali accesi hanno un id).
+     */
+    public function hasPublishedChannels(): bool
+    {
+        return collect($this->channels ?? [])
+            ->contains(fn ($c) => is_array($c) && !empty($c['on']) && !empty($c['id']));
+    }
+
+    /** Modificabile solo finché nessun canale è stato pubblicato. */
+    public function isEditable(): bool
+    {
+        return !in_array($this->status(), ['published', 'partial'], true);
+    }
+
     public function status(): string
     {
         if ($this->published == '1') {
             return 'published';
+        }
+
+        // Prima risultava "draft" (modificabile): salvare il form riscriveva
+        // channels perdendo gli id remoti e il worker ripubblicava sui canali
+        // già usciti.
+        if ($this->hasPublishedChannels()) {
+            return 'partial';
         }
 
         if ($this->published_at !== null && $this->published_at->isFuture()) {
