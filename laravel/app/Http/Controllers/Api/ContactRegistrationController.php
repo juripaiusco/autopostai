@@ -13,9 +13,10 @@ use Illuminate\Http\Request;
 class ContactRegistrationController extends Controller
 {
     /**
-     * Registrazione contatto server-to-server (Step 5): niente form pubblico,
-     * niente captcha/rate limit oltre alla base del framework — solo
-     * autenticazione via API key (ApiKeyAuth) + validazione payload.
+     * Registrazione contatto server-to-server (Step 5): niente form pubblico
+     * né captcha — autenticazione via API key (ApiKeyAuth), limite di 60
+     * richieste/minuto per account (limiter `contacts-api`), validazione
+     * payload.
      */
     public function store(Request $request): JsonResponse
     {
@@ -25,6 +26,10 @@ class ContactRegistrationController extends Controller
         $data = $request->validate([
             'email' => ['required', 'email:rfc', new ValidMxRecord],
             'consent_source' => ['nullable', 'string', 'max:255'],
+            // IP dell'iscritto (lo conosce il sito che raccoglie il consenso):
+            // $request->ip() qui è quello del server chiamante, non una prova
+            // di consenso GDPR valida. Resta il fallback se non inviato.
+            'consent_ip' => ['nullable', 'ip'],
         ]);
 
         $email = $data['email'];
@@ -65,7 +70,7 @@ class ContactRegistrationController extends Controller
             'email' => $email,
             'status' => $status,
             'consent_source' => $data['consent_source'] ?? 'api',
-            'consent_ip' => $request->ip(),
+            'consent_ip' => $data['consent_ip'] ?? $request->ip(),
             'consent_at' => now(),
         ]);
 

@@ -127,3 +127,34 @@ test('api rejects an email whose domain has no MX record', function () {
     $this->postJson('/api/contacts', ['email' => 'someone@this-domain-does-not-exist-faper3-test.invalid'], ['X-Api-Key' => $key])
         ->assertStatus(422);
 });
+
+test('consent_ip from the payload is stored instead of the calling server ip', function () {
+    [$account, $key] = accountWithApiKey();
+
+    $this->postJson('/api/contacts', ['email' => 'gdpr@example.com', 'consent_ip' => '203.0.113.7'], ['X-Api-Key' => $key])
+        ->assertStatus(201);
+
+    expect(Contact::where('email', 'gdpr@example.com')->first()->consent_ip)->toBe('203.0.113.7');
+});
+
+test('consent_ip must be a valid ip', function () {
+    [, $key] = accountWithApiKey();
+
+    $this->postJson('/api/contacts', ['email' => 'gdpr@example.com', 'consent_ip' => 'non-un-ip'], ['X-Api-Key' => $key])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('consent_ip');
+});
+
+test('registrations are rate limited per account', function () {
+    [, $key] = accountWithApiKey();
+    [, $otherKey] = accountWithApiKey();
+
+    // 60 richieste/minuto: la 61esima viene respinta (anche se non valida,
+    // conta comunque). Un altro account ha il proprio contatore.
+    for ($i = 0; $i < 60; $i++) {
+        $this->postJson('/api/contacts', ['email' => 'not-an-email'], ['X-Api-Key' => $key])->assertStatus(422);
+    }
+
+    $this->postJson('/api/contacts', ['email' => 'not-an-email'], ['X-Api-Key' => $key])->assertStatus(429);
+    $this->postJson('/api/contacts', ['email' => 'not-an-email'], ['X-Api-Key' => $otherKey])->assertStatus(422);
+});
