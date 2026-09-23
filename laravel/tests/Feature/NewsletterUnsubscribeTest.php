@@ -8,56 +8,82 @@ use Illuminate\Support\Facades\URL;
 
 uses(RefreshDatabase::class);
 
-test('a valid signed link unsubscribes the contact and adds it to the suppression list', function () {
+/** Link firmato come lo genera il worker Python: firma relativa (solo path). */
+function unsubscribeUrl(Contact $contact): string
+{
+    return URL::signedRoute('newsletter.unsubscribe', ['contact' => $contact->id], null, false);
+}
+
+function activeContact(): Contact
+{
     $account = User::factory()->create(['parent_id' => null]);
-    $contact = Contact::factory()->create(['user_id' => $account->id, 'status' => 'active']);
 
-    $url = URL::signedRoute('newsletter.unsubscribe', ['contact' => $contact->id]);
+    return Contact::factory()->create(['user_id' => $account->id, 'status' => 'active']);
+}
 
-    $this->get($url)->assertOk();
+test('opening the link only shows the confirmation page', function () {
+    // Gli scanner antiphishing aprono i link delle email in automatico: il GET
+    // non deve disiscrivere nessuno.
+    $contact = activeContact();
+
+    $this->get(unsubscribeUrl($contact))
+        ->assertOk()
+        ->assertSee('Conferma disiscrizione')
+        ->assertSee($contact->email);
+
+    expect($contact->fresh()->status)->toBe('active');
+    expect(SuppressionList::where('email', $contact->email)->exists())->toBeFalse();
+});
+
+test('confirming unsubscribes the contact and adds it to the suppression list', function () {
+    $contact = activeContact();
+
+    $this->post(unsubscribeUrl($contact))->assertOk()->assertSee('Disiscrizione confermata');
 
     $contact->refresh();
     expect($contact->status)->toBe('unsubscribed');
     expect($contact->unsubscribed_at)->not->toBeNull();
 
-    $suppressed = SuppressionList::where('user_id', $account->id)->where('email', $contact->email)->first();
+    $suppressed = SuppressionList::where('user_id', $contact->user_id)->where('email', $contact->email)->first();
     expect($suppressed)->not->toBeNull();
     expect($suppressed->reason)->toBe('unsubscribe');
 });
 
+test('one-click unsubscribe from the mail client works with the RFC 8058 body', function () {
+    $contact = activeContact();
+
+    $this->post(unsubscribeUrl($contact), ['List-Unsubscribe' => 'One-Click'])->assertOk();
+
+    expect($contact->fresh()->status)->toBe('unsubscribed');
+});
+
 test('an unsigned or tampered link is rejected', function () {
-    $account = User::factory()->create(['parent_id' => null]);
-    $contact = Contact::factory()->create(['user_id' => $account->id, 'status' => 'active']);
+    $contact = activeContact();
 
     $this->get(route('newsletter.unsubscribe', ['contact' => $contact->id]))->assertForbidden();
-
-    $url = URL::signedRoute('newsletter.unsubscribe', ['contact' => $contact->id]);
-    $this->get($url.'tampered')->assertForbidden();
+    $this->post(route('newsletter.unsubscribe.confirm', ['contact' => $contact->id]))->assertForbidden();
+    $this->post(unsubscribeUrl($contact).'tampered')->assertForbidden();
 
     expect($contact->fresh()->status)->toBe('active');
 });
 
-test('clicking the link twice is idempotent', function () {
-    $account = User::factory()->create(['parent_id' => null]);
-    $contact = Contact::factory()->create(['user_id' => $account->id, 'status' => 'active']);
-    $url = URL::signedRoute('newsletter.unsubscribe', ['contact' => $contact->id]);
+test('confirming twice is idempotent and the page then shows the done state', function () {
+    $contact = activeContact();
+    $url = unsubscribeUrl($contact);
 
-    $this->get($url)->assertOk();
-    $this->get($url)->assertOk();
+    $this->post($url)->assertOk();
+    $this->post($url)->assertOk();
+    $this->get($url)->assertOk()->assertSee('Disiscrizione confermata');
 
-    expect(SuppressionList::where('user_id', $account->id)->where('email', $contact->email)->count())->toBe(1);
+    expect(SuppressionList::where('user_id', $contact->user_id)->where('email', $contact->email)->count())->toBe(1);
 });
 
 test('the signature Laravel generates matches the python replication algorithm', function () {
-    // Verifica di regressione: publisher/integrations/unsubscribe.py (Python)
-    // replica hash_hmac('sha256', url_assoluto_senza_query, APP_KEY grezza) —
-    // se mai cambiasse la config URL signing di Laravel, questo test lo becca.
-    $contact = Contact::factory()->create(['user_id' => User::factory()->create(['parent_id' => null])->id]);
-    $url = URL::signedRoute('newsletter.unsubscribe', ['contact' => $contact->id]);
+    // publisher/integrations/unsubscribe.py replica
+    // hash_hmac('sha256', '/disiscrivi/{id}', APP_KEY grezza): se cambiasse
+    // la config URL signing di Laravel, questo test lo becca.
+    $contact = activeContact();
 
-    $base = route('newsletter.unsubscribe', ['contact' => $contact->id]);
-    $expected = hash_hmac('sha256', $base, config('app.key'));
-
-    parse_str(parse_url($url, PHP_URL_QUERY), $query);
-    expect($query['signature'])->toBe($expected);
+    parse_str(parse_url(unsubscribeUrl($contact), PHP_URL_QUERY), $query);
+    expect($query['signature'])->toBe(hash_hmac('sha256', "/disiscrivi/{$contact->id}", config('app.key')));
 });

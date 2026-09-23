@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
+
+        // Disiscrizione one-click (RFC 8058): il client di posta fa POST
+        // sull'URL firmato senza sessione né token. La firma resta obbligatoria.
+        $middleware->validateCsrfTokens(except: ['disiscrivi/*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

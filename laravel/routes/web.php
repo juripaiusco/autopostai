@@ -178,10 +178,16 @@ Route::middleware('auth')->group(function () {
 
 // Pubblica, nessun login: la firma della route (signed URL) è l'unica
 // autorizzazione — destinata ai destinatari delle newsletter, non agli
-// utenti autenticati dell'app.
+// utenti autenticati dell'app. Firma relativa (solo path): generata dal
+// worker Python, non dipende da http/https né dall'host visto dietro proxy.
+// GET = pagina di conferma, POST = disiscrizione (anche one-click RFC 8058,
+// escluso dal CSRF in bootstrap/app.php).
 Route::get('/disiscrivi/{contact}', [UnsubscribeController::class, 'show'])
-    ->middleware('signed')
+    ->middleware('signed:relative')
     ->name('newsletter.unsubscribe');
+Route::post('/disiscrivi/{contact}', [UnsubscribeController::class, 'unsubscribe'])
+    ->middleware('signed:relative')
+    ->name('newsletter.unsubscribe.confirm');
 
 // Pixel di tracking apertura (Step 8): pubblica come sopra, ma senza firma —
 // un id indovinato marca al più un "aperto" falso, nessuna azione distruttiva.

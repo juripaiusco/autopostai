@@ -12,9 +12,9 @@ from publisher.integrations.unsubscribe import unsubscribe_url
 
 
 def test_unsubscribe_url_matches_laravel_signed_route_algorithm(monkeypatch):
-    # Stessa chiave/URL usati per verificare manualmente contro un vero
-    # URL::signedRoute() generato da Laravel in fase di sviluppo — la firma
-    # attesa qui e' quella osservata realmente, non ricalcolata a mano.
+    # Firma attesa generata da un vero URL::signedRoute('newsletter.unsubscribe',
+    # ['contact' => 123], null, false) con questa chiave — osservata, non
+    # ricalcolata a mano.
     monkeypatch.setattr(config, "APP_URL", "http://localhost")
     monkeypatch.setattr(config, "APP_KEY", "base64:dRZeddneXaE1p+iJ2G2FAiyNLCx+x7/bVi+NtEyV3Is=")
 
@@ -22,15 +22,14 @@ def test_unsubscribe_url_matches_laravel_signed_route_algorithm(monkeypatch):
 
     assert url.startswith("http://localhost/disiscrivi/123?signature=")
     signature = url.split("signature=", 1)[1]
-    assert signature == "06f0a4c2380e48913c550d3aecbd3b008398c06c85ba8d0b42c785f2e8f405cf"
+    assert signature == "1873cf975fa02e65a7925730b59038cfd8452506b8e9e7b3dd4e441705d42129"
 
 
-def test_unsubscribe_url_is_a_valid_hmac_for_any_key(monkeypatch):
-    monkeypatch.setattr(config, "APP_URL", "https://faper3.it")
+def test_signature_covers_only_the_path(monkeypatch):
+    """Firma relativa: stesso valore per http/https e qualunque host (proxy)."""
     monkeypatch.setattr(config, "APP_KEY", "base64:whatever==")
+    expected = hmac.new(b"base64:whatever==", b"/disiscrivi/42", hashlib.sha256).hexdigest()
 
-    url = unsubscribe_url(42)
-    base = "https://faper3.it/disiscrivi/42"
-    expected = hmac.new(b"base64:whatever==", base.encode(), hashlib.sha256).hexdigest()
-
-    assert url == f"{base}?signature={expected}"
+    for app_url in ("https://faper3.it", "http://beta.faper3.it/"):
+        monkeypatch.setattr(config, "APP_URL", app_url)
+        assert unsubscribe_url(42) == f"{app_url.rstrip('/')}/disiscrivi/42?signature={expected}"
