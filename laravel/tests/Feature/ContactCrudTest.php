@@ -3,6 +3,7 @@
 use App\Models\Contact;
 use App\Models\ContactTag;
 use App\Models\Settings;
+use App\Models\SuppressionList;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -152,4 +153,40 @@ test('index respects the same visibleTo scoping as posts', function () {
         ->withSession(['scoped_user_id' => $accountA->id])
         ->get(route('contacts'))
         ->assertInertia(fn (Assert $page) => $page->has('contacts.data', 1));
+});
+
+test('a suppressed address cannot be set back to active or unverified', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $account = makeSmtpCustomAccount($admin);
+    $contact = Contact::factory()->create(['user_id' => $account->id, 'email' => 'bye@example.com', 'status' => 'unsubscribed']);
+    SuppressionList::create(['user_id' => $account->id, 'email' => 'bye@example.com', 'reason' => 'unsubscribe']);
+
+    foreach (['active', 'unverified'] as $status) {
+        $this->actingAs($account)->put(route('contacts.update', $contact), [
+            'email' => 'bye@example.com',
+            'status' => $status,
+        ])->assertInvalid(['status' => 'si è disiscritto']);
+    }
+    expect($contact->fresh()->status)->toBe('unsubscribed');
+
+    // Altri campi restano modificabili se lo stato non torna attivo.
+    $this->actingAs($account)->put(route('contacts.update', $contact), [
+        'email' => 'bye@example.com',
+        'status' => 'unsubscribed',
+        'tags' => ['ex-clienti'],
+    ])->assertRedirect(route('contacts'));
+});
+
+test('a new contact cannot be created active for a suppressed address', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $account = makeSmtpCustomAccount($admin);
+    SuppressionList::create(['user_id' => $account->id, 'email' => 'bounced@example.com', 'reason' => 'hard_bounce']);
+
+    $this->actingAs($account)->post(route('contacts.store'), [
+        'user_id' => $account->id,
+        'email' => 'bounced@example.com',
+        'status' => 'active',
+    ])->assertInvalid(['status' => 'bounce']);
+
+    expect(Contact::where('email', 'bounced@example.com')->exists())->toBeFalse();
 });

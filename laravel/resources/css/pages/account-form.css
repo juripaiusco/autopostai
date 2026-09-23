@@ -145,6 +145,7 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
 .acc-field:last-child { margin-bottom: 0; }
 .acc-row-label { display: block; font-size: 14px; font-weight: 600; color: var(--g700); margin-bottom: 4px; }
 .acc-row-help  { display: block; font-size: 12.5px; color: var(--g500); margin-bottom: 7px; line-height: 1.45; }
+.acc-row-error { display: block; font-size: 12.5px; color: var(--danger); margin-top: 6px; line-height: 1.45; }
 
 /* ---------- Grids ---------- */
 .acc-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }

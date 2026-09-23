@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Contact;
 use App\Models\ContactTag;
+use App\Models\SuppressionList;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -139,6 +140,8 @@ class ContactController extends Controller
         $eligibleIds = $this->eligibleAccounts($me)->pluck('id');
         abort_unless($eligibleIds->contains((int) $data['user_id']), 422, 'Account non valido.');
 
+        $this->ensureNotSuppressed((int) $data['user_id'], $data['email'], $data['status']);
+
         $existing = Contact::withTrashed()
             ->where('user_id', $data['user_id'])
             ->where('email', $data['email'])
@@ -209,6 +212,8 @@ class ContactController extends Controller
             throw ValidationException::withMessages(['email' => 'Esiste già un altro contatto con questa email per questo account.']);
         }
 
+        $this->ensureNotSuppressed($contact->user_id, $data['email'], $data['status']);
+
         $contact->update([
             'email' => $data['email'],
             'status' => $data['status'],
@@ -217,6 +222,35 @@ class ContactController extends Controller
         $this->syncTags($contact, $contact->user_id, $data['tags'] ?? []);
 
         return redirect()->route('contacts');
+    }
+
+    /**
+     * Un indirizzo in suppression list (disiscritto, bounce, segnalato come
+     * spam) non torna "attivo" da una modifica manuale: stessa regola
+     * dell'API di registrazione. Il worker lo escluderebbe comunque
+     * dall'invio, ma la scheda mostrerebbe un contatto attivo che non riceve.
+     */
+    private function ensureNotSuppressed(int $userId, string $email, string $status): void
+    {
+        if (!in_array($status, ['active', 'unverified'], true)) {
+            return;
+        }
+
+        $reason = SuppressionList::where('user_id', $userId)->where('email', $email)->value('reason');
+        if ($reason === null) {
+            return;
+        }
+
+        $label = match ($reason) {
+            'unsubscribe' => 'si è disiscritto',
+            'hard_bounce' => 'l\'indirizzo non esiste (bounce)',
+            'complaint' => 'ha segnalato le email come spam',
+            default => $reason,
+        };
+
+        throw ValidationException::withMessages([
+            'status' => "Questo indirizzo non può essere riattivato: {$label}.",
+        ]);
     }
 
     public function destroy(Contact $contact): RedirectResponse

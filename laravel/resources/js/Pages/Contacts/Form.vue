@@ -16,6 +16,9 @@ const props = defineProps({
 });
 
 const userName = computed(() => usePage().props.auth?.user?.name ?? '');
+// Errori di validazione del server (email duplicata, indirizzo soppresso…):
+// prima non venivano mostrati e il salvataggio sembrava ignorato.
+const errors = computed(() => usePage().props.errors ?? {});
 
 const STATUSES = [
     { id: 'active', label: 'Attivo' },
@@ -121,10 +124,10 @@ function save() {
             <SectionCard v-else-if="selectedAccount" title="Account" :subtitle="accountLabel(selectedAccount)" />
 
             <SectionCard title="Contatto" subtitle="Email e stato di iscrizione.">
-                <FieldRow id="ct-email" label="Email">
+                <FieldRow id="ct-email" label="Email" :error="errors.email">
                     <input id="ct-email" class="control" type="email" v-model="form.email" placeholder="nome@dominio.it" />
                 </FieldRow>
-                <FieldRow id="ct-status" label="Stato" style="margin-bottom: 0">
+                <FieldRow id="ct-status" label="Stato" style="margin-bottom: 0" :error="errors.status">
                     <select id="ct-status" class="control" v-model="form.status">
                         <option v-for="s in STATUSES" :key="s.id" :value="s.id">{{ s.label }}</option>
                     </select>
