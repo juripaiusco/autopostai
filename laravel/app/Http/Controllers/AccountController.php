@@ -6,6 +6,7 @@ use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -336,6 +337,15 @@ class AccountController extends Controller
         // controller e restavano non salvati (child_on/child_max/tokens_limit/
         // image_model_limit invariati).
         $canSubusers = $request->boolean('canSubusers');
+
+        // Un manager con sotto-account non può perdere il ruolo: i suoi figli
+        // resterebbero appesi a un utente semplice. Vanno spostati prima.
+        if (!$user->isAdmin() && !$canSubusers && $user->children()->exists()) {
+            throw ValidationException::withMessages([
+                'canSubusers' => 'L\'account ha dei sotto-account: spostali o eliminali prima di togliere il ruolo manager.',
+            ]);
+        }
+
         $user->child_on = $canSubusers ? 1 : null;
         $user->child_max = $canSubusers ? ($request->input('subusersLimit') ?: null) : null;
         $user->tokens_limit = $request->input('tokensMonth') ?: null;
@@ -346,7 +356,9 @@ class AccountController extends Controller
         // non spostarli altrove), e solo verso un manager/admin valido — mai
         // a vuoto, altrimenti parent_id=null renderebbe l'account admin
         // (isAdmin() lo deduce da parent_id===null).
-        if ($me->isAdmin() && !$canSubusers) {
+        // Un amministratore (anche sé stesso) non si riassegna mai: ricevere un
+        // parent_id lo declasserebbe, perdendo i permessi di admin.
+        if ($me->isAdmin() && !$user->isAdmin() && !$canSubusers) {
             $managerId = $request->input('manager');
             if ($managerId !== null && $managerId !== '') {
                 $newParent = User::where(fn ($q) => $q->whereNull('parent_id')->orWhere('child_on', 1))
@@ -457,6 +469,19 @@ class AccountController extends Controller
     public function destroy(Request $request, User $user): RedirectResponse
     {
         $this->authorize('delete', $user);
+
+        // La cancellazione è in cascata (sotto-account, post, contatti,
+        // impostazioni): niente auto-eliminazione, niente admin, niente
+        // account con sotto-account (verrebbero cancellati anche loro).
+        $reason = match (true) {
+            $user->is($request->user()) => 'Non puoi eliminare il tuo account.',
+            $user->isAdmin() => 'Un amministratore non può essere eliminato.',
+            $user->children()->exists() => 'L\'account ha dei sotto-account: spostali o eliminali prima.',
+            default => null,
+        };
+        if ($reason) {
+            throw ValidationException::withMessages(['account' => $reason]);
+        }
 
         $user->delete();
 

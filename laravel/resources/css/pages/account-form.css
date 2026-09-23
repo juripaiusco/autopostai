@@ -501,6 +501,7 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
     animation: accrise .25s ease-out;
 }
 .acc-toast svg { width: 17px; height: 17px; color: var(--st-pub-bd); }
+.acc-toast--error svg { color: var(--danger); }
 @keyframes accrise {
     from { transform: translateX(-50%) translateY(10px); opacity: 0; }
     to   { transform: translateX(-50%) translateY(0);    opacity: 1; }

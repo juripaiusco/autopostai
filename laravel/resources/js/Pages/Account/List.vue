@@ -58,7 +58,7 @@ function confirmDelete(id) {
     router.delete(route('account.destroy', id), {
         preserveScroll: true,
         onSuccess: () => { deleteTarget.value = null; },
-        onError: () => { deleteError.value = 'Eliminazione non riuscita. Riprova.'; },
+        onError: (errors) => { deleteError.value = errors.account ?? 'Eliminazione non riuscita. Riprova.'; },
         onFinish: () => { deleting.value = false; },
     });
 }
@@ -193,7 +193,8 @@ function confirmDelete(id) {
         >
             Sei sicuro di voler eliminare <b>{{ deleteTarget.name }}</b>?<br />
             <span class="modal-note">
-                Questa azione è irreversibile. I post associati rimarranno nel sistema.
+                Questa azione è irreversibile: vengono eliminati anche i suoi post, contatti e impostazioni.
+                I post già pubblicati restano online sui canali (Facebook, WordPress…) e vanno tolti a mano.
             </span>
         </ConfirmModal>
     </AppLayout>

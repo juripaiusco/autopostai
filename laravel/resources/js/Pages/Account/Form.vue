@@ -177,6 +177,7 @@ function set(path, value) {
 const activeTab  = ref('profile');
 const activeIntg = ref('ai');
 const toast      = ref(null);
+const toastError = ref(false);
 let toastTimer   = null;
 
 const activeCh  = computed(() => CHANNELS.filter(c => form.channels[c.id].on).length);
@@ -226,10 +227,12 @@ function doSave() {
     if (props.mode === 'create') {
         router.post(route('account.store'), form, {
             onSuccess: () => { showToast('Account creato'); dirty.value = false; },
+            onError: showFirstError,
         });
     } else {
         router.put(route('account.update', props.account?.id), form, {
             onSuccess: (page) => { showToast('Modifiche salvate'); dirty.value = false; resetSecrets(page.props.account); },
+            onError: showFirstError,
         });
     }
 }
@@ -238,10 +241,17 @@ function doCancel() {
     router.get(route('account'));
 }
 
-function showToast(msg) {
+// Prima un errore di validazione (email già usata, blocchi sul ruolo…) non
+// mostrava nulla: il salvataggio sembrava semplicemente ignorato.
+function showFirstError(errors) {
+    showToast(Object.values(errors)[0] ?? 'Salvataggio non riuscito.', true);
+}
+
+function showToast(msg, isError = false) {
     toast.value = msg;
+    toastError.value = isError;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { toast.value = null; }, 2400);
+    toastTimer = setTimeout(() => { toast.value = null; }, isError ? 6000 : 2400);
 }
 
 function getLinkedinToken() {
@@ -551,8 +561,8 @@ function goToIntegration(chId) {
 
         <!-- Toast -->
         <Teleport to="body">
-            <div v-if="toast" class="acc-toast">
-                <Icon name="check" :size="17" />{{ toast }}
+            <div v-if="toast" class="acc-toast" :class="{ 'acc-toast--error': toastError }" :role="toastError ? 'alert' : 'status'">
+                <Icon :name="toastError ? 'warning' : 'check'" :size="17" />{{ toast }}
             </div>
         </Teleport>
 
