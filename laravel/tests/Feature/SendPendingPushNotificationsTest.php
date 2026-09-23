@@ -128,4 +128,60 @@ class SendPendingPushNotificationsTest extends TestCase
         $this->assertSame('alert', $n->fresh()->kind);
         $this->assertContains('database', (new PushNotificationAlert($n))->via($creator));
     }
+
+    public function test_a_failing_recipient_does_not_block_others_nor_cause_a_resend(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $ok = User::factory()->create(['parent_id' => $admin->id]);
+        $broken = User::factory()->create(['parent_id' => $admin->id]);
+        $n = PushNotification::factory()->create([
+            'created_by_user_id' => $admin->id,
+            'user_id' => null,
+            'audience' => 'children',
+        ]);
+
+        // Dispatcher finto: fallisce solo per $broken, registra gli altri.
+        $dispatcher = new class($broken) implements \Illuminate\Contracts\Notifications\Dispatcher
+        {
+            public array $delivered = [];
+
+            public function __construct(private User $broken) {}
+
+            public function send($notifiables, $notification)
+            {
+                $this->sendNow($notifiables, $notification);
+            }
+
+            public function sendNow($notifiables, $notification, ?array $channels = null)
+            {
+                foreach (\Illuminate\Support\Arr::wrap($notifiables) as $user) {
+                    if ($user->is($this->broken)) {
+                        throw new \RuntimeException('webpush down');
+                    }
+                    $this->delivered[] = $user->id;
+                }
+            }
+        };
+        // Il contratto Dispatcher è un alias di ChannelManager: va sostituito quello.
+        $this->app->instance(\Illuminate\Notifications\ChannelManager::class, $dispatcher);
+
+        $this->artisan('notifications:send-pending')->assertExitCode(0);
+
+        $this->assertSame([$ok->id], $dispatcher->delivered);
+        $this->assertNotNull($n->fresh()->sent_at);
+        $this->assertSame(1, $n->fresh()->recipients_count);
+
+        // Secondo run: la notifica è già presa, nessun nuovo invio.
+        $this->artisan('notifications:send-pending')->assertExitCode(0);
+        $this->assertSame([$ok->id], $dispatcher->delivered);
+    }
+
+    public function test_scheduler_does_not_overlap_runs(): void
+    {
+        $event = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+            ->first(fn ($e) => str_contains($e->command ?? '', 'notifications:send-pending'));
+
+        $this->assertNotNull($event);
+        $this->assertTrue($event->withoutOverlapping);
+    }
 }
