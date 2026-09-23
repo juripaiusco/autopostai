@@ -18,6 +18,12 @@ const props = defineProps({
 
 const userName = computed(() => usePage().props.auth?.user?.name ?? '');
 
+// Errori di validazione del server dopo "Salva": prima non venivano mostrati e
+// il salvataggio sembrava ignorato. Il wizard è a passi e un errore può
+// riguardare un campo di un altro passo (es. immagini): riepilogo unico,
+// visibile su ogni passo.
+const errorMessages = computed(() => Object.values(usePage().props.errors ?? {}));
+
 const CHANNELS_CFG = [
     { id: 'facebook', label: 'Facebook', limit: 63206 },
     { id: 'instagram', label: 'Instagram', limit: 2200 },
@@ -185,6 +191,13 @@ function submit(action) {
         <div class="acc-content">
             <div class="card card-pad">
                 <StepBar :current="step" :labels="STEP_LABELS" :free-nav="mode === 'edit'" @goto="goto" />
+
+                <div v-if="errorMessages.length" class="pf-errors" role="alert">
+                    <strong>Il post non è stato salvato:</strong>
+                    <ul>
+                        <li v-for="(message, i) in errorMessages" :key="i">{{ message }}</li>
+                    </ul>
+                </div>
 
                 <Transition name="pf-step" mode="out-in">
                     <div class="pf-step-content" :key="step">

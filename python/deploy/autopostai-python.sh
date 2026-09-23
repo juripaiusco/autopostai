@@ -1,80 +1,65 @@
 #!/bin/bash
-
-# Crontab (adatta il path):
-# *   *   *   *   *   /var/www/vhosts/.../dev_code/python/deploy/autopostai-python.sh >> /root/autopostai-python.log 2>&1
+# Servizio immagini (FastAPI, main.py) in produzione/beta: container fisso con
+# restart always. Lanciato da cron ogni minuto solo per (ri)costruire l'immagine
+# se cambiano Dockerfile/requirements e riavviare il container se non gira
+# (stile v1 autopostai.sh, nessun docker-compose in produzione).
 #
-# Stile v1 (autopostai.sh): nessun docker-compose in produzione. Rebuild solo
-# se Dockerfile o requirements.txt sono cambiati; il codice applicativo e'
-# montato come volume, quindi un git pull che tocca solo il codice richiede
-# solo un restart del container, non un rebuild dell'immagine.
+# Crontab (un'istanza per riga, path della propria checkout):
+#   * * * * * /var/www/vhosts/.../faper3/python/deploy/autopostai-python.sh >> /var/log/faper3-images.log 2>&1
+#   * * * * * IMAGES_INSTANCE=beta IMAGES_PORT=8011 /var/www/vhosts/.../faper3-beta/python/deploy/autopostai-python.sh >> /var/log/faper3-images-beta.log 2>&1
+#
+# Variabili (opzionali, default = produzione):
+#   IMAGES_INSTANCE  nome istanza (nome container)                  default: prod
+#   IMAGES_PORT      porta sull'host, SOLO 127.0.0.1                default: 8010
+#                    (8000 e' gia' usata dal servizio v1). Nella .env di
+#                    Laravel: PYTHON_SERVICE_URL=http://127.0.0.1:<porta>
+#
+# Il servizio non ha autenticazione: la porta resta sull'interfaccia locale,
+# mai esposta su internet. Il codice e' montato come volume: dopo un git pull
+# che tocca python/ serve `docker restart faper3-images-<istanza>`.
 
-(
-    PATH_SCRIPT=$(dirname "$0")
-    cd "$PATH_SCRIPT/.."
+set -u
 
-    echo ""
-    echo "############################################################"
-    echo "autopostai-python - START: $(date)"
-    echo "------------------------------------------------------------"
+PY_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+INSTANCE="${IMAGES_INSTANCE:-prod}"
+PORT="${IMAGES_PORT:-8010}"
+IMAGE_NAME="autopostai-python"
+CONTAINER_NAME="faper3-images-$INSTANCE"
+STATE_FILE="$PY_DIR/.docker_image_hash"
 
-    export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-    IMAGE_NAME="autopostai-python"
-    CONTAINER_NAME="container_python"
-    STATE_FILE=".docker_image_hash"
+echo ""
+echo "#### faper3-images [$INSTANCE] START $(date '+%Y-%m-%d %H:%M:%S')"
 
-    current_hash() {
-        cat Dockerfile requirements.txt | shasum -a 256 | awk '{print $1}'
-    }
+if [ ! -f "$PY_DIR/.env" ]; then
+    echo "manca $PY_DIR/.env: configurazione incompleta"
+    exit 1
+fi
 
-    needs_build() {
-        if [ ! -f "$STATE_FILE" ]; then
-            return 0
-        fi
-        [ "$(current_hash)" != "$(cat "$STATE_FILE")" ]
-    }
+start_container() {
+    docker run -d \
+        --name "$CONTAINER_NAME" \
+        --restart always \
+        -p "127.0.0.1:$PORT:8000" \
+        --env-file "$PY_DIR/.env" \
+        -v "$PY_DIR:/app" \
+        "$IMAGE_NAME" >/dev/null && echo "$CONTAINER_NAME avviato su 127.0.0.1:$PORT"
+}
 
-    if needs_build; then
-        echo "Dockerfile/requirements.txt cambiati: ricostruisco $IMAGE_NAME..."
-        docker build -t "$IMAGE_NAME" .
-        current_hash > "$STATE_FILE"
+current_hash=$(cat "$PY_DIR/Dockerfile" "$PY_DIR/requirements.txt" | sha256sum | awk '{print $1}')
+if [ -z "$(docker images -q "$IMAGE_NAME" 2>/dev/null)" ] || [ ! -f "$STATE_FILE" ] || [ "$current_hash" != "$(cat "$STATE_FILE")" ]; then
+    echo "Dockerfile/requirements.txt cambiati: ricostruisco $IMAGE_NAME..."
+    docker build -t "$IMAGE_NAME" "$PY_DIR" || exit 1
+    echo "$current_hash" > "$STATE_FILE"
+    docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
+    start_container
+elif [ -z "$(docker ps -q -f "name=^${CONTAINER_NAME}\$")" ]; then
+    echo "$CONTAINER_NAME non in esecuzione: lo avvio"
+    docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
+    start_container
+else
+    echo "$CONTAINER_NAME gia' in esecuzione"
+fi
 
-        if [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
-            echo "Arresto ed eliminazione del vecchio container $CONTAINER_NAME..."
-            docker stop "$CONTAINER_NAME"
-            docker rm "$CONTAINER_NAME"
-        fi
-
-        echo "Avvio del nuovo container $CONTAINER_NAME..."
-        docker run -d \
-            --name "$CONTAINER_NAME" \
-            --restart always \
-            -p 8000:8000 \
-            --env-file .env \
-            -v "$(pwd)":/app \
-            "$IMAGE_NAME"
-    else
-        echo "L'immagine $IMAGE_NAME e' aggiornata."
-
-        if [ -z "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
-            echo "$CONTAINER_NAME non e' in esecuzione: lo avvio..."
-
-            if [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
-                docker rm "$CONTAINER_NAME"
-            fi
-
-            docker run -d \
-                --name "$CONTAINER_NAME" \
-                --restart always \
-                -p 8000:8000 \
-                --env-file .env \
-                -v "$(pwd)":/app \
-                "$IMAGE_NAME"
-        else
-            echo "$CONTAINER_NAME gia' in esecuzione."
-        fi
-    fi
-
-    echo "------------------------------------------------------------"
-    echo "autopostai-python - END: $(date)"
-)
+echo "#### faper3-images [$INSTANCE] END $(date '+%Y-%m-%d %H:%M:%S')"

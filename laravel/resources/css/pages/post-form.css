@@ -36,6 +36,8 @@
 
 /* ---------- Step content wrapper ---------- */
 .pf-step-content { margin-top: 22px; }
+.pf-errors { margin-top: 18px; padding: 10px 14px; border-radius: var(--radius); background: color-mix(in srgb, var(--danger) 8%, white); border: 1px solid color-mix(in srgb, var(--danger) 30%, white); color: var(--danger); font-size: 13px; }
+.pf-errors ul { margin: 6px 0 0; padding-left: 18px; }
 
 /* ---------- Step transition ---------- */
 .pf-step-enter-active, .pf-step-leave-active { transition: opacity .2s var(--ease-out-quart), transform .2s var(--ease-out-quart); }
