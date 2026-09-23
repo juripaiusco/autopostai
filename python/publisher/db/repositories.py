@@ -614,7 +614,17 @@ class ContactRepository:
             {"now": now, "id": send_id},
         )
 
-    def mark_send_bounced(self, send_id: int, contact_id: int, now: str, error_message: str) -> None:
+    def delete_placeholder(self, send_id: int) -> None:
+        """Invio non partito per un errore dell'account SMTP: la riga sparisce,
+        cosi' il contatto torna servibile per questo post al giro dopo."""
+        email_sends = config.table("email_sends")
+        self.conn.execute(text(f"DELETE FROM {email_sends} WHERE id = :id"), {"id": send_id})
+
+    def mark_send_bounced(
+        self, send_id: int, contact_id: int, now: str, error_message: str, permanent: bool = True
+    ) -> None:
+        """permanent=False (soft bounce, 4xx): solo questo invio e' bounced, il
+        contatto resta attivo per le newsletter future."""
         email_sends = config.table("email_sends")
         self.conn.execute(
             text(
@@ -626,7 +636,8 @@ class ContactRepository:
             ),
             {"now": now, "id": send_id, "error_message": error_message},
         )
-        self.mark_bounced(contact_id)
+        if permanent:
+            self.mark_bounced(contact_id)
 
     def mark_bounced(self, contact_id: int) -> None:
         contacts = config.table("contacts")

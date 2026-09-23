@@ -3,7 +3,11 @@
 A differenza di Mailchimp/Brevo (una singola API di campagna) qui non c'e' un
 "servizio terzo" da chiamare: e' un invio SMTP diretto, un messaggio alla
 volta — il chiamante (publisher/tasks/newsletter_send.py) itera i contatti e
-chiama send() per ciascuno, catturando le eccezioni come bounce sincrono.
+chiama send() per ciascuno.
+
+Solo RecipientRefused e' un bounce (il server ha rifiutato QUEL destinatario);
+qualsiasi altra eccezione (connessione, login, mittente, timeout) e' un problema
+dell'account/server, non del contatto.
 """
 
 from __future__ import annotations
@@ -13,6 +17,17 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
+
+
+class RecipientRefused(Exception):
+    """Il server SMTP ha rifiutato il destinatario (RCPT TO). `permanent` = 5xx
+    (hard bounce: casella inesistente); 4xx = temporaneo (casella piena,
+    greylisting)."""
+
+    def __init__(self, code: int, message: str):
+        super().__init__(f"{code} {message}")
+        self.code = code
+        self.permanent = 500 <= code < 600
 
 
 def parse_sender(sender: str | None, fallback_address: str | None) -> tuple[str | None, str]:
@@ -54,4 +69,10 @@ class SmtpClient:
     def _login_and_send(self, server: smtplib.SMTP, from_address: str, to_email: str, message: MIMEMultipart) -> None:
         if self.username:
             server.login(self.username, self.password or "")
-        server.sendmail(from_address, [to_email], message.as_string())
+        try:
+            server.sendmail(from_address, [to_email], message.as_string())
+        except smtplib.SMTPRecipientsRefused as e:
+            code, reply = next(iter(e.recipients.values()), (0, b""))
+            if isinstance(reply, bytes):
+                reply = reply.decode(errors="replace")
+            raise RecipientRefused(code, reply) from e

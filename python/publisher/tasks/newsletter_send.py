@@ -27,7 +27,7 @@ from publisher import config
 from publisher.content import ContentService
 from publisher.db.repositories import ContactRepository, PostRepository, TokenLogRepository
 from publisher.domain.channels import Channels
-from publisher.integrations.smtp import SmtpClient
+from publisher.integrations.smtp import RecipientRefused, SmtpClient
 from publisher.integrations.unsubscribe import unsubscribe_url
 from publisher.publishing.newsletter import NewsletterPublisher
 
@@ -87,23 +87,9 @@ def _process_one(post, post_repo, contact_repo, token_repo, content_service, now
         post["nl_smtp_password"], post["nl_smtp_encryption"],
     )
 
-    sent = 0
-    bounced = 0
-    for contact in contacts:
-        # La riga va creata PRIMA di inviare: il pixel di tracking apertura
-        # (Step 8) dentro l'html porta l'id di questa riga, quindi deve
-        # esistere gia' quando l'email parte.
-        send_id = contact_repo.create_placeholder(contact["id"], post["id"], now)
-        contact_html = _finalize_html(html, contact["id"], send_id)
-        try:
-            if not config.DRY_RUN:
-                client.send(contact["email"], subject, contact_html, post["nl_smtp_sender"], post["nl_smtp_username"])
-            contact_repo.mark_sent(send_id, now)
-            sent += 1
-        except Exception as e:  # noqa: BLE001 — un bounce non deve bloccare gli altri contatti
-            contact_repo.mark_send_bounced(send_id, contact["id"], now, str(e))
-            bounced += 1
-
+    sent, bounced = _send_batch(client, contacts, post, subject, html, contact_repo, now)
+    if not sent and not bounced:
+        return  # batch interrotto prima del primo invio (gia' loggato): niente da salvare
     log.info("newsletter_send: post %s - batch inviato (%d ok, %d bounce)", post["id"], sent, bounced)
 
     # Step 8: l'aggregato in channels.newsletter.stats si ricalcola ad ogni
@@ -113,6 +99,40 @@ def _process_one(post, post_repo, contact_repo, token_repo, content_service, now
     # (riferimento, non copia): set_result() qui sotto si riflette in entrambi.
     if _save_progress(post, channels, entry, post_repo, contact_repo):
         log.info("newsletter_send: post %s pubblicato (primo batch inviato)", post["id"])
+
+
+def _send_batch(client, contacts, post, subject, html, contact_repo, now) -> tuple[int, int]:
+    """Invia a ogni contatto del batch. Bounce solo quando il server rifiuta il
+    destinatario: 5xx = hard (contatto -> bounced), 4xx = soft (solo questo
+    invio, contatto resta attivo). Ogni altro errore (connessione, login,
+    mittente, timeout) e' dell'account, non del contatto: batch interrotto,
+    placeholder rimosso, si riprova al giro dopo — prima marcava bounced ogni
+    contatto e un SMTP mal configurato svuotava la lista."""
+    sent = bounced = 0
+    for contact in contacts:
+        # La riga va creata PRIMA di inviare: il pixel di tracking apertura
+        # (Step 8) dentro l'html porta l'id di questa riga, quindi deve
+        # esistere gia' quando l'email parte.
+        send_id = contact_repo.create_placeholder(contact["id"], post["id"], now)
+        contact_html = _finalize_html(html, contact["id"], send_id)
+        try:
+            if not config.DRY_RUN:
+                client.send(contact["email"], subject, contact_html, post["nl_smtp_sender"], post["nl_smtp_username"])
+        except RecipientRefused as e:
+            contact_repo.mark_send_bounced(send_id, contact["id"], now, str(e), permanent=e.permanent)
+            bounced += 1
+            continue
+        except Exception:  # noqa: BLE001 — errore dell'account SMTP, non del contatto
+            contact_repo.delete_placeholder(send_id)
+            log.exception(
+                "newsletter_send: post %s - errore SMTP account (host %s), batch interrotto, nessun contatto "
+                "marcato bounced: si riprova al prossimo giro",
+                post["id"], post["nl_smtp_host"],
+            )
+            break
+        contact_repo.mark_sent(send_id, now)
+        sent += 1
+    return sent, bounced
 
 
 def _complete(post, channels, entry, post_repo, contact_repo, now) -> None:
