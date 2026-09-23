@@ -114,4 +114,51 @@ class PostImageUploadTest extends TestCase
             'action' => 'save',
         ])->assertSessionHasErrors('images.0');
     }
+
+    /** File vero su disco: il MIME viene rilevato dal contenuto (i fake lo deducono dal nome). */
+    private function realUpload(string $content, string $clientName): UploadedFile
+    {
+        $path = tempnam(sys_get_temp_dir(), 'upl');
+        file_put_contents($path, $content);
+
+        return new UploadedFile($path, $clientName, null, null, true);
+    }
+
+    public function test_stored_extension_comes_from_real_content_not_client_name(): void
+    {
+        Storage::fake('public');
+        $user = $this->makeUser();
+
+        // PNG valido ma chiamato .html: passa la validazione, e salvato con
+        // l'estensione del client verrebbe servito come pagina HTML dal disco
+        // pubblico (le estensioni PHP le blocca gia' Laravel).
+        $png = UploadedFile::fake()->image('real.png');
+        $disguised = $this->realUpload(file_get_contents($png->getPathname()), 'pagina.html');
+
+        $this->actingAs($user)->post(route('posts.store'), [
+            'title' => 'Post estensione',
+            'channels' => ['facebook' => []],
+            'images' => [$disguised],
+            'action' => 'save',
+        ])->assertRedirect(route('posts'));
+
+        $filename = Post::where('title', 'Post estensione')->firstOrFail()->img[0];
+        $this->assertStringEndsWith('.png', $filename);
+        $this->assertStringNotContainsString('.html', $filename);
+    }
+
+    public function test_non_image_and_svg_uploads_are_rejected(): void
+    {
+        Storage::fake('public');
+        $user = $this->makeUser();
+
+        $this->actingAs($user)->post(route('posts.store'), [
+            'channels' => ['facebook' => []],
+            'images' => [
+                $this->realUpload('<html><script>alert(1)</script></html>', 'finta.jpg'),
+                $this->realUpload('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>', 'logo.svg'),
+            ],
+            'action' => 'save',
+        ])->assertSessionHasErrors(['images.0', 'images.1']);
+    }
 }

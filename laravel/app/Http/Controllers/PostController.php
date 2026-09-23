@@ -16,6 +16,12 @@ use Inertia\Response;
 class PostController extends Controller
 {
     /**
+     * Immagini del post: contenuto verificato (image) e tipo limitato ai
+     * formati che i canali accettano. Niente SVG (può contenere script).
+     */
+    private const IMAGE_RULES = ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'];
+
+    /**
      * Lista post: l'amministratore vede tutti i post, il manager (child_on=1)
      * vede solo i post dei propri sotto-utenti, l'utente vede solo i propri.
      * Con uno scope globale attivo (?user=), la lista mostra solo i post di
@@ -139,7 +145,10 @@ class PostController extends Controller
                 ->replaceMatches('/[^A-Za-z0-9_-]+/', '_')
                 ->trim('_')
                 ->value();
-            $filename = date('YmdHis').'-'.Str::random(13).'-'.($safeName ?: 'img').'.'.$file->getClientOriginalExtension();
+            // Estensione dal tipo reale del contenuto, non dal nome scelto dal
+            // client: un'immagine valida chiamata "x.php" finiva salvata come
+            // .php sul disco pubblico.
+            $filename = date('YmdHis').'-'.Str::random(13).'-'.($safeName ?: 'img').'.'.$file->extension();
             Storage::disk('public')->putFileAs("posts/{$postId}", $file, $filename);
             $stored[] = $filename;
         }
@@ -411,7 +420,7 @@ class PostController extends Controller
             'ai_prompt_comment' => ['nullable', 'string'],
             'ai_content' => ['nullable', 'string'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'max:10240'],
+            'images.*' => self::IMAGE_RULES,
             'img_source' => ['nullable', 'string', Rule::in(['upload', 'generated', 'archive'])],
             'published_at' => ['nullable', 'date'],
             'action' => ['required', 'string', Rule::in(['save', 'save_and_add'])],
@@ -486,7 +495,7 @@ class PostController extends Controller
             'ai_prompt_comment' => ['nullable', 'string'],
             'ai_content' => ['nullable', 'string'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'max:10240'],
+            'images.*' => self::IMAGE_RULES,
             'keep_images' => ['nullable', 'string'],
             'img_source' => ['nullable', 'string', Rule::in(['upload', 'generated', 'archive'])],
             'published_at' => ['nullable', 'date'],
