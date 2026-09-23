@@ -251,8 +251,10 @@ class PostRepository:
         )
 
     def due_for_deletion(self, now: str) -> list[dict]:
-        """Post pubblicati, soft-deleted (deleted_at passato), non ancora rimossi
-        dai canali remoti (deleted=0)."""
+        """Post soft-deleted (deleted_at passato), non ancora rimossi dai canali
+        remoti (deleted=0), usciti su almeno un canale: published=1 oppure un
+        post parziale (published=0 ma qualche canale ha gia' un id remoto — prima
+        escluso, le copie gia' uscite restavano online)."""
         posts = config.table("posts")
         settings = config.table("settings")
 
@@ -273,7 +275,7 @@ class PostRepository:
                         s.nl_brevo_api             AS nl_brevo_api
                     FROM {posts} p
                     INNER JOIN {settings} s ON s.user_id = p.user_id
-                WHERE p.published = 1
+                WHERE (p.published = 1 OR JSON_EXTRACT(p.channels, '$.*.id') IS NOT NULL)
                     AND p.deleted = 0
                     AND p.deleted_at IS NOT NULL
                     AND p.deleted_at <= :now
