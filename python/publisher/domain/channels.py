@@ -69,6 +69,20 @@ class ChannelEntry:
         # di quella modifica (mailchimp/brevo lo duplicavano li' soltanto).
         return self.data.get("provider") or (self.data.get("list") or {}).get("provider")
 
+    def resolve_newsletter_provider(self, settings: dict) -> str | None:
+        """Provider del canale; se la riga non lo indica (righe vecchie) ricade
+        sulla chiave API valorizzata nei settings dell'account — stesso fallback
+        di NewsletterPublisher._infer_provider. Da usare al posto di controllare
+        le chiavi settings: un account puo' averne piu' d'una valorizzata."""
+        provider = self.newsletter_provider()
+        if provider:
+            return provider
+        if settings.get("nl_mailchimp_api"):
+            return "mailchimp"
+        if settings.get("nl_brevo_api"):
+            return "brevo"
+        return None
+
     def newsletter_list_id(self):
         return (self.data.get("list") or {}).get("id")
 

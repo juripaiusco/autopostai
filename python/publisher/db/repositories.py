@@ -192,6 +192,7 @@ class PostRepository:
                         s.meta_page_id           AS meta_page_id,
                         s.linkedin_company_id    AS linkedin_company_id,
                         s.linkedin_token         AS linkedin_token,
+                        s.nl_mailchimp_api       AS nl_mailchimp_api,
                         s.nl_brevo_api           AS nl_brevo_api,
                         SUM(CASE WHEN c.channel = 'facebook' THEN 1 ELSE 0 END)  AS facebook_comments_count,
                         SUM(CASE WHEN c.channel = 'instagram' THEN 1 ELSE 0 END) AS instagram_comments_count,

@@ -3,7 +3,8 @@
 Porting di `task/posts_delete.py` (v1). Per ogni canale acceso chiama la delete del
 provider e salva `id_del`; il post e' marcato deleted=1 solo quando ogni canale
 acceso ha `id_del == id` (porting di ctrl_posts_deleted). Instagram non supporta la
-cancellazione via API (come in v1: si limita a ricopiare l'id) e Brevo idem.
+cancellazione via API (come in v1: si limita a ricopiare l'id); idem Brevo e
+newsletter smtp_custom (email gia' consegnate, nessuna piattaforma remota).
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from sqlalchemy.engine import Connection
 
 from publisher import config
 from publisher.db.repositories import PostRepository
-from publisher.domain.channels import CHANNEL_KEYS, Channels
+from publisher.domain.channels import CHANNEL_KEYS, ChannelEntry, Channels
 from publisher.integrations.linkedin import LinkedIn
 from publisher.integrations.mailchimp import Mailchimp
 from publisher.integrations.meta import Meta
@@ -44,7 +45,7 @@ def run(conn: Connection) -> None:
                 continue  # gia' rimosso in un run precedente
 
             try:
-                entry.data["id_del"] = _delete_on_channel(key, post, entry.data["id"])
+                entry.data["id_del"] = _delete_on_channel(entry, post)
                 log.info("posts_delete: post %s canale '%s' - rimosso (id=%s)", post["id"], key, entry.data["id_del"])
             except Exception:  # noqa: BLE001
                 log.exception("posts_delete: delete '%s' fallita per il post %s", key, post["id"])
@@ -54,7 +55,8 @@ def run(conn: Connection) -> None:
         log.info("posts_delete: post %s - deleted=%s", post["id"], deleted)
 
 
-def _delete_on_channel(key: str, post: dict, remote_id: str) -> str | None:
+def _delete_on_channel(entry: ChannelEntry, post: dict) -> str | None:
+    key, remote_id = entry.key, entry.data["id"]
     if config.DRY_RUN:
         return remote_id
 
@@ -67,11 +69,17 @@ def _delete_on_channel(key: str, post: dict, remote_id: str) -> str | None:
     if key == "wordpress":
         return WordPress(post["wordpress_url"], post["wordpress_username"], post["wordpress_password"]).delete(remote_id)
     if key == "newsletter":
-        if post.get("nl_mailchimp_api"):
+        # Provider dal canale, non dalle chiavi settings: un account smtp_custom
+        # con anche una chiave Mailchimp tentava la delete Mailchimp sull'id
+        # sintetico, e smtp_custom non aveva ramo (None -> mai deleted=1).
+        provider = entry.resolve_newsletter_provider(post)
+        if provider == "mailchimp":
             return Mailchimp(post["nl_mailchimp_api"], post["nl_mailchimp_datacenter"]).delete(remote_id)
-        if post.get("nl_brevo_api"):
-            # L'API Brevo non offre una delete di campagna: v1 si limitava a
-            # ricopiare l'id (comportamento intenzionale, non un TODO).
+        if provider in ("brevo", "smtp_custom"):
+            # Brevo: l'API non offre una delete di campagna (v1 ricopiava l'id,
+            # comportamento intenzionale). smtp_custom: email gia' consegnate, nessuna
+            # piattaforma da avvisare — l'invio residuo si ferma gia' da solo
+            # (due_smtp_custom_posts esclude i post soft-deleted).
             return remote_id
     return None
 

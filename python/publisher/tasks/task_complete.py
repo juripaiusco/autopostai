@@ -93,9 +93,12 @@ def _newsletter_complete(entry, post: dict) -> bool:
         return True
     if entry.data.get("url"):
         return True
-    if not post.get("nl_brevo_api"):
-        # Mailchimp ha gia' l'archive_url al momento della pubblicazione; solo
-        # Brevo richiede questo secondo giro per recuperare lo shareLink.
+    if entry.resolve_newsletter_provider(post) != "brevo":
+        # Mailchimp ha gia' l'archive_url al momento della pubblicazione e
+        # smtp_custom non ha una pagina remota; solo Brevo richiede questo
+        # secondo giro per recuperare lo shareLink. Provider dal canale, non
+        # dalla chiave settings: un account smtp_custom/mailchimp con anche la
+        # chiave Brevo chiamava shareLink su un id non Brevo, all'infinito.
         return True
 
     try:
