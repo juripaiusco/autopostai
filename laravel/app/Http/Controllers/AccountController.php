@@ -6,6 +6,7 @@ use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -320,9 +321,17 @@ class AccountController extends Controller
         $me = $request->user();
         $this->authorize('update', $user);
 
+        // Chiave OpenAI e pagina Meta sono uniche a livello DB (una pagina su
+        // due account = doppia pubblicazione): senza queste regole il
+        // salvataggio finiva in un errore 500 del vincolo unique.
         $data = $request->validate([
             'name'  => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', "unique:users,email,{$user->id}"],
+            'openai.apiKey' => ['nullable', 'string', Rule::unique('settings', 'openai_api_key')->ignore($user->id, 'user_id')],
+            'meta.pageId' => ['nullable', 'string', Rule::unique('settings', 'meta_page_id')->ignore($user->id, 'user_id')],
+        ], [
+            'openai.apiKey.unique' => 'Questa chiave OpenAI è già collegata a un altro account.',
+            'meta.pageId.unique' => 'Questa pagina Meta è già collegata a un altro account.',
         ]);
 
         $user->name  = $data['name'];
