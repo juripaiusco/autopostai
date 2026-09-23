@@ -5,7 +5,7 @@ import ConnectionBadge from '@/Components/UI/ConnectionBadge.vue';
 import Icon from '@/Components/Icon.vue';
 
 defineProps({
-    modelValue: { type: Object, required: true }, // { url, username, password, categoryId, connected, categories }
+    modelValue: { type: Object, required: true }, // { url, username, password(Hint|Clear), categoryId, connected, categories }
 });
 
 const emit = defineEmits(['update', 'fetch-categories']);
@@ -24,7 +24,8 @@ const emit = defineEmits(['update', 'fetch-categories']);
             </FieldRow>
             <FieldRow id="acc-wp-password" label="Application Password" help="Usa una password applicativa, non quella di accesso.">
                 <SecretField id="acc-wp-password" :model-value="modelValue.password" placeholder="xxxx xxxx xxxx xxxx"
-                    @update:model-value="emit('update', 'password', $event)" />
+                    :saved-hint="modelValue.passwordHint" :cleared="!!modelValue.passwordClear"
+                    @update:model-value="emit('update', 'password', $event)" @clear="emit('update', 'passwordClear', $event)" />
             </FieldRow>
         </div>
 

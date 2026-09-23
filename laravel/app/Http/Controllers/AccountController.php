@@ -12,6 +12,19 @@ use Inertia\Response;
 class AccountController extends Controller
 {
     /**
+     * Segreti del form Account (campo => colonna settings): mai inviati al
+     * browser, vedi edit() e applySecrets().
+     */
+    private const SECRET_FIELDS = [
+        'openai.apiKey'               => 'openai_api_key',
+        'linkedin.clientSecret'       => 'linkedin_client_secret',
+        'wordpress.password'          => 'wordpress_password',
+        'newsletter.mailchimp.apiKey' => 'nl_mailchimp_api',
+        'newsletter.brevo.apiKey'     => 'nl_brevo_api',
+        'newsletter.smtp.password'    => 'nl_smtp_password',
+    ];
+
+    /**
      * Lista utenti/account: l'amministratore (parent_id null) vede tutti,
      * chi ha un parent vede solo i propri sotto-utenti. Con uno scope
      * globale attivo (?user=), si naviga l'albero account come se si fosse
@@ -217,13 +230,17 @@ class AccountController extends Controller
                 'knows'         => $s->ai_prompt_prefix ?? '',
                 'commentStyle'  => $s->ai_comment_prefix ?? '',
             ],
-            'openai'        => ['apiKey' => $s->openai_api_key ?? '', 'connected' => !empty($s?->openai_api_key)],
+            // Segreti: mai in chiaro verso il browser (finivano nelle props
+            // Inertia, visibili a chiunque apra la pagina, manager compresi).
+            // Il valore resta '' e arriva solo un hint; vedi applySecrets().
+            'openai'        => ['apiKey' => '', 'apiKeyHint' => self::secretHint($s?->openai_api_key), 'connected' => !empty($s?->openai_api_key)],
             'meta'          => ['pageId' => $s->meta_page_id ?? '', 'connected' => !empty($s?->meta_page_id)],
             'linkedin'      => [
                 'clientId'      => $s->linkedin_client_id ?? '',
-                'clientSecret'  => $s->linkedin_client_secret ?? '',
+                'clientSecret'  => '',
+                'clientSecretHint' => self::secretHint($s?->linkedin_client_secret),
                 'pageId'        => $s->linkedin_company_id ?? '',
-                'token'         => $s->linkedin_token ?? '',
+                'tokenHint'     => self::secretHint($s?->linkedin_token),
                 'connected'     => !empty($s?->linkedin_token),
                 'tokenExpiresAt' => $s?->linkedin_token_expires_at?->diffForHumans(),
                 'sharedWithCount' => $linkedinSharedWithCount,
@@ -234,7 +251,8 @@ class AccountController extends Controller
             'wordpress'     => [
                 'url'           => $s->wordpress_url ?? '',
                 'username'      => $s->wordpress_username ?? '',
-                'password'      => $s->wordpress_password ?? '',
+                'password'      => '',
+                'passwordHint'  => self::secretHint($s?->wordpress_password, 0),
                 'categoryId'    => $s->wordpress_cat_id ?? '',
                 'connected'     => !empty($s?->wordpress_url) && !empty($s?->wordpress_username),
                 'categories'    => $s?->wordpress_options['categories'] ?? [],
@@ -242,14 +260,16 @@ class AccountController extends Controller
             ],
             'newsletter'    => [
                 'mailchimp'     => [
-                    'apiKey'        => $s->nl_mailchimp_api ?? '',
+                    'apiKey'        => '',
+                    'apiKeyHint'    => self::secretHint($s?->nl_mailchimp_api),
                     'serverPrefix'  => $s->nl_mailchimp_datacenter ?? '',
                     'audienceId'    => $s->nl_mailchimp_list_id ?? '',
                     'connected'     => !empty($s?->nl_mailchimp_api),
                     'lists'         => $s?->nl_mailchimp_options['lists'] ?? [],
                 ],
                 'brevo'     => [
-                    'apiKey'    => $s->nl_brevo_api ?? '',
+                    'apiKey'    => '',
+                    'apiKeyHint' => self::secretHint($s?->nl_brevo_api),
                     'listId'    => $s->nl_brevo_list_id ?? '',
                     'sender'    => $s->nl_brevo_from_email ?? '',
                     'connected' => !empty($s?->nl_brevo_api),
@@ -259,7 +279,8 @@ class AccountController extends Controller
                     'host'          => $s->nl_smtp_host ?? '',
                     'port'          => $s->nl_smtp_port ?? '587',
                     'username'      => $s->nl_smtp_username ?? '',
-                    'password'      => $s->nl_smtp_password ?? '',
+                    'password'      => '',
+                    'passwordHint'  => self::secretHint($s?->nl_smtp_password, 0),
                     'encryption'    => $s->nl_smtp_encryption ?? 'tls',
                     'sender'        => $s->nl_smtp_sender ?? '',
                     'connected'     => !empty($s?->nl_smtp_host),
@@ -354,7 +375,6 @@ class AccountController extends Controller
         $user->save();
 
         $ai = $request->input('ai', []);
-        $openai = $request->input('openai', []);
         $meta = $request->input('meta', []);
         $linkedin = $request->input('linkedin', []);
         $wordpress = $request->input('wordpress', []);
@@ -366,45 +386,72 @@ class AccountController extends Controller
 
         Settings::updateOrCreate(
             ['user_id' => $user->id],
-            [
+            $this->applySecrets($request, [
                 'ai_personality' => $ai['profile'] ?? null,
                 'ai_prompt_prefix' => $ai['knows'] ?? null,
                 'ai_comment_prefix' => $ai['commentStyle'] ?? null,
 
-                'openai_api_key' => $openai['apiKey'] ?? null,
-
                 'meta_page_id' => $meta['pageId'] ?? null,
 
                 'linkedin_client_id' => $linkedin['clientId'] ?? null,
-                'linkedin_client_secret' => $linkedin['clientSecret'] ?? null,
                 'linkedin_company_id' => $linkedin['pageId'] ?? null,
 
                 'wordpress_url' => $wordpress['url'] ?? null,
                 'wordpress_username' => $wordpress['username'] ?? null,
-                'wordpress_password' => $wordpress['password'] ?? null,
                 'wordpress_cat_id' => $wordpress['categoryId'] ?? null,
 
-                'nl_mailchimp_api' => $mailchimp['apiKey'] ?? null,
                 'nl_mailchimp_datacenter' => $mailchimp['serverPrefix'] ?? null,
                 'nl_mailchimp_list_id' => $mailchimp['audienceId'] ?? null,
 
-                'nl_brevo_api' => $brevo['apiKey'] ?? null,
                 'nl_brevo_list_id' => $brevo['listId'] ?? null,
                 'nl_brevo_from_email' => $brevo['sender'] ?? null,
 
                 'nl_smtp_host' => $smtp['host'] ?? null,
                 'nl_smtp_port' => $smtp['port'] ?? null,
                 'nl_smtp_username' => $smtp['username'] ?? null,
-                'nl_smtp_password' => $smtp['password'] ?? null,
                 'nl_smtp_encryption' => $smtp['encryption'] ?? null,
                 'nl_smtp_sender' => $smtp['sender'] ?? null,
 
                 'nl_template' => $template['content'] ?? null,
                 'nl_template_cta' => $template['cta'] ?? null,
-            ]
+            ])
         );
 
         return back();
+    }
+
+    /**
+     * Il form non riceve mai i segreti salvati, quindi un campo vuoto significa
+     * "non toccare", non "cancella". Per rimuovere un segreto (es. passare da
+     * Mailchimp a SMTP: il provider si sceglie da quale chiave è valorizzata)
+     * il form manda esplicitamente `<campo>Clear: true`.
+     */
+    private function applySecrets(Request $request, array $attributes): array
+    {
+        foreach (self::SECRET_FIELDS as $field => $column) {
+            if ($request->boolean("{$field}Clear")) {
+                $attributes[$column] = null;
+            } elseif ($request->filled($field)) {
+                $attributes[$column] = $request->input($field);
+            }
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * "••••1234" per un segreto salvato, null se assente. Con $visible = 0
+     * solo i pallini (password).
+     */
+    private static function secretHint(?string $value, int $visible = 4): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        return $visible > 0 && mb_strlen($value) > $visible * 2
+            ? '••••' . mb_substr($value, -$visible)
+            : '••••••••';
     }
 
     public function destroy(Request $request, User $user): RedirectResponse

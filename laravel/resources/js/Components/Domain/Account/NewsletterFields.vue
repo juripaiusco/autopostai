@@ -76,7 +76,9 @@ function connState(providerId) {
                     <template v-if="p.id === 'mailchimp'">
                         <FieldRow id="acc-nl-mc-key" label="API Key" help="Dalla sezione Account › Extra › API keys di MailChimp.">
                             <SecretField id="acc-nl-mc-key" :model-value="modelValue.mailchimp.apiKey" placeholder="xxxxxxxx-us21"
-                                @update:model-value="emit('update', 'mailchimp', 'apiKey', $event)" />
+                                :saved-hint="modelValue.mailchimp.apiKeyHint" :cleared="!!modelValue.mailchimp.apiKeyClear"
+                                @update:model-value="emit('update', 'mailchimp', 'apiKey', $event)"
+                                @clear="emit('update', 'mailchimp', 'apiKeyClear', $event)" />
                         </FieldRow>
                         <FieldRow id="acc-nl-mc-server" label="Server prefix" help="Es. us21 (è nel dominio della tua dashboard).">
                             <input id="acc-nl-mc-server" class="control" type="text" :value="modelValue.mailchimp.serverPrefix" placeholder="us21"
@@ -111,7 +113,9 @@ function connState(providerId) {
                     <template v-else-if="p.id === 'brevo'">
                         <FieldRow id="acc-nl-brevo-key" label="API Key" help="Dalla sezione SMTP &amp; API di Brevo.">
                             <SecretField id="acc-nl-brevo-key" :model-value="modelValue.brevo.apiKey" placeholder="xkeysib-…"
-                                @update:model-value="emit('update', 'brevo', 'apiKey', $event)" />
+                                :saved-hint="modelValue.brevo.apiKeyHint" :cleared="!!modelValue.brevo.apiKeyClear"
+                                @update:model-value="emit('update', 'brevo', 'apiKey', $event)"
+                                @clear="emit('update', 'brevo', 'apiKeyClear', $event)" />
                         </FieldRow>
                         <FieldRow id="acc-nl-brevo-sender" label="Mittente" help="Email verificata come mittente.">
                             <input id="acc-nl-brevo-sender" class="control" type="email" :value="modelValue.brevo.sender" placeholder="news@dominio.it"
@@ -161,7 +165,9 @@ function connState(providerId) {
                             </FieldRow>
                             <FieldRow id="acc-nl-smtp-password" label="Password" help="La password della casella.">
                                 <SecretField id="acc-nl-smtp-password" :model-value="modelValue.smtp.password" placeholder="••••••••"
-                                    @update:model-value="emit('update', 'smtp', 'password', $event)" />
+                                    :saved-hint="modelValue.smtp.passwordHint" :cleared="!!modelValue.smtp.passwordClear"
+                                    @update:model-value="emit('update', 'smtp', 'password', $event)"
+                                    @clear="emit('update', 'smtp', 'passwordClear', $event)" />
                             </FieldRow>
                         </div>
                         <div class="acc-grid-2">

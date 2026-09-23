@@ -5,7 +5,7 @@ import ConnectionBadge from '@/Components/UI/ConnectionBadge.vue';
 import Icon from '@/Components/Icon.vue';
 
 defineProps({
-    modelValue: { type: Object, required: true }, // { clientId, clientSecret, pageId, token, connected, availablePages }
+    modelValue: { type: Object, required: true }, // { clientId, clientSecret(Hint|Clear), pageId, tokenHint, connected, availablePages }
 });
 
 const emit = defineEmits(['update', 'get-token', 'pick-page']);
@@ -20,7 +20,8 @@ const emit = defineEmits(['update', 'get-token', 'pick-page']);
             </FieldRow>
             <FieldRow id="acc-li-secret" label="Client Secret" help="Tienilo riservato.">
                 <SecretField id="acc-li-secret" :model-value="modelValue.clientSecret" placeholder="••••••••"
-                    @update:model-value="emit('update', 'clientSecret', $event)" />
+                    :saved-hint="modelValue.clientSecretHint" :cleared="!!modelValue.clientSecretClear"
+                    @update:model-value="emit('update', 'clientSecret', $event)" @clear="emit('update', 'clientSecretClear', $event)" />
             </FieldRow>
         </div>
 
@@ -54,7 +55,7 @@ const emit = defineEmits(['update', 'get-token', 'pick-page']);
                 Generato automaticamente dopo l'autorizzazione. Non modificabile a mano.
                 <template v-if="modelValue.tokenExpiresAt"> Scade {{ modelValue.tokenExpiresAt }}.</template>
             </span>
-            <SecretField id="acc-li-token" :model-value="modelValue.token" :read-only="true" :copyable="true"
+            <SecretField id="acc-li-token" model-value="" :read-only="true" :saved-hint="modelValue.tokenHint"
                 placeholder="Si genera dopo «Ottieni token»" />
         </div>
         <div v-if="modelValue.sharedWithCount" class="acc-hint-inline" style="margin-bottom: 14px">

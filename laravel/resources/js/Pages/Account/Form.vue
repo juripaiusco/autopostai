@@ -96,7 +96,7 @@ function buildForm(account) {
             ai: { profile: '', knows: '', commentStyle: '' },
             openai:    { apiKey: '', connected: false },
             meta:      { pageId: '', connected: false },
-            linkedin:  { clientId: '', clientSecret: '', pageId: '', token: '', connected: false },
+            linkedin:  { clientId: '', clientSecret: '', pageId: '', connected: false },
             wordpress: { url: '', username: '', password: '', categoryId: '', connected: false },
             newsletter: {
                 mailchimp: { apiKey: '', serverPrefix: '', audienceId: '', connected: false },
@@ -120,6 +120,7 @@ function syncServerState(acc) {
     Object.assign(form.linkedin, {
         connected: acc.linkedin.connected,
         tokenExpiresAt: acc.linkedin.tokenExpiresAt,
+        tokenHint: acc.linkedin.tokenHint,
         sharedWithCount: acc.linkedin.sharedWithCount,
         availablePages: acc.linkedin.availablePages,
         connectUrl: acc.linkedin.connectUrl,
@@ -138,6 +139,28 @@ function syncServerState(acc) {
 }
 
 watch(() => props.account, syncServerState);
+
+// Segreti (vedi AccountController::SECRET_FIELDS): il server non li rimanda
+// mai, solo un hint. Dopo un salvataggio riuscito si svuota quanto digitato e
+// si azzerano le rimozioni richieste; con errori di validazione no, altrimenti
+// l'utente perderebbe il valore appena inserito.
+const SECRET_PATHS = [
+    'openai.apiKey', 'linkedin.clientSecret', 'wordpress.password',
+    'newsletter.mailchimp.apiKey', 'newsletter.brevo.apiKey', 'newsletter.smtp.password',
+];
+
+function resetSecrets(acc) {
+    for (const path of SECRET_PATHS) {
+        const keys = path.split('.');
+        const field = keys.pop();
+        const target = keys.reduce((obj, k) => obj[k], form);
+        const source = keys.reduce((obj, k) => obj?.[k], acc);
+        target[field] = '';
+        target[field + 'Clear'] = false;
+        target[field + 'Hint'] = source?.[field + 'Hint'] ?? null;
+    }
+    form.linkedin.tokenHint = acc?.linkedin?.tokenHint ?? null;
+}
 
 function set(path, value) {
     const keys = path.split('.');
@@ -206,7 +229,7 @@ function doSave() {
         });
     } else {
         router.put(route('account.update', props.account?.id), form, {
-            onSuccess: () => { showToast('Modifiche salvate'); dirty.value = false; },
+            onSuccess: (page) => { showToast('Modifiche salvate'); dirty.value = false; resetSecrets(page.props.account); },
         });
     }
 }
