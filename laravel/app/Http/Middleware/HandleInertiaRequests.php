@@ -53,8 +53,8 @@ class HandleInertiaRequests extends Middleware
             'activeUser' => $activeUser,
             'contactsEnabled' => $me?->canViewContacts($activeUser['id'] ?? null) ?? false,
             'app' => [
-                'version' => env('APP_VERSION', '0.0.0'),
-                'changelog_url' => env('APP_CHANGELOG_URL', '#'),
+                'version' => config('app.version'),
+                'changelog_url' => config('app.changelog_url'),
             ],
             'flash' => [
                 'toast' => fn () => $request->session()->get('toast'),

@@ -8,6 +8,9 @@ _config.sh
 /public/assets
 .editorconfig
 .env*
+# Modelli di configurazione e versione app: vanno versionati (niente segreti).
+!.env.example
+!.env.app-version
 __pycache__/
 *.pyc
 .docker_image_hash

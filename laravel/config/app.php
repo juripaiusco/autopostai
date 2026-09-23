@@ -1,5 +1,13 @@
 <?php
 
+use Dotenv\Dotenv;
+
+// Versione dell'app (schermate di login/registrazione): file dedicato
+// .env.app-version, letto qui e non a ogni richiesta, così vale anche con
+// `php artisan config:cache` (dove env() fuori da config/ restituisce null).
+$appVersionFile = dirname(__DIR__).'/.env.app-version';
+$appVersion = is_file($appVersionFile) ? Dotenv::parse(file_get_contents($appVersionFile)) : [];
+
 return [
 
     /*
@@ -14,6 +22,9 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+
+    'version' => $appVersion['APP_VERSION'] ?? '0.0.0',
+    'changelog_url' => $appVersion['APP_CHANGELOG_URL'] ?? '#',
 
     /*
     |--------------------------------------------------------------------------
