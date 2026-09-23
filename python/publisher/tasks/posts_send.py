@@ -18,6 +18,7 @@ from sqlalchemy.engine import Connection
 
 from publisher import config
 from publisher.content import ContentService
+from publisher.db.engine import checkpoint
 from publisher.db.repositories import PostRepository, PushNotificationRepository, TokenLogRepository
 from publisher.domain.channels import Channels
 from publisher.notifications import notify_post_published
@@ -65,9 +66,11 @@ def _send_one(post, post_repo, push_repo, token_repo, content_service, now) -> N
             log.exception("posts_send: canale '%s' fallito per il post %s", entry.key, post["id"])
             continue
         entry.set_result(result.remote_id, result.url, result.gallery_html)
+        # Salvato e committato canale per canale: se il run si interrompe dopo
+        # questa pubblicazione, il run successivo non la ripete.
+        post_repo.save_channels(post["id"], channels.to_dict())
+        checkpoint(post_repo.conn)
         log.info("posts_send: post %s canale '%s' - pubblicato (id=%s)", post["id"], entry.key, result.remote_id)
-
-    post_repo.save_channels(post["id"], channels.to_dict())
 
     # Post pubblicato solo se ogni canale acceso ha un id remoto.
     if channels.all_on_published():

@@ -1,14 +1,16 @@
 """Entry point del worker di pubblicazione (cron one-shot).
 
-Come v1: viene lanciato una volta (ogni minuto, dal servizio Docker `publisher`),
-esegue i task in ordine su UNA sola connessione/transazione e termina. Nessun loop
-interno: la cadenza la da' l'orchestratore esterno (Docker/cron).
+Come v1: viene lanciato una volta (ogni minuto, da cron via run-publisher.sh),
+esegue i task in ordine su UNA sola connessione e termina. Nessun loop interno: la
+cadenza la da' l'orchestratore esterno.
 
     python -m publisher.worker
 
-I task sono eseguiti in ordine; ognuno isola i propri errori cosi' che il fallimento
-di uno non impedisca agli altri di girare. Solo `posts_send` e' implementato: gli
-altri sono scheletri no-op finche' non verranno portati.
+Un solo run alla volta (lock MariaDB, vedi db/engine.run_lock): se il run
+precedente e' ancora in corso questo esce subito. Commit dopo ogni task e dentro i
+task ad ogni azione remota (db/engine.checkpoint). I task sono eseguiti in ordine;
+ognuno isola i propri errori cosi' che il fallimento di uno non impedisca agli
+altri di girare.
 """
 
 from __future__ import annotations
@@ -17,7 +19,7 @@ import logging
 import sys
 
 from publisher import cli_output, config
-from publisher.db.engine import connection
+from publisher.db.engine import checkpoint, connection, run_lock
 from publisher.tasks import (
     comments_get,
     newsletter_send,
@@ -53,12 +55,20 @@ def main() -> None:
     log = logging.getLogger("publisher")
     log.info("worker start (dry_run=%s)", config.DRY_RUN)
 
-    with connection() as conn:
+    with connection() as conn, run_lock(conn) as acquired:
+        if not acquired:
+            log.warning("worker: run precedente ancora in corso, esco senza fare nulla")
+            return
         for name, run in TASKS:
             started = cli_output.task_start(name)
             try:
                 run(conn)
+                checkpoint(conn)
             except Exception:  # noqa: BLE001 — un task non deve far cadere gli altri
+                # Scarta solo il lavoro non ancora committato del task fallito
+                # (le azioni remote gia' riuscite sono state committate dai
+                # checkpoint interni) e rimette la connessione in stato pulito.
+                conn.rollback()
                 log.exception("task '%s' fallito", name)
             cli_output.task_end(name, started)
 

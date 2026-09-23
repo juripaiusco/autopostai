@@ -25,6 +25,7 @@ from sqlalchemy.engine import Connection
 
 from publisher import config
 from publisher.content import ContentService
+from publisher.db.engine import checkpoint
 from publisher.db.repositories import ContactRepository, PostRepository, TokenLogRepository
 from publisher.domain.channels import Channels
 from publisher.integrations.smtp import RecipientRefused, SmtpClient
@@ -47,6 +48,7 @@ def run(conn: Connection) -> None:
 
     for post in posts:
         _process_one(post, post_repo, contact_repo, token_repo, content_service, now)
+        checkpoint(conn)
 
 
 def _process_one(post, post_repo, contact_repo, token_repo, content_service, now) -> None:
@@ -114,16 +116,22 @@ def _send_batch(client, contacts, post, subject, html, contact_repo, now) -> tup
         # (Step 8) dentro l'html porta l'id di questa riga, quindi deve
         # esistere gia' quando l'email parte.
         send_id = contact_repo.create_placeholder(contact["id"], post["id"], now)
+        # Committata PRIMA dell'invio: se il run muore dopo che l'email e' partita,
+        # la riga 'queued' resta e il contatto non viene ripescato (meglio uno
+        # stato 'queued' orfano che una seconda email).
+        checkpoint(contact_repo.conn)
         contact_html = _finalize_html(html, contact["id"], send_id)
         try:
             if not config.DRY_RUN:
                 client.send(contact["email"], subject, contact_html, post["nl_smtp_sender"], post["nl_smtp_username"])
         except RecipientRefused as e:
             contact_repo.mark_send_bounced(send_id, contact["id"], now, str(e), permanent=e.permanent)
+            checkpoint(contact_repo.conn)
             bounced += 1
             continue
         except Exception:  # noqa: BLE001 — errore dell'account SMTP, non del contatto
             contact_repo.delete_placeholder(send_id)
+            checkpoint(contact_repo.conn)
             log.exception(
                 "newsletter_send: post %s - errore SMTP account (host %s), batch interrotto, nessun contatto "
                 "marcato bounced: si riprova al prossimo giro",
@@ -131,6 +139,7 @@ def _send_batch(client, contacts, post, subject, html, contact_repo, now) -> tup
             )
             break
         contact_repo.mark_sent(send_id, now)
+        checkpoint(contact_repo.conn)
         sent += 1
     return sent, bounced
 

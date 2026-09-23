@@ -15,6 +15,7 @@ from datetime import datetime
 from sqlalchemy.engine import Connection
 
 from publisher import config
+from publisher.db.engine import checkpoint
 from publisher.db.repositories import PostRepository
 from publisher.domain.channels import CHANNEL_KEYS, ChannelEntry, Channels
 from publisher.integrations.linkedin import LinkedIn
@@ -52,6 +53,7 @@ def run(conn: Connection) -> None:
 
         post_repo.save_channels(post["id"], channels.to_dict())
         deleted = _ctrl_deleted(post_repo, post["id"], channels)
+        checkpoint(conn)
         log.info("posts_delete: post %s - deleted=%s", post["id"], deleted)
 
 

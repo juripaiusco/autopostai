@@ -23,6 +23,11 @@ def _newsletter(provider: str | None, remote_id: str = "nl-1") -> dict:
     return {"newsletter": data}
 
 
+class FakeConn:
+    def get_execution_options(self):
+        return {}
+
+
 class FakePostRepo:
     def __init__(self, posts):
         self.posts = posts
@@ -54,7 +59,7 @@ def live(monkeypatch):
 def _run_delete(monkeypatch, post):
     repo = FakePostRepo([post])
     monkeypatch.setattr(posts_delete, "PostRepository", lambda conn: repo)
-    posts_delete.run(conn=None)
+    posts_delete.run(conn=FakeConn())
     return repo
 
 

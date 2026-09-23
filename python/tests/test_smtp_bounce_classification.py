@@ -52,8 +52,16 @@ def test_account_errors_are_not_recipient_refused():
 
 # --- newsletter_send._send_batch ---
 
+class FakeConn:
+    """Connessione fuori da engine.connection(): checkpoint() e' un no-op."""
+
+    def get_execution_options(self):
+        return {}
+
+
 class FakeContactRepo:
     def __init__(self):
+        self.conn = FakeConn()
         self.next_id = 0
         self.placeholders = {}
         self.sent, self.deleted = [], []
