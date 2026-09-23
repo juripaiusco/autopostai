@@ -88,9 +88,11 @@ class FakeClient:
     def __init__(self, errors):
         self.errors = errors
         self.attempts = []
+        self.unsubscribe_urls = []
 
-    def send(self, to_email, *args):
+    def send(self, to_email, *args, unsubscribe_url=None):
         self.attempts.append(to_email)
+        self.unsubscribe_urls.append(unsubscribe_url)
         if to_email in self.errors:
             raise self.errors[to_email]
 
@@ -109,6 +111,12 @@ def _run(errors):
     repo, client = FakeContactRepo(), FakeClient(errors)
     result = newsletter_send._send_batch(client, CONTACTS, POST, "Oggetto", "<p>x</p>", repo, "2026-09-23 10:00:00")
     return result, repo, client
+
+
+def test_each_email_carries_its_own_unsubscribe_url(monkeypatch):
+    monkeypatch.setattr(newsletter_send, "unsubscribe_url", lambda contact_id: f"https://app.test/disiscrivi/{contact_id}")
+    _, _, client = _run({})
+    assert client.unsubscribe_urls == [f"https://app.test/disiscrivi/{i}" for i in (1, 2, 3)]
 
 
 def test_hard_bounce_marks_contact_and_continues():

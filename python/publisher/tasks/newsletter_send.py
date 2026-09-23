@@ -123,7 +123,10 @@ def _send_batch(client, contacts, post, subject, html, contact_repo, now) -> tup
         contact_html = _finalize_html(html, contact["id"], send_id)
         try:
             if not config.DRY_RUN:
-                client.send(contact["email"], subject, contact_html, post["nl_smtp_sender"], post["nl_smtp_username"])
+                client.send(
+                    contact["email"], subject, contact_html, post["nl_smtp_sender"], post["nl_smtp_username"],
+                    unsubscribe_url=unsubscribe_url(contact["id"]),
+                )
         except RecipientRefused as e:
             contact_repo.mark_send_bounced(send_id, contact["id"], now, str(e), permanent=e.permanent)
             checkpoint(contact_repo.conn)
