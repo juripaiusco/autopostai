@@ -14,3 +14,4 @@ _config.sh
 __pycache__/
 *.pyc
 .docker_image_hash
+.docker_publisher_hash
