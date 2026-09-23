@@ -9,10 +9,13 @@ alle pagine via Business Manager) da cui si ricava il page access token per ogni
 from __future__ import annotations
 
 import json
+import logging
 
 import requests
 
 from publisher import config
+
+log = logging.getLogger(__name__)
 
 
 class Meta:
@@ -75,6 +78,13 @@ class Meta:
 
     def fb_delete(self, post_id: str) -> str | None:
         resp = requests.delete(f"{self.base_url}/{post_id}", params={"access_token": self.page_access_token()})
+        # Post gia' tolto a mano dalla pagina: Graph risponde 400 con
+        # error_subcode 33 ("object does not exist"), non 404. Va trattato come
+        # rimosso, altrimenti posts_delete lo ritenta ogni minuto per sempre.
+        if resp.status_code == 404 or _graph_error(resp).get("error_subcode") == 33:
+            log.warning("fb_delete: post %s non esiste piu' su Facebook (HTTP %s), considerato rimosso",
+                        post_id, resp.status_code)
+            return post_id
         resp.raise_for_status()
         return post_id if resp.json().get("success") else None
 
@@ -160,3 +170,13 @@ class Meta:
             data={"message": message, "access_token": self.page_access_token()},
         )
         return resp.json().get("id")
+
+
+def _graph_error(resp) -> dict:
+    """Oggetto `error` di una risposta Graph fallita ({} se ok o body non JSON)."""
+    if resp.status_code < 400:
+        return {}
+    try:
+        return resp.json().get("error") or {}
+    except ValueError:
+        return {}

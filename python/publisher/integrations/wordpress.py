@@ -7,6 +7,8 @@ Auth via HTTP Basic (application password).
 
 from __future__ import annotations
 
+import logging
+
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -22,6 +24,8 @@ _GALLERY_CLOSE = (
     '<script>document.addEventListener("DOMContentLoaded",function(){GLightbox({selector:".glightbox"});});</script>'
     '<!-- /wp:gallery -->'
 )
+
+log = logging.getLogger(__name__)
 
 
 class WordPress:
@@ -91,5 +95,10 @@ class WordPress:
 
     def delete(self, post_id: str) -> str | None:
         resp = requests.delete(f"{self.url}/wp-json/wp/v2/posts/{post_id}", headers=self._headers(), auth=self.auth)
+        # 404 = post eliminato a mano, 410 = gia' nel cestino (rest_already_trashed):
+        # in entrambi i casi e' gia' rimosso, niente retry infinito in posts_delete.
+        if resp.status_code in (404, 410):
+            log.warning("wordpress delete: post %s gia' rimosso (HTTP %s)", post_id, resp.status_code)
+            return post_id
         resp.raise_for_status()
         return resp.json().get("id")

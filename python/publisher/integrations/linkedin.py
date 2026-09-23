@@ -12,12 +12,15 @@ senza dipendenze dal DB.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from urllib.parse import quote
 
 import requests
 
 from publisher import config
+
+log = logging.getLogger(__name__)
 
 
 class LinkedIn:
@@ -103,7 +106,13 @@ class LinkedIn:
             f"{self.base_url}/shares/{numeric_id}",
             headers={"Authorization": f"Bearer {self.token}", "X-Restli-Protocol-Version": "2.0.0"},
         )
-        return post_id if resp.status_code in (200, 204) else None
+        if resp.status_code == 404:
+            log.warning("linkedin delete: share %s gia' rimosso (HTTP 404)", post_id)
+            return post_id
+        # Altri errori sollevano (loggati da posts_delete con il dettaglio), invece
+        # di un None silenzioso che finiva nel log come "rimosso (id=None)".
+        resp.raise_for_status()
+        return post_id
 
     # --- Commenti ------------------------------------------------------
     def get_comments(self, post_id: str) -> dict:

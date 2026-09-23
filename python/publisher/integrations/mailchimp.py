@@ -8,9 +8,13 @@ del ciclo campagna: crea -> imposta contenuto -> invia.
 
 from __future__ import annotations
 
+import logging
+
 import requests
 
 from publisher import config
+
+log = logging.getLogger(__name__)
 
 
 class Mailchimp:
@@ -47,4 +51,8 @@ class Mailchimp:
 
     def delete(self, post_id: str) -> str | None:
         resp = requests.delete(f"{self.base_url}/campaigns/{post_id}", headers=self._headers())
-        return post_id if resp.status_code == 204 else None
+        if resp.status_code == 404:
+            log.warning("mailchimp delete: campagna %s gia' rimossa (HTTP 404)", post_id)
+            return post_id
+        resp.raise_for_status()
+        return post_id
