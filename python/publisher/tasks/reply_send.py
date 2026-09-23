@@ -5,6 +5,10 @@ auto_reply_enabled: si esamina un piccolo batch di commenti senza risposta (non 
 solo LIMIT 1 come v1) e si elabora il primo il cui canale ha auto_reply_enabled
 attivo sul post — un commento con solo comments_enabled (tracciato ma senza
 auto-risposta) viene lasciato stare e non blocca la coda per gli altri.
+
+Un invio fallito (errore del canale o nessun id restituito) marca il commento
+`reply_failed_at` e lo toglie dalla coda: prima veniva ritentato ogni minuto,
+rigenerando la risposta AI (e addebitando token all'account) ad ogni giro.
 """
 
 from __future__ import annotations
@@ -44,11 +48,16 @@ def run(conn: Connection) -> None:
             reply_text = content_service.generate_reply(comment, replier.build_prompt())
             result = replier.simulate(reply_text) if config.DRY_RUN else replier.send(reply_text)
         except Exception:  # noqa: BLE001
-            log.exception("reply_send: risposta fallita per il commento %s", comment["id"])
+            log.exception("reply_send: risposta fallita per il commento %s, non verra' ritentata", comment["id"])
+            comment_repo.mark_reply_failed(comment["id"], now)
             return
 
         if not result.remote_id:
-            log.warning("reply_send: provider non ha restituito un id per il commento %s", comment["id"])
+            log.warning(
+                "reply_send: provider non ha restituito un id per il commento %s, non verra' ritentata",
+                comment["id"],
+            )
+            comment_repo.mark_reply_failed(comment["id"], now)
             return
 
         comment_repo.mark_replied(comment["id"], result.remote_id, result.text, now)

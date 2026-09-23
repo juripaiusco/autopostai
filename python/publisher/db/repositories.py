@@ -471,6 +471,7 @@ class CommentRepository:
                     INNER JOIN {users} u ON u.id = p.user_id
                     INNER JOIN {settings} s ON s.user_id = u.id
                 WHERE c.reply IS NULL
+                    AND c.reply_failed_at IS NULL
                     AND p.deleted_at IS NULL
                 ORDER BY c.id
                 LIMIT :limit
@@ -480,6 +481,14 @@ class CommentRepository:
         ).mappings().all()
 
         return [dict(r) for r in rows]
+
+    def mark_reply_failed(self, comment_id: int, now: str) -> None:
+        """Risposta automatica fallita: il commento esce da due_for_reply."""
+        comments = config.table("comments")
+        self.conn.execute(
+            text(f"UPDATE {comments} SET reply_failed_at = :now WHERE id = :id"),
+            {"now": now, "id": comment_id},
+        )
 
     def mark_replied(self, comment_id: int, reply_id: str, reply_text: str, now: str) -> None:
         comments = config.table("comments")

@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'reply_id',
     'reply',
     'reply_created_time',
+    'reply_failed_at',
 ])]
 class Comment extends Model
 {
@@ -31,6 +32,7 @@ class Comment extends Model
         return [
             'message_created_time' => 'datetime',
             'reply_created_time' => 'datetime',
+            'reply_failed_at' => 'datetime',
         ];
     }
 

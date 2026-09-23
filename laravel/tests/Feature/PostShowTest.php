@@ -86,4 +86,27 @@ class PostShowTest extends TestCase
             ->where('post.commentsTotal', 5)
         );
     }
+
+    public function test_failed_auto_reply_is_exposed_to_the_page(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $owner = User::factory()->create(['parent_id' => $admin->id]);
+        $post = $this->makePost($owner);
+
+        Comment::factory()->create([
+            'post_id' => $post->id,
+            'channel' => 'facebook',
+            'reply' => null,
+            'reply_id' => null,
+            'reply_created_time' => null,
+            'reply_failed_at' => '2026-09-23 10:00:00',
+        ]);
+
+        $response = $this->actingAs($owner)->get(route('posts.show', $post));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('comments.0.reply', null)
+            ->where('comments.0.replyFailedAt', fn ($value) => str_starts_with($value, '2026-09-23T10:00:00'))
+        );
+    }
 }

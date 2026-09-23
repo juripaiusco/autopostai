@@ -45,5 +45,9 @@ function formatDate(value) {
             </div>
             <div class="ps-comment__reply-text">{{ comment.reply.text }}</div>
         </div>
+        <div v-else-if="comment.replyFailedAt" class="ps-comment__reply-failed">
+            <Icon name="warning" :size="13" />
+            Risposta automatica non inviata ({{ formatDate(comment.replyFailedAt) }}): errore del canale, non verrà ritentata.
+        </div>
     </div>
 </template>

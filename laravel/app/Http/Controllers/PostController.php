@@ -255,6 +255,7 @@ class PostController extends Controller
                     'time' => $c->reply_created_time?->toIso8601String(),
                     'tokens' => $c->token?->tokens_used,
                 ] : null,
+                'replyFailedAt' => $c->reply_failed_at?->toIso8601String(),
             ])->values(),
         ]);
     }

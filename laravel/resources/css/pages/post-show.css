@@ -129,6 +129,13 @@
 .ps-comment__reply-time { font-size: 11.5px; color: var(--g500); }
 .ps-comment__reply-tokens { margin-left: auto; font-size: 11px; color: var(--g400); white-space: nowrap; }
 .ps-comment__reply-text { font-size: 13.5px; color: var(--g700); line-height: 1.6; }
+.ps-comment__reply-failed {
+    display: flex; align-items: center; gap: 6px;
+    margin: 0 16px 14px; padding: 8px 12px; border-radius: 8px;
+    background: color-mix(in srgb, var(--danger) 6%, white);
+    border: 1px solid color-mix(in srgb, var(--danger) 25%, white);
+    color: var(--danger); font-size: 12.5px;
+}
 
 /* ---------- Footer ---------- */
 .ps-footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--g100); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; text-decoration: none; }
