@@ -8,6 +8,12 @@ ContactRepository.sendable_for_post). Il post riceve un id sintetico sul canale
 newsletter al PRIMO batch inviato (passa "Pubblicato" subito, la consegna
 prosegue in background) — non e' un id remoto reale, nessuna piattaforma
 esterna e' coinvolta.
+
+Il pubblico e' congelato a `published_at`: i contatti registrati dopo non
+ricevono newsletter gia' uscite. Quando non resta nessun contatto da servire il
+canale riceve `completed_at` e il post esce dalla selezione (anche con 0
+destinatari al primo giro: il post viene comunque marcato pubblicato, con stats
+a zero, invece di restare published=0 ripescato ogni minuto da posts_send).
 """
 
 from __future__ import annotations
@@ -50,21 +56,21 @@ def _process_one(post, post_repo, contact_repo, token_repo, content_service, now
         return
 
     contacts = contact_repo.sendable_for_post(
-        post["user_id"], post["id"], config.NEWSLETTER_SMTP_BATCH_SIZE, tag_id=entry.newsletter_tag_id()
+        post["user_id"], post["id"], config.NEWSLETTER_SMTP_BATCH_SIZE,
+        audience_cutoff=post["published_at"], tag_id=entry.newsletter_tag_id(),
     )
     if not contacts:
-        log.info(
-            "newsletter_send: post %s - 0 destinatari (user %s, tag_id %s) - tag senza contatti attivi, "
-            "tutti soppressi o gia' processati",
-            post["id"], post["user_id"], entry.newsletter_tag_id(),
-        )
+        _complete(post, channels, entry, post_repo, contact_repo, now)
         return
 
     # Stesso guard di posts_send.py: se il contenuto va ancora generato e
     # l'account ha esaurito i token, il post viene abbandonato senza inviare
     # (published=1 + task_complete=1, non piu' rivalutato da nessun task).
+    # completed_at: senza, due_smtp_custom_posts lo ripescherebbe ogni minuto.
     if not post.get("ai_content") and token_repo.is_over_limit(post["user_id"]):
         post_repo.abandon_over_limit(post["id"])
+        entry.data["completed_at"] = now
+        post_repo.save_channels(post["id"], channels.to_dict())
         log.info("newsletter_send: post %s abbandonato (limite token superato)", post["id"])
         return
 
@@ -105,6 +111,28 @@ def _process_one(post, post_repo, contact_repo, token_repo, content_service, now
     # newsletter, cosi' il frontend che gia' legge channels non ha bisogno di
     # logica dedicata. entry.data e' lo stesso dict di channels_dict['newsletter']
     # (riferimento, non copia): set_result() qui sotto si riflette in entrambi.
+    if _save_progress(post, channels, entry, post_repo, contact_repo):
+        log.info("newsletter_send: post %s pubblicato (primo batch inviato)", post["id"])
+
+
+def _complete(post, channels, entry, post_repo, contact_repo, now) -> None:
+    """Nessun contatto da servire: invio esaurito (o 0 destinatari fin dal primo
+    giro). Il canale riceve completed_at e il post non viene piu' selezionato."""
+    if entry.already_published:
+        log.info("newsletter_send: post %s - invio completato", post["id"])
+    else:
+        log.warning(
+            "newsletter_send: post %s - 0 destinatari (user %s, tag_id %s): tag senza contatti attivi "
+            "o tutti soppressi - canale newsletter chiuso con 0 invii",
+            post["id"], post["user_id"], entry.newsletter_tag_id(),
+        )
+    entry.data["completed_at"] = now
+    _save_progress(post, channels, entry, post_repo, contact_repo)
+
+
+def _save_progress(post, channels, entry, post_repo, contact_repo) -> bool:
+    """Id sintetico al primo giro, stats aggiornate, published=1 quando tutti i
+    canali accesi hanno un id. True se il post e' stato appena marcato pubblicato."""
     first_batch = not entry.already_published
     if first_batch:
         entry.set_result(f"smtp-{post['id']}", None)
@@ -115,7 +143,8 @@ def _process_one(post, post_repo, contact_repo, token_repo, content_service, now
 
     if first_batch and channels.all_on_published():
         post_repo.mark_published(post["id"])
-        log.info("newsletter_send: post %s pubblicato (primo batch inviato)", post["id"])
+        return True
+    return False
 
 
 def _finalize_html(html: str, contact_id: int, send_id: int) -> str:

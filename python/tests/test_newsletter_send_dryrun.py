@@ -43,15 +43,17 @@ def _make_account(conn) -> int:
     return user_id
 
 
-def _make_contact(conn, user_id: int, status: str = "active") -> int:
+def _make_contact(conn, user_id: int, status: str = "active", created_minutes_ago: int = 60) -> int:
+    # Default: creato prima del post (published_at = 5 minuti fa), quindi nel
+    # pubblico congelato della newsletter.
     return conn.execute(
         text(
             """
             INSERT INTO contacts (user_id, email, status, created_at, updated_at)
-            VALUES (:uid, :email, :status, NOW(), NOW())
+            VALUES (:uid, :email, :status, DATE_SUB(NOW(), INTERVAL :ago MINUTE), NOW())
             """
         ),
-        {"uid": user_id, "email": f"{uuid.uuid4()}@example.com", "status": status},
+        {"uid": user_id, "email": f"{uuid.uuid4()}@example.com", "status": status, "ago": created_minutes_ago},
     ).lastrowid
 
 
@@ -214,6 +216,85 @@ def test_newsletter_send_ignores_mailchimp_and_brevo_providers():
             text("SELECT COUNT(*) FROM email_sends WHERE post_id = :pid"), {"pid": post_id}
         ).scalar()
         assert count == 0
+    finally:
+        trans.rollback()
+        conn.close()
+
+
+def _post_row(conn, post_id: int) -> dict:
+    row = conn.execute(
+        text("SELECT channels, published FROM posts WHERE id = :id"), {"id": post_id}
+    ).mappings().first()
+    return {"channels": json.loads(row["channels"]), "published": str(row["published"])}
+
+
+@pytest.mark.skipif(not config.DRY_RUN, reason="richiede PUBLISHER_DRY_RUN=1")
+def test_newsletter_send_skips_contacts_created_after_publication():
+    """Pubblico congelato: un contatto registrato dopo published_at non riceve
+    newsletter gia' uscite (prima le riceveva tutte, una per post)."""
+    engine = get_engine()
+    conn = engine.connect()
+    trans = conn.begin()
+    try:
+        user_id = _make_account(conn)
+        before = _make_contact(conn, user_id)
+        after = _make_contact(conn, user_id, created_minutes_ago=1)  # post uscito 5 minuti fa
+        post_id = _make_post(conn, user_id)
+
+        newsletter_send.run(conn)
+        newsletter_send.run(conn)
+
+        sent_contact_ids = conn.execute(
+            text("SELECT contact_id FROM email_sends WHERE post_id = :pid"), {"pid": post_id}
+        ).scalars().all()
+        assert sent_contact_ids == [before]
+        assert after not in sent_contact_ids
+    finally:
+        trans.rollback()
+        conn.close()
+
+
+@pytest.mark.skipif(not config.DRY_RUN, reason="richiede PUBLISHER_DRY_RUN=1")
+def test_newsletter_send_marks_completed_when_audience_exhausted():
+    engine = get_engine()
+    conn = engine.connect()
+    trans = conn.begin()
+    try:
+        user_id = _make_account(conn)
+        _make_contact(conn, user_id)
+        post_id = _make_post(conn, user_id)
+
+        newsletter_send.run(conn)  # invia all'unico contatto
+        assert "completed_at" not in _post_row(conn, post_id)["channels"]["newsletter"]
+
+        newsletter_send.run(conn)  # nessuno rimasto -> chiuso
+        assert _post_row(conn, post_id)["channels"]["newsletter"]["completed_at"]
+
+        due_ids = [p["id"] for p in newsletter_send.PostRepository(conn).due_smtp_custom_posts("2999-01-01 00:00:00")]
+        assert post_id not in due_ids
+    finally:
+        trans.rollback()
+        conn.close()
+
+
+@pytest.mark.skipif(not config.DRY_RUN, reason="richiede PUBLISHER_DRY_RUN=1")
+def test_newsletter_send_zero_recipients_publishes_and_completes():
+    """0 destinatari al primo giro: prima il post restava published=0 per sempre
+    (ripescato ogni minuto da posts_send), ora viene chiuso con stats a zero."""
+    engine = get_engine()
+    conn = engine.connect()
+    trans = conn.begin()
+    try:
+        user_id = _make_account(conn)
+        post_id = _make_post(conn, user_id)  # nessun contatto
+
+        newsletter_send.run(conn)
+
+        row = _post_row(conn, post_id)
+        assert row["published"] == "1"
+        assert row["channels"]["newsletter"]["id"] == f"smtp-{post_id}"
+        assert row["channels"]["newsletter"]["completed_at"]
+        assert row["channels"]["newsletter"]["stats"]["sent"] == 0
     finally:
         trans.rollback()
         conn.close()

@@ -83,7 +83,9 @@ class PostRepository:
         smtp_custom si spalma su piu' run (batch da 4 contatti a tick,
         publisher/tasks/newsletter_send.py), quindi va ripescato anche dopo
         che il post e' gia' stato marcato pubblicato (primo batch inviato).
-        Il task si ferma da solo quando non restano piu' contatti da servire.
+        Esclusi i post gia' esauriti (`newsletter.completed_at`, scritto da
+        newsletter_send quando non restano contatti da servire): senza, ogni
+        newsletter storica verrebbe rivalutata ad ogni run per sempre.
         """
         posts = config.table("posts")
         settings = config.table("settings")
@@ -94,6 +96,7 @@ class PostRepository:
                 SELECT  p.id                  AS id,
                         p.user_id             AS user_id,
                         p.title                AS title,
+                        p.published_at         AS published_at,
                         p.ai_prompt_post       AS ai_prompt_post,
                         p.ai_content           AS ai_content,
                         p.img                  AS img,
@@ -117,6 +120,7 @@ class PostRepository:
                     AND p.deleted_at IS NULL
                     AND JSON_EXTRACT(p.channels, '$.newsletter.on') = true
                     AND JSON_UNQUOTE(JSON_EXTRACT(p.channels, '$.newsletter.provider')) = 'smtp_custom'
+                    AND JSON_EXTRACT(p.channels, '$.newsletter.completed_at') IS NULL
                 """
             ),
             {"now": now},
@@ -537,10 +541,14 @@ class ContactRepository:
     def __init__(self, conn: Connection):
         self.conn = conn
 
-    def sendable_for_post(self, user_id: int, post_id: int, limit: int, tag_id: int | None = None) -> list[dict]:
+    def sendable_for_post(
+        self, user_id: int, post_id: int, limit: int, audience_cutoff, tag_id: int | None = None
+    ) -> list[dict]:
         """Contatti attivi, non in suppression list, non ancora processati per
         QUESTO post (nessuna riga email_sends esistente) — i piu' vecchi prima,
         cosi' un batch limitato avanza sempre sui prossimi al giro successivo.
+        Pubblico congelato a `audience_cutoff` (published_at del post): un
+        contatto registrato dopo non riceve le newsletter gia' uscite.
         Se tag_id e' valorizzato, restringe ai contatti che hanno quel tag
         (filtro opzionale impostato in compose sul canale newsletter smtp_custom)."""
         contacts = config.table("contacts")
@@ -556,6 +564,7 @@ class ContactRepository:
                 WHERE c.user_id = :user_id
                     AND c.status = 'active'
                     AND c.deleted_at IS NULL
+                    AND c.created_at <= :audience_cutoff
                     AND NOT EXISTS (
                         SELECT 1 FROM {suppression} sl
                         WHERE sl.user_id = c.user_id AND sl.email = c.email
@@ -575,7 +584,10 @@ class ContactRepository:
                 LIMIT :limit
                 """
             ),
-            {"user_id": user_id, "post_id": post_id, "limit": limit, "tag_id": tag_id},
+            {
+                "user_id": user_id, "post_id": post_id, "limit": limit,
+                "audience_cutoff": audience_cutoff, "tag_id": tag_id,
+            },
         ).mappings().all()
 
         return [dict(r) for r in rows]
