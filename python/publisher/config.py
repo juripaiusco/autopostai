@@ -58,6 +58,14 @@ APP_KEY = _env("APP_KEY")
 # --- Provider esterni (base URL, con default sensati) ----------------------
 OPENAI_MODEL = _env("OPENAI_MODEL", "gpt-4o-mini")
 OPENAI_BASE_URL = _env("OPENAI_API_URL")  # None => default SDK ufficiale
+# Default SDK: 600s x 3 tentativi, troppo per un run al minuto con lock.
+OPENAI_TIMEOUT = float(_env("OPENAI_TIMEOUT", "90"))
+OPENAI_MAX_RETRIES = int(_env("OPENAI_MAX_RETRIES", "1"))
+
+# --- HTTP verso i provider (integrations/http.py) --------------------------
+# (connessione, lettura) in secondi: la lettura e' per singola operazione di
+# socket, non il tempo totale, quindi basta anche per upload immagini.
+HTTP_TIMEOUT = (float(_env("HTTP_CONNECT_TIMEOUT", "10")), float(_env("HTTP_READ_TIMEOUT", "60")))
 META_API_BASE_URL = _env("META_API_BASE_URL", "https://graph.facebook.com/v21.0")
 # Token Meta GLOBALE (non per-account): un'unica app Meta gestita dall'admin,
 # condivisa alle pagine via Business Manager. Da qui si ricava il page access

@@ -16,9 +16,8 @@ import logging
 import re
 from urllib.parse import quote
 
-import requests
-
 from publisher import config
+from publisher.integrations import http
 
 log = logging.getLogger(__name__)
 
@@ -61,14 +60,14 @@ class LinkedIn:
             "visibility": {"com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"},
         }
 
-        resp = requests.post(f"{self.base_url}/ugcPosts", headers=self._headers(), data=json.dumps(payload))
+        resp = http.post(f"{self.base_url}/ugcPosts", headers=self._headers(), data=json.dumps(payload))
         if resp.status_code != 201:
             resp.raise_for_status()
         post_id = resp.json().get("id")
         return post_id, f"https://www.linkedin.com/feed/update/{post_id}"
 
     def _upload_image(self, author_urn: str, image_path: str) -> str | None:
-        register = requests.post(
+        register = http.post(
             f"{self.base_url}/assets?action=registerUpload",
             headers=self._headers(),
             data=json.dumps(
@@ -92,7 +91,7 @@ class LinkedIn:
         asset = data["value"]["asset"]
 
         with open(image_path, "rb") as f:
-            requests.put(
+            http.put(
                 upload_url,
                 headers={"Authorization": f"Bearer {self.token}", "Content-Type": "application/octet-stream"},
                 data=f.read(),
@@ -102,7 +101,7 @@ class LinkedIn:
 
     def delete(self, post_id: str) -> str | None:
         numeric_id = post_id.split(":")[-1]
-        resp = requests.delete(
+        resp = http.delete(
             f"{self.base_url}/shares/{numeric_id}",
             headers={"Authorization": f"Bearer {self.token}", "X-Restli-Protocol-Version": "2.0.0"},
         )
@@ -117,7 +116,7 @@ class LinkedIn:
     # --- Commenti ------------------------------------------------------
     def get_comments(self, post_id: str) -> dict:
         encoded_urn = post_id.replace(":", "%3A")
-        resp = requests.get(
+        resp = http.get(
             f"{self.base_url}/socialActions/{encoded_urn}/comments",
             headers={"Authorization": f"Bearer {self.token}", "X-Restli-Protocol-Version": "2.0.0"},
         )
@@ -125,7 +124,7 @@ class LinkedIn:
 
     def get_author(self, actor_urn: str) -> tuple[str | None, str | None]:
         person_id = actor_urn.split(":")[-1]
-        resp = requests.get(
+        resp = http.get(
             f"{self.base_url}/people/(id:{person_id})",
             headers={"Authorization": f"Bearer {self.token}", "X-Restli-Protocol-Version": "2.0.0"},
         )
@@ -174,7 +173,7 @@ class LinkedIn:
             "parentComment": comment_urn,
         }
 
-        resp = requests.post(
+        resp = http.post(
             url,
             headers={
                 "Authorization": f"Bearer {self.token}",

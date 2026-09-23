@@ -23,7 +23,12 @@ def generate(
     model: str | None = None,
 ) -> tuple[str, int]:
     """Ritorna (testo, token_totali_usati)."""
-    client = OpenAI(api_key=api_key, base_url=config.OPENAI_BASE_URL)
+    client = OpenAI(
+        api_key=api_key,
+        base_url=config.OPENAI_BASE_URL,
+        timeout=config.OPENAI_TIMEOUT,
+        max_retries=config.OPENAI_MAX_RETRIES,
+    )
 
     user_content: object = user_prompt
     if img_path:

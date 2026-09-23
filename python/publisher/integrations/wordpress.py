@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import logging
 
-import requests
 from requests.auth import HTTPBasicAuth
+
+from publisher.integrations import http
 
 _GALLERY_OPEN = (
     '<!-- wp:gallery -->'
@@ -66,14 +67,14 @@ class WordPress:
         if uploaded:
             data["featured_media"] = uploaded[0]["id"]
 
-        resp = requests.post(f"{self.url}/wp-json/wp/v2/posts", headers=self._headers(), auth=self.auth, json=data)
+        resp = http.post(f"{self.url}/wp-json/wp/v2/posts", headers=self._headers(), auth=self.auth, json=data)
         resp.raise_for_status()
         body = resp.json()
         return body.get("id"), body.get("link"), gallery_html
 
     def _upload_image(self, image_path: str) -> dict:
         with open(image_path, "rb") as img:
-            resp = requests.post(
+            resp = http.post(
                 f"{self.url}/wp-json/wp/v2/media",
                 headers=self._headers({"Content-Disposition": f"attachment; filename={image_path}"}),
                 auth=self.auth,
@@ -84,7 +85,7 @@ class WordPress:
         return {"id": body.get("id"), "url": body.get("source_url")}
 
     def update(self, post_id: str, title: str, content: str) -> str | None:
-        resp = requests.post(
+        resp = http.post(
             f"{self.url}/wp-json/wp/v2/posts/{post_id}",
             headers=self._headers(),
             auth=self.auth,
@@ -94,7 +95,7 @@ class WordPress:
         return resp.json().get("id")
 
     def delete(self, post_id: str) -> str | None:
-        resp = requests.delete(f"{self.url}/wp-json/wp/v2/posts/{post_id}", headers=self._headers(), auth=self.auth)
+        resp = http.delete(f"{self.url}/wp-json/wp/v2/posts/{post_id}", headers=self._headers(), auth=self.auth)
         # 404 = post eliminato a mano, 410 = gia' nel cestino (rest_already_trashed):
         # in entrambi i casi e' gia' rimosso, niente retry infinito in posts_delete.
         if resp.status_code in (404, 410):

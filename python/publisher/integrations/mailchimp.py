@@ -10,9 +10,8 @@ from __future__ import annotations
 
 import logging
 
-import requests
-
 from publisher import config
+from publisher.integrations import http
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +25,7 @@ class Mailchimp:
         return {"Authorization": f"apikey {self.api_key}", "Content-Type": "application/json"}
 
     def send(self, subject: str, html_content: str, from_name: str, from_email: str, list_id: str) -> tuple[str, str]:
-        campaign = requests.post(
+        campaign = http.post(
             f"{self.base_url}/campaigns",
             headers=self._headers(),
             json={
@@ -39,18 +38,18 @@ class Mailchimp:
         post_id = campaign.json().get("id")
         post_url = campaign.json().get("archive_url")
 
-        requests.put(
+        http.put(
             f"{self.base_url}/campaigns/{post_id}/content",
             headers=self._headers(),
             json={"html": html_content},
         ).raise_for_status()
 
-        requests.post(f"{self.base_url}/campaigns/{post_id}/actions/send", headers=self._headers()).raise_for_status()
+        http.post(f"{self.base_url}/campaigns/{post_id}/actions/send", headers=self._headers()).raise_for_status()
 
         return post_id, post_url
 
     def delete(self, post_id: str) -> str | None:
-        resp = requests.delete(f"{self.base_url}/campaigns/{post_id}", headers=self._headers())
+        resp = http.delete(f"{self.base_url}/campaigns/{post_id}", headers=self._headers())
         if resp.status_code == 404:
             log.warning("mailchimp delete: campagna %s gia' rimossa (HTTP 404)", post_id)
             return post_id

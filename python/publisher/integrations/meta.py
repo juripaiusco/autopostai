@@ -4,6 +4,11 @@ Porting di `services/meta.py` di v1, stesso modello: un token utente GLOBALE
 (`config.META_USER_ACCESS_TOKEN`, da python/.env — l'app Meta dell'admin condivisa
 alle pagine via Business Manager) da cui si ricava il page access token per ogni
 `meta_page_id` e, per Instagram, l'id del business account collegato alla pagina.
+
+Nelle GET/DELETE il token viaggia nell'header `Authorization: Bearer`, mai in
+query string: l'URL finisce nei messaggi di errore di requests (raise_for_status,
+ConnectionError) e quindi nei log del worker — il token utente globale compreso.
+Le POST lo passano nel body (`data=`), che non compare nei messaggi di errore.
 """
 
 from __future__ import annotations
@@ -11,9 +16,8 @@ from __future__ import annotations
 import json
 import logging
 
-import requests
-
 from publisher import config
+from publisher.integrations import http
 
 log = logging.getLogger(__name__)
 
@@ -26,21 +30,16 @@ class Meta:
 
     # --- token / account resolution --------------------------------------
     def page_access_token(self) -> str | None:
-        resp = requests.get(
-            f"{self.base_url}/me/accounts",
-            params={"access_token": self.user_access_token},
-        )
+        resp = http.get(f"{self.base_url}/me/accounts", headers=_bearer(self.user_access_token))
         resp.raise_for_status()
         pages = resp.json().get("data", [])
         return next((p["access_token"] for p in pages if p["id"] == self.page_id), None)
 
     def instagram_account_id(self) -> str | None:
-        resp = requests.get(
+        resp = http.get(
             f"{self.base_url}/{self.page_id}",
-            params={
-                "fields": "instagram_business_account",
-                "access_token": self.user_access_token,
-            },
+            params={"fields": "instagram_business_account"},
+            headers=_bearer(self.user_access_token),
         )
         resp.raise_for_status()
         return (resp.json().get("instagram_business_account") or {}).get("id")
@@ -50,20 +49,20 @@ class Meta:
         token = self.page_access_token()
 
         if not image_urls:
-            resp = requests.post(
+            resp = http.post(
                 f"{self.base_url}/{self.page_id}/feed",
                 data={"message": message, "access_token": token},
             )
         else:
             media_ids = []
             for url in image_urls:
-                up = requests.post(
+                up = http.post(
                     f"{self.base_url}/{self.page_id}/photos",
                     data={"url": url, "published": "false", "access_token": token},
                 )
                 up.raise_for_status()
                 media_ids.append({"media_fbid": up.json()["id"]})
-            resp = requests.post(
+            resp = http.post(
                 f"{self.base_url}/{self.page_id}/feed",
                 data={
                     "message": message,
@@ -77,7 +76,7 @@ class Meta:
         return post_id, f"https://www.facebook.com/{self.page_id}/posts/{post_id}"
 
     def fb_delete(self, post_id: str) -> str | None:
-        resp = requests.delete(f"{self.base_url}/{post_id}", params={"access_token": self.page_access_token()})
+        resp = http.delete(f"{self.base_url}/{post_id}", headers=_bearer(self.page_access_token()))
         # Post gia' tolto a mano dalla pagina: Graph risponde 400 con
         # error_subcode 33 ("object does not exist"), non 404. Va trattato come
         # rimosso, altrimenti posts_delete lo ritenta ogni minuto per sempre.
@@ -96,7 +95,7 @@ class Meta:
         images = image_urls[: config.INSTAGRAM_MAX_IMAGES]
 
         if len(images) == 1:
-            resp = requests.post(
+            resp = http.post(
                 media_url,
                 data={"image_url": images[0], "caption": caption, "access_token": token},
             )
@@ -105,13 +104,13 @@ class Meta:
         else:
             children = []
             for url in images:
-                item = requests.post(
+                item = http.post(
                     media_url,
                     data={"image_url": url, "is_carousel_item": "true", "access_token": token},
                 )
                 item.raise_for_status()
                 children.append(item.json()["id"])
-            resp = requests.post(
+            resp = http.post(
                 media_url,
                 data={
                     "media_type": "CAROUSEL",
@@ -123,16 +122,17 @@ class Meta:
             resp.raise_for_status()
             creation_id = resp.json()["id"]
 
-        publish = requests.post(
+        publish = http.post(
             f"{self.base_url}/{ig_id}/media_publish",
             data={"creation_id": creation_id, "access_token": token},
         )
         publish.raise_for_status()
         post_id = publish.json().get("id")
 
-        permalink = requests.get(
+        permalink = http.get(
             f"{self.base_url}/{post_id}",
-            params={"fields": "permalink", "access_token": token},
+            params={"fields": "permalink"},
+            headers=_bearer(token),
         ).json().get("permalink")
 
         return post_id, permalink
@@ -144,32 +144,37 @@ class Meta:
 
     # --- Commenti (facebook + instagram condividono l'endpoint Graph) -----
     def fb_get_comments(self, post_id: str) -> dict:
-        resp = requests.get(
+        resp = http.get(
             f"{self.base_url}/{post_id}/comments",
-            params={"access_token": self.page_access_token()},
+            headers=_bearer(self.page_access_token()),
         )
         return resp.json()
 
     def fb_reply_comment(self, comment_id: str, message: str) -> str | None:
-        resp = requests.post(
+        resp = http.post(
             f"{self.base_url}/{comment_id}/comments",
             data={"message": message, "access_token": self.page_access_token()},
         )
         return resp.json().get("id")
 
     def ig_get_comments(self, post_id: str) -> dict:
-        resp = requests.get(
+        resp = http.get(
             f"{self.base_url}/{post_id}/comments",
-            params={"fields": "text,from,timestamp", "access_token": self.page_access_token()},
+            params={"fields": "text,from,timestamp"},
+            headers=_bearer(self.page_access_token()),
         )
         return resp.json()
 
     def ig_reply_comment(self, comment_id: str, message: str) -> str | None:
-        resp = requests.post(
+        resp = http.post(
             f"{self.base_url}/{comment_id}/replies",
             data={"message": message, "access_token": self.page_access_token()},
         )
         return resp.json().get("id")
+
+
+def _bearer(token: str | None) -> dict:
+    return {"Authorization": f"Bearer {token}"}
 
 
 def _graph_error(resp) -> dict:
