@@ -1,4 +1,5 @@
 <script setup>
+import ChipPicker from '@/Components/UI/ChipPicker.vue';
 import FieldRow from '@/Components/UI/FieldRow.vue';
 import SecretField from '@/Components/UI/SecretField.vue';
 import ConnectionBadge from '@/Components/UI/ConnectionBadge.vue';
@@ -32,21 +33,9 @@ const emit = defineEmits(['update', 'fetch-categories']);
         <div v-if="modelValue.categories?.length" class="acc-field">
             <label class="acc-row-label">Categoria</label>
             <span class="acc-row-help">Scegli la categoria del sito in cui salvare gli articoli.</span>
-            <div class="acc-li-pages">
-                <button
-                    v-for="cat in modelValue.categories"
-                    :key="cat.id"
-                    type="button"
-                    class="acc-li-page"
-                    :class="{ 'acc-li-page--active': String(modelValue.categoryId) === String(cat.id) }"
-                    @click="emit('update', 'categoryId', cat.id)"
-                >
-                    <span class="acc-li-page-dot" aria-hidden="true"></span>
-                    <span class="acc-li-page-name">{{ cat.name }}</span>
-                    <span v-if="cat.count != null" class="acc-li-page-count" :title="cat.count + ' articoli'">{{ cat.count.toLocaleString('it-IT') }}</span>
-                    <Icon v-if="String(modelValue.categoryId) === String(cat.id)" name="check" :size="16" />
-                </button>
-            </div>
+            <ChipPicker :options="modelValue.categories" :model-value="modelValue.categoryId"
+                count-label="articoli" aria-label="Categoria WordPress"
+                @update:model-value="emit('update', 'categoryId', $event)" />
         </div>
         <FieldRow v-else id="acc-wp-category" label="Categoria ID" help="L'ID della categoria in cui salvare gli articoli. Si popola come elenco dopo aver caricato le categorie.">
             <input id="acc-wp-category" class="control" type="text" :value="modelValue.categoryId" placeholder="es. 8"

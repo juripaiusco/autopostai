@@ -1,17 +1,21 @@
 <script setup>
-import Icon from '@/Components/Icon.vue';
+import { computed } from 'vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
+import ChipPicker from '@/Components/UI/ChipPicker.vue';
 
 const props = defineProps({
-    modelValue: { type: Object, required: true }, // { categories: [{id, name, on}] }
+    modelValue: { type: Object, required: true }, // { categories: [{id, name, count?, on}] }
     loading: { type: Boolean, default: false },
     error: { type: String, default: null }, // messaggio dell'ultima fetch fallita
 });
 
 const emit = defineEmits(['update', 'fetch']);
 
-function toggle(index) {
-    const categories = props.modelValue.categories.map((c, i) => (i === index ? { ...c, on: !c.on } : c));
+const selectedIds = computed(() => (props.modelValue.categories ?? []).filter((c) => c.on).map((c) => c.id));
+
+function onPick(ids) {
+    const on = ids.map(String);
+    const categories = props.modelValue.categories.map((c) => ({ ...c, on: on.includes(String(c.id)) }));
     emit('update', 'categories', categories);
 }
 </script>
@@ -23,21 +27,10 @@ function toggle(index) {
         </div>
         <div class="pf-check-help" style="margin-bottom:10px">Seleziona una o più categorie in cui pubblicare l'articolo.</div>
 
-        <div v-if="modelValue.categories?.length" class="acc-li-pages">
-            <button
-                v-for="(cat, i) in modelValue.categories"
-                :key="cat.id"
-                type="button"
-                class="acc-li-page"
-                :class="{ 'acc-li-page--active': cat.on }"
-                @click="toggle(i)"
-            >
-                <span class="acc-li-page-dot" aria-hidden="true"></span>
-                <span class="acc-li-page-name">{{ cat.name }}</span>
-                <span v-if="cat.count != null" class="acc-li-page-count" :title="cat.count + ' articoli'">{{ cat.count.toLocaleString('it-IT') }}</span>
-                <Icon v-if="cat.on" name="check" :size="16" />
-            </button>
-        </div>
+        <ChipPicker v-if="modelValue.categories?.length" multiple
+            :options="modelValue.categories" :model-value="selectedIds"
+            count-label="articoli" aria-label="Categorie WordPress"
+            @update:model-value="onPick" />
         <div v-else class="pf-check-help" style="margin-bottom:10px">Nessuna categoria caricata ancora.</div>
 
         <button type="button" class="btn btn-secondary btn-sm" style="margin-top:12px" :disabled="loading" @click="emit('fetch')">

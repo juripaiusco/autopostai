@@ -1,8 +1,9 @@
 <script setup>
-import Icon from '@/Components/Icon.vue';
+import { computed } from 'vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
+import ChipPicker from '@/Components/UI/ChipPicker.vue';
 
-defineProps({
+const props = defineProps({
     modelValue: { type: Object, required: true }, // { list: {provider, id, name} | null, tag_id: number | null }
     lists: { type: Array, default: () => [] }, // candidati appena scaricati (non persistiti finché non scelti)
     provider: { type: String, default: null },
@@ -14,6 +15,14 @@ defineProps({
 });
 
 const emit = defineEmits(['pick', 'fetch', 'pick-tag', 'fetch-tags']);
+
+// Liste non ancora ricaricate (es. in modifica): si mostra comunque quella già scelta.
+const listOptions = computed(() => (props.lists.length ? props.lists : (props.modelValue.list ? [props.modelValue.list] : [])));
+
+function onPickList(id) {
+    const list = listOptions.value.find((l) => String(l.id) === String(id));
+    if (list) emit('pick', list);
+}
 </script>
 
 <template>
@@ -26,28 +35,11 @@ const emit = defineEmits(['pick', 'fetch', 'pick-tag', 'fetch-tags']);
             Scegli a chi inviare: tutti i contatti attivi, oppure solo quelli con un tag specifico.
         </div>
 
-        <div class="acc-li-pages">
-            <button type="button" class="acc-li-page" :class="{ 'acc-li-page--active': !modelValue.tag_id }" @click="emit('pick-tag', null)">
-                <span class="acc-li-page-dot" aria-hidden="true"></span>
-                <span class="acc-li-page-name">Tutti i contatti attivi</span>
-                <span v-if="activeCount != null" class="acc-li-page-count" :title="activeCount + ' contatti attivi'">{{ activeCount.toLocaleString('it-IT') }}</span>
-                <Icon v-if="!modelValue.tag_id" name="check" :size="16" />
-            </button>
-            <button
-                v-for="tag in tags"
-                :key="tag.id"
-                type="button"
-                class="acc-li-page"
-                :class="{ 'acc-li-page--active': modelValue.tag_id === tag.id }"
-                @click="emit('pick-tag', tag.id)"
-            >
-                <span class="acc-li-page-dot" aria-hidden="true"></span>
-                <span class="acc-li-page-name">{{ tag.name }}</span>
-                <span v-if="tag.count != null" class="acc-li-page-count" :title="tag.count + ' contatti attivi'">{{ tag.count.toLocaleString('it-IT') }}</span>
-                <Icon v-if="modelValue.tag_id === tag.id" name="check" :size="16" />
-            </button>
-        </div>
-        <div v-if="!tags.length" class="pf-check-help" style="margin-bottom:10px">Nessun tag caricato ancora.</div>
+        <ChipPicker :options="tags" :model-value="modelValue.tag_id"
+            :none-option="{ name: 'Tutti i contatti attivi', count: activeCount }"
+            count-label="contatti attivi" aria-label="Destinatari newsletter"
+            @update:model-value="emit('pick-tag', $event)" />
+        <div v-if="!tags.length" class="pf-check-help" style="margin:10px 0">Nessun tag caricato ancora.</div>
 
         <button type="button" class="btn btn-secondary btn-sm" style="margin-top:12px" :disabled="tagsLoading" @click="emit('fetch-tags')">
             <span v-if="tagsLoading" class="btn-spinner" aria-hidden="true"></span>
@@ -63,28 +55,9 @@ const emit = defineEmits(['pick', 'fetch', 'pick-tag', 'fetch-tags']);
         </div>
         <div class="pf-check-help" style="margin-bottom:10px">Scegli la lista a cui inviare questo post.</div>
 
-        <div v-if="lists.length" class="acc-li-pages">
-            <button
-                v-for="list in lists"
-                :key="list.id"
-                type="button"
-                class="acc-li-page"
-                :class="{ 'acc-li-page--active': modelValue.list?.id === list.id }"
-                @click="emit('pick', list)"
-            >
-                <span class="acc-li-page-dot" aria-hidden="true"></span>
-                <span class="acc-li-page-name">{{ list.name }}</span>
-                <span v-if="list.count != null" class="acc-li-page-count" :title="list.count + ' iscritti'">{{ list.count.toLocaleString('it-IT') }}</span>
-                <Icon v-if="modelValue.list?.id === list.id" name="check" :size="16" />
-            </button>
-        </div>
-        <div v-else-if="modelValue.list" class="acc-li-pages">
-            <div class="acc-li-page acc-li-page--active">
-                <span class="acc-li-page-dot" aria-hidden="true"></span>
-                <span class="acc-li-page-name">{{ modelValue.list.name }}</span>
-                <Icon name="check" :size="16" />
-            </div>
-        </div>
+        <ChipPicker v-if="listOptions.length" :options="listOptions" :model-value="modelValue.list?.id ?? null"
+            count-label="iscritti" aria-label="Lista newsletter"
+            @update:model-value="onPickList" />
         <div v-else class="pf-check-help" style="margin-bottom:10px">Nessuna lista caricata ancora.</div>
 
         <button type="button" class="btn btn-secondary btn-sm" style="margin-top:12px" :disabled="loading" @click="emit('fetch')">

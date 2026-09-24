@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import ChipPicker from '@/Components/UI/ChipPicker.vue';
 import FieldRow from '@/Components/UI/FieldRow.vue';
 import SecretField from '@/Components/UI/SecretField.vue';
 import ConnectionBadge from '@/Components/UI/ConnectionBadge.vue';
@@ -88,21 +89,9 @@ function connState(providerId) {
                         <div v-if="modelValue.mailchimp.lists?.length" class="acc-field">
                             <label class="acc-row-label">Audience</label>
                             <span class="acc-row-help">Scegli la lista a cui inviare le campagne.</span>
-                            <div class="acc-li-pages">
-                                <button
-                                    v-for="list in modelValue.mailchimp.lists"
-                                    :key="list.id"
-                                    type="button"
-                                    class="acc-li-page"
-                                    :class="{ 'acc-li-page--active': String(modelValue.mailchimp.audienceId) === String(list.id) }"
-                                    @click="emit('update', 'mailchimp', 'audienceId', list.id)"
-                                >
-                                    <span class="acc-li-page-dot" aria-hidden="true"></span>
-                                    <span class="acc-li-page-name">{{ list.name }}</span>
-                                    <span v-if="list.count != null" class="acc-li-page-count" :title="list.count + ' iscritti'">{{ list.count.toLocaleString('it-IT') }}</span>
-                                    <Icon v-if="String(modelValue.mailchimp.audienceId) === String(list.id)" name="check" :size="16" />
-                                </button>
-                            </div>
+                            <ChipPicker :options="modelValue.mailchimp.lists" :model-value="modelValue.mailchimp.audienceId"
+                                count-label="iscritti" aria-label="Audience MailChimp"
+                                @update:model-value="emit('update', 'mailchimp', 'audienceId', $event)" />
                         </div>
                         <FieldRow v-else id="acc-nl-mc-audience" label="Audience ID" help="La lista a cui inviare. Si popola come elenco dopo aver caricato le liste.">
                             <input id="acc-nl-mc-audience" class="control" type="text" :value="modelValue.mailchimp.audienceId" placeholder="9f3c1a7b2e"
@@ -126,21 +115,9 @@ function connState(providerId) {
                         <div v-if="modelValue.brevo.lists?.length" class="acc-field">
                             <label class="acc-row-label">Lista</label>
                             <span class="acc-row-help">Scegli la lista a cui inviare le campagne.</span>
-                            <div class="acc-li-pages">
-                                <button
-                                    v-for="list in modelValue.brevo.lists"
-                                    :key="list.id"
-                                    type="button"
-                                    class="acc-li-page"
-                                    :class="{ 'acc-li-page--active': String(modelValue.brevo.listId) === String(list.id) }"
-                                    @click="emit('update', 'brevo', 'listId', list.id)"
-                                >
-                                    <span class="acc-li-page-dot" aria-hidden="true"></span>
-                                    <span class="acc-li-page-name">{{ list.name }}</span>
-                                    <span v-if="list.count != null" class="acc-li-page-count" :title="list.count + ' iscritti'">{{ list.count.toLocaleString('it-IT') }}</span>
-                                    <Icon v-if="String(modelValue.brevo.listId) === String(list.id)" name="check" :size="16" />
-                                </button>
-                            </div>
+                            <ChipPicker :options="modelValue.brevo.lists" :model-value="modelValue.brevo.listId"
+                                count-label="iscritti" aria-label="Lista Brevo"
+                                @update:model-value="emit('update', 'brevo', 'listId', $event)" />
                         </div>
                         <FieldRow v-else id="acc-nl-brevo-list" label="List ID" help="L'ID numerico della lista. Si popola come elenco dopo aver caricato le liste.">
                             <input id="acc-nl-brevo-list" class="control" type="text" :value="modelValue.brevo.listId" placeholder="es. 12"
