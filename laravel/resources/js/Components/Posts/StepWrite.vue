@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
+import ComboboxSelect from '@/Components/UI/ComboboxSelect.vue';
 import SocialOptions from '@/Components/Posts/ChannelOptions/SocialOptions.vue';
 import WordpressOptions from '@/Components/Posts/ChannelOptions/WordpressOptions.vue';
 import NewsletterOptions from '@/Components/Posts/ChannelOptions/NewsletterOptions.vue';
@@ -25,20 +25,6 @@ function toggleChannel(ch) {
 }
 
 const selectedSocialWithAutoReply = computed(() => SOCIAL_IDS.some((id) => props.form.channels[id]?.auto_reply_enabled));
-
-const userQuery = ref('');
-const selectedUser = computed(() => props.users.find((u) => u.id === props.form.user_id) ?? null);
-const filteredUsers = computed(() => {
-    const q = userQuery.value.trim().toLowerCase();
-    if (!q) return props.users;
-    return props.users.filter((u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
-});
-function userLabel(u) {
-    return u ? `${u.name} - ${u.email}` : '';
-}
-function onUserSelect(u) {
-    emit('set', 'user_id', u?.id ?? null);
-}
 
 /* ------------------------------------------------------------------ */
 /* Fetch live: categorie WordPress / liste Newsletter                    */
@@ -129,26 +115,13 @@ function pickNewsletterTag(tagId) {
 
         <div class="flex w-full flex-row gap-4">
 
-            <div class="acc-field w-1/3 pf-combobox" style="margin-bottom:0">
+            <div class="acc-field w-1/3" style="margin-bottom:0">
                 <label class="acc-row-label" for="post-user">Account</label>
                 <span class="acc-row-help">Il post verrà pubblicato con i canali collegati a questo account.</span>
-                <Combobox v-if="mode === 'create' && users.length > 0" :model-value="selectedUser" @update:model-value="onUserSelect">
-                    <div class="pf-combobox-wrap">
-                        <ComboboxInput id="post-user" class="control" autocomplete="off"
-                            :display-value="userLabel"
-                            placeholder="Seleziona l'account"
-                            @change="userQuery = $event.target.value" />
-                        <ComboboxButton class="pf-combobox-btn" aria-label="Apri lista account">▾</ComboboxButton>
-                        <ComboboxOptions class="pf-combobox-options">
-                            <div v-if="filteredUsers.length === 0" class="pf-combobox-empty">Nessun account trovato</div>
-                            <ComboboxOption v-for="u in filteredUsers" :key="u.id" :value="u" v-slot="{ active, selected }">
-                                <div class="pf-combobox-option" :class="{ 'pf-combobox-option--active': active, 'pf-combobox-option--selected': selected }">
-                                    {{ u.name }} - {{ u.email }}
-                                </div>
-                            </ComboboxOption>
-                        </ComboboxOptions>
-                    </div>
-                </Combobox>
+                <ComboboxSelect v-if="mode === 'create' && users.length > 0" id="post-user"
+                    :model-value="form.user_id" :options="users" placeholder="Seleziona l'account"
+                    empty-text="Nessun account trovato"
+                    @update:model-value="emit('set', 'user_id', $event)" />
                 <div v-else-if="mode === 'edit' && owner" class="acc-field" style="margin-bottom:0">
                     <input class="control readonly" readonly type="text" :value="owner.name + ' - ' + owner.email" />
                 </div>
@@ -218,56 +191,3 @@ function pickNewsletterTag(tagId) {
         </div>
     </div>
 </template>
-
-<style scoped>
-.pf-combobox-wrap {
-    position: relative;
-}
-.pf-combobox-btn {
-    position: absolute;
-    top: 0;
-    right: 0;
-    height: 100%;
-    width: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--g500);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-}
-.pf-combobox-options {
-    position: absolute;
-    z-index: 20;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    max-height: 240px;
-    overflow-y: auto;
-    background: #fff;
-    border: 1px solid var(--g300);
-    border-radius: var(--radius);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
-    padding: 4px;
-}
-.pf-combobox-empty {
-    padding: 8px 10px;
-    font-size: 13px;
-    color: var(--g500);
-}
-.pf-combobox-option {
-    padding: 8px 10px;
-    font-size: 13.5px;
-    color: var(--g700);
-    border-radius: 6px;
-    cursor: pointer;
-}
-.pf-combobox-option--active {
-    background: var(--sky);
-    color: #fff;
-}
-.pf-combobox-option--selected {
-    font-weight: 600;
-}
-</style>

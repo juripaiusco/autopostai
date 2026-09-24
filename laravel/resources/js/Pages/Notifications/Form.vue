@@ -1,10 +1,10 @@
 <script setup>
 import { reactive, ref, computed } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/Layout/PageHeader.vue';
 import SectionCard from '@/Components/Layout/SectionCard.vue';
+import ComboboxSelect from '@/Components/UI/ComboboxSelect.vue';
 import FieldRow from '@/Components/UI/FieldRow.vue';
 import Icon from '@/Components/Icon.vue';
 
@@ -32,16 +32,6 @@ const form = reactive({
 });
 
 const saving = ref(false);
-const userQuery = ref('');
-const selectedUser = computed(() => props.recipients.find((u) => u.id === form.user_id) ?? null);
-const filteredRecipients = computed(() => {
-    const q = userQuery.value.trim().toLowerCase();
-    if (!q) return props.recipients;
-    return props.recipients.filter((u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
-});
-function recipientLabel(u) {
-    return u ? `${u.name} - ${u.email}` : '';
-}
 
 const canSave = computed(() => form.title.trim() && form.body.trim() && (form.recipient_type !== 'user' || form.user_id));
 
@@ -106,35 +96,12 @@ function save() {
                     </button>
                 </div>
 
-                <div v-if="form.recipient_type === 'user'" class="acc-field pf-combobox" style="margin-top: 14px; margin-bottom: 0">
+                <div v-if="form.recipient_type === 'user'" class="acc-field" style="margin-top: 14px; margin-bottom: 0">
                     <label class="acc-row-label" for="pn-user">Destinatario</label>
-                    <Combobox :model-value="selectedUser" @update:model-value="(u) => (form.user_id = u?.id ?? null)">
-                        <div class="pf-combobox-wrap">
-                            <ComboboxInput id="pn-user" class="control" autocomplete="off" :display-value="recipientLabel"
-                                placeholder="Cerca account…" @change="userQuery = $event.target.value" />
-                            <ComboboxButton class="pf-combobox-btn" aria-label="Apri lista account">▾</ComboboxButton>
-                            <ComboboxOptions class="pf-combobox-options">
-                                <div v-if="filteredRecipients.length === 0" class="pf-combobox-empty">Nessun account trovato</div>
-                                <ComboboxOption v-for="u in filteredRecipients" :key="u.id" :value="u" v-slot="{ active, selected }">
-                                    <div class="pf-combobox-option" :class="{ 'pf-combobox-option--active': active, 'pf-combobox-option--selected': selected }">
-                                        {{ u.name }} - {{ u.email }}
-                                    </div>
-                                </ComboboxOption>
-                            </ComboboxOptions>
-                        </div>
-                    </Combobox>
+                    <ComboboxSelect id="pn-user" v-model="form.user_id" :options="recipients"
+                        placeholder="Cerca account…" empty-text="Nessun account trovato" />
                 </div>
             </SectionCard>
         </div>
     </AppLayout>
 </template>
-
-<style scoped>
-.pf-combobox-wrap { position: relative; }
-.pf-combobox-btn { position: absolute; top: 0; right: 0; height: 100%; width: 32px; display: flex; align-items: center; justify-content: center; color: var(--g500); background: transparent; border: none; cursor: pointer; }
-.pf-combobox-options { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; right: 0; max-height: 240px; overflow-y: auto; background: #fff; border: 1px solid var(--g300); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0, 0, 0, .12); padding: 4px; }
-.pf-combobox-empty { padding: 8px 10px; font-size: 13px; color: var(--g500); }
-.pf-combobox-option { padding: 8px 10px; font-size: 13.5px; color: var(--g700); border-radius: 6px; cursor: pointer; }
-.pf-combobox-option--active { background: var(--sky); color: #fff; }
-.pf-combobox-option--selected { font-weight: 600; }
-</style>
