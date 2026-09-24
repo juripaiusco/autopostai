@@ -550,6 +550,7 @@ textarea.control { resize: vertical; min-height: 80px; padding: 10px 14px; line-
 .acc-li-page-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--g300); flex-shrink: 0; }
 .acc-li-page--active .acc-li-page-dot { background: var(--sky); }
 .acc-li-page-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-li-page-count { flex-shrink: 0; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--g500); background: var(--g100); border-radius: 999px; padding: 1px 8px; }
 .acc-li-page svg { margin-left: auto; color: var(--sky-strong); flex-shrink: 0; }
 
 /* ---------- Content area padding (reset container for Form) ---------- */

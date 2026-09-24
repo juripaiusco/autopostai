@@ -34,6 +34,7 @@ function toggle(index) {
             >
                 <span class="acc-li-page-dot" aria-hidden="true"></span>
                 <span class="acc-li-page-name">{{ cat.name }}</span>
+                <span v-if="cat.count != null" class="acc-li-page-count" :title="cat.count + ' articoli'">{{ cat.count.toLocaleString('it-IT') }}</span>
                 <Icon v-if="cat.on" name="check" :size="16" />
             </button>
         </div>

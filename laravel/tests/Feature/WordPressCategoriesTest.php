@@ -42,8 +42,8 @@ class WordPressCategoriesTest extends TestCase
     {
         Http::fake([
             'https://example.com/wp-json/wp/v2/categories*' => Http::response([
-                ['id' => 8, 'name' => 'Novità'],
-                ['id' => 12, 'name' => 'Ricette'],
+                ['id' => 8, 'name' => 'Novità', 'count' => 14],
+                ['id' => 12, 'name' => 'Ricette &amp; Menù', 'count' => 3],
             ]),
         ]);
 
@@ -57,8 +57,8 @@ class WordPressCategoriesTest extends TestCase
 
         $categories = $child->settings->fresh()->wordpress_options['categories'];
         $this->assertSame([
-            ['id' => '8', 'name' => 'Novità'],
-            ['id' => '12', 'name' => 'Ricette'],
+            ['id' => '8', 'name' => 'Novità', 'count' => 14],
+            ['id' => '12', 'name' => 'Ricette & Menù', 'count' => 3],
         ], $categories);
 
         $this->actingAs($admin)

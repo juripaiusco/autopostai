@@ -99,6 +99,7 @@ function connState(providerId) {
                                 >
                                     <span class="acc-li-page-dot" aria-hidden="true"></span>
                                     <span class="acc-li-page-name">{{ list.name }}</span>
+                                    <span v-if="list.count != null" class="acc-li-page-count" :title="list.count + ' iscritti'">{{ list.count.toLocaleString('it-IT') }}</span>
                                     <Icon v-if="String(modelValue.mailchimp.audienceId) === String(list.id)" name="check" :size="16" />
                                 </button>
                             </div>
@@ -136,6 +137,7 @@ function connState(providerId) {
                                 >
                                     <span class="acc-li-page-dot" aria-hidden="true"></span>
                                     <span class="acc-li-page-name">{{ list.name }}</span>
+                                    <span v-if="list.count != null" class="acc-li-page-count" :title="list.count + ' iscritti'">{{ list.count.toLocaleString('it-IT') }}</span>
                                     <Icon v-if="String(modelValue.brevo.listId) === String(list.id)" name="check" :size="16" />
                                 </button>
                             </div>

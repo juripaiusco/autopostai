@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Contact;
+use App\Models\ContactTag;
 use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -88,5 +90,26 @@ class PostChannelFetchTest extends TestCase
             ->getJson(route('posts.newsletter-lists', $child))
             ->assertOk()
             ->assertJson(['provider' => 'mailchimp']);
+    }
+
+    public function test_newsletter_tags_include_active_contact_counts(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+
+        $vip = ContactTag::factory()->create(['user_id' => $user->id, 'name' => 'VIP']);
+        $empty = ContactTag::factory()->create(['user_id' => $user->id, 'name' => 'Vuoto']);
+
+        $active = Contact::factory()->count(2)->create(['user_id' => $user->id]);
+        $unsubscribed = Contact::factory()->create(['user_id' => $user->id, 'status' => 'unsubscribed']);
+        $vip->contacts()->attach([...$active->pluck('id'), $unsubscribed->id]);
+
+        $this->actingAs($user)
+            ->getJson(route('posts.newsletter-tags', $user))
+            ->assertOk()
+            ->assertJsonPath('activeCount', 2)
+            ->assertJsonPath('tags.0.name', 'VIP')
+            ->assertJsonPath('tags.0.count', 2)
+            ->assertJsonPath('tags.1.count', 0);
     }
 }

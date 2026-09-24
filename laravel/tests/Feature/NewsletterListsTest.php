@@ -43,8 +43,8 @@ class NewsletterListsTest extends TestCase
         Http::fake([
             'https://us21.api.mailchimp.com/3.0/lists*' => Http::response([
                 'lists' => [
-                    ['id' => 'abc123', 'name' => 'Clienti VIP'],
-                    ['id' => 'def456', 'name' => 'Newsletter generale'],
+                    ['id' => 'abc123', 'name' => 'Clienti VIP', 'stats' => ['member_count' => 42]],
+                    ['id' => 'def456', 'name' => 'Newsletter generale', 'stats' => ['member_count' => 1300]],
                 ],
             ]),
         ]);
@@ -63,8 +63,8 @@ class NewsletterListsTest extends TestCase
 
         $lists = $child->settings->fresh()->nl_mailchimp_options['lists'];
         $this->assertSame([
-            ['id' => 'abc123', 'name' => 'Clienti VIP'],
-            ['id' => 'def456', 'name' => 'Newsletter generale'],
+            ['id' => 'abc123', 'name' => 'Clienti VIP', 'count' => 42],
+            ['id' => 'def456', 'name' => 'Newsletter generale', 'count' => 1300],
         ], $lists);
 
         $this->actingAs($admin)
@@ -79,7 +79,7 @@ class NewsletterListsTest extends TestCase
         Http::fake([
             'https://api.brevo.com/v3/contacts/lists*' => Http::response([
                 'lists' => [
-                    ['id' => 12, 'name' => 'Lista principale'],
+                    ['id' => 12, 'name' => 'Lista principale', 'uniqueSubscribers' => 250, 'totalSubscribers' => 260],
                 ],
             ]),
         ]);
@@ -93,7 +93,7 @@ class NewsletterListsTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame(
-            [['id' => '12', 'name' => 'Lista principale']],
+            [['id' => '12', 'name' => 'Lista principale', 'count' => 250]],
             $child->settings->fresh()->nl_brevo_options['lists']
         );
     }

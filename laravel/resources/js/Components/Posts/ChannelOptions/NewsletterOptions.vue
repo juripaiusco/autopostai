@@ -10,6 +10,7 @@ defineProps({
     error: { type: String, default: null }, // messaggio dell'ultima fetch fallita
     tags: { type: Array, default: () => [] }, // tag dell'account, per smtp_custom
     tagsLoading: { type: Boolean, default: false },
+    activeCount: { type: Number, default: null }, // contatti attivi totali, per "Tutti i contatti attivi"
 });
 
 const emit = defineEmits(['pick', 'fetch', 'pick-tag', 'fetch-tags']);
@@ -29,6 +30,7 @@ const emit = defineEmits(['pick', 'fetch', 'pick-tag', 'fetch-tags']);
             <button type="button" class="acc-li-page" :class="{ 'acc-li-page--active': !modelValue.tag_id }" @click="emit('pick-tag', null)">
                 <span class="acc-li-page-dot" aria-hidden="true"></span>
                 <span class="acc-li-page-name">Tutti i contatti attivi</span>
+                <span v-if="activeCount != null" class="acc-li-page-count" :title="activeCount + ' contatti attivi'">{{ activeCount.toLocaleString('it-IT') }}</span>
                 <Icon v-if="!modelValue.tag_id" name="check" :size="16" />
             </button>
             <button
@@ -41,6 +43,7 @@ const emit = defineEmits(['pick', 'fetch', 'pick-tag', 'fetch-tags']);
             >
                 <span class="acc-li-page-dot" aria-hidden="true"></span>
                 <span class="acc-li-page-name">{{ tag.name }}</span>
+                <span v-if="tag.count != null" class="acc-li-page-count" :title="tag.count + ' contatti attivi'">{{ tag.count.toLocaleString('it-IT') }}</span>
                 <Icon v-if="modelValue.tag_id === tag.id" name="check" :size="16" />
             </button>
         </div>
@@ -71,6 +74,7 @@ const emit = defineEmits(['pick', 'fetch', 'pick-tag', 'fetch-tags']);
             >
                 <span class="acc-li-page-dot" aria-hidden="true"></span>
                 <span class="acc-li-page-name">{{ list.name }}</span>
+                <span v-if="list.count != null" class="acc-li-page-count" :title="list.count + ' iscritti'">{{ list.count.toLocaleString('it-IT') }}</span>
                 <Icon v-if="modelValue.list?.id === list.id" name="check" :size="16" />
             </button>
         </div>

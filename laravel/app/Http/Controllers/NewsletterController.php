@@ -60,7 +60,9 @@ class NewsletterController extends Controller
     }
 
     /**
-     * @return array{0: array<int, array{id: string, name: string}>, 1: string|null} [liste, messaggio di errore]
+     * `count` = iscritti al momento del caricamento (fotografia, può andare fuori sync).
+     *
+     * @return array{0: array<int, array{id: string, name: string, count: int|null}>, 1: string|null} [liste, messaggio di errore]
      */
     private function fetchAndCacheLists(?Settings $settings): array
     {
@@ -95,7 +97,11 @@ class NewsletterController extends Controller
         }
 
         $lists = collect($response->json('lists', []))
-            ->map(fn (array $l) => ['id' => $l['id'], 'name' => $l['name']])
+            ->map(fn (array $l) => [
+                'id' => $l['id'],
+                'name' => $l['name'],
+                'count' => $l['stats']['member_count'] ?? null,
+            ])
             ->sortBy('name')
             ->values()
             ->all();
@@ -137,7 +143,11 @@ class NewsletterController extends Controller
         } while (count($page) === $perPage && $offset < (int) $response->json('count', 0));
 
         $lists = collect($raw)
-            ->map(fn (array $l) => ['id' => (string) $l['id'], 'name' => $l['name']])
+            ->map(fn (array $l) => [
+                'id' => (string) $l['id'],
+                'name' => $l['name'],
+                'count' => $l['uniqueSubscribers'] ?? $l['totalSubscribers'] ?? null,
+            ])
             ->sortBy('name')
             ->values()
             ->all();

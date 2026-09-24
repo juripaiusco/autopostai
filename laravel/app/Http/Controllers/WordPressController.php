@@ -60,7 +60,9 @@ class WordPressController extends Controller
     }
 
     /**
-     * @return array<int, array{id: string, name: string}>|null null se WordPress non ha risposto.
+     * `count` = articoli nella categoria al momento del caricamento.
+     *
+     * @return array<int, array{id: string, name: string, count: int|null}>|null null se WordPress non ha risposto.
      */
     private function fetchAndCacheCategories(Settings $settings): ?array
     {
@@ -75,7 +77,12 @@ class WordPressController extends Controller
         }
 
         $categories = collect($response->json())
-            ->map(fn (array $c) => ['id' => (string) $c['id'], 'name' => $c['name']])
+            ->map(fn (array $c) => [
+                'id' => (string) $c['id'],
+                // la REST API restituisce il nome con entità HTML (es. "Eventi &amp; News")
+                'name' => html_entity_decode($c['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+                'count' => $c['count'] ?? null,
+            ])
             ->values()
             ->all();
 

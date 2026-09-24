@@ -289,8 +289,16 @@ class ContactController extends Controller
     {
         abort_unless($request->user()->canActFor($user), 403);
 
+        // Conteggi sui contatti attivi, come li seleziona il worker all'invio
+        // (esclusa la suppression list: il numero è indicativo).
+        $active = fn ($q) => $q->where('status', 'active');
+
         return response()->json([
-            'tags' => ContactTag::where('user_id', $user->id)->orderBy('name')->get(['id', 'name']),
+            'tags' => ContactTag::where('user_id', $user->id)
+                ->withCount(['contacts as count' => $active])
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'activeCount' => Contact::where('user_id', $user->id)->where('status', 'active')->count(),
         ]);
     }
 

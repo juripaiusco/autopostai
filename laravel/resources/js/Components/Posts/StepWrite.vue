@@ -104,6 +104,7 @@ function pickNewsletterList(list) {
 
 const nlTagsLoading = ref(false);
 const nlTags = ref([]);
+const nlActiveCount = ref(null);
 async function fetchNewsletterTags() {
     if (!props.targetUserId) return;
     nlTagsLoading.value = true;
@@ -111,6 +112,7 @@ async function fetchNewsletterTags() {
     try {
         const data = await getJson(route('posts.newsletter-tags', props.targetUserId));
         nlTags.value = data.tags ?? [];
+        nlActiveCount.value = data.activeCount ?? null;
     } catch (e) {
         nlError.value = e.message;
     } finally {
@@ -202,7 +204,7 @@ function pickNewsletterTag(tagId) {
 
             <NewsletterOptions v-else-if="form.channels[ch.id] && ch.id === 'newsletter'"
                 :model-value="form.channels[ch.id]" :lists="nlLists" :provider="nlProvider" :loading="nlLoading" :error="nlError"
-                :tags="nlTags" :tags-loading="nlTagsLoading"
+                :tags="nlTags" :tags-loading="nlTagsLoading" :active-count="nlActiveCount"
                 @fetch="fetchNewsletterLists" @pick="pickNewsletterList"
                 @fetch-tags="fetchNewsletterTags" @pick-tag="pickNewsletterTag" />
         </template>
