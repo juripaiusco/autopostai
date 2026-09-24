@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import { bezierPath } from '@/data/chartHelpers';
 import { fmtNum } from '@/data/dashboardMock';
 import Icon from '@/Components/Icon.vue';
@@ -18,6 +18,8 @@ const IH = H - PT - PB;
 const svgEl = ref(null);
 const clipRect = ref(null);
 const hover = ref(null);
+// Nuovi dati (es. cambio utente): l'indice in hover può non esistere più.
+watch(() => props.data, () => { hover.value = null; });
 
 const n = computed(() => props.data.length);
 // Math.max(1, …): con tutti i mesi a zero niente divisione per zero.

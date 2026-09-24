@@ -10,7 +10,6 @@ import { router } from '@inertiajs/vue3';
 export function useUserScope() {
     function setScope(id) {
         router.post(route('scope.update'), { user: id ?? undefined }, {
-            preserveState: true,
             preserveScroll: true,
         });
     }

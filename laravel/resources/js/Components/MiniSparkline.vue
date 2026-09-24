@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, getCurrentInstance } from 'vue';
+import { computed, ref, onMounted, watch, nextTick, getCurrentInstance } from 'vue';
 import { bezierPath } from '@/data/chartHelpers';
 
 const props = defineProps({
@@ -60,6 +60,14 @@ onMounted(() => {
             });
         }
     }, delay);
+});
+
+// Il dasharray dell'animazione è calcolato sulla lunghezza del path al mount:
+// se i dati cambiano senza rimontare, va tolto o la nuova linea resta tagliata.
+watch(() => props.data, async () => {
+    await nextTick();
+    if (lineRef.value) lineRef.value.style.strokeDasharray = 'none';
+    if (areaRef.value) areaRef.value.style.opacity = '1';
 });
 </script>
 

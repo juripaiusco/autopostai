@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import Icon from '@/Components/Icon.vue';
 import MiniSparkline from '@/Components/MiniSparkline.vue';
 
@@ -24,23 +24,31 @@ const displayValue = computed(() => {
     return typeof v === 'number' ? v.toLocaleString('it-IT') : v;
 });
 
-onMounted(() => {
-    if (typeof props.value !== 'number') return;
+let animTimer = null;
+
+// Conteggio animato da 0 al valore; rilanciato anche quando il valore cambia
+// senza rimontare il componente (reload parziali della pagina).
+function animate(delay) {
+    clearTimeout(animTimer);
+    if (typeof props.value !== 'number') { animatedValue.value = props.value; return; }
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) { animatedValue.value = props.value; return; }
     const duration = 650;
     const target = props.value;
-    const delay = props.index * 60 + 120;
-    setTimeout(() => {
+    animTimer = setTimeout(() => {
         const start = performance.now();
         const tick = (now) => {
+            if (target !== props.value) return; // superato da un valore più recente
             const t = Math.min((now - start) / duration, 1);
             animatedValue.value = Math.round(target * (1 - Math.pow(1 - t, 4)));
             if (t < 1) requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);
     }, delay);
-});
+}
+
+onMounted(() => animate(props.index * 60 + 120));
+watch(() => props.value, () => animate(0));
 </script>
 
 <template>
