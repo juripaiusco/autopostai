@@ -337,10 +337,17 @@ class PostController extends Controller
             $opts = is_array($selected[$id]) ? $selected[$id] : [];
 
             if (in_array($id, ['facebook', 'instagram', 'linkedin'], true)) {
+                // Stesse regole del toggle nel form (SocialOptions.vue), ma
+                // applicate qui: l'auto-risposta richiede i commenti attivi e
+                // che l'account la consenta su quel canale (reply_on).
+                $commentsEnabled = !empty($opts['comments_enabled']);
+
                 return [$id => [
                     'on' => true,
-                    'comments_enabled' => !empty($opts['comments_enabled']),
-                    'auto_reply_enabled' => !empty($opts['auto_reply_enabled']),
+                    'comments_enabled' => $commentsEnabled,
+                    'auto_reply_enabled' => $commentsEnabled
+                        && !empty($opts['auto_reply_enabled'])
+                        && !empty($accountChannels[$id]['reply_on']),
                     'reply_n' => $accountChannels[$id]['reply_n'] ?? null,
                 ]];
             }

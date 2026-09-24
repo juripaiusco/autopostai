@@ -66,6 +66,36 @@ class PostChannelOptionsTest extends TestCase
         $this->assertSame('1', $post->auto_reply_enabled);
     }
 
+    public function test_auto_reply_is_forced_off_when_account_disallows_it_or_comments_are_off(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create([
+            'parent_id' => $admin->id,
+            'channels' => [
+                'facebook' => ['on' => true, 'reply_on' => false],
+                'linkedin' => ['on' => true, 'reply_on' => true],
+            ],
+        ]);
+
+        // Richiesta forzata: il form avrebbe il toggle disabilitato in entrambi i casi.
+        $this->actingAs($user)->post(route('posts.store'), [
+            'title' => 'Auto-risposta forzata',
+            'channels' => [
+                'facebook' => ['comments_enabled' => true, 'auto_reply_enabled' => true],
+                'linkedin' => ['comments_enabled' => false, 'auto_reply_enabled' => true],
+            ],
+            'action' => 'save',
+        ])->assertRedirect(route('posts'));
+
+        $post = Post::where('title', 'Auto-risposta forzata')->firstOrFail();
+
+        $this->assertTrue($post->channels['facebook']['comments_enabled']);
+        $this->assertFalse($post->channels['facebook']['auto_reply_enabled']);
+        $this->assertFalse($post->channels['linkedin']['comments_enabled']);
+        $this->assertFalse($post->channels['linkedin']['auto_reply_enabled']);
+        $this->assertSame('0', $post->auto_reply_enabled);
+    }
+
     public function test_storing_a_post_saves_wordpress_categories_and_newsletter_list(): void
     {
         $admin = User::factory()->create(['parent_id' => null]);
