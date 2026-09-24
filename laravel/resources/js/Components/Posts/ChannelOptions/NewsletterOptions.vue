@@ -7,6 +7,7 @@ defineProps({
     lists: { type: Array, default: () => [] }, // candidati appena scaricati (non persistiti finché non scelti)
     provider: { type: String, default: null },
     loading: { type: Boolean, default: false },
+    error: { type: String, default: null }, // messaggio dell'ultima fetch fallita
     tags: { type: Array, default: () => [] }, // tag dell'account, per smtp_custom
     tagsLoading: { type: Boolean, default: false },
 });
@@ -49,6 +50,7 @@ const emit = defineEmits(['pick', 'fetch', 'pick-tag', 'fetch-tags']);
             <span v-if="tagsLoading" class="btn-spinner" aria-hidden="true"></span>
             {{ tagsLoading ? 'Caricamento…' : 'Carica tag' }}
         </button>
+        <div v-if="error" class="pf-channel-error pf-fade-in" role="alert">{{ error }}</div>
     </div>
 
     <div class="pf-comments-card" v-else>
@@ -85,5 +87,6 @@ const emit = defineEmits(['pick', 'fetch', 'pick-tag', 'fetch-tags']);
             <span v-if="loading" class="btn-spinner" aria-hidden="true"></span>
             {{ loading ? 'Caricamento…' : 'Carica liste' }}
         </button>
+        <div v-if="error" class="pf-channel-error pf-fade-in" role="alert">{{ error }}</div>
     </div>
 </template>

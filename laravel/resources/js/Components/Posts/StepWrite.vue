@@ -44,36 +44,56 @@ function onUserSelect(u) {
 /* Fetch live: categorie WordPress / liste Newsletter                    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * GET JSON verso gli endpoint live del form. Ritorna i dati, oppure lancia
+ * un Error con il messaggio del server (abort 422/502) da mostrare inline.
+ */
+async function getJson(url) {
+    let res;
+    try {
+        res = await fetch(url, { headers: { Accept: 'application/json' } });
+    } catch {
+        throw new Error('Connessione non riuscita. Riprova.');
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || `Errore durante il caricamento (HTTP ${res.status}).`);
+    return data;
+}
+
 const wpLoading = ref(false);
+const wpError = ref(null);
 async function fetchWordpressCategories() {
     if (!props.targetUserId) return;
     wpLoading.value = true;
+    wpError.value = null;
     try {
-        const res = await fetch(route('posts.wordpress-categories', props.targetUserId), { headers: { Accept: 'application/json' } });
-        if (!res.ok) return;
-        const data = await res.json();
+        const data = await getJson(route('posts.wordpress-categories', props.targetUserId));
         const existing = props.form.channels.wordpress?.categories ?? [];
         const merged = (data.categories ?? []).map((c) => ({
             ...c,
             on: existing.find((e) => e.id === c.id)?.on ?? false,
         }));
         emit('set-channel-option', 'wordpress', 'categories', merged);
+    } catch (e) {
+        wpError.value = e.message;
     } finally {
         wpLoading.value = false;
     }
 }
 
 const nlLoading = ref(false);
+const nlError = ref(null);
 const nlLists = ref([]);
 const nlProvider = computed(() => props.channels.find((c) => c.id === 'newsletter')?.provider ?? null);
 async function fetchNewsletterLists() {
     if (!props.targetUserId) return;
     nlLoading.value = true;
+    nlError.value = null;
     try {
-        const res = await fetch(route('posts.newsletter-lists', props.targetUserId), { headers: { Accept: 'application/json' } });
-        if (!res.ok) return;
-        const data = await res.json();
+        const data = await getJson(route('posts.newsletter-lists', props.targetUserId));
         nlLists.value = data.lists ?? [];
+    } catch (e) {
+        nlError.value = e.message;
     } finally {
         nlLoading.value = false;
     }
@@ -87,11 +107,12 @@ const nlTags = ref([]);
 async function fetchNewsletterTags() {
     if (!props.targetUserId) return;
     nlTagsLoading.value = true;
+    nlError.value = null;
     try {
-        const res = await fetch(route('posts.newsletter-tags', props.targetUserId), { headers: { Accept: 'application/json' } });
-        if (!res.ok) return;
-        const data = await res.json();
+        const data = await getJson(route('posts.newsletter-tags', props.targetUserId));
         nlTags.value = data.tags ?? [];
+    } catch (e) {
+        nlError.value = e.message;
     } finally {
         nlTagsLoading.value = false;
     }
@@ -175,12 +196,12 @@ function pickNewsletterTag(tagId) {
                 @update="(field, value) => emit('set-channel-option', ch.id, field, value)" />
 
             <WordpressOptions v-else-if="form.channels[ch.id] && ch.id === 'wordpress'"
-                :model-value="form.channels[ch.id]" :loading="wpLoading"
+                :model-value="form.channels[ch.id]" :loading="wpLoading" :error="wpError"
                 @update="(field, value) => emit('set-channel-option', 'wordpress', field, value)"
                 @fetch="fetchWordpressCategories" />
 
             <NewsletterOptions v-else-if="form.channels[ch.id] && ch.id === 'newsletter'"
-                :model-value="form.channels[ch.id]" :lists="nlLists" :provider="nlProvider" :loading="nlLoading"
+                :model-value="form.channels[ch.id]" :lists="nlLists" :provider="nlProvider" :loading="nlLoading" :error="nlError"
                 :tags="nlTags" :tags-loading="nlTagsLoading"
                 @fetch="fetchNewsletterLists" @pick="pickNewsletterList"
                 @fetch-tags="fetchNewsletterTags" @pick-tag="pickNewsletterTag" />

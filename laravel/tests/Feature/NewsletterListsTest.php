@@ -21,7 +21,8 @@ class NewsletterListsTest extends TestCase
 
         $this->actingAs($admin)
             ->post(route('newsletter.lists', $child))
-            ->assertStatus(422);
+            ->assertRedirect()
+            ->assertSessionHas('toast', fn ($msg) => str_contains($msg, 'Salva prima la API Key'));
     }
 
     public function test_manager_cannot_fetch_lists_for_an_account_they_do_not_own(): void
@@ -95,6 +96,46 @@ class NewsletterListsTest extends TestCase
             [['id' => '12', 'name' => 'Lista principale']],
             $child->settings->fresh()->nl_brevo_options['lists']
         );
+    }
+
+    public function test_brevo_lists_are_paginated_within_the_50_per_page_limit(): void
+    {
+        $page1 = array_map(fn ($i) => ['id' => $i, 'name' => "Lista {$i}"], range(1, 50));
+        Http::fake([
+            'https://api.brevo.com/v3/contacts/lists*' => Http::sequence()
+                ->push(['lists' => $page1, 'count' => 52])
+                ->push(['lists' => [['id' => 51, 'name' => 'Lista 51'], ['id' => 52, 'name' => 'Lista 52']], 'count' => 52]),
+        ]);
+
+        $admin = User::factory()->create(['parent_id' => null]);
+        $child = User::factory()->create(['parent_id' => $admin->id]);
+        Settings::factory()->create(['user_id' => $child->id, 'nl_brevo_api' => 'fake-brevo-key']);
+
+        $this->actingAs($admin)
+            ->getJson(route('posts.newsletter-lists', $child))
+            ->assertOk()
+            ->assertJsonPath('provider', 'brevo')
+            ->assertJsonCount(52, 'lists');
+
+        Http::assertSentCount(2);
+        Http::assertSent(fn ($request) => $request['limit'] <= 50);
+        Http::assertSent(fn ($request) => (int) $request['offset'] === 50);
+    }
+
+    public function test_post_form_gets_json_error_message_when_brevo_fails(): void
+    {
+        Http::fake([
+            'https://api.brevo.com/v3/contacts/lists*' => Http::response(['code' => 'unauthorized'], 401),
+        ]);
+
+        $admin = User::factory()->create(['parent_id' => null]);
+        $child = User::factory()->create(['parent_id' => $admin->id]);
+        Settings::factory()->create(['user_id' => $child->id, 'nl_brevo_api' => 'bad-key']);
+
+        $this->actingAs($admin)
+            ->getJson(route('posts.newsletter-lists', $child))
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Brevo ha rifiutato la API Key. Controllala e salva di nuovo.');
     }
 
     public function test_shows_error_toast_when_provider_does_not_respond_correctly(): void

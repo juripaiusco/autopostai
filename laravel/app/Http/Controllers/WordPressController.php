@@ -22,7 +22,9 @@ class WordPressController extends Controller
         $this->authorize('update', $user);
 
         $settings = $user->settings;
-        abort_if(empty($settings?->wordpress_url), 422, 'Configura prima l\'URL del sito WordPress.');
+        if (empty($settings?->wordpress_url)) {
+            return back()->with('toast', 'Salva prima l\'URL del sito WordPress per questo account.');
+        }
 
         $categories = $this->fetchAndCacheCategories($settings);
 
@@ -42,12 +44,17 @@ class WordPressController extends Controller
     {
         abort_unless($request->user()->canActFor($user), 403);
 
+        // JSON esplicito: fuori da api/* gli abort() vengono resi come pagina HTML.
         $settings = $user->settings;
-        abort_if(empty($settings?->wordpress_url), 422, 'Configura prima l\'URL del sito WordPress per questo account.');
+        if (empty($settings?->wordpress_url)) {
+            return response()->json(['message' => 'Configura prima l\'URL del sito WordPress per questo account.'], 422);
+        }
 
         $categories = $this->fetchAndCacheCategories($settings);
 
-        abort_if($categories === null, 502, 'WordPress non ha risposto correttamente. Controlla l\'URL del sito.');
+        if ($categories === null) {
+            return response()->json(['message' => 'WordPress non ha risposto correttamente. Controlla l\'URL del sito.'], 502);
+        }
 
         return response()->json(['categories' => $categories]);
     }

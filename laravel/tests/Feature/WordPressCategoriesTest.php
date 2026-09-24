@@ -21,7 +21,8 @@ class WordPressCategoriesTest extends TestCase
 
         $this->actingAs($admin)
             ->post(route('wordpress.categories', $child))
-            ->assertStatus(422);
+            ->assertRedirect()
+            ->assertSessionHas('toast', fn ($msg) => str_contains($msg, 'Salva prima l\'URL'));
     }
 
     public function test_manager_cannot_fetch_categories_for_an_account_they_do_not_own(): void

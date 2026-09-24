@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class NewsletterController extends Controller
 {
@@ -22,8 +23,6 @@ class NewsletterController extends Controller
         $this->authorize('update', $user);
 
         $settings = $user->settings;
-        abort_if(empty($settings?->nl_mailchimp_api) && empty($settings?->nl_brevo_api), 422, 'Configura prima MailChimp o Brevo per questo account.');
-
         [$lists, $error] = $this->fetchAndCacheLists($settings);
 
         if ($error !== null) {
@@ -44,7 +43,10 @@ class NewsletterController extends Controller
 
         [$lists, $error] = $this->fetchAndCacheLists($user->settings);
 
-        abort_if($error !== null, 422, $error ?? 'Configura prima MailChimp o Brevo per questo account.');
+        // JSON esplicito: fuori da api/* gli abort() vengono resi come pagina HTML.
+        if ($error !== null) {
+            return response()->json(['message' => $error], 422);
+        }
 
         return response()->json([
             'provider' => $this->providerOf($user->settings),
@@ -70,7 +72,7 @@ class NewsletterController extends Controller
             return $this->fetchBrevoLists($settings);
         }
 
-        return [[], 'Configura prima MailChimp o Brevo per questo account.'];
+        return [[], 'Salva prima la API Key di MailChimp o Brevo per questo account.'];
     }
 
     private function fetchMailchimpLists(Settings $settings): array
@@ -83,6 +85,12 @@ class NewsletterController extends Controller
             ->get("https://{$settings->nl_mailchimp_datacenter}.api.mailchimp.com/3.0/lists", ['count' => 100]);
 
         if (!$response->successful()) {
+            Log::warning('MailChimp: recupero liste fallito', [
+                'settings_id' => $settings->id,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
             return [[], 'MailChimp non ha risposto correttamente. Controlla API Key e Server prefix.'];
         }
 
@@ -97,16 +105,38 @@ class NewsletterController extends Controller
         return [$lists, null];
     }
 
+    /**
+     * Brevo accetta al massimo limit=50 per pagina (oltre risponde 400):
+     * si pagina con offset finché non si arriva al totale (`count`).
+     */
     private function fetchBrevoLists(Settings $settings): array
     {
-        $response = Http::withHeaders(['api-key' => $settings->nl_brevo_api, 'accept' => 'application/json'])
-            ->get('https://api.brevo.com/v3/contacts/lists', ['limit' => 100]);
+        $perPage = 50;
+        $raw = [];
+        $offset = 0;
 
-        if (!$response->successful()) {
-            return [[], 'Brevo non ha risposto correttamente. Controlla la API Key.'];
-        }
+        do {
+            $response = Http::withHeaders(['api-key' => $settings->nl_brevo_api, 'accept' => 'application/json'])
+                ->get('https://api.brevo.com/v3/contacts/lists', ['limit' => $perPage, 'offset' => $offset]);
 
-        $lists = collect($response->json('lists', []))
+            if (!$response->successful()) {
+                Log::warning('Brevo: recupero liste fallito', [
+                    'settings_id' => $settings->id,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return [[], $response->status() === 401
+                    ? 'Brevo ha rifiutato la API Key. Controllala e salva di nuovo.'
+                    : 'Brevo non ha risposto correttamente (HTTP ' . $response->status() . ').'];
+            }
+
+            $page = $response->json('lists', []);
+            $raw = array_merge($raw, $page);
+            $offset += $perPage;
+        } while (count($page) === $perPage && $offset < (int) $response->json('count', 0));
+
+        $lists = collect($raw)
             ->map(fn (array $l) => ['id' => (string) $l['id'], 'name' => $l['name']])
             ->sortBy('name')
             ->values()

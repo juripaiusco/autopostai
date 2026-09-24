@@ -5,6 +5,7 @@ import ChannelIcon from '@/Components/ChannelIcon.vue';
 const props = defineProps({
     modelValue: { type: Object, required: true }, // { categories: [{id, name, on}] }
     loading: { type: Boolean, default: false },
+    error: { type: String, default: null }, // messaggio dell'ultima fetch fallita
 });
 
 const emit = defineEmits(['update', 'fetch']);
@@ -42,5 +43,6 @@ function toggle(index) {
             <span v-if="loading" class="btn-spinner" aria-hidden="true"></span>
             {{ loading ? 'Caricamento…' : (modelValue.categories?.length ? 'Aggiorna categorie' : 'Carica categorie') }}
         </button>
+        <div v-if="error" class="pf-channel-error pf-fade-in" role="alert">{{ error }}</div>
     </div>
 </template>
