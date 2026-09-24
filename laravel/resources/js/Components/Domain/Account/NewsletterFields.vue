@@ -85,6 +85,16 @@ function connState(providerId) {
                             <input id="acc-nl-mc-server" class="control" type="text" :value="modelValue.mailchimp.serverPrefix" placeholder="us21"
                                 @input="emit('update', 'mailchimp', 'serverPrefix', $event.target.value)" />
                         </FieldRow>
+                        <div class="acc-grid-2">
+                            <FieldRow id="acc-nl-mc-sender-name" label="Nome mittente" help="Il nome che vedranno gli iscritti.">
+                                <input id="acc-nl-mc-sender-name" class="control" type="text" :value="modelValue.mailchimp.senderName" placeholder="Trattoria da Mario"
+                                    @input="emit('update', 'mailchimp', 'senderName', $event.target.value)" />
+                            </FieldRow>
+                            <FieldRow id="acc-nl-mc-sender" label="Email mittente" help="Deve essere verificata su MailChimp.">
+                                <input id="acc-nl-mc-sender" class="control" type="email" :value="modelValue.mailchimp.sender" placeholder="news@dominio.it"
+                                    @input="emit('update', 'mailchimp', 'sender', $event.target.value)" />
+                            </FieldRow>
+                        </div>
 
                         <div v-if="modelValue.mailchimp.lists?.length" class="acc-field">
                             <label class="acc-row-label">Audience</label>
@@ -107,10 +117,16 @@ function connState(providerId) {
                                 @update:model-value="emit('update', 'brevo', 'apiKey', $event)"
                                 @clear="emit('update', 'brevo', 'apiKeyClear', $event)" />
                         </FieldRow>
-                        <FieldRow id="acc-nl-brevo-sender" label="Mittente" help="Email verificata come mittente.">
-                            <input id="acc-nl-brevo-sender" class="control" type="email" :value="modelValue.brevo.sender" placeholder="news@dominio.it"
-                                @input="emit('update', 'brevo', 'sender', $event.target.value)" />
-                        </FieldRow>
+                        <div class="acc-grid-2">
+                            <FieldRow id="acc-nl-brevo-sender-name" label="Nome mittente" help="Il nome che vedranno gli iscritti.">
+                                <input id="acc-nl-brevo-sender-name" class="control" type="text" :value="modelValue.brevo.senderName" placeholder="Trattoria da Mario"
+                                    @input="emit('update', 'brevo', 'senderName', $event.target.value)" />
+                            </FieldRow>
+                            <FieldRow id="acc-nl-brevo-sender" label="Email mittente" help="Deve essere verificata su Brevo.">
+                                <input id="acc-nl-brevo-sender" class="control" type="email" :value="modelValue.brevo.sender" placeholder="news@dominio.it"
+                                    @input="emit('update', 'brevo', 'sender', $event.target.value)" />
+                            </FieldRow>
+                        </div>
 
                         <div v-if="modelValue.brevo.lists?.length" class="acc-field">
                             <label class="acc-row-label">Lista</label>

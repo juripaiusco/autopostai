@@ -266,6 +266,8 @@ class AccountController extends Controller
                     'apiKeyHint'    => self::secretHint($s?->nl_mailchimp_api),
                     'serverPrefix'  => $s->nl_mailchimp_datacenter ?? '',
                     'audienceId'    => $s->nl_mailchimp_list_id ?? '',
+                    'senderName'    => $s->nl_mailchimp_from_name ?? '',
+                    'sender'        => $s->nl_mailchimp_from_email ?? '',
                     'connected'     => !empty($s?->nl_mailchimp_api),
                     'lists'         => $s?->nl_mailchimp_options['lists'] ?? [],
                 ],
@@ -273,6 +275,7 @@ class AccountController extends Controller
                     'apiKey'    => '',
                     'apiKeyHint' => self::secretHint($s?->nl_brevo_api),
                     'listId'    => $s->nl_brevo_list_id ?? '',
+                    'senderName' => $s->nl_brevo_from_name ?? '',
                     'sender'    => $s->nl_brevo_from_email ?? '',
                     'connected' => !empty($s?->nl_brevo_api),
                     'lists'     => $s?->nl_brevo_options['lists'] ?? [],
@@ -329,9 +332,15 @@ class AccountController extends Controller
             'email' => ['required', 'email', 'max:255', "unique:users,email,{$user->id}"],
             'openai.apiKey' => ['nullable', 'string', Rule::unique('settings', 'openai_api_key')->ignore($user->id, 'user_id')],
             'meta.pageId' => ['nullable', 'string', Rule::unique('settings', 'meta_page_id')->ignore($user->id, 'user_id')],
+            'newsletter.mailchimp.senderName' => ['nullable', 'string', 'max:255'],
+            'newsletter.mailchimp.sender' => ['nullable', 'email', 'max:255'],
+            'newsletter.brevo.senderName' => ['nullable', 'string', 'max:255'],
+            'newsletter.brevo.sender' => ['nullable', 'email', 'max:255'],
         ], [
             'openai.apiKey.unique' => 'Questa chiave OpenAI è già collegata a un altro account.',
             'meta.pageId.unique' => 'Questa pagina Meta è già collegata a un altro account.',
+            'newsletter.mailchimp.sender.email' => 'L\'email mittente MailChimp non è valida.',
+            'newsletter.brevo.sender.email' => 'L\'email mittente Brevo non è valida.',
         ]);
 
         $user->name  = $data['name'];
@@ -423,8 +432,11 @@ class AccountController extends Controller
 
                 'nl_mailchimp_datacenter' => $mailchimp['serverPrefix'] ?? null,
                 'nl_mailchimp_list_id' => $mailchimp['audienceId'] ?? null,
+                'nl_mailchimp_from_name' => $mailchimp['senderName'] ?? null,
+                'nl_mailchimp_from_email' => $mailchimp['sender'] ?? null,
 
                 'nl_brevo_list_id' => $brevo['listId'] ?? null,
+                'nl_brevo_from_name' => $brevo['senderName'] ?? null,
                 'nl_brevo_from_email' => $brevo['sender'] ?? null,
 
                 'nl_smtp_host' => $smtp['host'] ?? null,

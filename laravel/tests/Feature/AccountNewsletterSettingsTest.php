@@ -23,8 +23,8 @@ class AccountNewsletterSettingsTest extends TestCase
                 'name' => $child->name,
                 'email' => $child->email,
                 'newsletter' => [
-                    'mailchimp' => ['apiKey' => 'mc-key', 'serverPrefix' => 'us1', 'audienceId' => 'aud-1'],
-                    'brevo' => ['apiKey' => 'brevo-key', 'listId' => 'list-1', 'sender' => 'noreply@example.com'],
+                    'mailchimp' => ['apiKey' => 'mc-key', 'serverPrefix' => 'us1', 'audienceId' => 'aud-1', 'senderName' => 'Trattoria MC', 'sender' => 'mc@example.com'],
+                    'brevo' => ['apiKey' => 'brevo-key', 'listId' => 'list-1', 'senderName' => 'Trattoria Brevo', 'sender' => 'noreply@example.com'],
                     'smtp' => [
                         'host' => 'smtp.example.com',
                         'port' => '587',
@@ -49,6 +49,9 @@ class AccountNewsletterSettingsTest extends TestCase
         $this->assertSame('brevo-key', $settings->nl_brevo_api);
         $this->assertSame('list-1', $settings->nl_brevo_list_id);
         $this->assertSame('noreply@example.com', $settings->nl_brevo_from_email);
+        $this->assertSame('Trattoria Brevo', $settings->nl_brevo_from_name);
+        $this->assertSame('Trattoria MC', $settings->nl_mailchimp_from_name);
+        $this->assertSame('mc@example.com', $settings->nl_mailchimp_from_email);
 
         $this->assertSame('smtp.example.com', $settings->nl_smtp_host);
         $this->assertSame('587', $settings->nl_smtp_port);
@@ -64,9 +67,27 @@ class AccountNewsletterSettingsTest extends TestCase
             ->get(route('account.edit', $child))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('account.newsletter.smtp.host', 'smtp.example.com')
+                ->where('account.newsletter.mailchimp.senderName', 'Trattoria MC')
+                ->where('account.newsletter.mailchimp.sender', 'mc@example.com')
+                ->where('account.newsletter.brevo.senderName', 'Trattoria Brevo')
                 ->where('account.newsletter.smtp.connected', true)
                 ->where('account.newsletter.template.content', '<html><body>{{ post }}</body></html>')
                 ->where('account.newsletter.template.cta', '<a href="{{ link }}">Scopri di più</a>')
             );
+    }
+
+    public function test_invalid_newsletter_sender_email_is_rejected(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $child = User::factory()->create(['parent_id' => $admin->id]);
+        Settings::factory()->create(['user_id' => $child->id]);
+
+        $this->actingAs($admin)
+            ->put(route('account.update', $child), [
+                'name' => $child->name,
+                'email' => $child->email,
+                'newsletter' => ['mailchimp' => ['sender' => 'non-una-email']],
+            ])
+            ->assertSessionHasErrors('newsletter.mailchimp.sender');
     }
 }

@@ -99,8 +99,8 @@ function buildForm(account) {
             linkedin:  { clientId: '', clientSecret: '', pageId: '', connected: false },
             wordpress: { url: '', username: '', password: '', categoryId: '', connected: false },
             newsletter: {
-                mailchimp: { apiKey: '', serverPrefix: '', audienceId: '', connected: false },
-                brevo:     { apiKey: '', listId: '', sender: '', connected: false },
+                mailchimp: { apiKey: '', serverPrefix: '', audienceId: '', senderName: '', sender: '', connected: false },
+                brevo:     { apiKey: '', listId: '', senderName: '', sender: '', connected: false },
                 smtp:      { host: '', port: '587', username: '', password: '', encryption: 'tls', sender: '', connected: false },
                 template:  { content: '', cta: '' },
             },
