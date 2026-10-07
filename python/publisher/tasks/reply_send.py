@@ -1,10 +1,11 @@
 """Task: genera e invia una risposta automatica a un commento in attesa.
 
 Porting di `task/reply_send.py` (v1), adattato allo split v2 comments_enabled/
-auto_reply_enabled: si esamina un piccolo batch di commenti senza risposta (non un
-solo LIMIT 1 come v1) e si elabora il primo il cui canale ha auto_reply_enabled
-attivo sul post — un commento con solo comments_enabled (tracciato ma senza
-auto-risposta) viene lasciato stare e non blocca la coda per gli altri.
+auto_reply_enabled: la coda (CommentRepository.due_for_reply) contiene solo i
+commenti il cui canale ha auto_reply_enabled attivo sul post. Un commento con
+solo comments_enabled (tracciato ma senza auto-risposta) non entra in coda:
+prima ci entrava, veniva saltato qui e 20 di loro bloccavano le risposte di
+tutti gli account.
 
 Un invio fallito (errore del canale o nessun id restituito) marca il commento
 `reply_failed_at` e lo toglie dalla coda: prima veniva ritentato ogni minuto,
@@ -34,6 +35,7 @@ def run(conn: Connection) -> None:
     content_service = ContentService(PostRepository(conn), TokenLogRepository(conn))
 
     for comment in comment_repo.due_for_reply(limit=config.REPLY_SEND_BATCH_SIZE):
+        # Gia' filtrato dalla query; resta come seconda difesa.
         entry = Channels.parse(comment["channels"]).entry(comment["channel"])
         if not entry or not entry.auto_reply_enabled:
             continue

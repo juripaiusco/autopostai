@@ -433,11 +433,13 @@ class CommentRepository:
     def due_for_reply(self, limit: int = 20) -> list[dict]:
         """Commenti senza risposta, coi dati del post per decidere se rispondere.
 
-        A differenza di v1 (LIMIT 1 secco, un solo toggle reply_on) qui si legge un
-        piccolo batch: il canale del primo commento potrebbe avere auto_reply_enabled
-        spento (si traccia ma non si risponde), e con LIMIT 1 quel commento
-        bloccherebbe la coda per sempre. Il task elabora il primo commento
-        idoneo nel batch e si ferma li' (un reply per run, come v1).
+        Solo i commenti il cui canale ha auto_reply_enabled acceso NEL POST:
+        quelli "solo tracciati" (commenti si', risposta no) restano senza
+        risposta per sempre, e se entravano nel batch lo riempivano — con 20 di
+        loro in testa nessun account riceveva piu' risposte. Il filtro sta nella
+        query (JSON del post, chiave = canale del commento), non dopo il LIMIT.
+        Il task elabora il primo commento del batch e si ferma li' (un reply
+        per run, come v1).
         """
         comments = config.table("comments")
         posts = config.table("posts")
@@ -475,6 +477,7 @@ class CommentRepository:
                 WHERE c.reply IS NULL
                     AND c.reply_failed_at IS NULL
                     AND p.deleted_at IS NULL
+                    AND JSON_EXTRACT(p.channels, CONCAT('$.', c.channel, '.auto_reply_enabled')) = true
                 ORDER BY c.id
                 LIMIT :limit
                 """

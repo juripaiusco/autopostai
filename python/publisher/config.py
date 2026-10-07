@@ -87,8 +87,7 @@ INSTAGRAM_MAX_IMAGES = 10
 TASK_COMPLETE_MAX_WAIT_DAYS = 14
 # Backoff esponenziale del polling commenti: 2^tentativi minuti, fino a 1 giorno.
 TASK_COMPLETE_MAX_BACKOFF_MINUTES = 24 * 60
-# Batch scansionato da reply_send per trovare il primo commento idoneo
-# (canale con auto_reply_enabled attivo) senza restare bloccati in testa alla coda.
+# Commenti in attesa di risposta letti da reply_send a ogni giro (ne elabora uno).
 REPLY_SEND_BATCH_SIZE = 20
 # Newsletter smtp_custom: throttling 20 contatti/5 minuti per account, spalmato
 # sul tick da 1 minuto del worker (20/5 = 4 per tick, publisher/tasks/newsletter_send.py).
