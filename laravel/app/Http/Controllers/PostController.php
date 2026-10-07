@@ -430,7 +430,7 @@ class PostController extends Controller
             'images.*' => self::IMAGE_RULES,
             'img_source' => ['nullable', 'string', Rule::in(['upload', 'generated', 'archive'])],
             'published_at' => ['nullable', 'date'],
-            'action' => ['required', 'string', Rule::in(['save', 'save_and_add'])],
+            'action' => ['required', 'string', Rule::in(['save', 'save_and_add', 'publish_now'])],
         ]);
 
         $unknown = array_diff(array_keys($data['channels']), array_keys(User::CHANNELS));
@@ -461,7 +461,7 @@ class PostController extends Controller
             'comments_enabled' => $commentsEnabled ? '1' : '0',
             'auto_reply_enabled' => $autoReplyEnabled ? '1' : '0',
             'channels' => $channels,
-            'published_at' => $data['published_at'] ?? null,
+            'published_at' => $this->publishedAt($data),
             'published' => '0',
         ]);
 
@@ -481,9 +481,29 @@ class PostController extends Controller
             return redirect()->route('posts.create');
         }
 
-        $request->session()->flash('toast', 'Post salvato.');
+        $request->session()->flash('toast', $this->savedToast($data, 'Post salvato.'));
 
         return redirect()->route('posts');
+    }
+
+    /**
+     * Data di pubblicazione dal form. Senza data il post resta una bozza: il
+     * worker seleziona solo published_at <= adesso, quindi non esce finché
+     * non ne riceve una. "Pubblica subito" (action=publish_now) la imposta
+     * qui, lato server, senza dipendere dall'orologio del browser.
+     */
+    private function publishedAt(array $data): mixed
+    {
+        return ($data['action'] ?? null) === 'publish_now'
+            ? now()
+            : ($data['published_at'] ?? null);
+    }
+
+    private function savedToast(array $data, string $default): string
+    {
+        return ($data['action'] ?? null) === 'publish_now'
+            ? 'Post in pubblicazione: esce entro un minuto.'
+            : $default;
     }
 
     /**
@@ -506,6 +526,7 @@ class PostController extends Controller
             'keep_images' => ['nullable', 'string'],
             'img_source' => ['nullable', 'string', Rule::in(['upload', 'generated', 'archive'])],
             'published_at' => ['nullable', 'date'],
+            'action' => ['nullable', 'string', Rule::in(['save', 'publish_now'])],
         ]);
 
         $unknown = array_diff(array_keys($data['channels']), array_keys(User::CHANNELS));
@@ -542,10 +563,10 @@ class PostController extends Controller
             'comments_enabled' => $commentsEnabled ? '1' : '0',
             'auto_reply_enabled' => $autoReplyEnabled ? '1' : '0',
             'channels' => $channels,
-            'published_at' => $data['published_at'] ?? null,
+            'published_at' => $this->publishedAt($data),
         ]);
 
-        $request->session()->flash('toast', 'Post aggiornato.');
+        $request->session()->flash('toast', $this->savedToast($data, 'Post aggiornato.'));
 
         return redirect()->route('posts');
     }

@@ -12,7 +12,7 @@ const props = defineProps({
     targetUserId: { type: [Number, String], default: null },
 });
 
-const emit = defineEmits(['set', 'back', 'save', 'save-and-add']);
+const emit = defineEmits(['set', 'back', 'save', 'save-and-add', 'publish-now']);
 
 const genLoading = ref(false);
 const genError = ref(null);
@@ -84,7 +84,7 @@ async function runPreview() {
     <div style="display:flex;flex-direction:column;gap:22px">
         <div class="acc-field" style="margin-bottom:0">
             <label class="acc-row-label" for="post-date">Data e ora di pubblicazione</label>
-            <span class="acc-row-help">Lascia vuoto per pubblicare subito dopo aver confermato.</span>
+            <span class="acc-row-help">Lascia vuoto per salvare come bozza: il post non esce finché non imposti una data. Per farlo uscire adesso usa "Pubblica subito".</span>
             <input id="post-date" class="control" type="datetime-local" :value="form.published_at"
                 style="max-width:280px" @input="emit('set', 'published_at', $event.target.value)" />
         </div>
@@ -172,6 +172,12 @@ async function runPreview() {
                 @click="emit('save-and-add')">
                 <span v-if="saving" class="btn-spinner" aria-hidden="true"></span>
                 <Icon v-else name="clone" :size="16" />{{ saving ? 'Salvataggio…' : 'Salva e aggiungi' }}
+            </button>
+            <button type="button" class="btn btn-secondary" :disabled="!canSave || saving"
+                title="Salva e pubblica adesso, ignorando la data impostata: il post esce entro un minuto"
+                @click="emit('publish-now')">
+                <span v-if="saving" class="btn-spinner" aria-hidden="true"></span>
+                <Icon v-else name="send" :size="16" />{{ saving ? 'Salvataggio…' : 'Pubblica subito' }}
             </button>
             <button type="button" class="btn btn-dark" :disabled="!canSave || saving" @click="emit('save')">
                 <span v-if="saving" class="btn-spinner" aria-hidden="true"></span>

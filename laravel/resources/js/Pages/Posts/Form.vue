@@ -207,7 +207,8 @@ function submit(action) {
                         <StepMedia v-else-if="step === 1" :form="form" :target-user-id="targetUserId" @set="set" />
                         <StepPublish v-else :form="form" :channels="channels" :saving="saving" :mode="mode"
                             :target-user-id="targetUserId"
-                            @set="set" @back="back" @save="submit('save')" @save-and-add="submit('save_and_add')" />
+                            @set="set" @back="back" @save="submit('save')" @save-and-add="submit('save_and_add')"
+                            @publish-now="submit('publish_now')" />
                     </div>
                 </Transition>
 
