@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -23,6 +24,9 @@ use Illuminate\Support\Facades\DB;
 class ImportV1Data extends Command
 {
     private const LEGACY = 'mariadb_legacy';
+
+    /** Chiavi scritte dal worker v1 sul canale dopo le azioni remote. */
+    private const V1_REMOTE_KEYS = ['id', 'url', 'gallery_html', 'id_del', 'id_update'];
 
     public function handle(): void
     {
@@ -115,37 +119,187 @@ class ImportV1Data extends Command
         ]);
     }
 
+    /**
+     * `channels` va convertito nella forma v2 (normalizeChannels): copiato
+     * così com'era, il worker Python leggeva ogni canale come spento ("on"
+     * in v1 è la stringa "1", in v2 il booleano true) — i post programmati
+     * venivano marcati pubblicati senza uscire e quelli già pubblicati non
+     * venivano più tolti dai canali né monitorati. Le colonne riassuntive
+     * comments_enabled/auto_reply_enabled (assenti in v1) si ricavano dai
+     * canali convertiti.
+     */
     private function importPosts(bool $dryRun): void
     {
-        // comments_enabled/auto_reply_enabled non esistono in v1: si omettono,
-        // prendono il default di schema (1/0), come per un post mai personalizzato.
-        $this->copyTable('posts', $dryRun, fn (object $p) => [
-            'id' => $p->id,
-            'user_id' => $p->user_id,
-            'created_by_user_id' => $p->created_by_user_id,
-            'title' => $p->title,
-            'ai_prompt_post' => $p->ai_prompt_post,
-            'ai_content' => $p->ai_content,
-            'ai_prompt_comment' => $p->ai_prompt_comment,
-            'img' => $p->img,
-            'img_ai_check_on' => $p->img_ai_check_on,
-            'channels' => $p->channels,
-            'preview' => $p->preview,
-            'published_at' => $p->published_at,
-            'published' => $p->published,
-            'task_complete' => $p->task_complete,
-            'check_attempts' => $p->check_attempts,
-            'on_hold_until' => $p->on_hold_until,
-            'updated' => $p->updated,
-            'deleted' => $p->deleted,
-            'deleted_at' => $p->deleted_at,
-            'created_at' => $p->created_at,
-            'updated_at' => $p->updated_at,
-        ]);
+        $providers = $this->legacyNewsletterProviders();
+
+        $this->copyTable('posts', $dryRun, function (object $p) use ($providers) {
+            $channels = self::normalizeChannels($p->channels, $providers[$p->user_id] ?? null);
+
+            return [
+                'id' => $p->id,
+                'user_id' => $p->user_id,
+                'created_by_user_id' => $p->created_by_user_id,
+                'title' => $p->title,
+                'ai_prompt_post' => $p->ai_prompt_post,
+                'ai_content' => $p->ai_content,
+                'ai_prompt_comment' => $p->ai_prompt_comment,
+                'img' => $p->img,
+                'img_ai_check_on' => $p->img_ai_check_on,
+                'comments_enabled' => collect($channels)->contains(fn ($c) => !empty($c['comments_enabled'])) ? '1' : '0',
+                'auto_reply_enabled' => collect($channels)->contains(fn ($c) => !empty($c['auto_reply_enabled'])) ? '1' : '0',
+                'channels' => json_encode($channels),
+                'preview' => $p->preview,
+                'published_at' => $p->published_at,
+                'published' => $p->published,
+                'task_complete' => $p->task_complete,
+                'check_attempts' => $p->check_attempts,
+                'on_hold_until' => $p->on_hold_until,
+                'updated' => $p->updated,
+                'deleted' => $p->deleted,
+                'deleted_at' => $p->deleted_at,
+                'created_at' => $p->created_at,
+                'updated_at' => $p->updated_at,
+            ];
+        });
+
+        $this->warnAboutOverduePosts();
     }
 
+    /**
+     * Canali di un post v1 nella forma v2 che leggono Laravel e il worker
+     * (PostController::buildChannelsPayload, publisher/domain/channels.py).
+     *
+     *  - "on": "1" -> true (booleano);
+     *  - reply_on (un solo interruttore in v1: leggi i commenti E rispondi)
+     *    -> comments_enabled + auto_reply_enabled; reply_n -> intero;
+     *  - wordpress: options.categories -> categories [{id, name, on}];
+     *  - newsletter: provider dell'account + lista scelta nel post
+     *    (options.lists.lists; v2 ne tiene una sola);
+     *  - id/url remoti e stato di rimozione/aggiornamento conservati, così il
+     *    worker sa cosa è già uscito e non lo ripubblica.
+     */
+    public static function normalizeChannels(mixed $raw, ?string $newsletterProvider = null): array
+    {
+        $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
+        if (is_string($decoded)) {
+            $decoded = json_decode($decoded, true); // doppia codifica
+        }
+
+        // v1 riconosceva il canale dal campo `name`, non dalla chiave.
+        $byChannel = [];
+        foreach (is_array($decoded) ? $decoded : [] as $key => $entry) {
+            if (is_array($entry)) {
+                $byChannel[strtolower((string) ($entry['name'] ?? $key))] = $entry;
+            }
+        }
+
+        $on = fn ($value) => in_array($value, ['1', 1, true], true);
+
+        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($byChannel, $on, $newsletterProvider) {
+            $v1 = $byChannel[$id] ?? [];
+            if (!$on($v1['on'] ?? null)) {
+                return [$id => ['on' => false]];
+            }
+
+            $channel = ['on' => true];
+
+            if (in_array($id, ['facebook', 'instagram', 'linkedin'], true)) {
+                $replies = $on($v1['reply_on'] ?? null);
+                $channel += [
+                    'comments_enabled' => $replies,
+                    'auto_reply_enabled' => $replies,
+                    'reply_n' => is_numeric($v1['reply_n'] ?? null) ? (int) $v1['reply_n'] : null,
+                ];
+            }
+
+            if ($id === 'wordpress') {
+                $channel['categories'] = collect($v1['options']['categories'] ?? [])
+                    ->filter(fn ($c) => is_array($c) && !empty($c['id']))
+                    ->map(fn ($c) => [
+                        'id' => (string) $c['id'],
+                        'name' => (string) ($c['name'] ?? ''),
+                        'on' => $on($c['on'] ?? null),
+                    ])
+                    ->values()
+                    ->all();
+            }
+
+            if ($id === 'newsletter') {
+                $selected = collect($v1['options']['lists']['lists'] ?? [])
+                    ->filter(fn ($l) => is_array($l) && !empty($l['id']) && $on($l['on'] ?? null));
+                // v1: Mailchimp usava l'ultima lista accesa, Brevo tutte (v2 una sola: la prima).
+                $list = $newsletterProvider === 'mailchimp' ? $selected->last() : $selected->first();
+
+                $channel['provider'] = $newsletterProvider;
+                $channel['list'] = $list ? [
+                    'provider' => $newsletterProvider,
+                    'id' => (string) $list['id'],
+                    'name' => (string) ($list['name'] ?? ''),
+                ] : null;
+            }
+
+            foreach (self::V1_REMOTE_KEYS as $key) {
+                if (($v1[$key] ?? null) !== null) {
+                    $channel[$key] = $v1[$key];
+                }
+            }
+
+            return [$id => $channel];
+        })->all();
+    }
+
+    /**
+     * Provider newsletter di ogni account v1 (stessa regola di
+     * Settings::newsletterProvider: vince chi ha la API key valorizzata).
+     *
+     * @return array<int, string>
+     */
+    private function legacyNewsletterProviders(): array
+    {
+        return DB::connection(self::LEGACY)->table('settings')
+            ->get(['user_id', 'mailchimp_api', 'brevo_api'])
+            ->mapWithKeys(fn (object $s) => [$s->user_id => match (true) {
+                !empty($s->mailchimp_api) => 'mailchimp',
+                !empty($s->brevo_api) => 'brevo',
+                default => null,
+            }])
+            ->filter()
+            ->all();
+    }
+
+    /**
+     * Post v1 mai pubblicati con la data già passata: in v1 venivano ritentati
+     * (e fallivano) a ogni giro; il worker v2 li pubblica al primo giro dopo
+     * l'import. Vanno guardati prima di accendere il worker.
+     */
+    private function warnAboutOverduePosts(): void
+    {
+        $overdue = DB::connection(self::LEGACY)->table('posts')
+            ->where('published', 0)
+            ->where('preview', 0)
+            ->whereNull('deleted_at')
+            ->where('published_at', '<', now()->subDay())
+            ->orderBy('id')
+            ->pluck('id');
+
+        if ($overdue->isNotEmpty()) {
+            $this->warn("posts: {$overdue->count()} post non pubblicati con data passata da più di un giorno — "
+                .'il worker v2 li pubblicherà al primo giro. Controllali (o eliminali) prima di avviarlo. ID: '
+                .$overdue->take(50)->implode(', ').($overdue->count() > 50 ? ', …' : ''));
+        }
+    }
+
+    /**
+     * I commenti v1 ancora senza risposta e più vecchi di un giorno sono
+     * risposte che v1 non è riuscita a inviare: ricevono reply_failed_at ed
+     * escono dalla coda, altrimenti il worker v2 risponderebbe ora a commenti
+     * di settimane o mesi fa. Quelli dell'ultimo giorno restano in coda.
+     */
     private function importComments(bool $dryRun): void
     {
+        $now = now();
+        $staleBefore = $now->copy()->subDay();
+
         $this->copyTable('comments', $dryRun, fn (object $c) => [
             'id' => $c->id,
             'post_id' => $c->post_id,
@@ -158,6 +312,10 @@ class ImportV1Data extends Command
             'reply_id' => $c->reply_id,
             'reply' => $c->reply,
             'reply_created_time' => $c->reply_created_time,
+            'reply_failed_at' => $c->reply === null
+                && ($c->message_created_time === null || $c->message_created_time < $staleBefore->toDateTimeString())
+                ? $now
+                : null,
             'created_at' => $c->created_at,
             'updated_at' => $c->updated_at,
         ]);
@@ -283,14 +441,17 @@ class ImportV1Data extends Command
             return;
         }
 
-        $imported = 0;
+        // insertOrIgnore restituisce le righe davvero inserite: quelle saltate
+        // (già presenti da un import precedente, oppure scartate da un vincolo)
+        // vanno mostrate, non contate come importate.
+        $inserted = 0;
         DB::connection(self::LEGACY)->table($table)->orderBy('id')
-            ->chunkById(500, function ($rows) use ($table, $map, &$imported) {
-                $rows = $rows->map($map)->all();
-                DB::table($table)->insertOrIgnore($rows);
-                $imported += count($rows);
+            ->chunkById(500, function ($rows) use ($table, $map, &$inserted) {
+                $inserted += DB::table($table)->insertOrIgnore($rows->map($map)->all());
             });
 
-        $this->info("{$table}: {$imported}/{$total} righe importate (o gia' presenti).");
+        $skipped = $total - $inserted;
+        $this->info("{$table}: {$inserted}/{$total} righe importate"
+            .($skipped > 0 ? ", {$skipped} saltate (già presenti o scartate da un vincolo)." : '.'));
     }
 }
