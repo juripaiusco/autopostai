@@ -45,6 +45,15 @@ class Post extends Model
      */
     public const WORKER_CHANNEL_KEYS = ['id', 'url', 'gallery_html', 'id_del', 'id_update', 'stats', 'completed_at'];
 
+    /**
+     * Tentativi di pubblicazione per canale dopo i quali il worker si ferma
+     * (config.PUBLISH_MAX_ATTEMPTS in Python). Il worker li conta in
+     * channels.<canale>.attempts, con l'ultimo messaggio in .error: le due
+     * chiavi NON sono in WORKER_CHANNEL_KEYS, quindi risalvare il post dal
+     * form le azzera e il canale viene ritentato.
+     */
+    public const PUBLISH_MAX_ATTEMPTS = 3;
+
     protected function casts(): array
     {
         return [
@@ -120,6 +129,23 @@ class Post extends Model
             ->contains(fn ($c) => is_array($c) && !empty($c['on']) && !empty($c['id']));
     }
 
+    /**
+     * Canali accesi su cui la pubblicazione è fallita:
+     * [canale => ['message', 'attempts', 'gaveUp']]. gaveUp = tentativi
+     * esauriti, il worker non riprova da solo.
+     */
+    public function channelErrors(): array
+    {
+        return collect($this->channels ?? [])
+            ->filter(fn ($c) => is_array($c) && !empty($c['on']) && empty($c['id']) && !empty($c['error']))
+            ->map(fn ($c) => [
+                'message' => (string) $c['error'],
+                'attempts' => (int) ($c['attempts'] ?? 0),
+                'gaveUp' => (int) ($c['attempts'] ?? 0) >= self::PUBLISH_MAX_ATTEMPTS,
+            ])
+            ->all();
+    }
+
     /** Modificabile solo finché nessun canale è stato pubblicato. */
     public function isEditable(): bool
     {
@@ -137,6 +163,12 @@ class Post extends Model
         // già usciti.
         if ($this->hasPublishedChannels()) {
             return 'partial';
+        }
+
+        // Nessun canale uscito e almeno uno fallito: prima risultava "draft",
+        // l'utente non aveva modo di accorgersi dell'errore.
+        if ($this->channelErrors() !== []) {
+            return 'error';
         }
 
         if ($this->published_at !== null && $this->published_at->isFuture()) {

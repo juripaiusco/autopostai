@@ -137,6 +137,18 @@
     color: var(--danger); font-size: 12.5px;
 }
 
+/* ---------- Errori di pubblicazione per canale ---------- */
+.ps-errors {
+    margin-bottom: 18px; padding: 12px 16px; border-radius: var(--radius);
+    background: color-mix(in srgb, var(--danger) 6%, white);
+    border: 1px solid color-mix(in srgb, var(--danger) 25%, white);
+    color: var(--danger); font-size: 13px;
+}
+.ps-errors__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ps-errors ul { margin: 8px 0 0; padding-left: 18px; }
+.ps-errors li + li { margin-top: 6px; }
+.ps-errors__msg { display: block; margin-top: 2px; color: var(--g700); font-size: 12.5px; overflow-wrap: anywhere; }
+
 /* ---------- Footer ---------- */
 .ps-footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--g100); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; text-decoration: none; }
 .ps-footer__meta { font-size: 12px; color: var(--g400); }

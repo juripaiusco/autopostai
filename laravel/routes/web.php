@@ -109,6 +109,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/posts/{post}', [PostController::class, 'update'])
         ->name('posts.update');
 
+    Route::post('/posts/{post}/riprova', [PostController::class, 'retry'])
+        ->name('posts.retry');
+
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])
         ->name('posts.destroy');
 

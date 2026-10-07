@@ -129,13 +129,22 @@ class Meta:
         publish.raise_for_status()
         post_id = publish.json().get("id")
 
-        permalink = http.get(
-            f"{self.base_url}/{post_id}",
-            params={"fields": "permalink"},
-            headers=_bearer(token),
-        ).json().get("permalink")
+        return post_id, self._ig_permalink(post_id, token)
 
-        return post_id, permalink
+    def _ig_permalink(self, post_id: str, token: str | None) -> str | None:
+        """Link pubblico del post appena uscito. Mai bloccante: il post e' gia'
+        online, un errore qui faceva risultare fallito il canale e al giro dopo
+        il post usciva una seconda volta."""
+        try:
+            resp = http.get(
+                f"{self.base_url}/{post_id}",
+                params={"fields": "permalink"},
+                headers=_bearer(token),
+            )
+            return resp.json().get("permalink")
+        except Exception:  # noqa: BLE001
+            log.warning("ig_publish: post %s pubblicato ma permalink non recuperato", post_id, exc_info=True)
+            return None
 
     def ig_delete(self, post_id: str) -> str | None:
         # L'API Instagram non permette di eliminare i post: v1 si limitava a

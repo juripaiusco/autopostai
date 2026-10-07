@@ -16,6 +16,9 @@ Shape (da PostController::buildChannelsPayload di Laravel):
                                   (tag_id assente/None = tutti i contatti attivi)
     non selezionato             : {on:false}
 Dopo la pubblicazione il worker aggiunge: id, url (+ gallery_html per wordpress).
+Se la pubblicazione fallisce aggiunge invece: attempts (tentativi falliti) ed
+error (ultimo messaggio); raggiunto config.PUBLISH_MAX_ATTEMPTS il canale non
+viene piu' ritentato finche' Laravel non azzera le due chiavi.
 Per newsletter smtp_custom l'id e' sintetico (non un id remoto reale): lo
 assegna publisher/tasks/newsletter_send.py al primo batch di contatti inviato,
 non publish() — l'invio si spalma su piu' run, non e' una singola chiamata API.
@@ -25,6 +28,8 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+
+from publisher import config
 
 # Chiavi canale note e ordine di elaborazione (i social prima, poi web/newsletter).
 CHANNEL_KEYS = ("facebook", "instagram", "linkedin", "wordpress", "newsletter")
@@ -51,13 +56,31 @@ class ChannelEntry:
         # se ne occupa interamente publisher/tasks/newsletter_send.py.
         if self.key == "newsletter" and self.newsletter_provider() == "smtp_custom":
             return False
-        return self.is_on and not self.already_published
+        return self.is_on and not self.already_published and not self.gave_up
+
+    @property
+    def attempts(self) -> int:
+        """Tentativi di pubblicazione falliti finora su questo canale."""
+        return int(self.data.get("attempts") or 0)
+
+    @property
+    def gave_up(self) -> bool:
+        """Tentativi esauriti: il canale resta fermo, in errore."""
+        return self.attempts >= config.PUBLISH_MAX_ATTEMPTS
+
+    def record_failure(self, message: str, final: bool = False) -> None:
+        """Pubblicazione fallita. `final` = niente altri tentativi automatici
+        (esito incerto: ritentare potrebbe far uscire il post due volte)."""
+        self.data["attempts"] = config.PUBLISH_MAX_ATTEMPTS if final else self.attempts + 1
+        self.data["error"] = message
 
     def set_result(self, remote_id, url, gallery_html=None) -> None:
         self.data["id"] = remote_id
         self.data["url"] = url
         if gallery_html is not None:
             self.data["gallery_html"] = gallery_html
+        self.data.pop("attempts", None)
+        self.data.pop("error", None)
 
     # --- accessori specifici per canale ---
     def wordpress_category_ids(self) -> list:

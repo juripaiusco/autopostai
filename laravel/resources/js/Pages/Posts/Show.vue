@@ -45,6 +45,19 @@ function formatDate(value) {
     return new Date(value).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+// Canali su cui la pubblicazione è fallita. Il worker riprova da solo fino a
+// post.maxAttempts, poi si ferma: "Riprova" azzera il conteggio.
+const channelErrors = computed(() => props.post.channelErrors ?? []);
+const retrying = ref(false);
+
+function retry() {
+    retrying.value = true;
+    router.post(route('posts.retry', props.post.id), {}, {
+        preserveScroll: true,
+        onFinish: () => { retrying.value = false; },
+    });
+}
+
 const deleting = ref(false);
 const deleteError = ref(null);
 const confirmingDelete = ref(false);
@@ -83,6 +96,24 @@ function confirmDelete() {
                     <Icon name="trash" :size="15" /> Elimina
                 </button>
             </div>
+        </div>
+
+        <div v-if="channelErrors.length" class="ps-errors" role="alert">
+            <div class="ps-errors__head">
+                <strong>Pubblicazione non riuscita su {{ channelErrors.length === 1 ? 'un canale' : `${channelErrors.length} canali` }}</strong>
+                <button type="button" class="btn btn-dark btn-sm" :disabled="retrying" @click="retry">
+                    <span v-if="retrying" class="btn-spinner" aria-hidden="true"></span>
+                    <Icon v-else name="send" :size="14" />{{ retrying ? 'Invio…' : 'Riprova' }}
+                </button>
+            </div>
+            <ul>
+                <li v-for="e in channelErrors" :key="e.channel">
+                    <strong>{{ CH_CONFIG[e.channel]?.label ?? e.channel }}</strong> —
+                    <template v-if="e.gaveUp">fermo dopo {{ e.attempts }} tentativi, non verrà ritentato da solo.</template>
+                    <template v-else>tentativo {{ e.attempts }} di {{ post.maxAttempts }}, il prossimo parte entro un minuto.</template>
+                    <span class="ps-errors__msg">{{ e.message }}</span>
+                </li>
+            </ul>
         </div>
 
         <!-- Hero: immagine + owner + KPI -->

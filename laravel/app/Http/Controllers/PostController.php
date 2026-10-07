@@ -235,13 +235,21 @@ class PostController extends Controller
                 'title' => $post->title,
                 'status' => $post->status(),
                 // Stato per canale: in un post parziale i canali con id sono
-                // usciti, gli altri sono falliti (il worker li ritenta).
+                // usciti, gli altri sono falliti (il worker li ritenta fino a
+                // Post::PUBLISH_MAX_ATTEMPTS, poi serve "Riprova").
                 'channelStatus' => collect($post->channels ?? [])
                     ->filter(fn ($c) => !empty($c['on']))
-                    ->map(fn ($c) => !empty($c['id'])
-                        ? 'published'
-                        : ($post->status() === 'partial' ? 'error' : $post->status()))
+                    ->map(fn ($c) => match (true) {
+                        !empty($c['id']) => 'published',
+                        !empty($c['error']), $post->status() === 'partial' => 'error',
+                        default => $post->status(),
+                    })
                     ->all(),
+                'channelErrors' => collect($post->channelErrors())
+                    ->map(fn ($e, $channel) => ['channel' => $channel, ...$e])
+                    ->values()
+                    ->all(),
+                'maxAttempts' => Post::PUBLISH_MAX_ATTEMPTS,
                 'owner' => ['name' => $post->user->name, 'email' => $post->user->email],
                 'channels' => collect($post->channels ?? [])
                     ->filter(fn ($c) => !empty($c['on']))
@@ -591,6 +599,32 @@ class PostController extends Controller
         }
 
         return $channels;
+    }
+
+    /**
+     * "Riprova" dalla pagina del post: azzera tentativi ed errore dei canali
+     * falliti, così il worker li ritenta al giro successivo. Serve soprattutto
+     * ai post parziali, che non si possono più risalvare dal form.
+     * Update per percorso JSON (JSON_SET), non dell'intera colonna: una
+     * riscrittura da una copia vecchia potrebbe cancellare l'id che il worker
+     * ha appena scritto su un altro canale.
+     */
+    public function retry(Request $request, Post $post): RedirectResponse
+    {
+        $this->authorize('update', $post);
+
+        $reset = [];
+        foreach (array_keys($post->channelErrors()) as $channel) {
+            $reset["channels->{$channel}->attempts"] = 0;
+            $reset["channels->{$channel}->error"] = null;
+        }
+        abort_if($reset === [], 422, 'Nessun canale in errore da riprovare.');
+
+        Post::whereKey($post->id)->update($reset);
+
+        $request->session()->flash('toast', 'Nuovo tentativo in coda: il worker riprova entro un minuto.');
+
+        return back();
     }
 
     public function destroy(Request $request, Post $post): RedirectResponse

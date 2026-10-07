@@ -5,8 +5,10 @@ Porting ottimizzato di `task/posts_send.py` (v1). Flusso per ogni post scaduto:
   2. salva id/url remoti nel JSON channels;
   3. se TUTTI i canali accesi hanno un id => marca il post published e accoda la notifica.
 
-Un canale che fallisce viene semplicemente saltato (l'errore e' isolato): resta
-senza id e verra' ritentato al run successivo, senza bloccare gli altri canali/post.
+Un canale che fallisce non blocca gli altri canali/post: resta senza id, con il
+numero di tentativi e l'ultimo errore salvati nel canale, e viene ritentato al
+run successivo fino a config.PUBLISH_MAX_ATTEMPTS. Poi si ferma: prima veniva
+ritentato ogni minuto per sempre, rifacendo ogni volta upload e campagne.
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
+import requests
 from sqlalchemy.engine import Connection
 
 from publisher import config
@@ -62,8 +65,16 @@ def _send_one(post, post_repo, push_repo, token_repo, content_service, now) -> N
         try:
             content = content_service.resolve(post, publisher, resolver)
             result = publisher.simulate() if config.DRY_RUN else publisher.publish(content)
-        except Exception:  # noqa: BLE001 — un canale non deve far cadere gli altri
+        except Exception as exc:  # noqa: BLE001 — un canale non deve far cadere gli altri
             log.exception("posts_send: canale '%s' fallito per il post %s", entry.key, post["id"])
+            entry.record_failure(_error_message(exc), final=_outcome_unknown(exc))
+            post_repo.save_channels(post["id"], channels.to_dict())
+            checkpoint(post_repo.conn)
+            if entry.gave_up:
+                log.error(
+                    "posts_send: post %s canale '%s' - fermo dopo %d tentativi, non verra' ritentato",
+                    post["id"], entry.key, entry.attempts,
+                )
             continue
         entry.set_result(result.remote_id, result.url, result.gallery_html)
         # Salvato e committato canale per canale: se il run si interrompe dopo
@@ -79,6 +90,26 @@ def _send_one(post, post_repo, push_repo, token_repo, content_service, now) -> N
             log.info("posts_send: post %s pubblicato, notifica accodata", post["id"])
         else:
             log.info("posts_send: post %s pubblicato (autore senza subscription push)", post["id"])
+
+
+def _outcome_unknown(exc: Exception) -> bool:
+    """La richiesta e' partita ma la risposta non e' arrivata: il provider puo'
+    averla eseguita lo stesso. Ritentare da soli farebbe uscire il post (o la
+    newsletter) due volte, quindi il canale si ferma subito."""
+    return isinstance(exc, requests.exceptions.ReadTimeout)
+
+
+def _error_message(exc: Exception) -> str:
+    """Messaggio breve per la pagina del post: tipo di errore e, per le risposte
+    HTTP, l'inizio del corpo (li' i provider spiegano il rifiuto)."""
+    if _outcome_unknown(exc):
+        return "Esito incerto: il canale non ha risposto in tempo. Controlla se il post è uscito prima di riprovare."
+    message = f"{type(exc).__name__}: {exc}"
+    response = getattr(exc, "response", None)
+    body = getattr(response, "text", "") or ""
+    if body:
+        message = f"{message} — {body[:200]}"
+    return message[:500]
 
 
 def _url_resolver(post_repo: PostRepository, requesting_user_id: int):

@@ -76,6 +76,10 @@ MAILCHIMP_BASE_URL = _env("MAILCHIMP_BASE_URL", "https://[DATACENTER].api.mailch
 BREVO_BASE_URL = _env("BREVO_BASE_URL", "https://api.brevo.com/v3")
 
 # --- Tunable (ex magic-number sparsi in v1) --------------------------------
+# Tentativi di pubblicazione per canale prima di fermarsi (posts_send): oltre,
+# il canale resta in errore finche' l'utente non preme "Riprova" o risalva il
+# post. Stesso valore di Post::PUBLISH_MAX_ATTEMPTS lato Laravel.
+PUBLISH_MAX_ATTEMPTS = 3
 LINKEDIN_MAX_IMAGES = 9
 INSTAGRAM_MAX_IMAGES = 10
 # Oltre questa finestra dalla pubblicazione, un post smette di essere monitorato
