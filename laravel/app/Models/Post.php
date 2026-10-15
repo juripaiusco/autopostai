@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'user_id',
@@ -53,6 +54,23 @@ class Post extends Model
      * form le azzera e il canale viene ritentato.
      */
     public const PUBLISH_MAX_ATTEMPTS = 3;
+
+    /**
+     * Gradient di sfondo per la miniatura dei post senza immagine (lista post,
+     * post recenti in dashboard): scelto in modo deterministico dall'id.
+     */
+    private const THUMBS = [
+        'linear-gradient(135deg,#5b7290,#3f5470)',
+        'linear-gradient(135deg,#6b96b3,#48708c)',
+        'linear-gradient(135deg,#5f8782,#456661)',
+        'linear-gradient(135deg,#6e7494,#4d5270)',
+        'linear-gradient(135deg,#9b7d86,#6f5860)',
+        'linear-gradient(135deg,#7c8a99,#566270)',
+        'linear-gradient(135deg,#5f8595,#41626f)',
+        'linear-gradient(135deg,#9a8b7d,#6f6055)',
+        'linear-gradient(135deg,#566b86,#3a4c63)',
+        'linear-gradient(135deg,#6b7686,#4a5563)',
+    ];
 
     protected function casts(): array
     {
@@ -147,6 +165,22 @@ class Post extends Model
     }
 
     /** Modificabile solo finché nessun canale è stato pubblicato. */
+    /**
+     * URL pubblico della prima immagine del post (cartella posts/{id}/),
+     * null se il post non ha immagini.
+     */
+    public function coverUrl(): ?string
+    {
+        $first = collect($this->img ?? [])->first();
+
+        return $first ? Storage::disk('public')->url("posts/{$this->id}/{$first}") : null;
+    }
+
+    public function thumbGradient(): string
+    {
+        return self::THUMBS[$this->id % count(self::THUMBS)];
+    }
+
     public function isEditable(): bool
     {
         return !in_array($this->status(), ['published', 'partial'], true);

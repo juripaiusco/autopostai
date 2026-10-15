@@ -313,6 +313,14 @@ tr:hover .ch-chip{ background: var(--g200); }
 .token-td{ min-width: 160px; text-align: right; }
 
 /* Stato vuoto tabella */
+/* Miniatura post (lista post, post recenti in dashboard) */
+.post-thumb{ display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border-radius: 8px; background: var(--g200); box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+.post-thumb img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+.post-thumb__icon{ color: rgba(255,255,255,.55); }
+.post-title-cell{ display: flex; align-items: center; gap: 12px; min-width: 0; }
+.post-title-cell__text{ min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.table tbody td.post-title-td{ padding-top: 10px; padding-bottom: 10px; }
+
 .table-empty{ padding: 48px 16px; text-align: center; color: var(--g400); }
 .table-empty__icon{ margin: 0 auto 10px; opacity: .35; }
 .table-empty__text{ font-size: 14px; }
@@ -532,6 +540,8 @@ tr:hover .ch-chip{ background: var(--g200); }
     .table--responsive-cards td[data-label]:not([data-label=""])::before{
         content: attr(data-label); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--g500); text-align: left; flex-shrink: 0;
     }
+    .table--responsive-cards td.post-title-td{ justify-content: flex-start; text-align: left; padding: 12px 0; }
+    .table--responsive-cards .post-title-cell__text{ white-space: normal; }
     .table--responsive-cards td.user-td{ justify-content: flex-start; min-width: 0; }
     .table--responsive-cards td.token-td{ min-width: 0; }
     .table--responsive-cards .token-bar{ min-width: 0; flex: 1; }

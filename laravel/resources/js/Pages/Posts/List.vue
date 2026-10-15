@@ -6,6 +6,7 @@ import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import StatusPill from '@/Components/StatusPill.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
+import PostThumb from '@/Components/PostThumb.vue';
 import PageHeader from '@/Components/Layout/PageHeader.vue';
 import FilterTabs from '@/Components/UI/FilterTabs.vue';
 import SearchInput from '@/Components/UI/SearchInput.vue';
@@ -86,11 +87,11 @@ function formatDate(value) {
         <div class="card table-wrap">
             <table class="table table--responsive-cards">
                 <colgroup>
-                    <col style="width: 28%">
+                    <col style="width: 32%">
                     <col v-if="showAuthor" style="width: 14%">
-                    <col style="width: 14%">
                     <col style="width: 12%">
-                    <col style="width: 16%">
+                    <col style="width: 12%">
+                    <col style="width: 14%">
                     <col style="width: 10%">
                     <col style="width: 52px">
                 </colgroup>
@@ -122,7 +123,12 @@ function formatDate(value) {
                         <tr v-for="p in posts.data" :key="p.id"
                             class="tr-clickable"
                             @click="router.get(['published', 'partial'].includes(p.status) ? route('posts.show', p.id) : route('posts.edit', p.id))">
-                            <td data-label="Titolo">{{ p.title }}</td>
+                            <td class="post-title-td" data-label="">
+                                <div class="post-title-cell">
+                                    <PostThumb :src="p.cover" :fallback="p.thumb" />
+                                    <span class="post-title-cell__text" :title="p.title">{{ p.title }}</span>
+                                </div>
+                            </td>
                             <td v-if="showAuthor" data-label="Autore">{{ p.author }}</td>
                             <td data-label="Canali">
                                 <div class="ch-list">

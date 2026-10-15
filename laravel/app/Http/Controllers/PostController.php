@@ -93,6 +93,8 @@ class PostController extends Controller
                 'status' => $p->status(),
                 'publishedAt' => $p->published_at?->toIso8601String(),
                 'comments' => $p->comments_count,
+                'cover' => $p->coverUrl(),
+                'thumb' => $p->thumbGradient(),
             ]);
 
         return Inertia::render('Posts/List', [

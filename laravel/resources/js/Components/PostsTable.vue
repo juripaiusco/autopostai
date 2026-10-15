@@ -4,6 +4,7 @@ import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import StatusPill from '@/Components/StatusPill.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
+import PostThumb from '@/Components/PostThumb.vue';
 import { CH_CONFIG } from '@/data/dashboardMock';
 
 const props = defineProps({
@@ -66,8 +67,7 @@ function cancelDelete() {
             <tbody>
                 <tr v-for="p in localPosts" :key="p.id">
                     <td style="width: 56px; padding-left: 16px; padding-right: 8px">
-                        <div :style="{ width: '40px', height: '40px', borderRadius: '8px', background: p.thumb,
-                                       flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }"></div>
+                        <PostThumb :src="p.cover" :fallback="p.thumb" />
                     </td>
                     <td>
                         <div style="font-weight: 600; color: var(--ink); margin-bottom: 4px;
