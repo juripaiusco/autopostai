@@ -75,10 +75,18 @@ class PostController extends Controller
             $query->where('title', 'like', "%{$search}%");
         }
 
+        // Ordinando per data le bozze (senza data) restano in cima in entrambe
+        // le direzioni: sono i post da ultimare. MariaDB in DESC metterebbe i
+        // NULL in fondo. Titolo/commenti: ordine scelto dall'utente, senza pin.
+        if ($sortColumn === 'published_at') {
+            $query->orderByRaw('published_at IS NULL DESC');
+        }
+
         $posts = $query
             ->with('user:id,name')
             ->withCount('comments')
             ->orderBy($sortColumn, $dir)
+            ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString()
             ->through(fn (Post $p) => [

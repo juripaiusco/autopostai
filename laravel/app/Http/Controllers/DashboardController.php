@@ -34,7 +34,10 @@ class DashboardController extends Controller
         $recentPosts = $postScope()
             ->with('user:id,name')
             ->withCount('comments')
+            // Bozze (senza data) in cima, come nella lista post.
+            ->orderByRaw('published_at IS NULL DESC')
             ->orderByDesc('published_at')
+            ->orderByDesc('id')
             ->limit(10)
             ->get()
             ->map(fn (Post $p) => [
