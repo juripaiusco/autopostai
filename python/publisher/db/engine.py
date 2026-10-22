@@ -15,23 +15,34 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Connection, Engine
+from sqlalchemy.engine import URL, Connection, Engine
 
 from publisher import config
 
 _engine: Engine | None = None
 
 
+def database_url() -> URL:
+    """URL di connessione costruito a campi, non concatenando stringhe: una
+    password con `@ : / # % ?` spezzava l'URL e MariaDB rispondeva
+    "Access denied" anche con la password giusta."""
+    return URL.create(
+        "mysql+pymysql",
+        username=config.DB_USERNAME,
+        password=config.DB_PASSWORD,
+        host=config.DB_HOST,
+        port=config.DB_PORT,
+        database=config.DB_DATABASE,
+        query={"charset": "utf8mb4"},
+    )
+
+
 def get_engine() -> Engine:
     """Engine singleton, creato pigramente al primo uso."""
     global _engine
     if _engine is None:
-        url = (
-            f"mysql+pymysql://{config.DB_USERNAME}:{config.DB_PASSWORD}"
-            f"@{config.DB_HOST}:{config.DB_PORT}/{config.DB_DATABASE}?charset=utf8mb4"
-        )
         # pool_pre_ping evita connessioni "stantie" tra un run e l'altro.
-        _engine = create_engine(url, pool_pre_ping=True, future=True)
+        _engine = create_engine(database_url(), pool_pre_ping=True, future=True)
     return _engine
 
 
