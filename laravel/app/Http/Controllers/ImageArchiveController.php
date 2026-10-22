@@ -86,7 +86,7 @@ class ImageArchiveController extends Controller
                             'prompt' => $job?->prompt,
                             'model' => $job?->model,
                             'createdAt' => $job?->created_at?->toIso8601String(),
-                            'sortKey' => Storage::disk('public')->lastModified($path),
+                            'sortKey' => self::createdTimestamp($path, $filename, $job),
                         ];
                     });
             })
@@ -96,6 +96,29 @@ class ImageArchiveController extends Controller
             ->values();
 
         return response()->json(['images' => $images]);
+    }
+
+    /**
+     * Data di creazione dell'immagine per l'ordinamento: la riga image_jobs,
+     * poi il timestamp nel nome file (`1-20250124100323-….jpg` della v1),
+     * solo in ultima istanza la data del file — che una copia/restore dello
+     * storage (es. immagini della beta copiate da prod) azzera per tutti.
+     */
+    private static function createdTimestamp(string $path, string $filename, ?ImageJob $job): int
+    {
+        if ($job?->created_at) {
+            return $job->created_at->getTimestamp();
+        }
+
+        if (preg_match('/(?:^|-)(\d{14})-/', $filename, $m)) {
+            $date = \DateTimeImmutable::createFromFormat('!YmdHis', $m[1]);
+
+            if ($date !== false) {
+                return $date->getTimestamp();
+            }
+        }
+
+        return Storage::disk('public')->lastModified($path);
     }
 
     /**

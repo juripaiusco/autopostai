@@ -47,6 +47,35 @@ class ImageArchiveTest extends TestCase
         $this->assertNull($orphan['prompt']);
     }
 
+    public function test_index_sorts_by_creation_date_not_by_file_modification_time(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create(['parent_id' => null]);
+        $disk = Storage::disk('public');
+
+        $disk->put("openai/{$user->id}/old-job.png", 'fake');
+        $disk->put("openai/{$user->id}/new-job.png", 'fake');
+        $disk->put("stable-diffusion/{$user->id}/{$user->id}-20250124100323-6793656b48e89.jpg", 'fake');
+        $disk->put("openai/{$user->id}/orphan.png", 'fake');
+
+        ImageJob::factory()->create(['user_id' => $user->id, 'image_url' => 'old-job.png', 'created_at' => now()->subYear()]);
+        ImageJob::factory()->create(['user_id' => $user->id, 'image_url' => 'new-job.png', 'created_at' => now()->subDay()]);
+
+        // Copia dello storage: i file più vecchi risultano modificati per ultimi.
+        touch($disk->path("openai/{$user->id}/old-job.png"), now()->timestamp);
+        touch($disk->path("stable-diffusion/{$user->id}/{$user->id}-20250124100323-6793656b48e89.jpg"), now()->timestamp);
+        touch($disk->path("openai/{$user->id}/new-job.png"), now()->subYears(5)->timestamp);
+        touch($disk->path("openai/{$user->id}/orphan.png"), now()->subYears(3)->timestamp);
+
+        $response = $this->actingAs($user)->get(route('posts.image-archive', $user));
+
+        $response->assertOk();
+        $this->assertSame(
+            ['new-job.png', 'old-job.png', "{$user->id}-20250124100323-6793656b48e89.jpg", 'orphan.png'],
+            collect($response->json('images'))->pluck('filename')->all(),
+        );
+    }
+
     public function test_index_returns_the_image_with_prompt_to_the_account_that_generated_it_for_another(): void
     {
         Storage::fake('public');
