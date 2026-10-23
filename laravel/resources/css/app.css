@@ -69,9 +69,9 @@
     --status-published-bg:     #bbf7d0;
     --status-published-border: #22c55e;
     --status-published-fg:     #16a34a;
-    --status-done-bg:     #e5e7eb;
-    --status-done-border: #6b7280;
-    --status-done-fg:     #4b5563;
+    --status-done-bg:     #f0fdf4;   /* verde "spento": monitoraggio commenti chiuso */
+    --status-done-border: #bbf7d0;
+    --status-done-fg:     #44825a;
     --status-error-fg:    #ef4444;
 
     /* ---------- RUOLI ACCOUNT ---------- */
@@ -211,9 +211,11 @@ main{ flex: 1; }
 
 /* Barra utilizzo token/immagini */
 .pill-error{ background: #fff; border-color: #fecaca; color: var(--st-err); }
-/* Badge "AI · N gg" accanto alla pill: post ancora seguito dal worker per i commenti. */
-.status-wrap{ display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.ai-badge{ display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--radius-lg); border: 1px solid #9ec5fe; background: #e7f1ff; color: #0a58ca; font-size: 11px; font-weight: 600; white-space: nowrap; cursor: help; }
+/* Pill a due colori: "Pubblicato" + segmento AI (post ancora seguito dal worker per i commenti). */
+.pill--split{ padding-right: 0; overflow: hidden; }
+.pill__ai{ display: inline-flex; align-items: center; gap: 3px; align-self: stretch; margin: -3px 0 -3px 2px; padding: 3px 8px 3px 7px; background: #e7f1ff; color: #0a58ca; border-left: 1px solid var(--st-pub-bd); font-size: 11px; cursor: help; }
+/* Cella stato: la pill non va mai troncata con i puntini. */
+.table tbody td.status-td{ overflow: visible; text-overflow: clip; }
 
 .table{ width: 100%; table-layout: fixed; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-collapse: collapse; overflow: hidden; }
 .table thead th{ text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--g500); padding: 14px 16px; border-bottom: 1px solid var(--g200); background: var(--g50); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

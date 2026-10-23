@@ -2,8 +2,8 @@
 import { computed } from 'vue';
 import Icon from '@/Components/Icon.vue';
 
-// Badge accanto a "Pubblicato": il worker sta ancora seguendo i commenti
-// del post (task_complete=0). until = fine stimata della finestra.
+// Segmento destro della pill "Pubblicato": il worker sta ancora seguendo i
+// commenti del post (task_complete=0). until = fine stimata della finestra.
 const props = defineProps({
     until: { type: String, required: true },
 });
@@ -21,7 +21,7 @@ const hint = computed(() => `L'AI segue i commenti fino al ${new Date(props.unti
 </script>
 
 <template>
-    <span class="ai-badge" :title="hint" :aria-label="hint">
-        <Icon name="sparkles" :size="12" /> AI · {{ label }}
+    <span class="pill__ai" :title="hint" :aria-label="hint">
+        <Icon name="sparkles" :size="12" /> {{ label }}
     </span>
 </template>

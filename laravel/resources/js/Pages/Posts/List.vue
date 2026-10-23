@@ -87,10 +87,10 @@ function formatDate(value) {
         <div class="card table-wrap">
             <table class="table table--responsive-cards">
                 <colgroup>
-                    <col style="width: 32%">
-                    <col v-if="showAuthor" style="width: 14%">
+                    <col style="width: 29%">
+                    <col v-if="showAuthor" style="width: 13%">
                     <col style="width: 12%">
-                    <col style="width: 12%">
+                    <col style="width: 16%">
                     <col style="width: 14%">
                     <col style="width: 10%">
                     <col style="width: 52px">
@@ -137,7 +137,7 @@ function formatDate(value) {
                                     </span>
                                 </div>
                             </td>
-                            <td data-label="Stato"><StatusPill :status="p.status" :monitoring-until="p.monitoringUntil" /></td>
+                            <td class="status-td" data-label="Stato"><StatusPill :status="p.status" :monitoring-until="p.monitoringUntil" /></td>
                             <td data-label="Pubblicazione">{{ formatDate(p.publishedAt) }}</td>
                             <td class="num" data-label="Commenti">{{ p.comments }}</td>
                             <td data-label="">
