@@ -2,12 +2,20 @@
 # Worker di pubblicazione (publisher/) in produzione/beta: un giro per
 # lancio, la cadenza la da' cron (stesso modello di v1 autopostai.sh).
 #
+# Lo script lancia solo il giro dei task dentro il container (come v1): nessun
+# lock sull'host. Un giro alla volta lo garantisce `flock` nel crontab (evita
+# container in coda se un giro dura > 1 min), poi il lock nel DB del worker.
+#
 # Crontab (un'istanza per riga, path della propria checkout):
-#   * * * * * /var/www/vhosts/.../faper3/python/deploy/autopostai-publisher.sh >> /var/log/faper3-publisher.log 2>&1
-#   * * * * * PUBLISHER_INSTANCE=beta PUBLISHER_IP=192.168.2.101 /var/www/vhosts/.../faper3-beta/python/deploy/autopostai-publisher.sh >> /var/log/faper3-publisher-beta.log 2>&1
+#   * * * * * flock -n /tmp/faper3-publisher-prod.lock /var/www/vhosts/.../faper3/python/deploy/autopostai-publisher.sh >> /var/log/faper3-publisher.log 2>&1
+#   * * * * * PUBLISHER_INSTANCE=beta PUBLISHER_IP=192.168.2.101 flock -n /tmp/faper3-publisher-beta.lock /var/www/vhosts/.../faper3-beta/python/deploy/autopostai-publisher.sh >> /var/log/faper3-publisher-beta.log 2>&1
+#
+# In locale su macOS (Docker Desktop): il DB di sviluppo e' il container compose
+# pubblicato sulla 3306 del Mac, il gateway 192.168.2.1 vale solo su Linux:
+#   PUBLISHER_INSTANCE=local PUBLISHER_DB_HOST=host.docker.internal dev_code/python/deploy/autopostai-publisher.sh
 #
 # Variabili (tutte opzionali, default = produzione):
-#   PUBLISHER_INSTANCE  nome istanza (lock, nome container)        default: prod
+#   PUBLISHER_INSTANCE  nome istanza (nome container)              default: prod
 #   PUBLISHER_NETWORK   rete Docker condivisa tra le istanze        default: faper3_publisher
 #   PUBLISHER_SUBNET    subnet della rete (diversa da v1: 192.168.1.0/24)  default: 192.168.2.0/24
 #   PUBLISHER_IP        IP fisso del container: e' quello da autorizzare in
@@ -46,14 +54,6 @@ echo "#### faper3-publisher [$INSTANCE] START $(date '+%Y-%m-%d %H:%M:%S')"
 
 if [ -f "$ROOT_DIR/.deploying" ]; then
     echo "deploy in corso ($ROOT_DIR/.deploying): giro saltato"
-    exit 0
-fi
-
-# Un solo giro alla volta per istanza, anche prima di arrivare al lock nel DB
-# (il worker ne ha uno suo): evita container in coda se un giro dura > 1 min.
-exec 9>"/tmp/faper3-publisher-$INSTANCE.lock"
-if ! flock -n 9; then
-    echo "giro precedente ancora in corso: esco"
     exit 0
 fi
 
