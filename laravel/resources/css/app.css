@@ -213,7 +213,9 @@ main{ flex: 1; }
 .pill-error{ background: #fff; border-color: #fecaca; color: var(--st-err); }
 /* Pill a due colori: "Pubblicato" + segmento AI (post ancora seguito dal worker per i commenti). */
 .pill--split{ padding-right: 0; overflow: hidden; }
-.pill__ai{ display: inline-flex; align-items: center; gap: 3px; align-self: stretch; margin: -3px 0 -3px 2px; padding: 3px 8px 3px 7px; background: #e7f1ff; color: #0a58ca; border-left: 1px solid var(--st-pub-bd); font-size: 11px; cursor: help; }
+.pill__ai{ display: inline-flex; align-items: center; gap: 3px; align-self: stretch; margin: -3px 0 -3px 2px; padding: 3px 8px 3px 7px; background: #e7f1ff; color: #0a58ca; border-left: 1px solid var(--st-pub-bd); font-size: 11px; cursor: help;
+    /* Larghezza fissa: "13 gg", "1 g" e "oggi" danno pill tutte uguali. */
+    box-sizing: border-box; min-width: 58px; justify-content: center; font-variant-numeric: tabular-nums; }
 /* Cella stato: la pill non va mai troncata con i puntini. */
 .table tbody td.status-td{ overflow: visible; text-overflow: clip; }
 
