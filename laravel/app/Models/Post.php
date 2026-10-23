@@ -56,6 +56,13 @@ class Post extends Model
     public const PUBLISH_MAX_ATTEMPTS = 3;
 
     /**
+     * Giorni dalla pubblicazione oltre i quali il worker smette comunque di
+     * seguire i commenti (config.TASK_COMPLETE_MAX_WAIT_DAYS in Python). La
+     * chiusura vera la decide il worker con task_complete=1, anche prima.
+     */
+    public const COMMENT_MONITORING_DAYS = 14;
+
+    /**
      * Gradient di sfondo per la miniatura dei post senza immagine (lista post,
      * post recenti in dashboard): scelto in modo deterministico dall'id.
      */
@@ -183,13 +190,28 @@ class Post extends Model
 
     public function isEditable(): bool
     {
-        return !in_array($this->status(), ['published', 'partial'], true);
+        return !in_array($this->status(), ['published', 'done', 'partial'], true);
+    }
+
+    /**
+     * Fine stimata del monitoraggio commenti (ISO 8601), null se il worker
+     * non sta seguendo il post. Il worker può chiudere prima (cap raggiunto).
+     */
+    public function monitoringUntil(): ?string
+    {
+        if ($this->status() !== 'published' || $this->published_at === null) {
+            return null;
+        }
+
+        return $this->published_at->copy()->addDays(self::COMMENT_MONITORING_DAYS)->toIso8601String();
     }
 
     public function status(): string
     {
+        // Pubblicato: finché task_complete=0 il worker segue ancora i
+        // commenti, poi il post è "completato".
         if ($this->published == '1') {
-            return 'published';
+            return $this->task_complete == '1' ? 'done' : 'published';
         }
 
         // Prima risultava "draft" (modificabile): salvare il form riscriveva

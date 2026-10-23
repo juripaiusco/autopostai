@@ -74,7 +74,7 @@ function cancelDelete() {
                                     max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
                             {{ p.title }}
                         </div>
-                        <StatusPill :status="p.status" />
+                        <StatusPill :status="p.status" :monitoring-until="p.monitoringUntil" />
                     </td>
                     <td>
                         <div style="display: flex; gap: 6px; align-items: center">

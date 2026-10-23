@@ -99,6 +99,7 @@ class PostController extends Controller
                     ->values()
                     ->all(),
                 'status' => $p->status(),
+                'monitoringUntil' => $p->monitoringUntil(),
                 'publishedAt' => $p->published_at?->toIso8601String(),
                 'comments' => $p->comments_count,
                 'cover' => $p->coverUrl(),
@@ -244,13 +245,14 @@ class PostController extends Controller
                 'id' => $post->id,
                 'title' => $post->title,
                 'status' => $post->status(),
+                'monitoringUntil' => $post->monitoringUntil(),
                 // Stato per canale: in un post parziale i canali con id sono
                 // usciti, gli altri sono falliti (il worker li ritenta fino a
                 // Post::PUBLISH_MAX_ATTEMPTS, poi serve "Riprova").
                 'channelStatus' => collect($post->channels ?? [])
                     ->filter(fn ($c) => !empty($c['on']))
                     ->map(fn ($c) => match (true) {
-                        !empty($c['id']) => 'published',
+                        !empty($c['id']) => $post->status() === 'done' ? 'done' : 'published',
                         !empty($c['error']), $post->status() === 'partial' => 'error',
                         default => $post->status(),
                     })

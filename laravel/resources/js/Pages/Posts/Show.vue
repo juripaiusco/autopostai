@@ -84,7 +84,7 @@ function confirmDelete() {
         <div class="ps-head">
             <div class="ps-head__main">
                 <div class="ps-head__meta">
-                    <StatusPill :status="post.status" />
+                    <StatusPill :status="post.status" :monitoring-until="post.monitoringUntil" />
                     <span class="ps-head__date">
                         <Icon name="clock" :size="14" /> {{ formatDate(post.publishedAt) }}
                     </span>

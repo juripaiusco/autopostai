@@ -122,7 +122,7 @@ function formatDate(value) {
                     <tbody v-else :key="`${listKey}-rows`">
                         <tr v-for="p in posts.data" :key="p.id"
                             class="tr-clickable"
-                            @click="router.get(['published', 'partial'].includes(p.status) ? route('posts.show', p.id) : route('posts.edit', p.id))">
+                            @click="router.get(['published', 'done', 'partial'].includes(p.status) ? route('posts.show', p.id) : route('posts.edit', p.id))">
                             <td class="post-title-td" data-label="">
                                 <div class="post-title-cell">
                                     <PostThumb :src="p.cover" :fallback="p.thumb" />
@@ -137,7 +137,7 @@ function formatDate(value) {
                                     </span>
                                 </div>
                             </td>
-                            <td data-label="Stato"><StatusPill :status="p.status" /></td>
+                            <td data-label="Stato"><StatusPill :status="p.status" :monitoring-until="p.monitoringUntil" /></td>
                             <td data-label="Pubblicazione">{{ formatDate(p.publishedAt) }}</td>
                             <td class="num" data-label="Commenti">{{ p.comments }}</td>
                             <td data-label="">

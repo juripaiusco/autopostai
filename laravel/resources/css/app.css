@@ -211,6 +211,9 @@ main{ flex: 1; }
 
 /* Barra utilizzo token/immagini */
 .pill-error{ background: #fff; border-color: #fecaca; color: var(--st-err); }
+/* Badge "AI · N gg" accanto alla pill: post ancora seguito dal worker per i commenti. */
+.status-wrap{ display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ai-badge{ display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--radius-lg); border: 1px solid #9ec5fe; background: #e7f1ff; color: #0a58ca; font-size: 11px; font-weight: 600; white-space: nowrap; cursor: help; }
 
 .table{ width: 100%; table-layout: fixed; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-collapse: collapse; overflow: hidden; }
 .table thead th{ text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--g500); padding: 14px 16px; border-bottom: 1px solid var(--g200); background: var(--g50); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

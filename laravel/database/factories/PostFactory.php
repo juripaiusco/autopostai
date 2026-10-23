@@ -24,7 +24,7 @@ class PostFactory extends Factory
             'ai_prompt_comment' => fake()->paragraph(),
             'published_at' => now(),
             'published' => (string) rand(0, 1),
-            'task_complete' => (string) rand(0, 1),
+            'task_complete' => '0',
         ];
     }
 }

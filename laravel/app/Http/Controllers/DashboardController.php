@@ -49,6 +49,7 @@ class DashboardController extends Controller
                     ->values()
                     ->all(),
                 'status' => $p->status(),
+                'monitoringUntil' => $p->monitoringUntil(),
                 'date' => $p->published_at ? $this->formatDateIt($p->published_at) : '—',
                 'comments' => $p->comments_count,
                 'cover' => $p->coverUrl(),
