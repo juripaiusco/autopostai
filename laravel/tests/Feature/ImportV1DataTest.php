@@ -191,6 +191,26 @@ class ImportV1DataTest extends TestCase
         $this->assertSame('0', $post->comments_enabled);
     }
 
+    public function test_soft_deleted_v1_post_is_marked_deleted_so_the_worker_does_not_remove_it(): void
+    {
+        $owner = $this->owner();
+        $channels = $this->v1Channels([
+            'facebook' => $this->v1Channel('Facebook', ['on' => '1', 'id' => '111_222']),
+        ]);
+        $deletedId = $this->legacyPost($owner, $channels, [
+            'published' => '1', 'published_at' => now()->subDays(20),
+            'deleted' => '0', 'deleted_at' => now()->subDays(10),
+        ]);
+        $liveId = $this->legacyPost($owner, $channels, [
+            'published' => '1', 'published_at' => now()->subDays(20),
+        ]);
+
+        $this->artisan('v1:import')->assertSuccessful();
+
+        $this->assertSame('1', DB::table('posts')->where('id', $deletedId)->value('deleted'));
+        $this->assertSame('0', DB::table('posts')->where('id', $liveId)->value('deleted'));
+    }
+
     public function test_newsletter_gets_the_account_provider_and_the_selected_list(): void
     {
         $owner = $this->owner();

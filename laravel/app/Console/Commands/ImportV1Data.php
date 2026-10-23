@@ -127,6 +127,11 @@ class ImportV1Data extends Command
      * venivano più tolti dai canali né monitorati. Le colonne riassuntive
      * comments_enabled/auto_reply_enabled (assenti in v1) si ricavano dai
      * canali convertiti.
+     *
+     * I post soft-deleted in v1 arrivano con deleted=1: v1 li marcava solo se
+     * pubblicati e con la rimozione remota riuscita, gli altri restavano
+     * deleted=0 e il worker v2 (che prende anche i parziali) tentava di
+     * rimuoverli dai canali al primo giro dopo l'import.
      */
     private function importPosts(bool $dryRun): void
     {
@@ -155,7 +160,7 @@ class ImportV1Data extends Command
                 'check_attempts' => $p->check_attempts,
                 'on_hold_until' => $p->on_hold_until,
                 'updated' => $p->updated,
-                'deleted' => $p->deleted,
+                'deleted' => $p->deleted_at !== null ? '1' : $p->deleted,
                 'deleted_at' => $p->deleted_at,
                 'created_at' => $p->created_at,
                 'updated_at' => $p->updated_at,
