@@ -277,7 +277,7 @@ async function confirmDeleteArchive() {
                         <div v-if="genError" class="pf-gen-error">{{ genError }}</div>
                         <div class="pf-gen-meta">
                             <div class="pf-gen-model">
-                                <label class="pf-gen-model-label" for="post-img-model">Modello:</label>
+                                <label class="sr-only" for="post-img-model">Modello</label>
                                 <div class="pf-gen-model-select">
                                     <ComboboxSelect id="post-img-model" v-model="genModel" :options="imageModels" drop-up
                                         placeholder="Seleziona il modello" empty-text="Nessun modello trovato"
