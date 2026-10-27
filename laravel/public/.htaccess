@@ -23,3 +23,12 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Stessi limiti di .user.ini quando PHP gira come modulo Apache (Docker locale),
+# che non legge .user.ini. Con PHP-FPM/FastCGI questo blocco viene saltato.
+<IfModule mod_php.c>
+    php_value upload_max_filesize 12M
+    php_value post_max_size 64M
+    php_value max_file_uploads 20
+    php_value memory_limit 256M
+</IfModule>
