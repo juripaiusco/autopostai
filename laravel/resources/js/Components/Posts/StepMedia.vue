@@ -89,7 +89,7 @@ const genFromArchive = ref(false); // true se il risultato mostrato viene dall'a
 const genError = ref(null);
 let pollTimer = null;
 
-const GEN_MODEL = 'gpt-image-1';
+const GEN_MODEL = 'gpt-image-2.5-flare';
 
 function stopPolling() {
     clearTimeout(pollTimer);
@@ -273,7 +273,7 @@ async function confirmDeleteArchive() {
                         <div class="pf-gen-meta">
                             <div class="pf-gen-meta-info">
                                 <Icon name="info" :size="14" />
-                                Modello: <strong class="pf-gen-meta-strong">gpt-image-1 (OpenAI)</strong>
+                                Modello: <strong class="pf-gen-meta-strong">GPT Image 2.5 Flare (OpenAI)</strong>
                                 <span class="pf-gen-meta-soon">· scelta modello in arrivo</span>
                             </div>
                             <button type="button" class="btn btn-dark" :disabled="!genPrompt.trim()" @click="handleGenerate">

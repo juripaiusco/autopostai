@@ -25,7 +25,7 @@ class GenerateImageJobTest extends TestCase
             'user_id' => $user->id,
             'status' => 'pending',
             'image_url' => null,
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
             'prompt' => 'Un gatto astronauta',
         ]);
 
@@ -58,7 +58,7 @@ class GenerateImageJobTest extends TestCase
             'created_by_user_id' => $admin->id,
             'status' => 'pending',
             'image_url' => null,
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
             'prompt' => 'Un gatto astronauta',
         ]);
 
@@ -91,7 +91,7 @@ class GenerateImageJobTest extends TestCase
             'created_by_user_id' => $user->id,
             'status' => 'pending',
             'image_url' => null,
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
         ]);
 
         Http::fake([
@@ -116,7 +116,7 @@ class GenerateImageJobTest extends TestCase
             'user_id' => $user->id,
             'status' => 'pending',
             'image_url' => null,
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
         ]);
 
         Http::fake([

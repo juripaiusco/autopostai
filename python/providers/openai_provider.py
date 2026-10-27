@@ -6,15 +6,16 @@ from .base import ImageGenerationError, ImageProvider
 
 
 class OpenAIImageProvider(ImageProvider):
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, api_key: str, model: str) -> None:
         if not api_key:
             raise ImageGenerationError("Nessuna chiave OpenAI collegata per questo account")
         self._client = OpenAI(api_key=api_key)
+        self._model = model
 
     def generate(self, prompt: str) -> bytes:
         try:
             response = self._client.images.generate(
-                model="gpt-image-1",
+                model=self._model,
                 prompt=prompt,
                 size="1024x1024",
                 quality="medium",

@@ -29,7 +29,7 @@ class ImageArchiveTest extends TestCase
             'user_id' => $user->id,
             'image_url' => 'with-job.png',
             'prompt' => 'Una pizza margherita',
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
         ]);
 
         $response = $this->actingAs($user)->get(route('posts.image-archive', $user));
@@ -89,7 +89,7 @@ class ImageArchiveTest extends TestCase
             'created_by_user_id' => $admin->id,
             'image_url' => 'shared.png',
             'prompt' => 'Un gatto astronauta',
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
         ]);
 
         $response = $this->actingAs($admin)->get(route('posts.image-archive', $admin));
@@ -175,7 +175,7 @@ class ImageArchiveTest extends TestCase
 
         $response = $this->actingAs($user)->postJson(route('posts.image-generate', $user), [
             'prompt' => 'Un gatto astronauta',
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
         ]);
 
         $response->assertOk();
@@ -186,7 +186,7 @@ class ImageArchiveTest extends TestCase
             'user_id' => $user->id,
             'status' => 'pending',
             'prompt' => 'Un gatto astronauta',
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
         ]);
 
         Queue::assertPushed(GenerateImageJob::class, fn (GenerateImageJob $job) => $job->imageJobId === $jobId);
@@ -201,7 +201,7 @@ class ImageArchiveTest extends TestCase
 
         $response = $this->actingAs($admin)->postJson(route('posts.image-generate', $user), [
             'prompt' => 'Un gatto astronauta',
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
         ]);
 
         $response->assertOk();
@@ -223,6 +223,60 @@ class ImageArchiveTest extends TestCase
         ])->assertStatus(422);
     }
 
+    public function test_start_job_rejects_the_dismissed_gpt_image_1_model(): void
+    {
+        Queue::fake();
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id, 'image_model_limit' => 5]);
+        Settings::factory()->create(['user_id' => $user->id, 'openai_api_key' => 'sk-test-key']);
+
+        $this->actingAs($user)->postJson(route('posts.image-generate', $user), [
+            'prompt' => 'Un gatto astronauta',
+            'model' => 'gpt-image-1',
+        ])->assertStatus(422);
+
+        Queue::assertNotPushed(GenerateImageJob::class);
+    }
+
+    public function test_start_job_accepts_the_sunburst_model(): void
+    {
+        Queue::fake();
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id, 'image_model_limit' => 5]);
+        Settings::factory()->create(['user_id' => $user->id, 'openai_api_key' => 'sk-test-key']);
+
+        $response = $this->actingAs($user)->postJson(route('posts.image-generate', $user), [
+            'prompt' => 'Un gatto astronauta',
+            'model' => 'gpt-image-2.5-sunburst',
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('image_jobs', [
+            'id' => $response->json('job_id'),
+            'model' => 'gpt-image-2.5-sunburst',
+        ]);
+    }
+
+    public function test_status_still_resolves_historic_gpt_image_1_jobs_to_the_openai_folder(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+
+        $job = ImageJob::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'completed',
+            'image_url' => 'old.png',
+            'model' => 'gpt-image-1',
+        ]);
+        Storage::disk('public')->put("openai/{$user->id}/old.png", 'fake');
+
+        $response = $this->actingAs($user)->getJson(route('posts.image-status', [$user, $job]));
+
+        $response->assertOk();
+        $this->assertStringContainsString("openai/{$user->id}/old.png", $response->json('url'));
+    }
+
     public function test_start_job_is_blocked_once_the_daily_quota_is_reached(): void
     {
         Queue::fake();
@@ -232,7 +286,7 @@ class ImageArchiveTest extends TestCase
 
         $response = $this->actingAs($user)->postJson(route('posts.image-generate', $user), [
             'prompt' => 'Un altro gatto',
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
         ]);
 
         $response->assertStatus(422);
@@ -247,7 +301,7 @@ class ImageArchiveTest extends TestCase
 
         $response = $this->actingAs($user)->postJson(route('posts.image-generate', $user), [
             'prompt' => 'Un gatto astronauta',
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
         ]);
 
         $response->assertStatus(422);
@@ -270,7 +324,7 @@ class ImageArchiveTest extends TestCase
             'user_id' => $user->id,
             'status' => 'completed',
             'image_url' => 'done.png',
-            'model' => 'gpt-image-1',
+            'model' => 'gpt-image-2.5-flare',
         ]);
         Storage::disk('public')->put("openai/{$user->id}/done.png", 'fake');
 

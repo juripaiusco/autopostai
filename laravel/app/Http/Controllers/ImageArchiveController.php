@@ -9,20 +9,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class ImageArchiveController extends Controller
 {
     private const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
-
-    /**
-     * Modelli AI supportati -> cartella di storage in cui finiscono i file
-     * generati con quel modello. Un solo provider (OpenAI) per ora; gli
-     * altri (Stability, Grok, Hugging Face) aggiungeranno una entry qui e
-     * il relativo provider Python, senza altre modifiche a questo controller.
-     */
-    private const FOLDERS = [
-        'gpt-image-1' => 'openai',
-    ];
 
     /**
      * Cartelle di provider non più generabili (es. `dall-e`, rimosso
@@ -32,19 +23,26 @@ class ImageArchiveController extends Controller
      */
     private const LEGACY_FOLDERS = ['dall-e', 'stable-diffusion'];
 
+    /**
+     * Cartella di storage per un modello (config/ai.php). Fallback "openai"
+     * per i modelli dismessi (es. gpt-image-1) i cui job storici restano in
+     * image_jobs e vanno ancora risolti.
+     */
     public static function folderForModel(string $model): string
     {
-        return self::FOLDERS[$model] ?? 'openai';
+        return config("ai.image_models.{$model}.folder", 'openai');
     }
 
     /**
      * Tutte le cartelle di storage da considerare quando si legge/cancella
-     * l'archivio (provider attivi + legacy), a differenza di FOLDERS che
-     * serve solo a scegliere la cartella di una NUOVA generazione.
+     * l'archivio (provider attivi + legacy), a differenza di folderForModel()
+     * che serve solo a scegliere la cartella di una NUOVA generazione.
      */
     private static function archiveFolders(): array
     {
-        return array_unique(array_merge(array_values(self::FOLDERS), self::LEGACY_FOLDERS));
+        $active = array_column(config('ai.image_models'), 'folder');
+
+        return array_values(array_unique(array_merge($active, self::LEGACY_FOLDERS)));
     }
 
     /**
@@ -137,7 +135,7 @@ class ImageArchiveController extends Controller
         // questo, come nel resto del controller, si valida a mano.
         $validator = Validator::make($request->all(), [
             'prompt' => ['required', 'string', 'max:2000'],
-            'model' => ['required', 'string', 'in:'.implode(',', array_keys(self::FOLDERS))],
+            'model' => ['required', 'string', Rule::in(array_keys(config('ai.image_models')))],
         ]);
 
         if ($validator->fails()) {
