@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Jobs\GenerateImageJob;
 use App\Models\ImageJob;
+use App\Models\Post;
 use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ImageArchiveTest extends TestCase
@@ -255,6 +257,28 @@ class ImageArchiveTest extends TestCase
             'id' => $response->json('job_id'),
             'model' => 'gpt-image-2.5-sunburst',
         ]);
+    }
+
+    public function test_post_form_exposes_the_selectable_image_models_with_flare_as_default(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        $user = User::factory()->create(['parent_id' => $admin->id]);
+        $post = Post::factory()->create([
+            'user_id' => $user->id,
+            'created_by_user_id' => $user->id,
+            'channels' => ['facebook' => ['on' => true]],
+            'published' => '0',
+            'published_at' => null,
+        ]);
+
+        $assertModels = fn (Assert $page) => $page
+            ->has('imageModels', 2)
+            ->where('imageModels.0.id', 'gpt-image-2.5-flare')
+            ->where('imageModels.1.id', 'gpt-image-2.5-sunburst')
+            ->where('defaultImageModel', 'gpt-image-2.5-flare');
+
+        $this->actingAs($user)->get(route('posts.create'))->assertInertia($assertModels);
+        $this->actingAs($user)->get(route('posts.edit', $post))->assertInertia($assertModels);
     }
 
     public function test_status_still_resolves_historic_gpt_image_1_jobs_to_the_openai_folder(): void

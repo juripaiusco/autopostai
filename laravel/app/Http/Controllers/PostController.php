@@ -168,6 +168,26 @@ class PostController extends Controller
     }
 
     /**
+     * Modelli selezionabili in "Genera con AI" (config/ai.php) per il
+     * combobox del form, più quello preselezionato.
+     */
+    private function imageModelsProps(): array
+    {
+        return [
+            'imageModels' => collect(config('ai.image_models'))
+                ->map(fn (array $m, string $id) => [
+                    'id' => $id,
+                    'name' => $m['label'],
+                    'provider' => $m['provider'],
+                    'description' => $m['description'],
+                ])
+                ->values()
+                ->all(),
+            'defaultImageModel' => config('ai.default_image_model'),
+        ];
+    }
+
+    /**
      * Filename nudi in Post::img -> [{filename, url}] risolti sulla cartella
      * posts/{id}/ per la UI (form multi-immagine e vista Show).
      */
@@ -216,6 +236,7 @@ class PostController extends Controller
             'channelsMeta' => $this->channelsMeta($me),
             'users' => $users ?? [],
             'prefill' => $prefill,
+            ...$this->imageModelsProps(),
         ]);
     }
 
@@ -331,6 +352,7 @@ class PostController extends Controller
                 'img_source' => $imgSource,
                 'published_at' => $post->published_at?->format('Y-m-d\TH:i'),
             ],
+            ...$this->imageModelsProps(),
         ]);
     }
 

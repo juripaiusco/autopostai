@@ -14,6 +14,8 @@ const props = defineProps({
     users: { type: Array, default: () => [] },
     prefill: { type: Object, default: null },
     post: { type: Object, default: null },
+    imageModels: { type: Array, default: () => [] }, // [{ id, name, provider, description }]
+    defaultImageModel: { type: String, default: null },
 });
 
 const userName = computed(() => usePage().props.auth?.user?.name ?? '');
@@ -204,7 +206,8 @@ function submit(action) {
                         <StepWrite v-if="step === 0" :form="form" :channels="channels" :users="users"
                             :mode="mode" :owner="post?.owner ?? null" :target-user-id="targetUserId"
                             @set="set" @toggle-channel="toggleChannel" @set-channel-option="setChannelOption" />
-                        <StepMedia v-else-if="step === 1" :form="form" :target-user-id="targetUserId" @set="set" />
+                        <StepMedia v-else-if="step === 1" :form="form" :target-user-id="targetUserId"
+                            :image-models="imageModels" :default-image-model="defaultImageModel" @set="set" />
                         <StepPublish v-else :form="form" :channels="channels" :saving="saving" :mode="mode"
                             :target-user-id="targetUserId"
                             @set="set" @back="back" @save="submit('save')" @save-and-add="submit('save_and_add')"

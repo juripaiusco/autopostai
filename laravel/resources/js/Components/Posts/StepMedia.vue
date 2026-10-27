@@ -3,10 +3,13 @@ import { ref, computed } from 'vue';
 import Icon from '@/Components/Icon.vue';
 import ImageLightbox from '@/Components/Posts/ImageLightbox.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
+import ComboboxSelect from '@/Components/UI/ComboboxSelect.vue';
 
 const props = defineProps({
     form: { type: Object, required: true },
     targetUserId: { type: [Number, String], default: null },
+    imageModels: { type: Array, default: () => [] }, // [{ id, name, provider, description }]
+    defaultImageModel: { type: String, default: null },
 });
 
 const emit = defineEmits(['set']);
@@ -89,7 +92,9 @@ const genFromArchive = ref(false); // true se il risultato mostrato viene dall'a
 const genError = ref(null);
 let pollTimer = null;
 
-const GEN_MODEL = 'gpt-image-2.5-flare';
+// Sempre il default all'apertura: la scelta non viene ricordata.
+const genModel = ref(props.defaultImageModel);
+const genModelName = computed(() => props.imageModels.find((m) => m.id === genModel.value)?.name ?? genModel.value);
 
 function stopPolling() {
     clearTimeout(pollTimer);
@@ -123,7 +128,7 @@ async function pollJobStatus(jobId) {
 }
 
 async function handleGenerate() {
-    if (!genPrompt.value.trim()) return;
+    if (!genPrompt.value.trim() || !genModel.value) return;
     genStep.value = 1;
     genError.value = null;
     stopPolling();
@@ -131,7 +136,7 @@ async function handleGenerate() {
         const res = await fetch(route('posts.image-generate', props.targetUserId), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': csrfToken(), Accept: 'application/json' },
-            body: JSON.stringify({ prompt: genPrompt.value, model: GEN_MODEL }),
+            body: JSON.stringify({ prompt: genPrompt.value, model: genModel.value }),
         });
         const json = await res.json();
         if (!res.ok) {
@@ -263,6 +268,19 @@ async function confirmDeleteArchive() {
                 <!-- Genera con AI -->
                 <div v-else-if="tab === 'genera'">
                     <div v-if="genStep === 0">
+                        <div class="acc-field pf-gen-model">
+                            <label class="acc-row-label" for="post-img-model">Modello</label>
+                            <span class="acc-row-help">Flare è più veloce, Sunburst più accurato ma più lento.</span>
+                            <ComboboxSelect id="post-img-model" v-model="genModel" :options="imageModels"
+                                placeholder="Seleziona il modello" empty-text="Nessun modello trovato"
+                                :option-label="(o) => (o ? `${o.name} (${o.provider})` : '')"
+                                :filter-keys="['name', 'id', 'provider', 'description']">
+                                <template #option="{ option }">
+                                    <div>{{ option.name }} <span class="pf-gen-model-provider">· {{ option.provider }}</span></div>
+                                    <div class="pf-gen-model-desc">{{ option.description }}</div>
+                                </template>
+                            </ComboboxSelect>
+                        </div>
                         <div class="acc-field" style="margin-bottom:0">
                             <label class="acc-row-label" for="post-img-prompt">Prompt immagine</label>
                             <span class="acc-row-help">Descrivi l'immagine che vuoi generare. Più sei specifico, meglio sarà il risultato.</span>
@@ -271,12 +289,7 @@ async function confirmDeleteArchive() {
                         </div>
                         <div v-if="genError" class="pf-gen-error">{{ genError }}</div>
                         <div class="pf-gen-meta">
-                            <div class="pf-gen-meta-info">
-                                <Icon name="info" :size="14" />
-                                Modello: <strong class="pf-gen-meta-strong">GPT Image 2.5 Flare (OpenAI)</strong>
-                                <span class="pf-gen-meta-soon">· scelta modello in arrivo</span>
-                            </div>
-                            <button type="button" class="btn btn-dark" :disabled="!genPrompt.trim()" @click="handleGenerate">
+                            <button type="button" class="btn btn-dark" :disabled="!genPrompt.trim() || !genModel" @click="handleGenerate">
                                 <Icon name="sparkles" :size="16" />Genera immagine
                             </button>
                         </div>
@@ -286,6 +299,7 @@ async function confirmDeleteArchive() {
                         <div class="pf-spinner"></div>
                         <div class="pf-gen-loading-title">Generazione in corso…</div>
                         <div class="pf-gen-loading-sub">"{{ genPrompt }}"</div>
+                        <div class="pf-gen-loading-sub">Modello: {{ genModelName }}</div>
                     </div>
 
                     <div v-else-if="genStep === 2 && genResultUrl" class="pf-fade-in">

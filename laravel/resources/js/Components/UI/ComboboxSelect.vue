@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/vue';
 
-// Select con ricerca (Headless UI Combobox) usato per scegliere un account.
+// Select con ricerca (Headless UI Combobox), es. scelta account o modello AI.
 // Si comporta come un <select>: la lista si apre cliccando ovunque sul campo,
 // non solo sulla freccia, e scrivendo si filtra. Il v-model è l'id.
 const props = defineProps({
