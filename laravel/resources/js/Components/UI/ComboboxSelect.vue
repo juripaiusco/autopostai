@@ -16,6 +16,8 @@ const props = defineProps({
     // Campi su cui cerca il testo digitato.
     filterKeys: { type: Array, default: () => ['name', 'email'] },
     disabled: { type: Boolean, default: false },
+    // Lista aperta verso l'alto: per campi in fondo a un contenitore che scorre.
+    dropUp: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -56,7 +58,7 @@ function openFromInput(open, event) {
             <ComboboxButton ref="buttonRef" class="cb-select__btn" aria-label="Apri lista">
                 <span aria-hidden="true">▾</span>
             </ComboboxButton>
-            <ComboboxOptions class="cb-select__options">
+            <ComboboxOptions class="cb-select__options" :class="{ 'cb-select__options--up': dropUp }">
                 <div v-if="filtered.length === 0" class="cb-select__empty">{{ emptyText }}</div>
                 <ComboboxOption v-for="o in filtered" :key="o.id" :value="o" v-slot="{ active, selected: isSelected }">
                     <div class="cb-select__option" :class="{ 'cb-select__option--active': active, 'cb-select__option--selected': isSelected }">
@@ -100,6 +102,7 @@ function openFromInput(open, event) {
     box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
     padding: 4px;
 }
+.cb-select__options--up { top: auto; bottom: calc(100% + 4px); }
 .cb-select__empty { padding: 8px 10px; font-size: 13px; color: var(--g500); }
 .cb-select__option { padding: 8px 10px; font-size: 13.5px; color: var(--g700); border-radius: 6px; cursor: pointer; }
 .cb-select__option--active { background: var(--sky); color: #fff; }

@@ -268,19 +268,6 @@ async function confirmDeleteArchive() {
                 <!-- Genera con AI -->
                 <div v-else-if="tab === 'genera'">
                     <div v-if="genStep === 0">
-                        <div class="acc-field pf-gen-model">
-                            <label class="acc-row-label" for="post-img-model">Modello</label>
-                            <span class="acc-row-help">Flare è più veloce, Sunburst più accurato ma più lento.</span>
-                            <ComboboxSelect id="post-img-model" v-model="genModel" :options="imageModels"
-                                placeholder="Seleziona il modello" empty-text="Nessun modello trovato"
-                                :option-label="(o) => (o ? `${o.name} (${o.provider})` : '')"
-                                :filter-keys="['name', 'id', 'provider', 'description']">
-                                <template #option="{ option }">
-                                    <div>{{ option.name }} <span class="pf-gen-model-provider">· {{ option.provider }}</span></div>
-                                    <div class="pf-gen-model-desc">{{ option.description }}</div>
-                                </template>
-                            </ComboboxSelect>
-                        </div>
                         <div class="acc-field" style="margin-bottom:0">
                             <label class="acc-row-label" for="post-img-prompt">Prompt immagine</label>
                             <span class="acc-row-help">Descrivi l'immagine che vuoi generare. Più sei specifico, meglio sarà il risultato.</span>
@@ -289,6 +276,20 @@ async function confirmDeleteArchive() {
                         </div>
                         <div v-if="genError" class="pf-gen-error">{{ genError }}</div>
                         <div class="pf-gen-meta">
+                            <div class="pf-gen-model">
+                                <label class="pf-gen-model-label" for="post-img-model">Modello:</label>
+                                <div class="pf-gen-model-select">
+                                    <ComboboxSelect id="post-img-model" v-model="genModel" :options="imageModels" drop-up
+                                        placeholder="Seleziona il modello" empty-text="Nessun modello trovato"
+                                        :option-label="(o) => (o ? `${o.name} (${o.provider})` : '')"
+                                        :filter-keys="['name', 'id', 'provider', 'description']">
+                                        <template #option="{ option }">
+                                            <div>{{ option.name }} <span class="pf-gen-model-provider">· {{ option.provider }}</span></div>
+                                            <div class="pf-gen-model-desc">{{ option.description }}</div>
+                                        </template>
+                                    </ComboboxSelect>
+                                </div>
+                            </div>
                             <button type="button" class="btn btn-dark" :disabled="!genPrompt.trim() || !genModel" @click="handleGenerate">
                                 <Icon name="sparkles" :size="16" />Genera immagine
                             </button>
