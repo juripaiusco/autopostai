@@ -25,6 +25,14 @@ MD)]
 class FaPer3Server extends Server
 {
     /**
+     * Tutti i tool in una pagina di tools/list: non tutti i client chiedono
+     * le pagine successive (default del pacchetto: 15).
+     */
+    public int $defaultPaginationLength = 50;
+
+    public int $maxPaginationLength = 100;
+
+    /**
      * Tool, risorse e prompt scoperti da app/Mcp/{Tools,Resources,Prompts}:
      * una funzionalità nuova si espone aggiungendo una classe, senza
      * registrarla qui. Le classi astratte (es. la base Tool) sono escluse.

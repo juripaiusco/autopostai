@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Settings;
 use App\Models\User;
+use App\Services\WordPressCategories;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class WordPressController extends Controller
 {
+    public function __construct(private WordPressCategories $categories) {}
+
     /**
      * Categorie del sito WordPress dell'account, per sceglierle da un elenco
      * invece di scrivere l'ID a mano. Endpoint pubblico di WordPress (nessuna
@@ -26,7 +27,7 @@ class WordPressController extends Controller
             return back()->with('toast', 'Salva prima l\'URL del sito WordPress per questo account.');
         }
 
-        $categories = $this->fetchAndCacheCategories($settings);
+        $categories = $this->categories->fetchAndCache($settings);
 
         if ($categories === null) {
             return back()->with('toast', 'WordPress non ha risposto correttamente. Controlla l\'URL del sito.');
@@ -50,44 +51,12 @@ class WordPressController extends Controller
             return response()->json(['message' => 'Configura prima l\'URL del sito WordPress per questo account.'], 422);
         }
 
-        $categories = $this->fetchAndCacheCategories($settings);
+        $categories = $this->categories->fetchAndCache($settings);
 
         if ($categories === null) {
             return response()->json(['message' => 'WordPress non ha risposto correttamente. Controlla l\'URL del sito.'], 502);
         }
 
         return response()->json(['categories' => $categories]);
-    }
-
-    /**
-     * `count` = articoli nella categoria al momento del caricamento.
-     *
-     * @return array<int, array{id: string, name: string, count: int|null}>|null null se WordPress non ha risposto.
-     */
-    private function fetchAndCacheCategories(Settings $settings): ?array
-    {
-        $response = Http::get(rtrim($settings->wordpress_url, '/') . '/wp-json/wp/v2/categories', [
-            'per_page' => 100,
-            'orderby' => 'name',
-            'order' => 'asc',
-        ]);
-
-        if (!$response->successful()) {
-            return null;
-        }
-
-        $categories = collect($response->json())
-            ->map(fn (array $c) => [
-                'id' => (string) $c['id'],
-                // la REST API restituisce il nome con entità HTML (es. "Eventi &amp; News")
-                'name' => html_entity_decode($c['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8'),
-                'count' => $c['count'] ?? null,
-            ])
-            ->values()
-            ->all();
-
-        $settings->update(['wordpress_options' => ['categories' => $categories]]);
-
-        return $categories;
     }
 }

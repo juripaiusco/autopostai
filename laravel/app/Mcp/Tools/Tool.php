@@ -2,13 +2,16 @@
 
 namespace App\Mcp\Tools;
 
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Server\Tool as BaseTool;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 /**
  * Base dei tool MCP di FaPer3. Ogni tool:
@@ -96,5 +99,44 @@ abstract class Tool extends BaseTool
         }
 
         return $target;
+    }
+
+    /**
+     * Post visibile all'utente e autorizzato per $ability (PostPolicy).
+     * Stesso messaggio per inesistente e non visibile: non si rivela
+     * l'esistenza dei post di altri account.
+     */
+    protected function findPost(mixed $id, string $ability = 'view'): Post
+    {
+        $post = Post::find((int) $id);
+
+        if (!$post || Gate::denies('view', $post)) {
+            throw ValidationException::withMessages(['post_id' => 'Post non trovato.']);
+        }
+
+        if ($ability !== 'view' && Gate::denies($ability, $post)) {
+            throw ValidationException::withMessages(['post_id' => 'Non hai i permessi per questa operazione su questo post.']);
+        }
+
+        return $post;
+    }
+
+    /**
+     * Esegue un'Action condivisa con l'interfaccia: i suoi abort() (422/403
+     * con messaggio per l'utente) diventano errori leggibili dall'LLM invece
+     * di un "errore interno" generico di laravel/mcp.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $action
+     * @return T
+     */
+    protected function guard(callable $action): mixed
+    {
+        try {
+            return $action();
+        } catch (HttpExceptionInterface $e) {
+            throw ValidationException::withMessages(['error' => $e->getMessage() ?: 'Operazione non consentita.']);
+        }
     }
 }

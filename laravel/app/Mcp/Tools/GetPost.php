@@ -6,9 +6,7 @@ use App\Models\Comment;
 use App\Models\Post;
 use App\Models\TokenLog;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
@@ -31,13 +29,7 @@ class GetPost extends Tool
             'post_id' => ['required', 'integer'],
         ]);
 
-        $post = Post::with(['user:id,name', 'token'])->find($data['post_id']);
-
-        // Stesso messaggio per inesistente e non visibile: non si rivela
-        // l'esistenza dei post di altri account.
-        if (!$post || Gate::denies('view', $post)) {
-            throw ValidationException::withMessages(['post_id' => 'Post non trovato.']);
-        }
+        $post = $this->findPost($data['post_id'])->load(['user:id,name', 'token']);
 
         $comments = $post->comments()->with('token')->limit(self::COMMENTS_LIMIT)->get();
         $commentsTotal = Comment::where('post_id', $post->id)->count();
@@ -63,7 +55,7 @@ class GetPost extends Tool
             'ai_content' => $post->ai_content,
             'ai_looks_at_image' => $post->img_ai_check_on == '1',
             'images' => collect($post->img ?? [])
-                ->map(fn ($f) => Storage::disk('public')->url("posts/{$post->id}/{$f}"))
+                ->map(fn ($f) => ['filename' => $f, 'url' => Storage::disk('public')->url("posts/{$post->id}/{$f}")])
                 ->values()
                 ->all(),
             'ai_tokens' => [

@@ -91,3 +91,13 @@ it('throttles a token after 120 requests per minute', function () {
 
     mcpCall($plain, method: 'ping')->assertStatus(429);
 });
+
+it('lists every tool in a single page for a publish token', function () {
+    $user = mcpHttpUser();
+    [, $plain] = McpToken::issue($user, 'ok', ['publish'], 30);
+
+    $names = mcpCall($plain)->assertOk()->assertJsonMissingPath('result.nextCursor')->json('result.tools.*.name');
+
+    expect($names)->toHaveCount(count(\App\Mcp\Servers\FaPer3Server::discover('Tools')))
+        ->toContain('whoami', 'create_post', 'publish_post_now', 'delete_post');
+});

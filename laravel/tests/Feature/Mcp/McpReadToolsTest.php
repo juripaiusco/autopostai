@@ -19,38 +19,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-/** Utente con un token MCP del livello indicato, come lo imposta McpTokenAuth. */
-function withMcp(User $user, string $ability = 'read'): User
-{
-    [$token] = McpToken::issue($user, 'test', [$ability], 30);
-
-    return $user->withMcpToken($token);
-}
-
-/** Admin → manager → due utenti semplici, più un utente fuori dal ramo del manager. */
-function mcpTree(): array
-{
-    $admin = User::factory()->create(['parent_id' => null]);
-    $manager = User::factory()->create(['parent_id' => $admin->id, 'child_on' => 1]);
-    $alice = User::factory()->create(['parent_id' => $manager->id, 'channels' => ['facebook' => ['on' => true, 'reply_on' => true]]]);
-    $bob = User::factory()->create(['parent_id' => $manager->id]);
-    $other = User::factory()->create(['parent_id' => $admin->id]);
-
-    return compact('admin', 'manager', 'alice', 'bob', 'other');
-}
-
-function mcpPost(User $owner, array $attrs = []): Post
-{
-    return Post::factory()->create([
-        'user_id' => $owner->id,
-        'created_by_user_id' => $owner->id,
-        'published' => '0',
-        'published_at' => null,
-        'channels' => ['facebook' => ['on' => true]],
-        ...$attrs,
-    ]);
-}
-
 it('hides tools whose ability the token lacks, and all tools without a token', function () {
     $writeTool = new class extends Tool
     {

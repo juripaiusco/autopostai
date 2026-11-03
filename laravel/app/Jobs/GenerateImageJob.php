@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Http\Controllers\ImageArchiveController;
+use App\Services\ImageArchive;
 use App\Models\ImageJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -49,7 +49,7 @@ class GenerateImageJob implements ShouldQueue
             }
 
             $filename = Str::uuid().'.png';
-            $folder = ImageArchiveController::folderForModel($job->model);
+            $folder = ImageArchive::folderForModel($job->model);
             $sourcePath = "{$folder}/{$job->user_id}/{$filename}";
             Storage::disk('public')->put($sourcePath, $bytes);
 

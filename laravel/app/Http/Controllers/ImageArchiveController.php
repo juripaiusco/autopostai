@@ -2,130 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\GenerateImageJob;
+use App\Actions\Images\StartImageGeneration;
 use App\Models\ImageJob;
 use App\Models\User;
+use App\Services\ImageArchive;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ImageArchiveController extends Controller
 {
-    private const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
-
-    /**
-     * Cartelle di provider non più generabili (es. `dall-e`, rimosso
-     * dall'API OpenAI il 12/05/2026) i cui file storici restano su disco e
-     * vanno comunque mostrati/cancellabili nell'archivio, pur non essendo
-     * più un target valido per una nuova generazione.
-     */
-    private const LEGACY_FOLDERS = ['dall-e', 'stable-diffusion'];
-
-    /**
-     * Cartella di storage per un modello (config/ai.php). Fallback "openai"
-     * per i modelli dismessi (es. gpt-image-1) i cui job storici restano in
-     * image_jobs e vanno ancora risolti.
-     */
-    public static function folderForModel(string $model): string
-    {
-        return config("ai.image_models.{$model}.folder", 'openai');
-    }
-
-    /**
-     * Tutte le cartelle di storage da considerare quando si legge/cancella
-     * l'archivio (provider attivi + legacy), a differenza di folderForModel()
-     * che serve solo a scegliere la cartella di una NUOVA generazione.
-     */
-    private static function archiveFolders(): array
-    {
-        $active = array_column(config('ai.image_models'), 'folder');
-
-        return array_values(array_unique(array_merge($active, self::LEGACY_FOLDERS)));
-    }
+    public function __construct(private ImageArchive $archive) {}
 
     /**
      * Archivio immagini AI visibile a $request->user() nel contesto del post
-     * dell'account $user: unione di storage/app/public/{folder}/{id}/* per
-     * $user e per l'attore loggato (coincidono per un utente semplice, che
-     * può agire solo per sé stesso — vede quindi solo le proprie), incrociata
-     * con image_jobs per recuperare il prompt quando disponibile (alcuni file
-     * possono non avere una riga corrispondente — restano comunque
-     * selezionabili, senza prompt).
+     * dell'account $user (vedi ImageArchive::images).
      */
     public function index(Request $request, User $user): JsonResponse
     {
         abort_unless($request->user()->canActFor($user), 403);
 
-        $folderUserIds = collect([$user->id, $request->user()->id])->unique()->values();
-
-        $jobsByFilename = ImageJob::where(function ($query) use ($folderUserIds) {
-                $query->whereIn('user_id', $folderUserIds)
-                    ->orWhereIn('created_by_user_id', $folderUserIds);
-            })
-            ->get()
-            ->keyBy(fn (ImageJob $job) => basename((string) $job->image_url));
-
-        $images = collect(self::archiveFolders())
-            ->crossJoin($folderUserIds)
-            ->flatMap(function (array $pair) use ($jobsByFilename) {
-                [$folder, $folderUserId] = $pair;
-
-                return collect(Storage::disk('public')->files("{$folder}/{$folderUserId}"))
-                    ->filter(fn ($path) => in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), self::IMAGE_EXTENSIONS, true))
-                    ->map(function ($path) use ($jobsByFilename) {
-                        $filename = basename($path);
-                        $job = $jobsByFilename->get($filename);
-
-                        return [
-                            'filename' => $filename,
-                            'url' => Storage::disk('public')->url($path),
-                            'prompt' => $job?->prompt,
-                            'model' => $job?->model,
-                            'createdAt' => $job?->created_at?->toIso8601String(),
-                            'sortKey' => self::createdTimestamp($path, $filename, $job),
-                        ];
-                    });
-            })
-            ->unique('filename')
-            ->sortByDesc('sortKey')
-            ->map(fn ($img) => collect($img)->except('sortKey')->all())
-            ->values();
-
-        return response()->json(['images' => $images]);
+        return response()->json(['images' => $this->archive->images($user, $request->user())]);
     }
 
     /**
-     * Data di creazione dell'immagine per l'ordinamento: la riga image_jobs,
-     * poi il timestamp nel nome file (`1-20250124100323-….jpg` della v1),
-     * solo in ultima istanza la data del file — che una copia/restore dello
-     * storage (es. immagini della beta copiate da prod) azzera per tutti.
+     * Avvia la generazione di un'immagine AI per l'account $user (vedi
+     * StartImageGeneration). Risponde subito con l'id del job; il frontend
+     * fa polling su status() per sapere quando è pronta.
      */
-    private static function createdTimestamp(string $path, string $filename, ?ImageJob $job): int
-    {
-        if ($job?->created_at) {
-            return $job->created_at->getTimestamp();
-        }
-
-        if (preg_match('/(?:^|-)(\d{14})-/', $filename, $m)) {
-            $date = \DateTimeImmutable::createFromFormat('!YmdHis', $m[1]);
-
-            if ($date !== false) {
-                return $date->getTimestamp();
-            }
-        }
-
-        return Storage::disk('public')->lastModified($path);
-    }
-
-    /**
-     * Avvia la generazione di un'immagine AI per l'account $user: crea la
-     * riga image_jobs (status=pending) e dispatcha il job che chiama il
-     * servizio Python. Risponde subito con l'id del job; il frontend fa
-     * polling su status() per sapere quando è pronta.
-     */
-    public function startJob(Request $request, User $user): JsonResponse
+    public function startJob(Request $request, User $user, StartImageGeneration $startGeneration): JsonResponse
     {
         abort_unless($request->user()->canActFor($user), 403);
 
@@ -133,10 +40,7 @@ class ImageArchiveController extends Controller
         // fuori da api/* (vedi bootstrap/app.php shouldRenderJsonWhen),
         // verrebbe renderizzata come redirect HTML invece che JSON. Per
         // questo, come nel resto del controller, si valida a mano.
-        $validator = Validator::make($request->all(), [
-            'prompt' => ['required', 'string', 'max:2000'],
-            'model' => ['required', 'string', Rule::in(array_keys(config('ai.image_models')))],
-        ]);
+        $validator = Validator::make($request->all(), StartImageGeneration::rules());
 
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
@@ -144,23 +48,11 @@ class ImageArchiveController extends Controller
 
         $data = $validator->validated();
 
-        if ($user->imagesUsed()->count() >= $user->image_model_limit) {
-            return response()->json(['message' => 'Limite giornaliero di immagini generate raggiunto.'], 422);
+        try {
+            $job = $startGeneration->handle($user, $request->user(), $data['prompt'], $data['model']);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => collect($e->errors())->flatten()->first()], 422);
         }
-
-        if (empty($user->settings?->openai_api_key)) {
-            return response()->json(['message' => 'Nessuna chiave OpenAI collegata per questo account. Collegala in Impostazioni AI.'], 422);
-        }
-
-        $job = ImageJob::create([
-            'user_id' => $user->id,
-            'created_by_user_id' => $request->user()->id,
-            'status' => 'pending',
-            'prompt' => $data['prompt'],
-            'model' => $data['model'],
-        ]);
-
-        GenerateImageJob::dispatch($job->id);
 
         return response()->json(['job_id' => $job->id]);
     }
@@ -177,7 +69,7 @@ class ImageArchiveController extends Controller
             return response()->json(['status' => $job->status]);
         }
 
-        $folder = self::folderForModel($job->model);
+        $folder = ImageArchive::folderForModel($job->model);
 
         return response()->json([
             'status' => 'completed',
@@ -188,36 +80,14 @@ class ImageArchiveController extends Controller
 
     /**
      * Elimina un'immagine dall'archivio visibile a $request->user() nel
-     * contesto del post dell'account $user: cerca il file in qualunque
-     * cartella provider di $user o dell'attore (stessa coppia di id usata da
-     * index()) e lo cancella ovunque lo trovi — se l'immagine è una copia
-     * duplicata presente in entrambe le cartelle, vengono rimosse entrambe,
-     * dato che l'azione avviene nella stessa vista unificata. Rimuove anche
-     * la riga image_jobs corrispondente, se presente (le orfane non ne hanno
-     * una).
+     * contesto del post dell'account $user (vedi ImageArchive::delete).
      */
     public function destroy(Request $request, User $user, string $filename): JsonResponse
     {
         abort_unless($request->user()->canActFor($user), 403);
         abort_if(str_contains($filename, '/') || str_contains($filename, '..'), 422);
 
-        $folderUserIds = collect([$user->id, $request->user()->id])->unique()->values();
-
-        $deleted = false;
-        foreach (self::archiveFolders() as $folder) {
-            foreach ($folderUserIds as $folderUserId) {
-                $path = "{$folder}/{$folderUserId}/{$filename}";
-                if (Storage::disk('public')->exists($path)) {
-                    Storage::disk('public')->delete($path);
-                    $deleted = true;
-                }
-            }
-        }
-        abort_unless($deleted, 404);
-
-        ImageJob::whereIn('user_id', $folderUserIds)->get()
-            ->filter(fn (ImageJob $job) => basename((string) $job->image_url) === $filename)
-            ->each(fn (ImageJob $job) => $job->delete());
+        abort_unless($this->archive->delete($user, $request->user(), $filename), 404);
 
         return response()->json(['deleted' => true]);
     }
