@@ -17,6 +17,12 @@ from publisher.domain import media
 from publisher.publishing.base import ChannelPublisher
 
 
+class EmptyContentError(Exception):
+    """Il post non ha un testo da pubblicare: niente prompt, oppure l'LLM ha
+    risposto vuoto. Il canale va in errore (con "Riprova") invece di uscire con
+    le sole immagini; il testo vuoto non viene messo in cache."""
+
+
 class ContentService:
     def __init__(self, post_repo: PostRepository, token_repo: TokenLogRepository):
         self.post_repo = post_repo
@@ -24,7 +30,8 @@ class ContentService:
 
     def resolve(self, post: dict, publisher: ChannelPublisher, url_resolver) -> str:
         # Contenuto gia' presente: riusalo, risolvendo solo gli shortcode.
-        if post.get("ai_content"):
+        # Solo spazi/a capo = assente, si rigenera.
+        if (post.get("ai_content") or "").strip():
             return shortcodes.parse_crosslinks(post["ai_content"], url_resolver)
 
         if config.DRY_RUN:
@@ -76,6 +83,9 @@ class ContentService:
         return text
 
     def _generate(self, post: dict, publisher: ChannelPublisher, url_resolver) -> str:
+        if not (post.get("ai_prompt_post") or "").strip():
+            raise EmptyContentError("Nessun testo né prompt AI per il post: aggiungi un prompt o un'anteprima e riprova.")
+
         system_prompt = " ".join(
             filter(
                 None,
@@ -100,5 +110,8 @@ class ContentService:
 
         now = datetime.now(config.LOCAL_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
         self.token_repo.log(post["user_id"], "post", post["id"], tokens, now)
+
+        if not text.strip():
+            raise EmptyContentError("L'AI ha restituito un testo vuoto.")
 
         return shortcodes.parse_crosslinks(text, url_resolver)

@@ -51,7 +51,7 @@ def _send_one(post, post_repo, push_repo, token_repo, content_service, now) -> N
     # (fedele a v1). Se ai_content e' gia' presente non si spende nulla, quindi
     # nessun blocco: il controllo scattava solo dentro ai_generate, mai sul contenuto
     # gia' generato.
-    if not post.get("ai_content") and token_repo.is_over_limit(post["user_id"]):
+    if not (post.get("ai_content") or "").strip() and token_repo.is_over_limit(post["user_id"]):
         post_repo.abandon_over_limit(post["id"])
         log.info("posts_send: post %s abbandonato (limite token superato)", post["id"])
         return

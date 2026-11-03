@@ -73,6 +73,9 @@ def generate_text(data: GenerateTextRequest):
     except OpenAIError as exc:
         return JSONResponse(status_code=422, content={"detail": str(exc)})
 
+    if not text.strip():
+        return JSONResponse(status_code=422, content={"detail": "L'AI ha restituito un testo vuoto, riprova."})
+
     return {"content": text, "tokens": tokens}
 
 
