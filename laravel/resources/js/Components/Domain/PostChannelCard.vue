@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue';
+import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import StatusPill from '@/Components/StatusPill.vue';
 import { CH_CONFIG } from '@/data/dashboardMock';
@@ -7,11 +9,30 @@ const props = defineProps({
     channelId: { type: String, required: true },
     status: { type: String, required: true },
     publishedAt: { type: String, default: null },
-    excerpt: { type: String, default: '' },
     commentsCount: { type: Number, default: 0 },
+    // post.channelEdit[canale]: { editable, content, pending, error }
+    edit: { type: Object, default: null },
 });
 
+const emit = defineEmits(['edit']);
+
 const def = CH_CONFIG[props.channelId] ?? { label: props.channelId, color: '#6b7280' };
+
+const excerpt = computed(() => {
+    const text = props.edit?.content ?? '';
+    return text.length > 220 ? `${text.slice(0, 220)}…` : text;
+});
+
+// Perché il pulsante non c'è: la piattaforma non lo consente (Post::EDITABLE_AFTER_PUBLISH)
+// oppure il post su questo canale non è ancora uscito.
+const NOT_EDITABLE = {
+    instagram: 'Instagram non permette di modificare un post già pubblicato.',
+    newsletter: 'Newsletter già inviata: non si può modificare.',
+    linkedin: 'Modifica da LinkedIn non ancora disponibile.',
+};
+const lockedReason = computed(() => (
+    props.edit?.editable ? null : (NOT_EDITABLE[props.channelId] ?? 'Non ancora pubblicato su questo canale.')
+));
 
 const METRICS = [
     { lab: 'Views', key: 'views' },
@@ -54,6 +75,19 @@ function formatDate(value) {
                     {{ m.key === 'comments' ? commentsCount.toLocaleString('it-IT') : 'N/D' }}
                 </div>
             </div>
+        </div>
+
+        <div class="ps-ch-card__edit">
+            <p v-if="lockedReason" class="ps-ch-card__edit-note">{{ lockedReason }}</p>
+            <template v-else>
+                <p v-if="edit.pending" class="ps-ch-card__edit-note">Aggiornamento in corso…</p>
+                <p v-else-if="edit.error" class="ps-ch-card__edit-note is-error" :title="edit.error">
+                    Ultimo aggiornamento non riuscito: {{ edit.error }}
+                </p>
+                <button type="button" class="btn btn-light btn-sm" :disabled="edit.pending" @click="emit('edit')">
+                    <Icon name="pencil" :size="14" /> Modifica post
+                </button>
+            </template>
         </div>
 
         <div class="ps-ch-card__foot">Andamento non disponibile</div>

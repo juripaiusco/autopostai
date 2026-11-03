@@ -9,6 +9,8 @@ const props = defineProps({
     danger: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
     error: { type: String, default: null },
+    // Più largo per contenuti da modificare (es. textarea), non solo da confermare.
+    wide: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['confirm', 'cancel']);
@@ -28,7 +30,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 <template>
     <div class="overlay" @click="!loading && emit('cancel')">
-        <div class="modal" role="alertdialog" aria-modal="true" :aria-label="title" @click.stop>
+        <div class="modal" :class="{ 'modal--wide': wide }" role="alertdialog" aria-modal="true" :aria-label="title" @click.stop>
             <div class="modal-head" style="display: flex; align-items: center; gap: 10px">
                 <span v-if="danger" style="color: var(--danger)"><Icon name="warning" :size="20" /></span>
                 {{ title }}

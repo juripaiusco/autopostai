@@ -35,11 +35,6 @@ const filteredComments = computed(() => (
     filter.value === 'all' ? props.comments : props.comments.filter((c) => c.channel === filter.value)
 ));
 
-const excerpt = computed(() => {
-    const text = props.post.aiContent ?? '';
-    return text.length > 220 ? `${text.slice(0, 220)}…` : text;
-});
-
 function formatDate(value) {
     if (!value) return '—';
     return new Date(value).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -55,6 +50,35 @@ function retry() {
     router.post(route('posts.retry', props.post.id), {}, {
         preserveScroll: true,
         onFinish: () => { retrying.value = false; },
+    });
+}
+
+// "Modifica post" dal box di un canale già pubblicato: il testo vale solo per
+// quel canale, il worker (posts_update) lo rimanda alla piattaforma.
+const editChannel = ref(null);
+const editText = ref('');
+const savingEdit = ref(false);
+const editError = ref(null);
+
+function openEdit(id) {
+    editChannel.value = id;
+    editText.value = props.post.channelEdit?.[id]?.content ?? '';
+    editError.value = null;
+}
+
+function cancelEdit() {
+    if (savingEdit.value) return;
+    editChannel.value = null;
+}
+
+function saveEdit() {
+    savingEdit.value = true;
+    editError.value = null;
+    router.put(route('posts.channel-content.update', [props.post.id, editChannel.value]), { content: editText.value }, {
+        preserveScroll: true,
+        onSuccess: () => { editChannel.value = null; },
+        onError: (errors) => { editError.value = errors.content ?? 'Salvataggio non riuscito. Riprova.'; },
+        onFinish: () => { savingEdit.value = false; },
     });
 }
 
@@ -196,8 +220,9 @@ function confirmDelete() {
                 :channel-id="id"
                 :status="post.channelStatus?.[id] ?? post.status"
                 :published-at="post.publishedAt"
-                :excerpt="excerpt"
                 :comments-count="post.commentsByChannel[id] ?? 0"
+                :edit="post.channelEdit?.[id]"
+                @edit="openEdit(id)"
             />
         </div>
 
@@ -267,6 +292,25 @@ function confirmDelete() {
             <Link :href="route('posts')" class="btn btn-light btn-sm">← Torna all'elenco post</Link>
             <span class="ps-footer__meta">Post #{{ post.id }} · creato il {{ formatDate(post.createdAt) }}</span>
         </div>
+
+        <ConfirmModal
+            v-if="editChannel"
+            :title="`Modifica post su ${CH_CONFIG[editChannel]?.label ?? editChannel}`"
+            confirm-label="Salva e aggiorna"
+            pending-label="Salvataggio…"
+            wide
+            :loading="savingEdit"
+            :error="editError"
+            @cancel="cancelEdit"
+            @confirm="saveEdit"
+        >
+            <label class="acc-row-label" for="ps-edit-text">Testo pubblicato</label>
+            <span class="acc-row-help">
+                Cambia solo questo canale: entro un minuto il post viene aggiornato sulla piattaforma.
+                <template v-if="editChannel === 'wordpress'"> Markdown: la prima riga con # è il titolo.</template>
+            </span>
+            <textarea id="ps-edit-text" v-model="editText" class="control" rows="10" :disabled="savingEdit"></textarea>
+        </ConfirmModal>
 
         <ConfirmModal
             v-if="confirmingDelete"

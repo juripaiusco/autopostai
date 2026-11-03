@@ -240,6 +240,7 @@ main{ flex: 1; }
 /* ---------- Modal / overlay ---------- */
 .overlay{ position: fixed; inset: 0; background: rgba(0,0,0,.4); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 50; animation: overlayFade .2s ease-out; }
 .modal{ background: #fff; border-radius: var(--radius-lg); box-shadow: 0 10px 30px rgba(0,0,0,.25); width: 100%; max-width: 440px; overflow: hidden; animation: modalRise .2s ease-out; }
+.modal--wide{ max-width: 640px; }
 .modal-head{ padding: 16px 20px; border-bottom: 1px solid var(--g200); font-weight: 700; font-size: 16px; }
 .modal-body{ padding: 20px; font-size: 14px; color: var(--g700); line-height: 1.55; }
 .modal-foot{ padding: 14px 20px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--g100); }
