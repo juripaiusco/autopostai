@@ -49,7 +49,13 @@ class ContentService:
     def generate_reply(self, comment: dict, prompt: str) -> str:
         """Genera il testo di una risposta a un commento. A differenza del contenuto
         del post NON viene messo in cache (ogni commento e' unico) e non passa dal
-        controllo del limite token: in v1 quel controllo vale solo per type='post'."""
+        controllo del limite token: in v1 quel controllo vale solo per type='post'.
+
+        Come v1, l'LLM riceve la conversazione del post (prompt + eventuale foto,
+        poi il testo pubblicato) prima del commento: senza quel contesto vedeva
+        solo foto + commento con un nome e rispondeva "non posso riconoscere le
+        persone in foto". La foto sta nel messaggio del post, non in quello del
+        commento."""
         if config.DRY_RUN:
             return f"[DRY_RUN] risposta simulata al commento {comment['id']}"
 
@@ -73,11 +79,18 @@ class ContentService:
         if comment.get("img_ai_check_on") == "1" and media.has_images(post_ref):
             img_path = media.local_paths(post_ref)[0]
 
+        context = []
+        post_prompt = (comment.get("ai_prompt_post") or "").strip()
+        if post_prompt or img_path:
+            context.append({"role": "user", "content": openai_text.user_content(post_prompt, img_path)})
+        if (comment.get("ai_content") or "").strip():
+            context.append({"role": "assistant", "content": comment["ai_content"]})
+
         text, tokens = openai_text.generate(
             api_key=comment["openai_api_key"],
             system_prompt=system_prompt,
-            user_prompt=prompt,
-            img_path=img_path,
+            user_prompt=f"{prompt} Rispondi al commento.",
+            context=context,
         )
 
         now = datetime.now(config.LOCAL_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")

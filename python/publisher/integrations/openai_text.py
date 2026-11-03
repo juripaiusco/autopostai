@@ -21,8 +21,13 @@ def generate(
     user_prompt: str,
     img_path: str | None = None,
     model: str | None = None,
+    context: list[dict] | None = None,
 ) -> tuple[str, int]:
-    """Ritorna (testo, token_totali_usati)."""
+    """Ritorna (testo, token_totali_usati).
+
+    `context`: messaggi (user/assistant) inseriti tra il system e lo user finale,
+    per dare all'LLM la conversazione precedente (es. post pubblicato prima di
+    rispondere a un commento, come la catena `messages` di v1)."""
     client = OpenAI(
         api_key=api_key,
         base_url=config.OPENAI_BASE_URL,
@@ -30,21 +35,12 @@ def generate(
         max_retries=config.OPENAI_MAX_RETRIES,
     )
 
-    user_content: object = user_prompt
-    if img_path:
-        user_content = [
-            {"type": "text", "text": user_prompt},
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{_to_base64(img_path)}"},
-            },
-        ]
-
     response = client.chat.completions.create(
         model=model or config.OPENAI_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_content},
+            *(context or []),
+            {"role": "user", "content": user_content(user_prompt, img_path)},
         ],
         temperature=1.0,
     )
@@ -52,6 +48,19 @@ def generate(
     text = response.choices[0].message.content or ""
     tokens = response.usage.total_tokens if response.usage else 0
     return text, tokens
+
+
+def user_content(text: str, img_path: str | None = None) -> object:
+    """Contenuto di un messaggio user: solo testo, o testo + immagine in base64."""
+    if not img_path:
+        return text
+    return [
+        {"type": "text", "text": text},
+        {
+            "type": "image_url",
+            "image_url": {"url": f"data:image/jpeg;base64,{_to_base64(img_path)}"},
+        },
+    ]
 
 
 def _to_base64(img_path: str) -> str:
