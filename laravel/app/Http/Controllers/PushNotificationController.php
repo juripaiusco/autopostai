@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Notifications\SavePushNotification;
 use App\Models\PushNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PushNotificationController extends Controller
 {
+    public function __construct(private SavePushNotification $notifications) {}
+
     /**
      * Archivio: l'admin vede tutte le notifiche create, il manager solo le
      * proprie. L'invio vero (WebPush) lo fa il comando schedulato
@@ -65,12 +67,7 @@ class PushNotificationController extends Controller
         $me = $request->user();
         $this->authorize('create', PushNotification::class);
 
-        $data = $this->validated($request, $me);
-
-        PushNotification::create([
-            ...$data,
-            'created_by_user_id' => $me->id,
-        ]);
+        $this->notifications->create($me, $request->validate(SavePushNotification::rules()));
 
         $request->session()->flash('toast', 'Notifica in coda: verrà inviata a breve.');
 
@@ -102,11 +99,10 @@ class PushNotificationController extends Controller
 
     public function update(Request $request, PushNotification $notification): RedirectResponse
     {
-        $me = $request->user();
         $this->authorize('view', $notification);
         abort_if($notification->sent_at !== null, 403, 'Questa notifica è già stata inviata.');
 
-        $notification->update($this->validated($request, $me));
+        $this->notifications->update($request->user(), $notification, $request->validate(SavePushNotification::rules()));
 
         $request->session()->flash('toast', 'Notifica aggiornata.');
 
@@ -120,38 +116,5 @@ class PushNotificationController extends Controller
         $notification->delete();
 
         return back();
-    }
-
-    /**
-     * Whitelist + regole di scoping: 'all' solo admin, 'children' solo
-     * manager, un utente specifico deve comparire tra i filterableUsers()
-     * di chi lo sta scegliendo (stesso confine gia' usato per Post/Search).
-     */
-    private function validated(Request $request, $me): array
-    {
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'body' => ['required', 'string'],
-            'url' => ['nullable', 'string', 'max:2048'],
-            'recipient_type' => ['required', Rule::in(['all', 'children', 'user'])],
-            'user_id' => ['nullable', 'integer'],
-        ]);
-
-        abort_if($data['recipient_type'] === 'all' && !$me->isAdmin(), 403);
-        abort_if($data['recipient_type'] === 'children' && !$me->isManager(), 403);
-
-        $userId = null;
-        if ($data['recipient_type'] === 'user') {
-            abort_unless($me->filterableUsers()->contains('id', $data['user_id'] ?? null), 422, 'Destinatario non valido.');
-            $userId = $data['user_id'];
-        }
-
-        return [
-            'title' => $data['title'],
-            'body' => $data['body'],
-            'url' => $data['url'] ?? null,
-            'audience' => $userId ? null : $data['recipient_type'],
-            'user_id' => $userId,
-        ];
     }
 }

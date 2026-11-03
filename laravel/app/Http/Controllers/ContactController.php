@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Contacts\SaveContact;
 use App\Models\Contact;
 use App\Models\ContactTag;
-use App\Models\SuppressionList;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ContactController extends Controller
 {
-    private const STATUSES = ['unverified', 'active', 'bounced', 'unsubscribed'];
+    private const STATUSES = SaveContact::STATUSES;
+
+    public function __construct(private SaveContact $contacts) {}
 
     /**
      * Stesso controllo di User::canViewContacts() usato per la voce sidebar,
@@ -107,7 +106,7 @@ class ContactController extends Controller
         $accounts = collect();
 
         if ($isOrchestrator) {
-            $accounts = $this->eligibleAccounts($me)->map(fn (User $u) => [
+            $accounts = $this->contacts->eligibleAccounts($me)->map(fn (User $u) => [
                 'id' => $u->id,
                 'name' => $u->name,
                 'email' => $u->email,
@@ -127,44 +126,12 @@ class ContactController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $me = $request->user();
-
         $data = $request->validate([
             'user_id' => ['required', 'integer'],
-            'email' => ['required', 'email', 'max:255'],
-            'status' => ['required', Rule::in(self::STATUSES)],
-            'tags' => ['array'],
-            'tags.*' => ['string', 'max:255'],
+            ...SaveContact::rules(),
         ]);
 
-        $eligibleIds = $this->eligibleAccounts($me)->pluck('id');
-        abort_unless($eligibleIds->contains((int) $data['user_id']), 422, 'Account non valido.');
-
-        $this->ensureNotSuppressed((int) $data['user_id'], $data['email'], $data['status']);
-
-        $existing = Contact::withTrashed()
-            ->where('user_id', $data['user_id'])
-            ->where('email', $data['email'])
-            ->first();
-
-        if ($existing) {
-            if (!$existing->trashed()) {
-                throw ValidationException::withMessages(['email' => 'Contatto già presente per questo account.']);
-            }
-            $existing->restore();
-            $existing->update(['status' => $data['status']]);
-            $contact = $existing;
-        } else {
-            $contact = Contact::create([
-                'user_id' => $data['user_id'],
-                'email' => $data['email'],
-                'status' => $data['status'],
-                'consent_source' => 'manuale',
-                'consent_at' => now(),
-            ]);
-        }
-
-        $this->syncTags($contact, (int) $data['user_id'], $data['tags'] ?? []);
+        $this->contacts->create($request->user(), $data);
 
         return redirect()->route('contacts');
     }
@@ -197,60 +164,9 @@ class ContactController extends Controller
     {
         $this->authorize('update', $contact);
 
-        $data = $request->validate([
-            'email' => ['required', 'email', 'max:255'],
-            'status' => ['required', Rule::in(self::STATUSES)],
-            'tags' => ['array'],
-            'tags.*' => ['string', 'max:255'],
-        ]);
-
-        $duplicate = Contact::where('user_id', $contact->user_id)
-            ->where('email', $data['email'])
-            ->whereKeyNot($contact->id)
-            ->exists();
-        if ($duplicate) {
-            throw ValidationException::withMessages(['email' => 'Esiste già un altro contatto con questa email per questo account.']);
-        }
-
-        $this->ensureNotSuppressed($contact->user_id, $data['email'], $data['status']);
-
-        $contact->update([
-            'email' => $data['email'],
-            'status' => $data['status'],
-        ]);
-
-        $this->syncTags($contact, $contact->user_id, $data['tags'] ?? []);
+        $this->contacts->update($contact, $request->validate(SaveContact::rules()));
 
         return redirect()->route('contacts');
-    }
-
-    /**
-     * Un indirizzo in suppression list (disiscritto, bounce, segnalato come
-     * spam) non torna "attivo" da una modifica manuale: stessa regola
-     * dell'API di registrazione. Il worker lo escluderebbe comunque
-     * dall'invio, ma la scheda mostrerebbe un contatto attivo che non riceve.
-     */
-    private function ensureNotSuppressed(int $userId, string $email, string $status): void
-    {
-        if (!in_array($status, ['active', 'unverified'], true)) {
-            return;
-        }
-
-        $reason = SuppressionList::where('user_id', $userId)->where('email', $email)->value('reason');
-        if ($reason === null) {
-            return;
-        }
-
-        $label = match ($reason) {
-            'unsubscribe' => 'si è disiscritto',
-            'hard_bounce' => 'l\'indirizzo non esiste (bounce)',
-            'complaint' => 'ha segnalato le email come spam',
-            default => $reason,
-        };
-
-        throw ValidationException::withMessages([
-            'status' => "Questo indirizzo non può essere riattivato: {$label}.",
-        ]);
     }
 
     public function destroy(Contact $contact): RedirectResponse
@@ -260,24 +176,6 @@ class ContactController extends Controller
         $contact->delete();
 
         return back();
-    }
-
-    /**
-     * Account su cui $me può creare/gestire contatti: solo quelli con
-     * provider smtp_custom attivo (stesso controllo della visibilità del
-     * modulo) — niente senso ad anagrafiche per account su Mailchimp/Brevo.
-     */
-    private function eligibleAccounts(User $me): Collection
-    {
-        if ($me->isAdmin()) {
-            $query = User::whereNotNull('parent_id')->whereNull('child_on');
-        } elseif ($me->isManager()) {
-            $query = User::where('parent_id', $me->id);
-        } else {
-            return $me->hasSmtpCustomActive() ? collect([$me]) : collect();
-        }
-
-        return $query->get()->filter(fn (User $u) => $u->hasSmtpCustomActive())->values();
     }
 
     /**
@@ -309,22 +207,11 @@ class ContactController extends Controller
         }
 
         if ($me->isAdmin() || $me->isManager()) {
-            $ids = $this->eligibleAccounts($me)->pluck('id');
+            $ids = $this->contacts->eligibleAccounts($me)->pluck('id');
 
             return ContactTag::whereIn('user_id', $ids)->orderBy('name')->get();
         }
 
         return ContactTag::where('user_id', $me->id)->orderBy('name')->get();
-    }
-
-    private function syncTags(Contact $contact, int $userId, array $names): void
-    {
-        $ids = collect($names)
-            ->map(fn ($name) => trim($name))
-            ->filter()
-            ->unique()
-            ->map(fn ($name) => ContactTag::firstOrCreate(['user_id' => $userId, 'name' => $name])->id);
-
-        $contact->tags()->sync($ids);
     }
 }
