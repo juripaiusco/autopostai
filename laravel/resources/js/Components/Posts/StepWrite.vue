@@ -24,7 +24,11 @@ function toggleChannel(ch) {
     emit('toggle-channel', ch.id);
 }
 
-const selectedSocialWithAutoReply = computed(() => SOCIAL_IDS.some((id) => props.form.channels[id]?.auto_reply_enabled));
+// users/owner arrivano valorizzati solo per admin/manager (PostController::create/edit):
+// l'utente singolo pubblica sempre sul proprio account, il campo non serve.
+const showAccount = computed(() => (props.mode === 'create' && props.users.length > 0) || (props.mode === 'edit' && !!props.owner));
+
+const selectedSocialWithAutoReply =computed(() => SOCIAL_IDS.some((id) => props.form.channels[id]?.auto_reply_enabled));
 
 /* ------------------------------------------------------------------ */
 /* Fetch live: categorie WordPress / liste Newsletter                    */
@@ -115,19 +119,19 @@ function pickNewsletterTag(tagId) {
 
         <div class="flex w-full flex-row gap-4">
 
-            <div class="acc-field w-1/3" style="margin-bottom:0">
+            <div v-if="showAccount" class="acc-field w-1/3" style="margin-bottom:0">
                 <label class="acc-row-label" for="post-user">Account</label>
                 <span class="acc-row-help">Il post verrà pubblicato con i canali collegati a questo account.</span>
-                <ComboboxSelect v-if="mode === 'create' && users.length > 0" id="post-user"
+                <ComboboxSelect v-if="mode === 'create'" id="post-user"
                     :model-value="form.user_id" :options="users" placeholder="Seleziona l'account"
                     empty-text="Nessun account trovato"
                     @update:model-value="emit('set', 'user_id', $event)" />
-                <div v-else-if="mode === 'edit' && owner" class="acc-field" style="margin-bottom:0">
+                <div v-else class="acc-field" style="margin-bottom:0">
                     <input class="control readonly" readonly type="text" :value="owner.name + ' - ' + owner.email" />
                 </div>
             </div>
 
-            <div class="acc-field w-2/3" style="margin-bottom:0">
+            <div class="acc-field" :class="showAccount ? 'w-2/3' : 'w-full'" style="margin-bottom:0">
                 <label class="acc-row-label" for="post-title">Titolo</label>
                 <span class="acc-row-help">Solo ad uso interno, non viene pubblicato.</span>
                 <input id="post-title" class="control" type="text" :value="form.title"
