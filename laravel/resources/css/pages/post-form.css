@@ -116,6 +116,7 @@
 }
 .pf-media-empty { text-align: center; padding: 60px 0; color: var(--g500); }
 .pf-media-empty svg { width: 30px; height: 30px; margin-bottom: 10px; color: var(--g500); }
+.pf-media-ai-check { margin-top: 14px; }
 
 .pf-dropzone {
     display: flex; flex-direction: column; align-items: center; justify-content: center;

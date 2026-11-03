@@ -79,7 +79,7 @@ function buildForm() {
             ai_content: props.post.ai_content ?? '',
             existingImages: (props.post.images ?? []).map((i) => ({ filename: i.filename, url: i.url })),
             newImages: [],
-            img_source: props.post.img_source ?? null,
+            img_ai_check_on: props.post.img_ai_check_on ?? false,
             published_at: props.post.published_at ?? '',
         };
     }
@@ -93,7 +93,7 @@ function buildForm() {
         ai_content: '',
         existingImages: [],
         newImages: [],
-        img_source: null,
+        img_ai_check_on: false,
         published_at: '',
     };
 }

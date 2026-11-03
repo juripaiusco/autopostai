@@ -346,8 +346,6 @@ class PostController extends Controller
             return redirect()->route('posts.show', $post);
         }
 
-        $imgSource = $post->img_ai_check_on == '1' ? 'generated' : (!empty($post->img) ? 'upload' : null);
-
         return Inertia::render('Posts/Form', [
             'mode' => 'edit',
             'channelsMeta' => $this->channelsMeta($post->user),
@@ -363,7 +361,7 @@ class PostController extends Controller
                 'ai_content' => $post->ai_content,
                 'ai_prompt_comment' => $post->ai_prompt_comment,
                 'images' => $this->imageUrls($post),
-                'img_source' => $imgSource,
+                'img_ai_check_on' => $post->img_ai_check_on == '1',
                 'published_at' => $post->published_at?->format('Y-m-d\TH:i'),
             ],
             ...$this->imageModelsProps(),
@@ -484,7 +482,7 @@ class PostController extends Controller
             'ai_content' => ['nullable', 'string'],
             'images' => ['nullable', 'array'],
             'images.*' => self::IMAGE_RULES,
-            'img_source' => ['nullable', 'string', Rule::in(['upload', 'generated', 'archive'])],
+            'img_ai_check_on' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
             'action' => ['required', 'string', Rule::in(['save', 'save_and_add', 'publish_now'])],
         ]);
@@ -513,7 +511,7 @@ class PostController extends Controller
             'ai_content' => $data['ai_content'] ?? null,
             'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
             'img' => null,
-            'img_ai_check_on' => ($data['img_source'] ?? null) === 'generated' ? '1' : '0',
+            'img_ai_check_on' => !empty($data['img_ai_check_on']) ? '1' : '0',
             'comments_enabled' => $commentsEnabled ? '1' : '0',
             'auto_reply_enabled' => $autoReplyEnabled ? '1' : '0',
             'channels' => $channels,
@@ -598,7 +596,7 @@ class PostController extends Controller
             'images' => ['nullable', 'array'],
             'images.*' => self::IMAGE_RULES,
             'keep_images' => ['nullable', 'string'],
-            'img_source' => ['nullable', 'string', Rule::in(['upload', 'generated', 'archive'])],
+            'img_ai_check_on' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
             'action' => ['nullable', 'string', Rule::in(['save', 'publish_now'])],
         ]);
@@ -623,9 +621,9 @@ class PostController extends Controller
         $newImages = $request->hasFile('images') ? $this->storeImages($post->id, $request->file('images')) : [];
         $img = array_merge($kept, $newImages);
 
-        $imgAiCheckOn = empty($newImages)
-            ? $post->img_ai_check_on
-            : (($data['img_source'] ?? null) === 'generated' ? '1' : '0');
+        $imgAiCheckOn = array_key_exists('img_ai_check_on', $data)
+            ? (!empty($data['img_ai_check_on']) ? '1' : '0')
+            : $post->img_ai_check_on;
 
         $post->update([
             'title' => $data['title'] ?? '',

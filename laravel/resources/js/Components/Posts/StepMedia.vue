@@ -4,6 +4,8 @@ import Icon from '@/Components/Icon.vue';
 import ImageLightbox from '@/Components/Posts/ImageLightbox.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import ComboboxSelect from '@/Components/UI/ComboboxSelect.vue';
+import OptionRow from '@/Components/UI/OptionRow.vue';
+import ToggleSwitch from '@/Components/UI/ToggleSwitch.vue';
 
 const props = defineProps({
     form: { type: Object, required: true },
@@ -49,7 +51,6 @@ async function attachHostedImage({ url, filename }) {
     const blob = await (await fetch(url)).blob();
     const file = new File([blob], filename, { type: blob.type || 'image/png' });
     emit('set', 'newImages', [...props.form.newImages, { file, previewUrl: url }]);
-    emit('set', 'img_source', 'generated');
 }
 
 /* ---------------- Carica ---------------- */
@@ -58,7 +59,6 @@ function addFiles(fileList) {
     if (!files.length) return;
     const additions = files.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }));
     emit('set', 'newImages', [...props.form.newImages, ...additions]);
-    emit('set', 'img_source', 'upload');
 }
 
 function onDrop(e) {
@@ -366,6 +366,16 @@ async function confirmDeleteArchive() {
                 <div v-else class="pf-media-empty">
                     <Icon name="image" :size="30" />
                     <div>Le immagini che aggiungi appariranno qui</div>
+                </div>
+
+                <!-- Come il check di v1: l'immagine va all'LLM solo se richiesto, da qualunque fonte arrivi -->
+                <div v-if="totalImages > 0" class="pf-media-ai-check">
+                    <OptionRow title="L'AI guarda l'immagine"
+                        :help="'Attivalo se nel prompt chiedi all\'AI di ispirarsi all\'immagine: la usa per scrivere il testo e rispondere ai commenti.' + (totalImages > 1 ? ' Con più immagini guarda solo la prima.' : '')">
+                        <template #control>
+                            <ToggleSwitch :model-value="form.img_ai_check_on" @update:model-value="emit('set', 'img_ai_check_on', $event)" />
+                        </template>
+                    </OptionRow>
                 </div>
             </div>
         </div>
