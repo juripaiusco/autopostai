@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\McpToken;
 use App\Models\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,6 +33,30 @@ class SettingsController extends Controller
                 'commentStyle' => $s->ai_comment_prefix ?? '',
             ] : null,
             'vapidPublicKey' => config('webpush.vapid.public_key'),
+            'mcp' => [
+                'url' => url('/mcp'),
+                'abilities' => McpToken::ABILITIES,
+                'expiryDays' => McpToken::EXPIRY_DAYS,
+                'plaintext' => $request->session()->get('mcp_token_plaintext'),
+                'tokens' => $me->mcpTokens()
+                    ->latest()
+                    ->get()
+                    ->map(fn (McpToken $t) => [
+                        'id' => $t->id,
+                        'name' => $t->name,
+                        'ability' => McpToken::ABILITIES[last($t->abilities)] ?? null,
+                        'lastFour' => $t->last_four,
+                        'createdAt' => $t->created_at?->format('d/m/Y'),
+                        'expiresAt' => $t->expires_at?->format('d/m/Y'),
+                        'lastUsedAt' => $t->last_used_at?->format('d/m/Y H:i'),
+                        'state' => match (true) {
+                            $t->revoked_at !== null => 'revocato',
+                            $t->expires_at?->isPast() => 'scaduto',
+                            default => 'attivo',
+                        },
+                    ])
+                    ->values(),
+            ],
         ]);
     }
 

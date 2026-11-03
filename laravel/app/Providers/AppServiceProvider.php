@@ -29,5 +29,12 @@ class AppServiceProvider extends ServiceProvider
         // un form compromesso o un loop lato cliente riempirebbe la lista.
         RateLimiter::for('contacts-api', fn (Request $request) => Limit::perMinute(60)
             ->by('contacts-api:'.hash('sha256', (string) $request->header('X-Api-Key'))));
+
+        // Server MCP: per token (stesso motivo, il throttle gira prima
+        // dell'autenticazione) più un tetto per IP contro chi prova token a caso.
+        RateLimiter::for('mcp', fn (Request $request) => [
+            Limit::perMinute(120)->by('mcp:'.hash('sha256', (string) $request->bearerToken())),
+            Limit::perMinute(300)->by('mcp-ip:'.$request->ip()),
+        ]);
     }
 }

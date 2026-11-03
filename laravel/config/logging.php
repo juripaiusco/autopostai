@@ -73,6 +73,15 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Una riga per chiamata al server MCP (McpAuditLog).
+        'mcp' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/mcp.log'),
+            'level' => 'info',
+            'days' => env('LOG_MCP_DAYS', 90),
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

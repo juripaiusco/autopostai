@@ -68,6 +68,30 @@ class User extends Authenticatable
         return $this->hasManyThrough(Comment::class, Post::class);
     }
 
+    public function mcpTokens(): HasMany
+    {
+        return $this->hasMany(McpToken::class);
+    }
+
+    /**
+     * Token MCP con cui è autenticata la richiesta corrente (impostato da
+     * McpTokenAuth, stesso schema di Sanctum::withAccessToken): i tool MCP
+     * lo leggono per sapere quali permessi ha. Null fuori da /mcp.
+     */
+    protected ?McpToken $currentMcpToken = null;
+
+    public function withMcpToken(McpToken $token): static
+    {
+        $this->currentMcpToken = $token;
+
+        return $this;
+    }
+
+    public function currentMcpToken(): ?McpToken
+    {
+        return $this->currentMcpToken;
+    }
+
     public function settings(): HasOne
     {
         return $this->hasOne(Settings::class);
@@ -100,6 +124,28 @@ class User extends Authenticatable
             ->where('type', 'reply')
             ->whereMonth('token_logs.created_at', now()->month)
             ->whereYear('token_logs.created_at', now()->year);
+    }
+
+    /**
+     * Metadati canale per canale per questo account: disponibile (attivo
+     * sull'account) e replyOn (l'account consente le risposte automatiche
+     * su quel canale) — usati dal form per mostrare TUTTI i canali (anche
+     * quelli non abilitati, disattivati) e per limitare l'auto-risposta.
+     */
+    public function channelsMeta(): array
+    {
+        $userChannels = $this->channels ?? [];
+        $newsletterProvider = $this->settings?->newsletterProvider();
+
+        return collect(self::CHANNELS)->keys()->mapWithKeys(function ($id) use ($userChannels, $newsletterProvider) {
+            $c = $userChannels[$id] ?? [];
+
+            return [$id => [
+                'available' => !empty($c['on']),
+                'replyOn' => !empty($c['reply_on']),
+                'provider' => $id === 'newsletter' ? $newsletterProvider : null,
+            ]];
+        })->all();
     }
 
     public function isAdmin(): bool

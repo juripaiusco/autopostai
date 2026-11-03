@@ -39,4 +39,9 @@ return [
         'url' => env('PYTHON_SERVICE_URL', 'http://python:8000'),
     ],
 
+    // Server MCP: origini browser ammesse oltre ad APP_URL (McpOriginGuard).
+    'mcp' => [
+        'allowed_origins' => array_filter(explode(',', (string) env('MCP_ALLOWED_ORIGINS', ''))),
+    ],
+
 ];

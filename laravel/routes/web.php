@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailTrackingController;
 use App\Http\Controllers\ImageArchiveController;
 use App\Http\Controllers\LinkedInController;
+use App\Http\Controllers\McpTokenController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PostContentController;
 use App\Http\Controllers\PostController;
@@ -150,6 +151,12 @@ Route::middleware('auth')->group(function () {
 
     Route::put('/impostazioni', [SettingsController::class, 'update'])
         ->name('settings.update');
+
+    Route::post('/impostazioni/mcp-token', [McpTokenController::class, 'store'])
+        ->name('settings.mcp-tokens.store');
+
+    Route::delete('/impostazioni/mcp-token/{token}', [McpTokenController::class, 'destroy'])
+        ->name('settings.mcp-tokens.destroy');
 
     Route::get('/notifiche', [PushNotificationController::class, 'index'])
         ->name('notifications');

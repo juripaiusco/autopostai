@@ -40,16 +40,11 @@ class PostController extends Controller
 
         $scope = fn () => Post::query()->visibleTo($me, $activeUserId);
 
-        $isPublishedFilter = fn ($q) => $q->where('published', '1');
-        $isScheduledFilter = fn ($q) => $q->where('published', '0')->where('published_at', '>', now());
-        $isDraftFilter = fn ($q) => $q->where('published', '0')
-            ->where(fn ($q2) => $q2->whereNull('published_at')->orWhere('published_at', '<=', now()));
-
         $counts = [
             'tutti' => $scope()->count(),
-            'pubblicati' => $isPublishedFilter($scope())->count(),
-            'programmati' => $isScheduledFilter($scope())->count(),
-            'bozze' => $isDraftFilter($scope())->count(),
+            'pubblicati' => $scope()->listFilter('pubblicati')->count(),
+            'programmati' => $scope()->listFilter('programmati')->count(),
+            'bozze' => $scope()->listFilter('bozze')->count(),
         ];
 
         $filter = $request->string('filter')->toString() ?: 'tutti';
@@ -64,15 +59,7 @@ class PostController extends Controller
         ];
         $sortColumn = $sortable[$sortKey] ?? 'published_at';
 
-        $query = $scope();
-
-        if ($filter === 'pubblicati') {
-            $isPublishedFilter($query);
-        } elseif ($filter === 'programmati') {
-            $isScheduledFilter($query);
-        } elseif ($filter === 'bozze') {
-            $isDraftFilter($query);
-        }
+        $query = $scope()->listFilter($filter);
 
         if ($search !== '') {
             $query->where('title', 'like', "%{$search}%");
@@ -120,28 +107,6 @@ class PostController extends Controller
             ],
             'counts' => $counts,
         ]);
-    }
-
-    /**
-     * Metadati canale per canale per l'account $user: disponibile (attivo
-     * sull'account) e replyOn (l'account consente le risposte automatiche
-     * su quel canale) — usati dal form per mostrare TUTTI i canali (anche
-     * quelli non abilitati, disattivati) e per limitare l'auto-risposta.
-     */
-    private function channelsMeta(User $user): array
-    {
-        $userChannels = $user->channels ?? [];
-        $newsletterProvider = $user->settings?->newsletterProvider();
-
-        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($userChannels, $newsletterProvider) {
-            $c = $userChannels[$id] ?? [];
-
-            return [$id => [
-                'available' => !empty($c['on']),
-                'replyOn' => !empty($c['reply_on']),
-                'provider' => $id === 'newsletter' ? $newsletterProvider : null,
-            ]];
-        })->all();
     }
 
     /**
@@ -228,7 +193,7 @@ class PostController extends Controller
                     'id' => $u->id,
                     'name' => $u->name,
                     'email' => $u->email,
-                    'channelsMeta' => $this->channelsMeta($u),
+                    'channelsMeta' => $u->channelsMeta(),
                 ])
                 ->values();
         }
@@ -236,7 +201,7 @@ class PostController extends Controller
         $prefill = $request->session()->pull('post_prefill');
 
         return Inertia::render('Posts/Form', [
-            'channelsMeta' => $this->channelsMeta($me),
+            'channelsMeta' => $me->channelsMeta(),
             'users' => $users ?? [],
             'prefill' => $prefill,
             ...$this->imageModelsProps(),
@@ -270,17 +235,7 @@ class PostController extends Controller
                 'title' => $post->title,
                 'status' => $post->status(),
                 'monitoringUntil' => $post->monitoringUntil(),
-                // Stato per canale: in un post parziale i canali con id sono
-                // usciti, gli altri sono falliti (il worker li ritenta fino a
-                // Post::PUBLISH_MAX_ATTEMPTS, poi serve "Riprova").
-                'channelStatus' => collect($post->channels ?? [])
-                    ->filter(fn ($c) => !empty($c['on']))
-                    ->map(fn ($c) => match (true) {
-                        !empty($c['id']) => $post->status() === 'done' ? 'done' : 'published',
-                        !empty($c['error']), $post->status() === 'partial' => 'error',
-                        default => $post->status(),
-                    })
-                    ->all(),
+                'channelStatus' => $post->channelStatuses(),
                 'channelErrors' => collect($post->channelErrors())
                     ->map(fn ($e, $channel) => ['channel' => $channel, ...$e])
                     ->values()
@@ -348,7 +303,7 @@ class PostController extends Controller
 
         return Inertia::render('Posts/Form', [
             'mode' => 'edit',
-            'channelsMeta' => $this->channelsMeta($post->user),
+            'channelsMeta' => $post->user->channelsMeta(),
             'post' => [
                 'id' => $post->id,
                 'title' => $post->title,

@@ -8,6 +8,7 @@ import Icon from '@/Components/Icon.vue';
 import FieldRow from '@/Components/UI/FieldRow.vue';
 import SecretField from '@/Components/UI/SecretField.vue';
 import AiFields from '@/Components/Domain/Account/AiFields.vue';
+import McpAccess from '@/Components/Domain/Settings/McpAccess.vue';
 import { usePushSubscription } from '@/Composables/usePushSubscription';
 
 const props = defineProps({
@@ -15,13 +16,15 @@ const props = defineProps({
     isSimpleUser: { type: Boolean, default: false },
     ai: { type: Object, default: null },
     vapidPublicKey: { type: String, default: null },
+    mcp: { type: Object, required: true },
 });
 
 const push = usePushSubscription(props.vapidPublicKey);
 
 const userName = computed(() => usePage().props.auth?.user?.name ?? props.account.name);
 
-const activeTab = ref('account');
+// Dopo la creazione di un token MCP si torna sul suo tab per mostrarlo.
+const activeTab = ref(props.mcp.plaintext ? 'mcp' : 'account');
 const form = reactive({
     name: props.account.name,
     email: props.account.email,
@@ -59,7 +62,7 @@ function save() {
     <AppLayout current="settings" :user="userName">
         <template #page-header>
             <PageHeader :crumbs="[{ label: 'Impostazioni', current: true }]">
-                <template #actions>
+                <template v-if="activeTab !== 'mcp'" #actions>
                     <div class="acc-head-meta">
                         <span v-if="dirty" class="acc-dirty">
                             <span class="acc-dirty-dot" />Modifiche non salvate
@@ -81,6 +84,10 @@ function save() {
                 <button v-if="isSimpleUser" type="button" class="acc-mtab" role="tab" :aria-selected="activeTab === 'ai'"
                     :class="{ active: activeTab === 'ai' }" @click="activeTab = 'ai'">
                     <Icon name="sparkles" :size="16" />Profilo AI
+                </button>
+                <button type="button" class="acc-mtab" role="tab" :aria-selected="activeTab === 'mcp'"
+                    :class="{ active: activeTab === 'mcp' }" @click="activeTab = 'mcp'">
+                    <Icon name="key" :size="16" />Accesso MCP
                 </button>
             </div>
 
@@ -115,6 +122,10 @@ function save() {
                     <div v-if="push.error.value" class="pf-channel-error" style="margin-top: 10px">{{ push.error.value }}</div>
                     <div v-if="!push.supported" class="pf-check-help" style="margin-top: 10px">Questo browser non supporta le notifiche push.</div>
                 </SectionCard>
+            </div>
+
+            <div v-if="activeTab === 'mcp'" class="acc-reveal" style="max-width: 44rem">
+                <McpAccess :mcp="mcp" />
             </div>
 
             <div v-if="isSimpleUser && activeTab === 'ai'" class="acc-reveal">

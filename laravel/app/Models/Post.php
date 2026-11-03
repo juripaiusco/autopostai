@@ -272,6 +272,68 @@ class Post extends Model
     }
 
     /**
+     * Canali accesi sul post (chiavi di channels con on=true).
+     *
+     * @return array<int, string>
+     */
+    public function activeChannels(): array
+    {
+        return collect($this->channels ?? [])
+            ->filter(fn ($c) => !empty($c['on']))
+            ->keys()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Stato per canale acceso: in un post parziale i canali con id sono
+     * usciti, gli altri sono falliti (il worker li ritenta fino a
+     * PUBLISH_MAX_ATTEMPTS, poi serve "Riprova").
+     *
+     * @return array<string, string>
+     */
+    public function channelStatuses(): array
+    {
+        $status = $this->status();
+
+        return collect($this->channels ?? [])
+            ->filter(fn ($c) => !empty($c['on']))
+            ->map(fn ($c) => match (true) {
+                !empty($c['id']) => $status === 'done' ? 'done' : 'published',
+                !empty($c['error']), $status === 'partial' => 'error',
+                default => $status,
+            })
+            ->all();
+    }
+
+    /**
+     * Filtri della lista post (tab in UI, argomento filter in MCP):
+     * pubblicati, programmati (data futura), bozze (senza data o con data
+     * passata mai uscita). Qualunque altro valore = tutti.
+     */
+    public function scopeListFilter(Builder $query, string $filter): Builder
+    {
+        return match ($filter) {
+            'pubblicati' => $query->where('published', '1'),
+            'programmati' => $query->where('published', '0')->where('published_at', '>', now()),
+            'bozze' => $query->where('published', '0')
+                ->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now())),
+            default => $query,
+        };
+    }
+
+    /**
+     * Post programmati (non usciti, data futura) con data nell'intervallo:
+     * calendario in UI e get_calendar in MCP.
+     */
+    public function scopeScheduledBetween(Builder $query, \DateTimeInterface $from, \DateTimeInterface $to): Builder
+    {
+        return $query->where('published', '0')
+            ->where('published_at', '>', now())
+            ->whereBetween('published_at', [$from, $to]);
+    }
+
+    /**
      * Post visibili a $me: se $scopedUserId è valorizzato (scope globale
      * attivo su un altro utente) mostra solo i suoi post, altrimenti
      * amministratore -> tutti, manager -> propri sotto-utenti, utente -> i

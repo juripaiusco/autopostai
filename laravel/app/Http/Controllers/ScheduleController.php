@@ -32,9 +32,7 @@ class ScheduleController extends Controller
 
         $posts = Post::query()
             ->visibleTo($me, $activeUserId)
-            ->where('published', '0')
-            ->where('published_at', '>', now())
-            ->whereBetween('published_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
+            ->scheduledBetween($month->copy()->startOfMonth(), $month->copy()->endOfMonth())
             ->with('user:id,name')
             ->orderBy('published_at')
             ->get()
