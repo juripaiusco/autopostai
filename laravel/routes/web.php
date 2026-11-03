@@ -112,6 +112,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/riprova', [PostController::class, 'retry'])
         ->name('posts.retry');
 
+    Route::put('/posts/{post}/canali/{channel}/contenuto', [PostController::class, 'updateChannelContent'])
+        ->name('posts.channel-content.update');
+
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])
         ->name('posts.destroy');
 

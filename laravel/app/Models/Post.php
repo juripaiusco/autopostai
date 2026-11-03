@@ -56,6 +56,14 @@ class Post extends Model
     public const PUBLISH_MAX_ATTEMPTS = 3;
 
     /**
+     * Canali il cui testo si può correggere anche dopo la pubblicazione: il
+     * worker (posts_update) lo rimanda alla piattaforma. Instagram non lo
+     * permette via API, una newsletter inviata non si richiama; LinkedIn
+     * arriverà dopo il passaggio alla Posts API.
+     */
+    public const EDITABLE_AFTER_PUBLISH = ['facebook', 'wordpress'];
+
+    /**
      * Giorni dalla pubblicazione oltre i quali il worker smette comunque di
      * seguire i commenti (config.TASK_COMPLETE_MAX_WAIT_DAYS in Python). La
      * chiusura vera la decide il worker con task_complete=1, anche prima.

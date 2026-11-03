@@ -283,6 +283,17 @@ class PostController extends Controller
                     ->values()
                     ->all(),
                 'maxAttempts' => Post::PUBLISH_MAX_ATTEMPTS,
+                // Box "Modifica post": testo del canale (o quello comune) e
+                // stato dell'ultimo invio a posts_update.
+                'channelEdit' => collect($post->channels ?? [])
+                    ->filter(fn ($c) => !empty($c['on']))
+                    ->map(fn ($c, $channel) => [
+                        'editable' => in_array($channel, Post::EDITABLE_AFTER_PUBLISH, true) && !empty($c['id']),
+                        'content' => $c['content'] ?? $post->ai_content,
+                        'pending' => !empty($c['update_pending']),
+                        'error' => $c['update_error'] ?? null,
+                    ])
+                    ->all(),
                 'owner' => ['name' => $post->user->name, 'email' => $post->user->email],
                 'channels' => collect($post->channels ?? [])
                     ->filter(fn ($c) => !empty($c['on']))
@@ -657,6 +668,36 @@ class PostController extends Controller
         Post::whereKey($post->id)->update($reset);
 
         $request->session()->flash('toast', 'Nuovo tentativo in coda: il worker riprova entro un minuto.');
+
+        return back();
+    }
+
+    /**
+     * "Modifica post" dal box di un canale già pubblicato: salva il testo di
+     * quel canale (gli altri restano su ai_content) e mette il post in coda
+     * per posts_update (updated = 2). Update per percorso JSON come retry().
+     */
+    public function updateChannelContent(Request $request, Post $post, string $channel): RedirectResponse
+    {
+        $this->authorize('update', $post);
+
+        $entry = $post->channels[$channel] ?? [];
+        abort_unless(in_array($channel, Post::EDITABLE_AFTER_PUBLISH, true), 422, 'Questo canale non permette di modificare un post pubblicato.');
+        abort_unless(!empty($entry['on']) && !empty($entry['id']), 422, 'Il post non è ancora pubblicato su questo canale.');
+
+        $data = $request->validate([
+            'content' => ['required', 'string', 'max:60000'],
+        ]);
+
+        Post::whereKey($post->id)->update([
+            "channels->{$channel}->content" => $data['content'],
+            "channels->{$channel}->update_pending" => true,
+            "channels->{$channel}->update_error" => null,
+            'updated' => '2',
+        ]);
+
+        $label = User::CHANNELS[$channel]['name'];
+        $request->session()->flash('toast', "Modifica in coda: {$label} viene aggiornato entro un minuto.");
 
         return back();
     }
