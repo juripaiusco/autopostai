@@ -75,6 +75,16 @@ class Meta:
         post_id = resp.json().get("post_id") or resp.json().get("id")
         return post_id, f"https://www.facebook.com/{self.page_id}/posts/{post_id}"
 
+    def fb_update(self, post_id: str, message: str) -> bool:
+        """Sostituisce il testo di un post gia' pubblicato sulla pagina (le
+        immagini restano quelle originali)."""
+        resp = http.post(
+            f"{self.base_url}/{post_id}",
+            data={"message": message, "access_token": self.page_access_token()},
+        )
+        resp.raise_for_status()
+        return bool(resp.json().get("success"))
+
     def fb_delete(self, post_id: str) -> str | None:
         resp = http.delete(f"{self.base_url}/{post_id}", headers=_bearer(self.page_access_token()))
         # Post gia' tolto a mano dalla pagina: Graph risponde 400 con

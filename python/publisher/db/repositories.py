@@ -229,6 +229,7 @@ class PostRepository:
                         p.user_id            AS user_id,
                         p.ai_content         AS ai_content,
                         p.channels           AS channels,
+                        s.meta_page_id       AS meta_page_id,
                         s.wordpress_url      AS wordpress_url,
                         s.wordpress_username AS wordpress_username,
                         s.wordpress_password AS wordpress_password

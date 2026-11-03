@@ -1,8 +1,15 @@
-"""Task: ripubblica i post modificati (updated=2).
+"""Task: rimanda alle piattaforme il testo dei post modificati (updated=2).
 
-Porting di `task/posts_update.py` (v1). Come in v1, **solo l'update WordPress e'
-implementato**: Facebook/Instagram non supportano bene l'update via API (v1 li
-aveva gia' commentati) — restano TODO espliciti, non un'omissione silenziosa.
+Porting di `task/posts_update.py` (v1), esteso. La pagina del post (Laravel,
+PostController::updateChannelContent) salva il testo corretto nel singolo canale
+(`channels.<c>.content`, assente = `ai_content` comune) e lo segna con
+`update_pending`. Qui si aggiornano solo i canali che lo permettono via API:
+WordPress e Facebook. Instagram non consente di cambiare la didascalia, una
+newsletter inviata non si richiama; LinkedIn arrivera' con la Posts API.
+
+Un aggiornamento fallito non viene ritentato da solo (stessa logica dei
+tentativi in posts_send): l'errore finisce in `update_error` e l'utente rilancia
+la modifica dal box del canale.
 """
 
 from __future__ import annotations
@@ -13,11 +20,17 @@ from sqlalchemy.engine import Connection
 
 from publisher import config
 from publisher.db.repositories import PostRepository
-from publisher.domain.channels import CHANNEL_KEYS, Channels
+from publisher.domain.channels import Channels
+from publisher.integrations import shortcodes
+from publisher.integrations.meta import Meta
 from publisher.integrations.wordpress import WordPress
 from publisher.publishing.base import split_markdown
+from publisher.tasks.posts_send import _error_message, _url_resolver
 
 log = logging.getLogger(__name__)
+
+#: canali aggiornabili dopo la pubblicazione (Post::EDITABLE_AFTER_PUBLISH in Laravel)
+UPDATABLE = ("facebook", "wordpress")
 
 
 def run(conn: Connection) -> None:
@@ -30,43 +43,51 @@ def run(conn: Connection) -> None:
 
     log.info("posts_update: post %s selezionato per il risync", post["id"])
     channels = Channels.parse(post["channels"])
+    resolver = _url_resolver(post_repo, post["user_id"])
 
-    # TODO(facebook/instagram): v1 aveva gia' questi update commentati (l'API
-    # Graph non si presta bene a un edit pulito del post pubblicato). Se servira'
-    # in futuro, seguire lo stesso pattern di WordPress qui sotto.
-    entry = channels.entry("wordpress")
-    if entry and entry.is_on and entry.already_published:
-        title, body = split_markdown(post.get("ai_content") or "")
+    for key in _keys_to_update(channels):
+        entry = channels.entry(key)
+        text = shortcodes.parse_crosslinks(entry.data.get("content") or post.get("ai_content") or "", resolver)
         try:
-            new_id = _wordpress_update(post, entry.data["id"], title, body)
-            entry.data["id_update"] = new_id
-            log.info("posts_update: post %s canale 'wordpress' - aggiornato (id=%s)", post["id"], new_id)
-        except Exception:  # noqa: BLE001
-            log.exception("posts_update: update WordPress fallito per il post %s", post["id"])
+            if not config.DRY_RUN:
+                _UPDATERS[key](post, entry.data, text)
+            entry.data["id_update"] = entry.data["id"]
+            entry.data.pop("update_error", None)
+            log.info("posts_update: post %s canale '%s' - aggiornato", post["id"], key)
+        except Exception as exc:  # noqa: BLE001
+            entry.data["update_error"] = _error_message(exc)
+            log.exception("posts_update: update '%s' fallito per il post %s", key, post["id"])
+        entry.data.pop("update_pending", None)
 
     post_repo.save_channels(post["id"], channels.to_dict())
-    updated = _ctrl_updated(post_repo, post["id"], channels)
-    log.info("posts_update: post %s - updated=%s", post["id"], updated)
+    post_repo.set_updated(post["id"], "1")
 
 
-def _wordpress_update(post: dict, post_id: str, title: str, body: str) -> str | None:
-    if config.DRY_RUN:
-        return post_id
+def _keys_to_update(channels: Channels) -> list[str]:
+    """Canali accesi, pubblicati e con update_pending. Post v1 (updated=2 senza
+    update_pending, il vecchio pulsante "Modifica" di v1): solo WordPress, come in v1."""
+    published = [
+        key for key in UPDATABLE
+        if (entry := channels.entry(key)) and entry.is_on and entry.already_published
+    ]
+    pending = [key for key in published if channels.entry(key).data.get("update_pending")]
+    return pending or [key for key in published if key == "wordpress"]
+
+
+def _wordpress_update(post: dict, data: dict, text: str) -> None:
+    title, body = split_markdown(text)
+    # La galleria (dalla seconda immagine in poi) era stata messa in testa al
+    # contenuto in pubblicazione: senza rimetterla l'update la cancellerebbe.
+    if data.get("gallery_html"):
+        body = data["gallery_html"] + "<br>" + body
     wp = WordPress(url=post["wordpress_url"], username=post["wordpress_username"], password=post["wordpress_password"])
-    return wp.update(post_id, title, body)
+    wp.update(data["id"], title, body)
 
 
-def _ctrl_updated(post_repo: PostRepository, post_id: int, channels: Channels) -> str:
-    """updated=1 solo se OGNI canale acceso ha id_update coincidente con id
-    (porting di ctrl_posts_update). Canali senza update implementato (facebook/
-    instagram, se accesi) restano senza id_update per sempre: come in v1, quei
-    post non arrivano mai a updated=1 finche' quei canali non vengono spenti."""
-    all_updated = True
-    for key in CHANNEL_KEYS:
-        entry = channels.entry(key)
-        if entry and entry.is_on and entry.data.get("id") != entry.data.get("id_update"):
-            all_updated = False
+def _facebook_update(post: dict, data: dict, text: str) -> None:
+    meta = Meta(page_id=post["meta_page_id"], user_access_token=config.META_USER_ACCESS_TOKEN)
+    if not meta.fb_update(data["id"], text):
+        raise RuntimeError("Facebook non ha confermato l'aggiornamento")
 
-    value = "1" if all_updated else "0"
-    post_repo.set_updated(post_id, value)
-    return value
+
+_UPDATERS = {"wordpress": _wordpress_update, "facebook": _facebook_update}
