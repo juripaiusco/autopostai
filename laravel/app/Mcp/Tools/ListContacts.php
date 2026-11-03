@@ -2,6 +2,8 @@
 
 namespace App\Mcp\Tools;
 
+use App\Actions\Contacts\SaveContact;
+use App\Mcp\Tools\Concerns\NeedsContactsModule;
 use App\Models\Contact;
 use App\Models\ContactTag;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -21,7 +23,9 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsReadOnly]
 class ListContacts extends Tool
 {
-    private const STATUSES = ['unverified', 'active', 'bounced', 'unsubscribed'];
+    use NeedsContactsModule;
+
+    private const STATUSES = SaveContact::STATUSES;
 
     public function handle(Request $request): ResponseFactory
     {

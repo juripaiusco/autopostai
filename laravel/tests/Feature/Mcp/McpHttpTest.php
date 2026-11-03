@@ -92,8 +92,8 @@ it('throttles a token after 120 requests per minute', function () {
     mcpCall($plain, method: 'ping')->assertStatus(429);
 });
 
-it('lists every tool in a single page for a publish token', function () {
-    $user = mcpHttpUser();
+it('lists every tool in a single page for an admin publish token', function () {
+    $user = User::factory()->create(['parent_id' => null]);
     [, $plain] = McpToken::issue($user, 'ok', ['publish'], 30);
 
     $names = mcpCall($plain)->assertOk()->assertJsonMissingPath('result.nextCursor')->json('result.tools.*.name');
