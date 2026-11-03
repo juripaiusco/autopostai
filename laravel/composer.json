@@ -11,6 +11,7 @@
         "laravel-notification-channels/webpush": "^11.0",
         "laravel/fortify": "^1.37",
         "laravel/framework": "^13.8",
+        "laravel/mcp": "^1.1",
         "laravel/tinker": "^3.0",
         "tightenco/ziggy": "^2.0"
     },
