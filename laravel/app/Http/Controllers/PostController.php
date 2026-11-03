@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GeneratePostContentJob;
 use App\Models\ContactTag;
 use App\Models\Post;
 use App\Models\User;
@@ -20,6 +21,8 @@ class PostController extends Controller
      * formati che i canali accettano. Niente SVG (può contenere script).
      */
     private const IMAGE_RULES = ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'];
+
+    private const TEXT_QUEUED_TOAST = "Post salvato. Il testo verrà generato dall'AI a breve: potrai rivederlo prima della pubblicazione.";
 
     /**
      * Lista post: l'amministratore vede tutti i post, il manager (child_on=1)
@@ -522,6 +525,8 @@ class PostController extends Controller
             $post->update(['img' => $this->storeImages($post->id, $request->file('images'))]);
         }
 
+        $textQueued = $this->queueTextGeneration($post);
+
         if ($data['action'] === 'save_and_add') {
             $request->session()->flash('post_prefill', [
                 'title' => $post->title,
@@ -534,7 +539,7 @@ class PostController extends Controller
             return redirect()->route('posts.create');
         }
 
-        $request->session()->flash('toast', $this->savedToast($data, 'Post salvato.'));
+        $request->session()->flash('toast', $this->savedToast($data, $textQueued ? self::TEXT_QUEUED_TOAST : 'Post salvato.'));
 
         return redirect()->route('posts');
     }
@@ -550,6 +555,22 @@ class PostController extends Controller
         return ($data['action'] ?? null) === 'publish_now'
             ? now()
             : ($data['published_at'] ?? null);
+    }
+
+    /**
+     * Post programmato salvato senza anteprima: il testo lo genera un job in
+     * coda, così si può rivedere prima dell'uscita. Senza coda o se il job
+     * fallisce, lo genera comunque il worker alla pubblicazione.
+     */
+    private function queueTextGeneration(Post $post): bool
+    {
+        if (!$post->needsGeneratedText()) {
+            return false;
+        }
+
+        GeneratePostContentJob::dispatch($post->id);
+
+        return true;
     }
 
     private function savedToast(array $data, string $default): string
@@ -619,7 +640,9 @@ class PostController extends Controller
             'published_at' => $this->publishedAt($data),
         ]);
 
-        $request->session()->flash('toast', $this->savedToast($data, 'Post aggiornato.'));
+        $textQueued = $this->queueTextGeneration($post);
+
+        $request->session()->flash('toast', $this->savedToast($data, $textQueued ? self::TEXT_QUEUED_TOAST : 'Post aggiornato.'));
 
         return redirect()->route('posts');
     }

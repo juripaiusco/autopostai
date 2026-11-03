@@ -179,6 +179,35 @@ class Post extends Model
             ->all();
     }
 
+    /**
+     * Canale che decide il formato del testo AI: WordPress e Newsletter
+     * chiedono Markdown (publisher/publishing/{wordpress,newsletter}.py),
+     * gli altri usano il prompt così com'è (null). Stessa scelta di
+     * "Genera anteprima" in StepPublish.vue.
+     */
+    public function textChannel(): ?string
+    {
+        $on = fn (string $id) => !empty(($this->channels ?? [])[$id]['on']);
+
+        return match (true) {
+            $on('wordpress') => 'wordpress',
+            $on('newsletter') => 'newsletter',
+            default => null,
+        };
+    }
+
+    /**
+     * Post programmato senza testo: il testo va generato prima dell'uscita
+     * (GeneratePostContentJob). Con data passata o "Pubblica subito" ci
+     * pensa direttamente il worker entro un minuto.
+     */
+    public function needsGeneratedText(): bool
+    {
+        return $this->published_at?->isFuture()
+            && trim((string) $this->ai_content) === ''
+            && trim((string) $this->ai_prompt_post) !== '';
+    }
+
     /** Modificabile solo finché nessun canale è stato pubblicato. */
     /**
      * URL pubblico della prima immagine del post (cartella posts/{id}/),
