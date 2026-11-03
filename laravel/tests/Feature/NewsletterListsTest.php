@@ -138,6 +138,25 @@ class NewsletterListsTest extends TestCase
             ->assertJsonPath('message', 'Brevo ha rifiutato la API Key. Controllala e salva di nuovo.');
     }
 
+    public function test_brevo_unauthorised_ip_gets_its_own_message_instead_of_bad_key(): void
+    {
+        Http::fake([
+            'https://api.brevo.com/v3/contacts/lists*' => Http::response([
+                'code' => 'unauthorized',
+                'message' => 'We have detected you are using an unrecognised IP address 203.0.113.7. If you performed this action make sure to add the new IP address in this link: https://app.brevo.com/security/authorised_ips',
+            ], 401),
+        ]);
+
+        $admin = User::factory()->create(['parent_id' => null]);
+        $child = User::factory()->create(['parent_id' => $admin->id]);
+        Settings::factory()->create(['user_id' => $child->id, 'nl_brevo_api' => 'good-key']);
+
+        $this->actingAs($admin)
+            ->getJson(route('posts.newsletter-lists', $child))
+            ->assertStatus(422)
+            ->assertJsonPath('message', "Brevo ha bloccato la richiesta: l'IP del server (203.0.113.7) non è tra gli IP autorizzati. Aggiungilo in Brevo > Sicurezza > IP autorizzati.");
+    }
+
     public function test_shows_error_toast_when_provider_does_not_respond_correctly(): void
     {
         Http::fake([

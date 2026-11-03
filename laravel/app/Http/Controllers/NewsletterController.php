@@ -6,6 +6,7 @@ use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -132,9 +133,7 @@ class NewsletterController extends Controller
                     'body' => $response->body(),
                 ]);
 
-                return [[], $response->status() === 401
-                    ? 'Brevo ha rifiutato la API Key. Controllala e salva di nuovo.'
-                    : 'Brevo non ha risposto correttamente (HTTP ' . $response->status() . ').'];
+                return [[], $this->brevoErrorMessage($response)];
             }
 
             $page = $response->json('lists', []);
@@ -155,5 +154,28 @@ class NewsletterController extends Controller
         $settings->update(['nl_brevo_options' => ['lists' => $lists]]);
 
         return [$lists, null];
+    }
+
+    /**
+     * Brevo risponde 401 sia per API key errata sia per IP del server non
+     * tra gli "IP autorizzati" dell'account ("unrecognised IP address x.x.x.x"):
+     * vanno distinti, altrimenti si cerca un problema di chiave che non c'è.
+     */
+    private function brevoErrorMessage(Response $response): string
+    {
+        if ($response->status() !== 401) {
+            return 'Brevo non ha risposto correttamente (HTTP ' . $response->status() . ').';
+        }
+
+        $message = (string) $response->json('message', '');
+
+        if (stripos($message, 'IP address') === false) {
+            return 'Brevo ha rifiutato la API Key. Controllala e salva di nuovo.';
+        }
+
+        $ip = preg_match('/IP address\s+([0-9a-f.:]*[0-9a-f])/i', $message, $m) ? " ({$m[1]})" : '';
+
+        return "Brevo ha bloccato la richiesta: l'IP del server{$ip} non è tra gli IP autorizzati. "
+            . 'Aggiungilo in Brevo > Sicurezza > IP autorizzati.';
     }
 }
