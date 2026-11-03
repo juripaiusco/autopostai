@@ -1,0 +1,79 @@
+<?php
+
+namespace App\Actions\Posts\Concerns;
+
+use App\Jobs\GeneratePostContentJob;
+use App\Models\Post;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+/**
+ * Pezzi comuni a CreatePost e UpdatePost.
+ */
+trait SavesPosts
+{
+    /**
+     * Immagini del post: contenuto verificato (image) e tipo limitato ai
+     * formati che i canali accettano. Niente SVG (può contenere script).
+     */
+    public const IMAGE_RULES = ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'];
+
+    /**
+     * Salva i file caricati in posts/{post_id}/ con filename univoco
+     * (pattern v1: timestamp-random-nomeoriginale.ext), ritorna solo i
+     * filename nudi da accodare a Post::img (nessun path in DB, la cartella
+     * è per convenzione posts/{id}/).
+     *
+     * @param  array<int, UploadedFile>  $files
+     * @return array<int, string>
+     */
+    private function storeImages(int $postId, array $files): array
+    {
+        $stored = [];
+        foreach ($files as $file) {
+            $safeName = Str::of(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME))
+                ->ascii()
+                ->replaceMatches('/[^A-Za-z0-9_-]+/', '_')
+                ->trim('_')
+                ->value();
+            // Estensione dal tipo reale del contenuto, non dal nome scelto dal
+            // client: un'immagine valida chiamata "x.php" finiva salvata come
+            // .php sul disco pubblico.
+            $filename = date('YmdHis').'-'.Str::random(13).'-'.($safeName ?: 'img').'.'.$file->extension();
+            Storage::disk('public')->putFileAs("posts/{$postId}", $file, $filename);
+            $stored[] = $filename;
+        }
+
+        return $stored;
+    }
+
+    /**
+     * Data di pubblicazione. Senza data il post resta una bozza: il worker
+     * seleziona solo published_at <= adesso, quindi non esce finché non ne
+     * riceve una. "Pubblica subito" (action=publish_now) la imposta qui,
+     * lato server, senza dipendere dall'orologio del client.
+     */
+    private function publishedAt(array $data): mixed
+    {
+        return ($data['action'] ?? null) === 'publish_now'
+            ? now()
+            : ($data['published_at'] ?? null);
+    }
+
+    /**
+     * Post programmato salvato senza anteprima: il testo lo genera un job in
+     * coda, così si può rivedere prima dell'uscita. Senza coda o se il job
+     * fallisce, lo genera comunque il worker alla pubblicazione.
+     */
+    private function queueTextGeneration(Post $post): bool
+    {
+        if (!$post->needsGeneratedText()) {
+            return false;
+        }
+
+        GeneratePostContentJob::dispatch($post->id);
+
+        return true;
+    }
+}

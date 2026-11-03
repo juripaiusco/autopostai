@@ -2,26 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\GeneratePostContentJob;
-use App\Models\ContactTag;
+use App\Actions\Posts\CreatePost;
+use App\Actions\Posts\RetryPost;
+use App\Actions\Posts\UpdatePost;
+use App\Actions\Posts\UpdatePublishedChannelContent;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PostController extends Controller
 {
-    /**
-     * Immagini del post: contenuto verificato (image) e tipo limitato ai
-     * formati che i canali accettano. Niente SVG (può contenere script).
-     */
-    private const IMAGE_RULES = ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'];
-
     private const TEXT_QUEUED_TOAST = "Post salvato. Il testo verrà generato dall'AI a breve: potrai rivederlo prima della pubblicazione.";
 
     /**
@@ -107,32 +101,6 @@ class PostController extends Controller
             ],
             'counts' => $counts,
         ]);
-    }
-
-    /**
-     * Salva i file caricati in posts/{post_id}/ con filename univoco
-     * (pattern v1: timestamp-random-nomeoriginale.ext), ritorna solo i
-     * filename nudi da accodare a Post::img (nessun path in DB, la cartella
-     * è per convenzione posts/{id}/).
-     */
-    private function storeImages(int $postId, array $files): array
-    {
-        $stored = [];
-        foreach ($files as $file) {
-            $safeName = Str::of(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME))
-                ->ascii()
-                ->replaceMatches('/[^A-Za-z0-9_-]+/', '_')
-                ->trim('_')
-                ->value();
-            // Estensione dal tipo reale del contenuto, non dal nome scelto dal
-            // client: un'immagine valida chiamata "x.php" finiva salvata come
-            // .php sul disco pubblico.
-            $filename = date('YmdHis').'-'.Str::random(13).'-'.($safeName ?: 'img').'.'.$file->extension();
-            Storage::disk('public')->putFileAs("posts/{$postId}", $file, $filename);
-            $stored[] = $filename;
-        }
-
-        return $stored;
     }
 
     /**
@@ -324,161 +292,13 @@ class PostController extends Controller
     }
 
     /**
-     * Ricostruisce i canali selezionati per il post a partire dal payload
-     * grezzo del form: whitelist dei campi attesi per tipo di canale, non un
-     * pass-through — coerente con come AccountController tratta i canali.
-     * I canali non presenti nel payload restano semplicemente 'on' => false.
-     *
-     * $accountChannels e' lo snapshot di User::channels dell'account target:
-     * il tetto di risposte automatiche (reply_n) e' una preferenza account-level
-     * (impostata in Account) ma viene CONGELATO nel post al salvataggio, cosi'
-     * il worker di pubblicazione applica le regole leggendo solo il post, senza
-     * dover risalire all'account (comportamento voluto, coerente con v1 dove
-     * tutto lo stato di pubblicazione viveva nel post).
-     */
-    private function buildChannelsPayload(array $selected, array $accountChannels = [], ?string $newsletterProvider = null, ?int $targetUserId = null): array
-    {
-        return collect(User::CHANNELS)->keys()->mapWithKeys(function ($id) use ($selected, $accountChannels, $newsletterProvider, $targetUserId) {
-            if (!array_key_exists($id, $selected)) {
-                return [$id => ['on' => false]];
-            }
-
-            $opts = is_array($selected[$id]) ? $selected[$id] : [];
-
-            if (in_array($id, ['facebook', 'instagram', 'linkedin'], true)) {
-                // Stesse regole del toggle nel form (SocialOptions.vue), ma
-                // applicate qui: l'auto-risposta richiede i commenti attivi e
-                // che l'account la consenta su quel canale (reply_on).
-                $commentsEnabled = !empty($opts['comments_enabled']);
-
-                return [$id => [
-                    'on' => true,
-                    'comments_enabled' => $commentsEnabled,
-                    'auto_reply_enabled' => $commentsEnabled
-                        && !empty($opts['auto_reply_enabled'])
-                        && !empty($accountChannels[$id]['reply_on']),
-                    'reply_n' => $accountChannels[$id]['reply_n'] ?? null,
-                ]];
-            }
-
-            if ($id === 'wordpress') {
-                $categories = collect($opts['categories'] ?? [])
-                    ->filter(fn ($c) => is_array($c) && !empty($c['id']))
-                    ->map(fn ($c) => [
-                        'id' => (string) $c['id'],
-                        'name' => (string) ($c['name'] ?? ''),
-                        'on' => !empty($c['on']),
-                    ])
-                    ->values()
-                    ->all();
-
-                return [$id => ['on' => true, 'categories' => $categories]];
-            }
-
-            if ($id === 'newsletter') {
-                // smtp_custom non ha lista esterna: i destinatari sono i
-                // Contact interni, letti direttamente dal worker Python (come
-                // fa già con Mailchimp/Brevo) — l'id/url reali li scrive lui
-                // una volta inviato davvero, stesso ciclo di vita degli altri
-                // provider, nessuno stato aggiuntivo da anticipare qui.
-                if ($newsletterProvider === 'smtp_custom') {
-                    $tagId = $opts['tag_id'] ?? null;
-                    if ($tagId !== null) {
-                        $tagId = (int) $tagId;
-                        $validTag = $targetUserId && ContactTag::where('id', $tagId)->where('user_id', $targetUserId)->exists();
-                        abort_unless($validTag, 422, 'Tag non valido per questo account.');
-                    }
-
-                    return [$id => ['on' => true, 'provider' => 'smtp_custom', 'tag_id' => $tagId]];
-                }
-
-                $list = $opts['list'] ?? null;
-                $list = (is_array($list) && !empty($list['id'])) ? [
-                    'provider' => $list['provider'] ?? $newsletterProvider,
-                    'id' => (string) $list['id'],
-                    'name' => (string) ($list['name'] ?? ''),
-                ] : null;
-
-                return [$id => ['on' => true, 'provider' => $newsletterProvider, 'list' => $list]];
-            }
-
-            return [$id => ['on' => true]];
-        })->all();
-    }
-
-    /**
-     * Aggregato [commenti abilitati, auto-risposta abilitata] su ALMENO un
-     * canale — le due colonne DB restano un riassunto per Posts/Show.vue,
-     * la verita' per canale vive nel JSON channels.
-     */
-    private function commentsAggregate(array $channels): array
-    {
-        return [
-            collect($channels)->contains(fn ($c) => !empty($c['comments_enabled'])),
-            collect($channels)->contains(fn ($c) => !empty($c['auto_reply_enabled'])),
-        ];
-    }
-
-    /**
      * Salva un nuovo post (bozza, programmato o da pubblicare).
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, CreatePost $createPost): RedirectResponse
     {
-        $me = $request->user();
-        $isAdmin = $me->isAdmin();
-        $isManager = $me->isManager();
+        $data = $request->validate(CreatePost::rules());
 
-        $data = $request->validate([
-            'title' => ['nullable', 'string', 'max:255'],
-            'user_id' => ['nullable', 'integer'],
-            'channels' => ['required', 'array', 'min:1'],
-            'ai_prompt_post' => ['nullable', 'string'],
-            'ai_prompt_comment' => ['nullable', 'string'],
-            'ai_content' => ['nullable', 'string'],
-            'images' => ['nullable', 'array'],
-            'images.*' => self::IMAGE_RULES,
-            'img_ai_check_on' => ['nullable', 'boolean'],
-            'published_at' => ['nullable', 'date'],
-            'action' => ['required', 'string', Rule::in(['save', 'save_and_add', 'publish_now'])],
-        ]);
-
-        $unknown = array_diff(array_keys($data['channels']), array_keys(User::CHANNELS));
-        abort_if(!empty($unknown), 422, 'Canale non valido.');
-
-        $targetUserId = match (true) {
-            $isAdmin => User::whereNotNull('parent_id')->whereNull('child_on')
-                ->whereKey($data['user_id'] ?? null)->value('id'),
-            $isManager => User::where('parent_id', $me->id)
-                ->whereKey($data['user_id'] ?? null)->value('id'),
-            default => $me->id,
-        };
-        abort_if(($isAdmin || $isManager) && !$targetUserId, 422, 'Account non valido.');
-
-        $targetUser = $targetUserId === $me->id ? $me : User::find($targetUserId);
-        $channels = $this->buildChannelsPayload($data['channels'], $targetUser?->channels ?? [], $targetUser?->settings?->newsletterProvider(), $targetUser?->id);
-        [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
-
-        $post = Post::create([
-            'user_id' => $targetUserId,
-            'created_by_user_id' => $me->id,
-            'title' => $data['title'] ?? '',
-            'ai_prompt_post' => $data['ai_prompt_post'] ?? null,
-            'ai_content' => $data['ai_content'] ?? null,
-            'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
-            'img' => null,
-            'img_ai_check_on' => !empty($data['img_ai_check_on']) ? '1' : '0',
-            'comments_enabled' => $commentsEnabled ? '1' : '0',
-            'auto_reply_enabled' => $autoReplyEnabled ? '1' : '0',
-            'channels' => $channels,
-            'published_at' => $this->publishedAt($data),
-            'published' => '0',
-        ]);
-
-        if ($request->hasFile('images')) {
-            $post->update(['img' => $this->storeImages($post->id, $request->file('images'))]);
-        }
-
-        $textQueued = $this->queueTextGeneration($post);
+        [$post, $textQueued] = $createPost->handle($request->user(), $data, $request->file('images', []));
 
         if ($data['action'] === 'save_and_add') {
             $request->session()->flash('post_prefill', [
@@ -497,35 +317,6 @@ class PostController extends Controller
         return redirect()->route('posts');
     }
 
-    /**
-     * Data di pubblicazione dal form. Senza data il post resta una bozza: il
-     * worker seleziona solo published_at <= adesso, quindi non esce finché
-     * non ne riceve una. "Pubblica subito" (action=publish_now) la imposta
-     * qui, lato server, senza dipendere dall'orologio del browser.
-     */
-    private function publishedAt(array $data): mixed
-    {
-        return ($data['action'] ?? null) === 'publish_now'
-            ? now()
-            : ($data['published_at'] ?? null);
-    }
-
-    /**
-     * Post programmato salvato senza anteprima: il testo lo genera un job in
-     * coda, così si può rivedere prima dell'uscita. Senza coda o se il job
-     * fallisce, lo genera comunque il worker alla pubblicazione.
-     */
-    private function queueTextGeneration(Post $post): bool
-    {
-        if (!$post->needsGeneratedText()) {
-            return false;
-        }
-
-        GeneratePostContentJob::dispatch($post->id);
-
-        return true;
-    }
-
     private function savedToast(array $data, string $default): string
     {
         return ($data['action'] ?? null) === 'publish_now'
@@ -536,64 +327,17 @@ class PostController extends Controller
     /**
      * Aggiorna un post esistente (solo titolo/contenuti/canali/data, non lo stato già pubblicato).
      */
-    public function update(Request $request, Post $post): RedirectResponse
+    public function update(Request $request, Post $post, UpdatePost $updatePost): RedirectResponse
     {
         $this->authorize('update', $post);
+        $updatePost->ensureEditable($post);
 
-        abort_if(!$post->isEditable(), 403, 'Un post pubblicato (anche solo su alcuni canali) non può essere modificato.');
+        $data = $request->validate([...UpdatePost::rules(), 'keep_images' => ['nullable', 'string']]);
 
-        $data = $request->validate([
-            'title' => ['nullable', 'string', 'max:255'],
-            'channels' => ['required', 'array', 'min:1'],
-            'ai_prompt_post' => ['nullable', 'string'],
-            'ai_prompt_comment' => ['nullable', 'string'],
-            'ai_content' => ['nullable', 'string'],
-            'images' => ['nullable', 'array'],
-            'images.*' => self::IMAGE_RULES,
-            'keep_images' => ['nullable', 'string'],
-            'img_ai_check_on' => ['nullable', 'boolean'],
-            'published_at' => ['nullable', 'date'],
-            'action' => ['nullable', 'string', Rule::in(['save', 'publish_now'])],
-        ]);
+        // keep_images (JSON del form) assente = tieni tutte le immagini.
+        $keep = isset($data['keep_images']) ? (json_decode($data['keep_images'], true) ?? []) : null;
 
-        $unknown = array_diff(array_keys($data['channels']), array_keys(User::CHANNELS));
-        abort_if(!empty($unknown), 422, 'Canale non valido.');
-
-        $channels = $this->preserveWorkerKeys(
-            $this->buildChannelsPayload($data['channels'], $post->user?->channels ?? [], $post->user?->settings?->newsletterProvider(), $post->user?->id),
-            $post->fresh()->channels ?? [],
-        );
-        [$commentsEnabled, $autoReplyEnabled] = $this->commentsAggregate($channels);
-
-        $existing = $post->img ?? [];
-        $keep = isset($data['keep_images']) ? (json_decode($data['keep_images'], true) ?? []) : $existing;
-        $kept = array_values(array_filter($keep, fn ($f) => in_array($f, $existing, true)));
-
-        foreach (array_diff($existing, $kept) as $removed) {
-            Storage::disk('public')->delete("posts/{$post->id}/{$removed}");
-        }
-
-        $newImages = $request->hasFile('images') ? $this->storeImages($post->id, $request->file('images')) : [];
-        $img = array_merge($kept, $newImages);
-
-        $imgAiCheckOn = array_key_exists('img_ai_check_on', $data)
-            ? (!empty($data['img_ai_check_on']) ? '1' : '0')
-            : $post->img_ai_check_on;
-
-        $post->update([
-            'title' => $data['title'] ?? '',
-            'ai_prompt_post' => $data['ai_prompt_post'] ?? null,
-            'ai_content' => $data['ai_content'] ?? null,
-            'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
-            'img' => $img,
-            'img_ai_check_on' => $imgAiCheckOn,
-            'comments_enabled' => $commentsEnabled ? '1' : '0',
-            'auto_reply_enabled' => $autoReplyEnabled ? '1' : '0',
-            'channels' => $channels,
-            'published_at' => $this->publishedAt($data),
-        ]);
-
-        $textQueued = $this->queueTextGeneration($post);
+        $textQueued = $updatePost->handle($post, $data, $request->file('images', []), $keep);
 
         $request->session()->flash('toast', $this->savedToast($data, $textQueued ? self::TEXT_QUEUED_TOAST : 'Post aggiornato.'));
 
@@ -601,47 +345,13 @@ class PostController extends Controller
     }
 
     /**
-     * Rimette nel payload del form le chiavi scritte dal worker (id remoti,
-     * url, stats...). Il controllo isEditable() blocca già i post con canali
-     * pubblicati; questo chiude la finestra in cui il worker pubblica mentre
-     * il form è aperto (letto con fresh(), non dal model caricato a inizio
-     * richiesta). Un canale spento nel form non eredita nulla.
+     * "Riprova" dalla pagina del post (vedi RetryPost).
      */
-    private function preserveWorkerKeys(array $channels, array $current): array
-    {
-        foreach ($channels as $id => $channel) {
-            if (empty($channel['on']) || !is_array($current[$id] ?? null)) {
-                continue;
-            }
-            $channels[$id] = array_merge(
-                $channel,
-                array_intersect_key($current[$id], array_flip(Post::WORKER_CHANNEL_KEYS)),
-            );
-        }
-
-        return $channels;
-    }
-
-    /**
-     * "Riprova" dalla pagina del post: azzera tentativi ed errore dei canali
-     * falliti, così il worker li ritenta al giro successivo. Serve soprattutto
-     * ai post parziali, che non si possono più risalvare dal form.
-     * Update per percorso JSON (JSON_SET), non dell'intera colonna: una
-     * riscrittura da una copia vecchia potrebbe cancellare l'id che il worker
-     * ha appena scritto su un altro canale.
-     */
-    public function retry(Request $request, Post $post): RedirectResponse
+    public function retry(Request $request, Post $post, RetryPost $retryPost): RedirectResponse
     {
         $this->authorize('update', $post);
 
-        $reset = [];
-        foreach (array_keys($post->channelErrors()) as $channel) {
-            $reset["channels->{$channel}->attempts"] = 0;
-            $reset["channels->{$channel}->error"] = null;
-        }
-        abort_if($reset === [], 422, 'Nessun canale in errore da riprovare.');
-
-        Post::whereKey($post->id)->update($reset);
+        $retryPost->handle($post);
 
         $request->session()->flash('toast', 'Nuovo tentativo in coda: il worker riprova entro un minuto.');
 
@@ -649,28 +359,16 @@ class PostController extends Controller
     }
 
     /**
-     * "Modifica post" dal box di un canale già pubblicato: salva il testo di
-     * quel canale (gli altri restano su ai_content) e mette il post in coda
-     * per posts_update (updated = 2). Update per percorso JSON come retry().
+     * "Modifica post" dal box di un canale già pubblicato (vedi UpdatePublishedChannelContent).
      */
-    public function updateChannelContent(Request $request, Post $post, string $channel): RedirectResponse
+    public function updateChannelContent(Request $request, Post $post, string $channel, UpdatePublishedChannelContent $updateContent): RedirectResponse
     {
         $this->authorize('update', $post);
+        $updateContent->ensureEditable($post, $channel);
 
-        $entry = $post->channels[$channel] ?? [];
-        abort_unless(in_array($channel, Post::EDITABLE_AFTER_PUBLISH, true), 422, 'Questo canale non permette di modificare un post pubblicato.');
-        abort_unless(!empty($entry['on']) && !empty($entry['id']), 422, 'Il post non è ancora pubblicato su questo canale.');
+        $data = $request->validate(UpdatePublishedChannelContent::rules());
 
-        $data = $request->validate([
-            'content' => ['required', 'string', 'max:60000'],
-        ]);
-
-        Post::whereKey($post->id)->update([
-            "channels->{$channel}->content" => $data['content'],
-            "channels->{$channel}->update_pending" => true,
-            "channels->{$channel}->update_error" => null,
-            'updated' => '2',
-        ]);
+        $updateContent->handle($post, $channel, $data['content']);
 
         $label = User::CHANNELS[$channel]['name'];
         $request->session()->flash('toast', "Modifica in coda: {$label} viene aggiornato entro un minuto.");
