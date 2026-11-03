@@ -122,3 +122,13 @@ def test_social_monitoring_complete_under_cap_is_not_complete():
 
 def test_social_monitoring_complete_cap_reached():
     assert _social(reply_n=5).social_monitoring_complete(5) is True
+
+
+def test_text_channel_prefers_wordpress_then_newsletter():
+    assert Channels.parse(_sample()).text_channel() == "wordpress"
+    assert Channels.parse({"facebook": {"on": True}, "newsletter": {"on": True}}).text_channel() == "newsletter"
+
+
+def test_text_channel_none_for_social_only_or_channels_off():
+    assert Channels.parse({"facebook": {"on": True}, "instagram": {"on": True}}).text_channel() is None
+    assert Channels.parse({"facebook": {"on": True}, "wordpress": {"on": False}}).text_channel() is None

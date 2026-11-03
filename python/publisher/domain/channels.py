@@ -183,6 +183,17 @@ class Channels:
                 out.append(entry)
         return out
 
+    def text_channel(self) -> str | None:
+        """Canale che decide il formato del testo AI generato una volta per
+        tutto il post: WordPress e Newsletter chiedono Markdown, gli altri il
+        prompt cosi' com'e' (None). Stessa scelta di Laravel (Post::textChannel)
+        per "Genera anteprima" e per il job sui post programmati."""
+        for key in ("wordpress", "newsletter"):
+            entry = self.entry(key)
+            if entry and entry.is_on:
+                return key
+        return None
+
     def all_on_published(self) -> bool:
         """True se ogni canale ACCESO ha un id remoto (=> post pubblicato)."""
         for key in CHANNEL_KEYS:

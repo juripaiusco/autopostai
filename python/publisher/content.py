@@ -14,6 +14,8 @@ from publisher import config
 from publisher.db.repositories import PostRepository, TokenLogRepository
 from publisher.integrations import openai_text, shortcodes
 from publisher.domain import media
+from publisher.domain.channels import Channels
+from publisher.publishing import PUBLISHERS
 from publisher.publishing.base import ChannelPublisher
 
 
@@ -101,10 +103,16 @@ class ContentService:
         if post.get("img_ai_check_on") == "1" and media.has_images(post):
             img_path = media.local_paths(post)[0]
 
+        # Il testo vale per tutti i canali: il prompt lo decide il canale primario
+        # (WordPress > Newsletter), non il primo canale del ciclo; senza canale
+        # primario va bene quello corrente (prompt base).
+        text_key = Channels.parse(post["channels"]).text_channel()
+        prompt_publisher = PUBLISHERS[text_key](post) if text_key else publisher
+
         text, tokens = openai_text.generate(
             api_key=post["openai_api_key"],
             system_prompt=system_prompt,
-            user_prompt=publisher.build_prompt(),
+            user_prompt=prompt_publisher.build_prompt(),
             img_path=img_path,
         )
 
