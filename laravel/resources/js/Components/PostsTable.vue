@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch, onBeforeUnmount } from 'vue';
+import { ref } from 'vue';
+import { router } from '@inertiajs/vue3';
 import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import StatusPill from '@/Components/StatusPill.vue';
@@ -7,7 +8,7 @@ import ConfirmModal from '@/Components/ConfirmModal.vue';
 import PostThumb from '@/Components/PostThumb.vue';
 import { CH_CONFIG } from '@/data/dashboardMock';
 
-const props = defineProps({
+defineProps({
     posts: { type: Array, required: true },
 });
 
@@ -18,41 +19,35 @@ function alignFor(h) {
     return 'left';
 }
 
-const localPosts = ref([...props.posts]);
-watch(() => props.posts, (v) => { localPosts.value = [...v]; });
-
-const pendingDelete = ref(null);
-const undoPost      = ref(null);
-let   undoTimer     = null;
-
-onBeforeUnmount(() => { clearTimeout(undoTimer); });
-
-function askDelete(post) {
-    pendingDelete.value = post;
+// Stessa regola della lista Post: i pubblicati aprono il dettaglio, il resto il form.
+function openPost(p) {
+    router.get(['published', 'done', 'partial'].includes(p.status) ? route('posts.show', p.id) : route('posts.edit', p.id));
 }
 
-function confirmDelete() {
-    const post  = pendingDelete.value;
-    const index = localPosts.value.findIndex(p => p.id === post.id);
-    localPosts.value = localPosts.value.filter(p => p.id !== post.id);
-    pendingDelete.value = null;
-    undoPost.value = { post, index };
-    clearTimeout(undoTimer);
-    undoTimer = setTimeout(() => { undoPost.value = null; }, 5000);
-}
+const deleteTarget = ref(null);
+const deleting = ref(false);
+const deleteError = ref(null);
 
-function undoDelete() {
-    if (!undoPost.value) return;
-    const { post, index } = undoPost.value;
-    const next = [...localPosts.value];
-    next.splice(index, 0, post);
-    localPosts.value = next;
-    clearTimeout(undoTimer);
-    undoPost.value = null;
+function openDelete(p) {
+    deleteTarget.value = p;
+    deleteError.value = null;
 }
 
 function cancelDelete() {
-    pendingDelete.value = null;
+    if (deleting.value) return;
+    deleteTarget.value = null;
+    deleteError.value = null;
+}
+
+function confirmDelete(id) {
+    deleting.value = true;
+    deleteError.value = null;
+    router.delete(route('posts.destroy', id), {
+        preserveScroll: true,
+        onSuccess: () => { deleteTarget.value = null; },
+        onError: () => { deleteError.value = 'Eliminazione non riuscita. Riprova.'; },
+        onFinish: () => { deleting.value = false; },
+    });
 }
 </script>
 
@@ -65,7 +60,7 @@ function cancelDelete() {
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="p in localPosts" :key="p.id">
+                <tr v-for="p in posts" :key="p.id" class="tr-clickable" @click="openPost(p)">
                     <td style="width: 56px; padding-left: 16px; padding-right: 8px">
                         <PostThumb :src="p.cover" :fallback="p.thumb" />
                     </td>
@@ -90,10 +85,7 @@ function cancelDelete() {
                     </td>
                     <td style="padding-right: 16px">
                         <div class="row-actions">
-                            <button class="icon-btn icon-btn--ghost" title="Modifica" aria-label="Modifica post" @click="() => {}">
-                                <Icon name="pencil" :size="16" />
-                            </button>
-                            <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" aria-label="Elimina post" @click="askDelete(p)">
+                            <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" :aria-label="`Elimina ${p.title}`" @click.stop="openDelete(p)">
                                 <Icon name="trash" :size="16" />
                             </button>
                         </div>
@@ -104,21 +96,19 @@ function cancelDelete() {
     </div>
 
     <ConfirmModal
-        v-if="pendingDelete"
+        v-if="deleteTarget"
         title="Elimina post"
         confirm-label="Elimina"
-        :danger="true"
-        @confirm="confirmDelete"
+        pending-label="Eliminazione…"
+        danger
+        :loading="deleting"
+        :error="deleteError"
         @cancel="cancelDelete"
+        @confirm="confirmDelete(deleteTarget.id)"
     >
-        Vuoi eliminare <b>{{ pendingDelete.title }}</b>?
-        Questa azione non può essere annullata.
+        Sei sicuro di voler eliminare <b>{{ deleteTarget.title }}</b>?<br />
+        <span class="modal-note">
+            Questa azione è irreversibile.
+        </span>
     </ConfirmModal>
-
-    <Teleport to="body">
-        <div v-if="undoPost" class="toast-undo" role="status" aria-live="polite">
-            <span>Post eliminato</span>
-            <button class="toast-undo__btn" @click="undoDelete">Annulla</button>
-        </div>
-    </Teleport>
 </template>
