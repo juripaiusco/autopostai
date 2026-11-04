@@ -8,6 +8,7 @@ import ConfirmModal from '@/Components/ConfirmModal.vue';
 import PageHeader from '@/Components/Layout/PageHeader.vue';
 import FilterTabs from '@/Components/UI/FilterTabs.vue';
 import SearchInput from '@/Components/UI/SearchInput.vue';
+import ComboboxSelect from '@/Components/UI/ComboboxSelect.vue';
 import SortableTh from '@/Components/UI/SortableTh.vue';
 import Pagination from '@/Components/UI/Pagination.vue';
 import { useTableFilters } from '@/Composables/useTableFilters';
@@ -33,6 +34,11 @@ const TABS = computed(() => [
     { id: 'unverified', label: 'Da verificare', count: props.counts.unverified },
     { id: 'bounced', label: 'Bounced', count: props.counts.bounced },
     { id: 'unsubscribed', label: 'Disiscritti', count: props.counts.unsubscribed },
+]);
+
+const tagOptions = computed(() => [
+    { id: '', name: 'Tutti i tag' },
+    ...props.availableTags.map((t) => ({ id: t, name: t })),
 ]);
 
 function setTag(value) {
@@ -85,10 +91,12 @@ function confirmDelete(id) {
 
             <SearchInput v-model="search" placeholder="Cerca email…" @clear="clearSearch" />
 
-            <select v-if="availableTags.length" class="control" style="width: auto" :value="filters.tag" @change="setTag($event.target.value)">
-                <option value="">Tutti i tag</option>
-                <option v-for="t in availableTags" :key="t" :value="t">{{ t }}</option>
-            </select>
+            <div v-if="availableTags.length" class="list-toolbar__filter">
+                <ComboboxSelect id="ct-tag-filter" :model-value="filters.tag ?? ''" :options="tagOptions"
+                    :option-label="(o) => o?.name ?? ''" :filter-keys="['name']"
+                    placeholder="Cerca tag…" empty-text="Nessun tag trovato"
+                    @update:model-value="setTag" />
+            </div>
         </div>
 
         <div class="card table-wrap">
