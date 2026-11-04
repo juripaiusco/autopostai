@@ -6,12 +6,20 @@ import Icon from '@/Components/Icon.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import PageHeader from '@/Components/Layout/PageHeader.vue';
 import Pagination from '@/Components/UI/Pagination.vue';
+import SearchInput from '@/Components/UI/SearchInput.vue';
+import { useTableFilters } from '@/Composables/useTableFilters';
 
 const props = defineProps({
     notifications: { type: Object, required: true },
+    filters: { type: Object, required: true },
 });
 
 const userName = computed(() => usePage().props.auth?.user?.name ?? '');
+
+const { search, clearSearch } = useTableFilters({
+    routeName: 'notifications',
+    filters: () => props.filters,
+});
 
 const deleteTarget = ref(null);
 const deleting = ref(false);
@@ -42,14 +50,16 @@ function confirmDelete(id) {
 
     <AppLayout current="notifications" :user="userName">
         <template #page-header>
-            <PageHeader :crumbs="[{ label: 'Notifiche', current: true }]">
-                <template #actions>
-                    <a :href="route('notifications.create')" class="btn btn-dark">
-                        <Icon name="plus" :size="17" />Nuova notifica
-                    </a>
-                </template>
-            </PageHeader>
+            <PageHeader :crumbs="[{ label: 'Notifiche', current: true }]" />
         </template>
+
+        <div class="list-toolbar">
+            <a :href="route('notifications.create')" class="btn btn-dark">
+                <Icon name="plus" :size="17" />Nuova notifica
+            </a>
+
+            <SearchInput v-model="search" placeholder="Cerca notifica…" @clear="clearSearch" />
+        </div>
 
         <div class="card table-wrap">
             <table class="table table--responsive-cards">
@@ -73,7 +83,11 @@ function confirmDelete(id) {
                     <tr>
                         <td colspan="5" class="table-empty">
                             <Icon name="bell" :size="32" class="table-empty__icon" />
-                            <div class="table-empty__text">Nessuna notifica creata</div>
+                            <template v-if="filters.search">
+                                <div class="table-empty__text">Nessun risultato per «{{ filters.search }}»</div>
+                                <button type="button" class="list-footer__clear" @click="clearSearch">Cancella ricerca</button>
+                            </template>
+                            <div v-else class="table-empty__text">Nessuna notifica creata</div>
                         </td>
                     </tr>
                 </tbody>
@@ -105,8 +119,15 @@ function confirmDelete(id) {
             </table>
 
             <div v-if="notifications.data.length > 0" class="list-footer">
-                <span class="list-footer__info">{{ notifications.total }} notifiche</span>
+                <span class="list-footer__info">
+                    {{ notifications.total }} {{ notifications.total === 1 ? 'notifica' : 'notifiche' }}{{ filters.search ? (notifications.total === 1 ? ' trovata' : ' trovate') : '' }}
+                </span>
+
                 <Pagination :links="notifications.links" />
+
+                <button v-if="filters.search" class="list-footer__clear" @click="clearSearch">
+                    Cancella filtro
+                </button>
             </div>
         </div>
 

@@ -49,6 +49,21 @@ class PushNotificationTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->has('notifications.data', 1));
     }
 
+    public function test_search_filters_by_title_or_body(): void
+    {
+        $admin = User::factory()->create(['parent_id' => null]);
+        PushNotification::factory()->create(['created_by_user_id' => $admin->id, 'title' => 'Promo estate', 'body' => 'Sconti']);
+        PushNotification::factory()->create(['created_by_user_id' => $admin->id, 'title' => 'Manutenzione', 'body' => 'Server giù per promo']);
+        PushNotification::factory()->create(['created_by_user_id' => $admin->id, 'title' => 'Altro', 'body' => 'Niente']);
+
+        $this->actingAs($admin)
+            ->get(route('notifications', ['search' => 'promo']))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('notifications.data', 2)
+                ->where('filters.search', 'promo')
+            );
+    }
+
     public function test_manager_cannot_broadcast_to_all_only_to_children(): void
     {
         $admin = User::factory()->create(['parent_id' => null]);

@@ -25,8 +25,13 @@ class PushNotificationController extends Controller
         $me = $request->user();
         $this->authorize('viewAny', PushNotification::class);
 
+        $search = trim($request->string('search')->toString());
+
         $notifications = PushNotification::query()
             ->visibleTo($me)
+            ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w
+                ->where('title', 'like', "%{$search}%")
+                ->orWhere('body', 'like', "%{$search}%")))
             ->with(['user:id,name', 'createdBy:id,name'])
             ->orderByDesc('id')
             ->paginate(15)
@@ -47,6 +52,7 @@ class PushNotificationController extends Controller
 
         return Inertia::render('Notifications/List', [
             'notifications' => $notifications,
+            'filters' => ['search' => $search],
         ]);
     }
 
