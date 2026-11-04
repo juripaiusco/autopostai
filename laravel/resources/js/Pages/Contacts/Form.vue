@@ -84,11 +84,13 @@ function save() {
         <template #page-header>
             <PageHeader :crumbs="[{ label: 'Contatti', href: route('contacts') }, { label: mode === 'edit' ? 'Modifica' : 'Nuovo', current: true }]">
                 <template #actions>
-                    <button type="button" class="btn btn-secondary btn-sm" @click="router.get(route('contacts'))">Annulla</button>
-                    <button type="button" class="btn btn-dark btn-sm" :disabled="!canSave || saving" @click="save">
-                        <span v-if="saving" class="btn-spinner" aria-hidden="true"></span>
-                        {{ saving ? 'Salvataggio…' : 'Salva' }}
-                    </button>
+                    <div class="acc-head-meta">
+                        <button type="button" class="btn btn-secondary btn-sm" @click="router.get(route('contacts'))">Annulla</button>
+                        <button type="button" class="btn btn-dark btn-sm" :disabled="!canSave || saving" @click="save">
+                            <span v-if="saving" class="btn-spinner" aria-hidden="true"></span>
+                            {{ saving ? 'Salvataggio…' : 'Salva' }}
+                        </button>
+                    </div>
                 </template>
             </PageHeader>
         </template>
