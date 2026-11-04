@@ -62,6 +62,7 @@ const MCP_COVERAGE = [
     'contacts.create' => 'list_channel_options',
     'contacts.edit' => 'list_contacts',
     'contacts.store' => 'create_contact',
+    'contacts.import' => 'esclusa: upload file CSV solo da interfaccia',
     'contacts.update' => 'update_contact',
     'contacts.destroy' => 'delete_contact',
     'POST api/contacts' => 'esclusa: API server-to-server con la propria chiave',

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Contacts\ImportContacts;
 use App\Actions\Contacts\SaveContact;
 use App\Models\Contact;
 use App\Models\ContactTag;
@@ -9,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -135,6 +137,55 @@ class ContactController extends Controller
         $this->contacts->create($request->user(), $data);
 
         return redirect()->route('contacts');
+    }
+
+    /**
+     * Import da CSV (tab "Da file CSV" della pagina Nuovo contatto): le
+     * colonne sono già mappate in interfaccia, qui si legge tutto il file.
+     */
+    public function import(Request $request, ImportContacts $importer): RedirectResponse
+    {
+        $data = $request->validate([
+            'user_id' => ['required', 'integer'],
+            'file' => ['required', 'file', 'extensions:csv,txt', 'max:5120'],
+            'delimiter' => ['required', Rule::in(array_keys(ImportContacts::DELIMITERS))],
+            'has_header' => ['required', 'boolean'],
+            'status' => ['required', Rule::in(ImportContacts::STATUSES)],
+            'map' => ['required', 'array'],
+            'map.email' => ['required', 'integer', 'min:0'],
+            'map.first_name' => ['nullable', 'integer', 'min:0'],
+            'map.last_name' => ['nullable', 'integer', 'min:0'],
+            'map.tags' => ['nullable', 'integer', 'min:0'],
+        ], [
+            'map.email.required' => 'Indica quale colonna contiene l\'email.',
+            'file.extensions' => 'Il file deve essere un CSV.',
+        ]);
+
+        $map = collect($data['map'])->only(['email', 'first_name', 'last_name', 'tags'])
+            ->map(fn ($v) => $v === null ? null : (int) $v)->all();
+
+        $r = $importer->run(
+            $request->user(),
+            (int) $data['user_id'],
+            $data['file']->getRealPath(),
+            $map,
+            $data['delimiter'],
+            $request->boolean('has_header'),
+            $data['status'],
+        );
+
+        $parts = [$r['created'] === 1 ? 'Importato 1 contatto' : "Importati {$r['created']} contatti"];
+        if ($r['existing']) {
+            $parts[] = "{$r['existing']} già presenti (tag aggiunti)";
+        }
+        if ($r['suppressed']) {
+            $parts[] = "{$r['suppressed']} saltati (disiscritti o bounce)";
+        }
+        if ($r['invalid']) {
+            $parts[] = "{$r['invalid']} scartati (email non valida)";
+        }
+
+        return redirect()->route('contacts')->with('toast', implode(' · ', $parts).'.');
     }
 
     public function edit(Contact $contact): Response

@@ -128,6 +128,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/contatti', [ContactController::class, 'store'])
         ->name('contacts.store');
 
+    Route::post('/contatti/importa', [ContactController::class, 'import'])
+        ->name('contacts.import');
+
     Route::get('/contatti/{contact}/modifica', [ContactController::class, 'edit'])
         ->name('contacts.edit');
 

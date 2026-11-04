@@ -166,12 +166,24 @@ class SaveContact
 
     private function syncTags(Contact $contact, int $userId, array $names): void
     {
-        $ids = collect($names)
-            ->map(fn ($name) => trim($name))
+        $contact->tags()->sync($this->tagIds($userId, $names));
+    }
+
+    /**
+     * Id dei tag dell'account per i nomi dati, creando quelli che mancano
+     * (nomi ripuliti da spazi, vuoti e doppioni scartati). Usato anche
+     * dall'import CSV.
+     *
+     * @return list<int>
+     */
+    public function tagIds(int $userId, array $names): array
+    {
+        return collect($names)
+            ->map(fn ($name) => trim((string) $name))
             ->filter()
             ->unique()
-            ->map(fn ($name) => ContactTag::firstOrCreate(['user_id' => $userId, 'name' => $name])->id);
-
-        $contact->tags()->sync($ids);
+            ->map(fn ($name) => ContactTag::firstOrCreate(['user_id' => $userId, 'name' => $name])->id)
+            ->values()
+            ->all();
     }
 }
