@@ -48,7 +48,7 @@ function setTag(value) {
 const deleteTarget = ref(null);
 const deleting = ref(false);
 const deleteError = ref(null);
-const colSpan = computed(() => (props.showAccount ? 6 : 5));
+const colSpan = computed(() => (props.showAccount ? 7 : 6));
 const listKey = computed(() => `${props.filters.filter}-${props.filters.search}-${props.filters.tag}-${props.filters.sort}-${props.filters.dir}-${props.contacts.current_page}`);
 
 function openDelete(c) {
@@ -89,7 +89,7 @@ function confirmDelete(id) {
 
             <FilterTabs :model-value="filters.filter" :tabs="TABS" @update:model-value="setFilter" />
 
-            <SearchInput v-model="search" placeholder="Cerca email…" @clear="clearSearch" />
+            <SearchInput v-model="search" placeholder="Cerca email o nome…" @clear="clearSearch" />
 
             <div v-if="availableTags.length" class="list-toolbar__filter">
                 <ComboboxSelect id="ct-tag-filter" :model-value="filters.tag ?? ''" :options="tagOptions"
@@ -102,15 +102,17 @@ function confirmDelete(id) {
         <div class="card table-wrap">
             <table class="table table--responsive-cards">
                 <colgroup>
-                    <col style="width: 28%">
+                    <col style="width: 18%">
                     <col style="width: 24%">
-                    <col style="width: 14%">
-                    <col v-if="showAccount" style="width: 16%">
+                    <col style="width: 18%">
                     <col style="width: 12%">
+                    <col v-if="showAccount" style="width: 14%">
+                    <col style="width: 10%">
                     <col style="width: 90px">
                 </colgroup>
                 <thead>
                     <tr>
+                        <th>Nome</th>
                         <SortableTh label="Email" column="email" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
                         <th>Tag</th>
                         <SortableTh label="Stato" column="status" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
@@ -136,6 +138,7 @@ function confirmDelete(id) {
                         <tr v-for="c in contacts.data" :key="c.id"
                             class="tr-clickable"
                             @click="router.get(route('contacts.edit', c.id))">
+                            <td data-label="Nome">{{ c.name ?? '—' }}</td>
                             <td data-label="Email">{{ c.email }}</td>
                             <td data-label="Tag">
                                 <span v-if="c.tags.length === 0" class="text-xs text-gray-500">—</span>

@@ -75,6 +75,24 @@ it('update_contact changes only the given fields', function () {
     expect($contact->fresh())->status->toBe('unsubscribed')->email->toBe('a@example.com');
 });
 
+it('create_contact and update_contact handle first and last name', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $account = mcpSmtpAccount($admin);
+
+    FaPer3Server::actingAs(withMcp($account, 'write'))->tool(CreateContact::class, [
+        'email' => 'anna@example.com', 'first_name' => 'Anna', 'last_name' => 'Neri', 'status' => 'active',
+    ])->assertOk()->assertSee('"first_name":"Anna"');
+
+    $contact = Contact::firstOrFail();
+
+    // Nome omesso: resta quello di prima; cognome esplicitamente null: cancellato.
+    FaPer3Server::actingAs(withMcp($account->fresh(), 'write'))->tool(UpdateContact::class, [
+        'contact_id' => $contact->id, 'last_name' => null,
+    ])->assertOk();
+
+    expect($contact->fresh())->first_name->toBe('Anna')->last_name->toBeNull();
+});
+
 it('contact tools cannot touch contacts of other accounts', function () {
     $admin = User::factory()->create(['parent_id' => null]);
     $mine = mcpSmtpAccount($admin);

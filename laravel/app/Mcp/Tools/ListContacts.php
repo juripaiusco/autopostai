@@ -19,7 +19,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('list_contacts')]
 #[Title('Contatti newsletter')]
-#[Description('Contatti della newsletter SMTP (modulo Contatti): conteggi per stato, filtro per stato/tag, ricerca per e-mail, paginazione. Disponibile solo per gli account con newsletter SMTP attiva.')]
+#[Description('Contatti della newsletter SMTP (modulo Contatti): conteggi per stato, filtro per stato/tag, ricerca per e-mail, nome o cognome, paginazione. Disponibile solo per gli account con newsletter SMTP attiva.')]
 #[IsReadOnly]
 class ListContacts extends Tool
 {
@@ -54,7 +54,7 @@ class ListContacts extends Tool
             $query->where('status', $data['status']);
         }
         if (($data['search'] ?? '') !== '') {
-            $query->where('email', 'like', '%'.$data['search'].'%');
+            $query->search($data['search']);
         }
         if (($data['tag'] ?? '') !== '') {
             $query->whereHas('tags', fn ($q) => $q->where('name', $data['tag']));
@@ -74,6 +74,8 @@ class ListContacts extends Tool
             'contacts' => collect($contacts->items())->map(fn (Contact $c) => [
                 'id' => $c->id,
                 'email' => $c->email,
+                'first_name' => $c->first_name,
+                'last_name' => $c->last_name,
                 'status' => $c->status,
                 'tags' => $c->tags->pluck('name')->all(),
                 'account' => ['id' => $c->user_id, 'name' => $c->user?->name],
@@ -89,7 +91,7 @@ class ListContacts extends Tool
             'account_id' => $this->accountIdSchema($schema),
             'status' => $schema->string()->enum(self::STATUSES),
             'tag' => $schema->string()->description('Nome del tag.'),
-            'search' => $schema->string()->description("Parte dell'indirizzo e-mail."),
+            'search' => $schema->string()->description("Parte dell'indirizzo e-mail, del nome o del cognome."),
             'page' => $schema->integer()->min(1),
             'per_page' => $schema->integer()->min(1)->max(100)->description('Default: 50.'),
         ];

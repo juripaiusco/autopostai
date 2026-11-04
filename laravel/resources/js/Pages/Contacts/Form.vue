@@ -30,6 +30,8 @@ const STATUSES = [
 const form = reactive({
     user_id: props.defaultUserId ?? props.accounts[0]?.id ?? null,
     email: props.contact?.email ?? '',
+    first_name: props.contact?.first_name ?? '',
+    last_name: props.contact?.last_name ?? '',
     status: props.contact?.status ?? 'active',
     tags: [...(props.contact?.tags ?? [])],
 });
@@ -106,7 +108,15 @@ function save() {
 
             <SectionCard v-else-if="selectedAccount" title="Account" :subtitle="accountLabel(selectedAccount)" />
 
-            <SectionCard title="Contatto" subtitle="Email e stato di iscrizione.">
+            <SectionCard title="Contatto" subtitle="Nome, email e stato di iscrizione.">
+                <div class="acc-field-row">
+                    <FieldRow id="ct-first-name" label="Nome" :error="errors.first_name">
+                        <input id="ct-first-name" class="control" type="text" v-model="form.first_name" placeholder="Mario" autocomplete="off" />
+                    </FieldRow>
+                    <FieldRow id="ct-last-name" label="Cognome" :error="errors.last_name">
+                        <input id="ct-last-name" class="control" type="text" v-model="form.last_name" placeholder="Rossi" autocomplete="off" />
+                    </FieldRow>
+                </div>
                 <FieldRow id="ct-email" label="Email" :error="errors.email">
                     <input id="ct-email" class="control" type="email" v-model="form.email" placeholder="nome@dominio.it" />
                 </FieldRow>

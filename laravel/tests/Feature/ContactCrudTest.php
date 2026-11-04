@@ -190,3 +190,40 @@ test('a new contact cannot be created active for a suppressed address', function
 
     expect(Contact::where('email', 'bounced@example.com')->exists())->toBeFalse();
 });
+
+test('store and update save first and last name, blank values become null', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $account = makeSmtpCustomAccount($admin);
+
+    $this->actingAs($account)->post(route('contacts.store'), [
+        'user_id' => $account->id,
+        'email' => 'mario@example.com',
+        'first_name' => ' Mario ',
+        'last_name' => 'Rossi',
+        'status' => 'active',
+    ])->assertRedirect(route('contacts'));
+
+    $contact = Contact::where('email', 'mario@example.com')->firstOrFail();
+    expect($contact->first_name)->toBe('Mario')->and($contact->last_name)->toBe('Rossi');
+
+    $this->actingAs($account)->put(route('contacts.update', $contact), [
+        'email' => 'mario@example.com',
+        'first_name' => 'Mario',
+        'last_name' => '',
+        'status' => 'active',
+    ])->assertRedirect(route('contacts'));
+
+    expect($contact->fresh()->last_name)->toBeNull();
+});
+
+test('index search matches first or last name as well as email', function () {
+    $admin = User::factory()->create(['parent_id' => null]);
+    $account = makeSmtpCustomAccount($admin);
+    Contact::factory()->create(['user_id' => $account->id, 'email' => 'x1@example.com', 'first_name' => 'Giulia', 'last_name' => 'Bianchi']);
+    Contact::factory()->create(['user_id' => $account->id, 'email' => 'x2@example.com', 'first_name' => 'Luca', 'last_name' => 'Verdi']);
+
+    $this->actingAs($account)->get(route('contacts', ['search' => 'bianc']))->assertInertia(fn (Assert $page) => $page
+        ->has('contacts.data', 1)
+        ->where('contacts.data.0.name', 'Giulia Bianchi')
+    );
+});

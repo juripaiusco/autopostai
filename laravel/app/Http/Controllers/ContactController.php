@@ -57,7 +57,7 @@ class ContactController extends Controller
         }
 
         if ($search !== '') {
-            $query->where('email', 'like', "%{$search}%");
+            $query->search($search);
         }
 
         if ($tag !== '') {
@@ -71,6 +71,7 @@ class ContactController extends Controller
             ->through(fn (Contact $c) => [
                 'id' => $c->id,
                 'email' => $c->email,
+                'name' => trim("{$c->first_name} {$c->last_name}") ?: null,
                 'status' => $c->status,
                 'tags' => $c->tags->pluck('name'),
                 'owner' => $showAccount ? $c->user?->name : null,
@@ -154,6 +155,8 @@ class ContactController extends Controller
             'contact' => [
                 'id' => $contact->id,
                 'email' => $contact->email,
+                'first_name' => $contact->first_name,
+                'last_name' => $contact->last_name,
                 'status' => $contact->status,
                 'tags' => $contact->tags->pluck('name'),
             ],

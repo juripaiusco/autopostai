@@ -26,6 +26,8 @@ class SaveContact
     {
         return [
             'email' => ['required', 'email', 'max:255'],
+            'first_name' => ['nullable', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(self::STATUSES)],
             'tags' => ['array'],
             'tags.*' => ['string', 'max:255'],
@@ -74,12 +76,16 @@ class SaveContact
                 throw ValidationException::withMessages(['email' => 'Contatto già presente per questo account.']);
             }
             $existing->restore();
-            $existing->update(['status' => $data['status']]);
+            $existing->update([
+                'status' => $data['status'],
+                ...self::names($data),
+            ]);
             $contact = $existing;
         } else {
             $contact = Contact::create([
                 'user_id' => $userId,
                 'email' => $data['email'],
+                ...self::names($data),
                 'status' => $data['status'],
                 'consent_source' => $consentSource,
                 'consent_at' => now(),
@@ -105,12 +111,28 @@ class SaveContact
 
         $contact->update([
             'email' => $data['email'],
+            ...self::names($data),
             'status' => $data['status'],
         ]);
 
         $this->syncTags($contact, $contact->user_id, $data['tags'] ?? []);
 
         return $contact;
+    }
+
+    /**
+     * Nome e cognome facoltativi: stringa vuota salvata come null.
+     *
+     * @return array{first_name: ?string, last_name: ?string}
+     */
+    public static function names(array $data): array
+    {
+        $clean = fn ($v) => ($v = trim((string) $v)) === '' ? null : $v;
+
+        return [
+            'first_name' => $clean($data['first_name'] ?? null),
+            'last_name' => $clean($data['last_name'] ?? null),
+        ];
     }
 
     /**

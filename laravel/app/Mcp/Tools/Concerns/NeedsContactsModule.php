@@ -44,6 +44,8 @@ trait NeedsContactsModule
             'id' => $contact->id,
             'account_id' => $contact->user_id,
             'email' => $contact->email,
+            'first_name' => $contact->first_name,
+            'last_name' => $contact->last_name,
             'status' => $contact->status,
             'tags' => $contact->tags->pluck('name')->all(),
             'consent_source' => $contact->consent_source,

@@ -41,6 +41,8 @@ class CreateContact extends Tool
         return [
             'account_id' => $schema->integer()->description('Account con newsletter SMTP (vedi whoami). Obbligatorio per admin/manager.'),
             'email' => $schema->string()->format('email')->required(),
+            'first_name' => $schema->string()->description('Nome (facoltativo).'),
+            'last_name' => $schema->string()->description('Cognome (facoltativo).'),
             'status' => $schema->string()->enum(SaveContact::STATUSES)->required(),
             'tags' => $schema->array()->items($schema->string())->description('Nomi dei tag (creati se non esistono).'),
         ];

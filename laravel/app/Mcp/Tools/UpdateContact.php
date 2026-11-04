@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 
 #[Name('update_contact')]
 #[Title('Modifica contatto newsletter')]
-#[Description('Modifica email, stato o tag di un contatto (id da list_contacts). Aggiornamento parziale: i campi omessi restano invariati; tags, se presente, sostituisce tutti i tag.')]
+#[Description('Modifica email, nome, cognome, stato o tag di un contatto (id da list_contacts). Aggiornamento parziale: i campi omessi restano invariati; tags, se presente, sostituisce tutti i tag.')]
 #[IsIdempotent]
 class UpdateContact extends Tool
 {
@@ -29,6 +29,8 @@ class UpdateContact extends Tool
         $data = $request->validate([
             'contact_id' => ['required', 'integer'],
             'email' => ['sometimes', 'email', 'max:255'],
+            'first_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'last_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'status' => ['sometimes', Rule::in(SaveContact::STATUSES)],
             'tags' => ['sometimes', 'array'],
             'tags.*' => ['string', 'max:255'],
@@ -38,6 +40,8 @@ class UpdateContact extends Tool
 
         $contacts->update($contact, [
             'email' => $data['email'] ?? $contact->email,
+            'first_name' => array_key_exists('first_name', $data) ? $data['first_name'] : $contact->first_name,
+            'last_name' => array_key_exists('last_name', $data) ? $data['last_name'] : $contact->last_name,
             'status' => $data['status'] ?? $contact->status,
             'tags' => $data['tags'] ?? $contact->tags->pluck('name')->all(),
         ]);
@@ -50,6 +54,8 @@ class UpdateContact extends Tool
         return [
             'contact_id' => $schema->integer()->required(),
             'email' => $schema->string()->format('email'),
+            'first_name' => $schema->string(),
+            'last_name' => $schema->string(),
             'status' => $schema->string()->enum(SaveContact::STATUSES),
             'tags' => $schema->array()->items($schema->string()),
         ];

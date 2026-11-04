@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'user_id',
     'email',
+    'first_name',
+    'last_name',
     'status',
     'consent_source',
     'consent_ip',
@@ -47,6 +49,19 @@ class Contact extends Model
     public function sends(): HasMany
     {
         return $this->hasMany(EmailSend::class);
+    }
+
+    /**
+     * Ricerca libera su email, nome e cognome (pagina Contatti e tool MCP).
+     */
+    public function scopeSearch(Builder $query, string $term): Builder
+    {
+        $like = "%{$term}%";
+
+        return $query->where(fn (Builder $q) => $q
+            ->where('email', 'like', $like)
+            ->orWhere('first_name', 'like', $like)
+            ->orWhere('last_name', 'like', $like));
     }
 
     /**
