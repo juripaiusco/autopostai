@@ -284,7 +284,9 @@ tr:hover .ch-chip{ background: var(--g200); }
 .list-toolbar .search-box{ margin-left: auto; }
 /* Filtro a tendina (ComboboxSelect) accanto al cerca: stessa altezza/bordo della search-box.
    padding-right lasciato al componente (spazio per la freccia). */
-.list-toolbar__filter{ width: 200px; }
+.list-toolbar__filter{ width: 150px; flex-shrink: 0; }
+/* Con il filtro accanto il cerca cede 40px, cosi' tutto resta su una riga. */
+.list-toolbar .search-box:has(+ .list-toolbar__filter){ min-width: 200px; }
 .list-toolbar__filter .control{ padding-top: 8px; padding-bottom: 8px; padding-left: 12px; font-size: 13.5px; border-color: var(--g200); box-shadow: none; }
 
 /* Tabs segmentate con count */
