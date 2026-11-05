@@ -245,3 +245,48 @@ test('a rejected hard_bounce registration creates no tags', function () {
 
     expect(ContactTag::where('user_id', $account->id)->exists())->toBeFalse();
 });
+
+test('api does not reactivate a bounced contact (A7)', function () {
+    [$account, $key] = accountWithApiKey();
+    $contact = Contact::factory()->create(['user_id' => $account->id, 'email' => 'dead@example.com', 'status' => 'bounced']);
+
+    $this->postJson('/api/contacts', ['email' => 'dead@example.com', 'first_name' => 'Nuovo', 'tags' => ['prestashop']], ['X-Api-Key' => $key])
+        ->assertStatus(422)
+        ->assertJson(['reason' => 'hard_bounce']);
+
+    $contact->refresh();
+    expect($contact->status)->toBe('bounced');
+    expect($contact->first_name)->toBeNull();
+    expect(ContactTag::where('user_id', $account->id)->exists())->toBeFalse();
+});
+
+test('api does not restore a soft-deleted bounced contact', function () {
+    [$account, $key] = accountWithApiKey();
+    $contact = Contact::factory()->create(['user_id' => $account->id, 'email' => 'dead@example.com', 'status' => 'bounced']);
+    $contact->delete();
+
+    $this->postJson('/api/contacts', ['email' => 'dead@example.com'], ['X-Api-Key' => $key])
+        ->assertStatus(422);
+
+    expect(Contact::withTrashed()->find($contact->id)->trashed())->toBeTrue();
+});
+
+test('api keeps an unsubscribed contact unsubscribed but still saves names and tags', function () {
+    [$account, $key] = accountWithApiKey();
+    $contact = Contact::factory()->create(['user_id' => $account->id, 'email' => 'bye@example.com', 'status' => 'unsubscribed']);
+
+    $this->postJson('/api/contacts', ['email' => 'bye@example.com', 'first_name' => 'Luca', 'tags' => ['prestashop']], ['X-Api-Key' => $key])
+        ->assertStatus(200)
+        ->assertJson(['status' => 'exists', 'contact' => ['status' => 'unsubscribed', 'first_name' => 'Luca', 'tags' => ['prestashop']]]);
+
+    expect($contact->fresh()->status)->toBe('unsubscribed');
+});
+
+test('api turns an unverified contact into active', function () {
+    [$account, $key] = accountWithApiKey();
+    $contact = Contact::factory()->create(['user_id' => $account->id, 'email' => 'new@example.com', 'status' => 'unverified']);
+
+    $this->postJson('/api/contacts', ['email' => 'new@example.com'], ['X-Api-Key' => $key])
+        ->assertStatus(200)
+        ->assertJson(['contact' => ['status' => 'active']]);
+});

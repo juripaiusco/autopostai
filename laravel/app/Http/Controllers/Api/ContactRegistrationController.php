@@ -61,6 +61,20 @@ class ContactRegistrationController extends Controller
             ->first();
 
         if ($existing) {
+            // A7: un contatto già `bounced` (casella inesistente) vale come un
+            // hard_bounce in suppression list anche se la riga lì manca: non
+            // si tocca. Un `unsubscribed` resta tale: la nuova registrazione
+            // non annulla una disiscrizione (stessa regola della suppression).
+            if ($existing->status === 'bounced') {
+                return response()->json([
+                    'message' => 'Email non registrabile: indirizzo inesistente (bounce).',
+                    'reason' => 'hard_bounce',
+                ], 422);
+            }
+            if ($existing->status === 'unsubscribed') {
+                $status = 'unsubscribed';
+            }
+
             $wasTrashed = $existing->trashed();
             if ($wasTrashed) {
                 $existing->restore();
