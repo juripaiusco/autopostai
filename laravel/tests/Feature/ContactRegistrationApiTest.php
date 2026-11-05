@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Contact;
+use App\Models\ContactTag;
 use App\Models\Settings;
 use App\Models\SuppressionList;
 use App\Models\User;
@@ -157,4 +158,90 @@ test('registrations are rate limited per account', function () {
 
     $this->postJson('/api/contacts', ['email' => 'not-an-email'], ['X-Api-Key' => $key])->assertStatus(429);
     $this->postJson('/api/contacts', ['email' => 'not-an-email'], ['X-Api-Key' => $otherKey])->assertStatus(422);
+});
+
+test('api saves first name, last name and tags on a new contact', function () {
+    [$account, $key] = accountWithApiKey();
+
+    $this->postJson('/api/contacts', [
+        'email' => 'mario@example.com',
+        'first_name' => ' Mario ',
+        'last_name' => 'Rossi',
+        'tags' => ['prestashop', 'clienti', 'prestashop', ' '],
+    ], ['X-Api-Key' => $key])
+        ->assertStatus(201)
+        ->assertJson(['status' => 'created', 'contact' => [
+            'first_name' => 'Mario',
+            'last_name' => 'Rossi',
+            'tags' => ['clienti', 'prestashop'],
+        ]]);
+
+    $contact = Contact::where('user_id', $account->id)->where('email', 'mario@example.com')->firstOrFail();
+    expect($contact->first_name)->toBe('Mario');
+    expect($contact->last_name)->toBe('Rossi');
+    expect($contact->tags()->pluck('name')->sort()->values()->all())->toBe(['clienti', 'prestashop']);
+    expect(ContactTag::where('user_id', $account->id)->count())->toBe(2);
+});
+
+test('api reuses an existing tag of the account instead of duplicating it', function () {
+    [$account, $key] = accountWithApiKey();
+    $tag = ContactTag::factory()->create(['user_id' => $account->id, 'name' => 'prestashop']);
+
+    $this->postJson('/api/contacts', ['email' => 'tag@example.com', 'tags' => ['prestashop']], ['X-Api-Key' => $key])
+        ->assertStatus(201);
+
+    expect(ContactTag::where('user_id', $account->id)->count())->toBe(1);
+    expect(Contact::where('email', 'tag@example.com')->first()->tags()->pluck('contact_tags.id')->all())->toBe([$tag->id]);
+});
+
+test('api adds tags and updates names on an existing contact without removing its tags', function () {
+    [$account, $key] = accountWithApiKey();
+    $contact = Contact::factory()->create(['user_id' => $account->id, 'email' => 'gia@example.com', 'status' => 'active', 'first_name' => 'Old']);
+    $uiTag = ContactTag::factory()->create(['user_id' => $account->id, 'name' => 'vip']);
+    $contact->tags()->attach($uiTag);
+
+    $this->postJson('/api/contacts', [
+        'email' => 'gia@example.com',
+        'first_name' => 'Giulia',
+        'tags' => ['prestashop'],
+    ], ['X-Api-Key' => $key])
+        ->assertStatus(200)
+        ->assertJson(['status' => 'exists', 'contact' => ['first_name' => 'Giulia', 'tags' => ['prestashop', 'vip']]]);
+
+    expect($contact->fresh()->first_name)->toBe('Giulia');
+});
+
+test('api does not erase names of an existing contact when only the email is sent', function () {
+    [$account, $key] = accountWithApiKey();
+    Contact::factory()->create(['user_id' => $account->id, 'email' => 'gia@example.com', 'first_name' => 'Anna', 'last_name' => 'Bianchi']);
+
+    $this->postJson('/api/contacts', ['email' => 'gia@example.com', 'first_name' => ''], ['X-Api-Key' => $key])
+        ->assertStatus(200);
+
+    $contact = Contact::where('email', 'gia@example.com')->first();
+    expect($contact->first_name)->toBe('Anna');
+    expect($contact->last_name)->toBe('Bianchi');
+});
+
+test('tags must be an array of at most 20 strings', function () {
+    [, $key] = accountWithApiKey();
+
+    $this->postJson('/api/contacts', ['email' => 'x@example.com', 'tags' => 'prestashop'], ['X-Api-Key' => $key])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('tags');
+
+    $tooMany = array_map(fn ($i) => "tag{$i}", range(1, 21));
+    $this->postJson('/api/contacts', ['email' => 'x@example.com', 'tags' => $tooMany], ['X-Api-Key' => $key])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('tags');
+});
+
+test('a rejected hard_bounce registration creates no tags', function () {
+    [$account, $key] = accountWithApiKey();
+    SuppressionList::create(['user_id' => $account->id, 'email' => 'bounced@example.com', 'reason' => 'hard_bounce']);
+
+    $this->postJson('/api/contacts', ['email' => 'bounced@example.com', 'tags' => ['prestashop']], ['X-Api-Key' => $key])
+        ->assertStatus(422);
+
+    expect(ContactTag::where('user_id', $account->id)->exists())->toBeFalse();
 });
