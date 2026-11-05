@@ -655,9 +655,25 @@ class ContactRepository:
             self.mark_bounced(contact_id)
 
     def mark_bounced(self, contact_id: int) -> None:
+        """Hard bounce: contatto `bounced` E indirizzo in suppression list
+        (`hard_bounce`), come chiede la revisione (A7) — senza la riga, il
+        contatto poteva essere riattivato dalla scheda Contatti, e se eliminato
+        e ricreato tornava a ricevere. Una riga gia' presente per quell'email
+        (es. `complaint`) resta com'e'."""
         contacts = config.table("contacts")
+        suppression = config.table("suppression_list")
         self.conn.execute(
             text(f"UPDATE {contacts} SET status = 'bounced' WHERE id = :id"),
+            {"id": contact_id},
+        )
+        self.conn.execute(
+            text(
+                f"""
+                INSERT INTO {suppression} (user_id, email, reason, created_at)
+                SELECT user_id, email, 'hard_bounce', NOW() FROM {contacts} WHERE id = :id
+                ON DUPLICATE KEY UPDATE reason = reason
+                """
+            ),
             {"id": contact_id},
         )
 

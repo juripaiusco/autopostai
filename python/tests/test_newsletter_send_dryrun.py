@@ -12,6 +12,7 @@ from sqlalchemy import text
 
 from publisher import config
 from publisher.db.engine import get_engine
+from publisher.db.repositories import ContactRepository
 from publisher.tasks import newsletter_send
 
 NEWSLETTER_CHANNELS = json.dumps({"newsletter": {"on": True, "provider": "smtp_custom"}})
@@ -295,6 +296,57 @@ def test_newsletter_send_zero_recipients_publishes_and_completes():
         assert row["channels"]["newsletter"]["id"] == f"smtp-{post_id}"
         assert row["channels"]["newsletter"]["completed_at"]
         assert row["channels"]["newsletter"]["stats"]["sent"] == 0
+    finally:
+        trans.rollback()
+        conn.close()
+
+
+@pytest.mark.skipif(not config.DRY_RUN, reason="richiede PUBLISHER_DRY_RUN=1")
+def test_mark_bounced_adds_hard_bounce_to_suppression_list():
+    """A7: l'hard bounce finisce anche in suppression list (idempotente)."""
+    engine = get_engine()
+    conn = engine.connect()
+    trans = conn.begin()
+    try:
+        user_id = _make_account(conn)
+        contact_id = _make_contact(conn, user_id)
+        email = conn.execute(text("SELECT email FROM contacts WHERE id = :id"), {"id": contact_id}).scalar()
+
+        repo = ContactRepository(conn)
+        repo.mark_bounced(contact_id)
+        repo.mark_bounced(contact_id)  # secondo bounce: nessun errore di unique
+
+        assert conn.execute(text("SELECT status FROM contacts WHERE id = :id"), {"id": contact_id}).scalar() == "bounced"
+        rows = conn.execute(
+            text("SELECT reason FROM suppression_list WHERE user_id = :uid AND email = :email"),
+            {"uid": user_id, "email": email},
+        ).scalars().all()
+        assert rows == ["hard_bounce"]
+    finally:
+        trans.rollback()
+        conn.close()
+
+
+@pytest.mark.skipif(not config.DRY_RUN, reason="richiede PUBLISHER_DRY_RUN=1")
+def test_mark_bounced_keeps_an_existing_suppression_reason():
+    engine = get_engine()
+    conn = engine.connect()
+    trans = conn.begin()
+    try:
+        user_id = _make_account(conn)
+        contact_id = _make_contact(conn, user_id)
+        email = conn.execute(text("SELECT email FROM contacts WHERE id = :id"), {"id": contact_id}).scalar()
+        conn.execute(
+            text("INSERT INTO suppression_list (user_id, email, reason, created_at) VALUES (:uid, :email, 'complaint', NOW())"),
+            {"uid": user_id, "email": email},
+        )
+
+        ContactRepository(conn).mark_bounced(contact_id)
+
+        assert conn.execute(
+            text("SELECT reason FROM suppression_list WHERE user_id = :uid AND email = :email"),
+            {"uid": user_id, "email": email},
+        ).scalar() == "complaint"
     finally:
         trans.rollback()
         conn.close()
