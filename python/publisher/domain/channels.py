@@ -34,6 +34,37 @@ from publisher import config
 # Chiavi canale note e ordine di elaborazione (i social prima, poi web/newsletter).
 CHANNEL_KEYS = ("facebook", "instagram", "linkedin", "wordpress", "newsletter")
 
+# Caratteri massimi accettati dalla piattaforma: oltre, la pubblicazione fallisce.
+# Stesso valore del contatore nel form post (Pages/Posts/Form.vue, CHANNELS_CFG).
+TEXT_LIMITS = {"linkedin": 3000}
+
+# Quota del limite chiesta all'AI: gli LLM contano male i caratteri, serve margine.
+TEXT_LIMIT_TARGET_RATIO = 0.8
+
+TEXT_LIMIT_LABELS = {"linkedin": "LinkedIn"}
+
+
+def length_instruction(keys) -> str:
+    """Istruzione da appendere al prompt del testo AI quando tra i canali
+    accesi ce n'e' uno con limite di caratteri (il testo e' unico per tutto il
+    post, quindi vale il limite piu' basso). Stringa vuota se nessun limite."""
+    limited = [k for k in keys if k in TEXT_LIMITS]
+    if not limited:
+        return ""
+    key = min(limited, key=lambda k: TEXT_LIMITS[k])
+    limit = TEXT_LIMITS[key]
+    target = int(limit * TEXT_LIMIT_TARGET_RATIO)
+    label = TEXT_LIMIT_LABELS.get(key, key)
+    return (
+        f"Il testo deve restare sotto i {target} caratteri, spazi inclusi: "
+        f"verra' pubblicato anche su {label}, che ne accetta al massimo {limit}."
+    )
+
+
+def with_length_instruction(prompt: str, keys) -> str:
+    instruction = length_instruction(keys)
+    return f"{prompt} {instruction}".strip() if instruction else prompt
+
 
 @dataclass
 class ChannelEntry:
@@ -182,6 +213,10 @@ class Channels:
             if entry and entry.needs_publish:
                 out.append(entry)
         return out
+
+    def on_keys(self) -> list[str]:
+        """Chiavi dei canali accesi, in ordine canonico."""
+        return [k for k in CHANNEL_KEYS if (e := self.entry(k)) and e.is_on]
 
     def text_channel(self) -> str | None:
         """Canale che decide il formato del testo AI generato una volta per

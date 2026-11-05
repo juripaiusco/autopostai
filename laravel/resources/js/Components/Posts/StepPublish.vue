@@ -64,7 +64,7 @@ async function runPreview() {
         const res = await fetch(route('posts.generate-text', props.targetUserId), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': csrfToken(), Accept: 'application/json' },
-            body: JSON.stringify({ ai_prompt_post: props.form.ai_prompt_post, channel: primaryChannel.value }),
+            body: JSON.stringify({ ai_prompt_post: props.form.ai_prompt_post, channel: primaryChannel.value, channels: selectedChannelIds.value }),
         });
         const json = await res.json();
         if (!res.ok) {

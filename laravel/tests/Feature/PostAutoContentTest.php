@@ -172,4 +172,34 @@ class PostAutoContentTest extends TestCase
             ->assertStatus(422)
             ->assertJson(['message' => "L'AI ha restituito un testo vuoto, riprova."]);
     }
+
+    public function test_generation_sends_the_active_channels_for_the_linkedin_limit(): void
+    {
+        $user = $this->simpleUser();
+        $post = $this->scheduledPost($user, ['channels' => [
+            'facebook' => ['on' => true], 'linkedin' => ['on' => true], 'instagram' => ['on' => false],
+        ]]);
+        Http::fake(['*/generate-text' => Http::response(['content' => 'Testo', 'tokens' => 1])]);
+
+        GeneratePostContentJob::dispatchSync($post->id);
+
+        $this->actingAs($user)
+            ->postJson(route('posts.generate-text', $user), ['ai_prompt_post' => 'Scrivi', 'channels' => ['linkedin']])
+            ->assertOk();
+
+        Http::assertSent(fn ($request) => $request['channels'] === ['facebook', 'linkedin']);
+        Http::assertSent(fn ($request) => $request['channels'] === ['linkedin']);
+    }
+
+    public function test_preview_rejects_unknown_channels(): void
+    {
+        $user = $this->simpleUser();
+        Http::fake();
+
+        $this->actingAs($user)
+            ->postJson(route('posts.generate-text', $user), ['ai_prompt_post' => 'Scrivi', 'channels' => ['tiktok']])
+            ->assertStatus(422);
+
+        Http::assertNothingSent();
+    }
 }

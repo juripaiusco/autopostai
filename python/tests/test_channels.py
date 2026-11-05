@@ -132,3 +132,19 @@ def test_text_channel_prefers_wordpress_then_newsletter():
 def test_text_channel_none_for_social_only_or_channels_off():
     assert Channels.parse({"facebook": {"on": True}, "instagram": {"on": True}}).text_channel() is None
     assert Channels.parse({"facebook": {"on": True}, "wordpress": {"on": False}}).text_channel() is None
+
+
+def test_on_keys_lists_only_active_channels_in_canonical_order():
+    assert Channels.parse(_sample()).on_keys() == ["facebook", "instagram", "wordpress", "newsletter"]
+
+
+def test_length_instruction_only_when_linkedin_is_on():
+    from publisher.domain.channels import length_instruction, with_length_instruction
+
+    assert length_instruction(["facebook", "instagram"]) == ""
+    assert with_length_instruction("Parla della pizza", ["facebook"]) == "Parla della pizza"
+
+    instruction = length_instruction(["facebook", "linkedin"])
+    assert "2400 caratteri" in instruction
+    assert "LinkedIn" in instruction and "3000" in instruction
+    assert with_length_instruction("Parla della pizza", ["linkedin"]) == f"Parla della pizza {instruction}"

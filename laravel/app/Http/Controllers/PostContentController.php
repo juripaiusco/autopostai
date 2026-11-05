@@ -24,6 +24,8 @@ class PostContentController extends Controller
         $validator = Validator::make($request->all(), [
             'ai_prompt_post' => ['required', 'string'],
             'channel' => ['nullable', 'string', 'in:'.implode(',', array_keys(User::CHANNELS))],
+            'channels' => ['nullable', 'array'],
+            'channels.*' => ['string', 'in:'.implode(',', array_keys(User::CHANNELS))],
         ]);
 
         if ($validator->fails()) {
@@ -37,7 +39,7 @@ class PostContentController extends Controller
         }
 
         try {
-            $result = $generator->generate($user->settings, $data['ai_prompt_post'], $data['channel'] ?? null);
+            $result = $generator->generate($user->settings, $data['ai_prompt_post'], $data['channel'] ?? null, $data['channels'] ?? []);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }

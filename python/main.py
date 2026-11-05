@@ -7,6 +7,7 @@ from openai import OpenAIError
 from pydantic import BaseModel
 
 from providers import ImageGenerationError, provider_for_model
+from publisher.domain.channels import with_length_instruction
 from publisher.publishing import PUBLISHERS
 from publisher.integrations import openai_text
 
@@ -39,6 +40,8 @@ class GenerateTextRequest(BaseModel):
     api_key: str
     ai_prompt_post: str
     channel: str | None = None
+    # Canali accesi sul post: servono per il limite di caratteri (LinkedIn).
+    channels: list[str] | None = None
     ai_personality: str | None = None
     ai_prompt_prefix: str | None = None
     model: str | None = None
@@ -52,6 +55,7 @@ def generate_text(data: GenerateTextRequest):
         if publisher_cls
         else data.ai_prompt_post
     )
+    user_prompt = with_length_instruction(user_prompt, data.channels or [])
     system_prompt = " ".join(
         filter(
             None,

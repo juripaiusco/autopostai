@@ -46,7 +46,7 @@ class GeneratePostContentJob implements ShouldQueue
         }
 
         try {
-            $result = $generator->generate($settings, $post->ai_prompt_post, $post->textChannel());
+            $result = $generator->generate($settings, $post->ai_prompt_post, $post->textChannel(), $post->activeChannels());
         } catch (\Throwable $e) {
             Log::warning('GeneratePostContentJob failed', ['post_id' => $post->id, 'error' => $e->getMessage()]);
 

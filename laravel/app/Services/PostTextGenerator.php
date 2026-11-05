@@ -15,16 +15,21 @@ use RuntimeException;
 class PostTextGenerator
 {
     /**
+     * $channels: canali accesi sul post, per il limite di caratteri (LinkedIn)
+     * che il servizio Python aggiunge al prompt.
+     *
+     * @param  array<int, string>  $channels
      * @return array{content: string, tokens: int}
      *
      * @throws RuntimeException messaggio leggibile per l'utente
      */
-    public function generate(Settings $settings, string $prompt, ?string $channel): array
+    public function generate(Settings $settings, string $prompt, ?string $channel, array $channels = []): array
     {
         try {
             $response = Http::timeout(60)->post(config('services.python.url').'/generate-text', [
                 'ai_prompt_post' => $prompt,
                 'channel' => $channel,
+                'channels' => array_values($channels),
                 'api_key' => $settings->openai_api_key,
                 'ai_personality' => $settings->ai_personality,
                 'ai_prompt_prefix' => $settings->ai_prompt_prefix,

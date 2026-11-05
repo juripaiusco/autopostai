@@ -57,3 +57,38 @@ def test_social_only_uses_the_plain_prompt(prompts):
     _resolve_on_facebook({"facebook": {"on": True}, "instagram": {"on": True}})
 
     assert prompts == ["Parla della pizza"]
+
+
+def test_linkedin_on_adds_the_character_limit_to_the_prompt(prompts):
+    _resolve_on_facebook({"facebook": {"on": True}, "linkedin": {"on": True}})
+
+    assert prompts[0].startswith("Parla della pizza ")
+    assert "LinkedIn" in prompts[0] and "3000" in prompts[0]
+
+
+def test_linkedin_off_leaves_the_prompt_untouched(prompts):
+    _resolve_on_facebook({"facebook": {"on": True}, "linkedin": {"on": False}})
+
+    assert prompts == ["Parla della pizza"]
+
+
+def test_generate_text_endpoint_adds_the_limit_for_linkedin(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import main
+
+    sent = []
+
+    def fake_generate(**kwargs):
+        sent.append(kwargs["user_prompt"])
+        return "Testo", 1
+
+    monkeypatch.setattr(openai_text, "generate", fake_generate)
+    client = TestClient(main.app)
+
+    base = {"api_key": "sk-fake", "ai_prompt_post": "Parla della pizza"}
+    assert client.post("/generate-text", json=base).status_code == 200
+    assert client.post("/generate-text", json={**base, "channels": ["facebook", "linkedin"]}).status_code == 200
+
+    assert sent[0] == "Parla della pizza"
+    assert sent[1].startswith("Parla della pizza ") and "LinkedIn" in sent[1]

@@ -28,11 +28,13 @@ class GeneratePostText extends Tool
             'account_id' => ['nullable', 'integer'],
             'prompt' => ['required', 'string', 'max:10000'],
             'channel' => ['nullable', Rule::in(array_keys(User::CHANNELS))],
+            'channels' => ['nullable', 'array'],
+            'channels.*' => [Rule::in(array_keys(User::CHANNELS))],
         ]);
 
         $account = $this->targetAccount($request);
 
-        $result = $preview->handle($account, $data['prompt'], $data['channel'] ?? null);
+        $result = $preview->handle($account, $data['prompt'], $data['channel'] ?? null, $data['channels'] ?? []);
 
         return Response::structured([
             'account_id' => $account->id,
@@ -47,6 +49,7 @@ class GeneratePostText extends Tool
             'account_id' => $schema->integer()->description('Account per cui scrivere (vedi whoami). Default: il tuo.'),
             'prompt' => $schema->string()->required()->description('Istruzioni per il testo (diventano ai_prompt_post).'),
             'channel' => $schema->string()->enum(array_keys(User::CHANNELS))->description('Canale principale: wordpress e newsletter producono Markdown.'),
+            'channels' => $schema->array()->items($schema->string()->enum(array_keys(User::CHANNELS)))->description('Tutti i canali su cui uscirà il post: con linkedin il testo resta sotto il limite di 3000 caratteri.'),
         ];
     }
 }

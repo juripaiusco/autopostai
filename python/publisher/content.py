@@ -14,7 +14,7 @@ from publisher import config
 from publisher.db.repositories import PostRepository, TokenLogRepository
 from publisher.integrations import openai_text, shortcodes
 from publisher.domain import media
-from publisher.domain.channels import Channels
+from publisher.domain.channels import Channels, with_length_instruction
 from publisher.publishing import PUBLISHERS
 from publisher.publishing.base import ChannelPublisher
 
@@ -119,13 +119,15 @@ class ContentService:
         # Il testo vale per tutti i canali: il prompt lo decide il canale primario
         # (WordPress > Newsletter), non il primo canale del ciclo; senza canale
         # primario va bene quello corrente (prompt base).
-        text_key = Channels.parse(post["channels"]).text_channel()
+        channels = Channels.parse(post["channels"])
+        text_key = channels.text_channel()
         prompt_publisher = PUBLISHERS[text_key](post) if text_key else publisher
 
         text, tokens = openai_text.generate(
             api_key=post["openai_api_key"],
             system_prompt=system_prompt,
-            user_prompt=prompt_publisher.build_prompt(),
+            # Limite caratteri (LinkedIn) dei canali accesi: il testo e' uno per tutti.
+            user_prompt=with_length_instruction(prompt_publisher.build_prompt(), channels.on_keys()),
             img_path=img_path,
         )
 

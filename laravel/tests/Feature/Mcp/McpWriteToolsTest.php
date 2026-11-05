@@ -281,6 +281,16 @@ it('generate_post_text meters tokens and respects the monthly limit', function (
         ->assertHasErrors(['Limite mensile di token AI raggiunto per questo account.']);
 });
 
+it('generate_post_text forwards the channels for the LinkedIn limit', function () {
+    Http::fake(['*/generate-text' => Http::response(['content' => 'Testo AI', 'tokens' => 1])]);
+
+    FaPer3Server::actingAs(withMcp(mcpWriter(), 'write'))
+        ->tool(GeneratePostText::class, ['prompt' => 'Scrivi', 'channels' => ['facebook', 'linkedin']])
+        ->assertOk();
+
+    Http::assertSent(fn ($request) => $request['channels'] === ['facebook', 'linkedin']);
+});
+
 it('generate_image starts a job and get_image_job reports the file', function () {
     $user = mcpWriter();
 
