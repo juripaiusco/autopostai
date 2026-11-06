@@ -47,10 +47,16 @@ def main() -> None:
     # stesso stream, altrimenti l'ordine si mischia quando entrambi finiscono
     # nello stesso file/terminale (buffering separato tra i due stream).
     handler = logging.StreamHandler(sys.stdout)
-    # Indentate: le righe di log leggono come "dentro" il blocco aperto da
-    # cli_output.task_start(), senza dover far combaciare larghezze di bordi.
-    fmt = cli_output.LOG_INDENT + "%(asctime)s %(levelname)s %(name)s: %(message)s"
-    handler.setFormatter(cli_output.ColorFormatter(fmt))
+    if config.DEBUG:
+        # Formato completo (timestamp, livello, logger) per le indagini.
+        fmt = cli_output.LOG_INDENT + "%(asctime)s %(levelname)s %(name)s: %(message)s"
+        handler.setFormatter(cli_output.ColorFormatter(fmt))
+    else:
+        # Compatto: la finestra del log e' stretta, vedi cli_output.
+        handler.setFormatter(cli_output.CompactFormatter())
+        # L'SDK OpenAI (httpx) logga ogni "HTTP Request: ..." a INFO: rumore.
+        for noisy in ("httpx", "openai", "urllib3"):
+            logging.getLogger(noisy).setLevel(logging.WARNING)
     logging.basicConfig(level=logging.DEBUG if config.DEBUG else logging.INFO, handlers=[handler])
     log = logging.getLogger("publisher")
     log.info("worker start (dry_run=%s)", config.DRY_RUN)
@@ -71,8 +77,6 @@ def main() -> None:
                 conn.rollback()
                 log.exception("task '%s' fallito", name)
             cli_output.task_end(name, started)
-
-    log.info("worker end")
 
 
 if __name__ == "__main__":

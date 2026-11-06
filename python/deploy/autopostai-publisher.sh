@@ -76,7 +76,12 @@ if ! docker network inspect "$NETWORK" >/dev/null 2>&1; then
     docker network create --subnet="$SUBNET" "$NETWORK" >/dev/null || exit 1
 fi
 
-docker run --rm \
+# -t solo se lanciato a mano da terminale: colori nel worker. Da cron (file)
+# niente TTY, il log resta testo puro.
+TTY_FLAG=""
+[ -t 1 ] && TTY_FLAG="-t"
+
+docker run --rm ${TTY_FLAG:+$TTY_FLAG} \
     --name "faper3-publisher-$INSTANCE" \
     --network "$NETWORK" \
     --ip "$CONTAINER_IP" \
