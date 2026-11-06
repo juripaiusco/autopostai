@@ -17,10 +17,12 @@
 # Il servizio non ha autenticazione: la porta resta sull'interfaccia locale,
 # mai esposta su internet. Il codice e' montato come volume: dopo un git pull
 # che tocca python/ serve `docker restart faper3-images-<istanza>`.
+# Con <checkout>/.deploying (lo crea deploy.sh) il giro viene saltato.
 
 set -u
 
 PY_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT_DIR="$(cd "$PY_DIR/.." && pwd)"
 INSTANCE="${IMAGES_INSTANCE:-prod}"
 PORT="${IMAGES_PORT:-8010}"
 IMAGE_NAME="autopostai-python"
@@ -31,6 +33,13 @@ export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 echo ""
 echo "#### faper3-images [$INSTANCE] START $(date '+%Y-%m-%d %H:%M:%S')"
+
+# Durante un deploy il codice di python/ viene sostituito: niente build ne' riavvii a meta'
+# (il container gia' acceso resta su; se python/ e' cambiato lo riavvia deploy.sh).
+if [ -f "$ROOT_DIR/.deploying" ]; then
+    echo "deploy in corso ($ROOT_DIR/.deploying): giro saltato"
+    exit 0
+fi
 
 if [ ! -f "$PY_DIR/.env" ]; then
     echo "manca $PY_DIR/.env: configurazione incompleta"
