@@ -3,6 +3,9 @@ import ChannelIcon from '@/Components/ChannelIcon.vue';
 import UserAvatar from '@/Components/UserAvatar.vue';
 import Icon from '@/Components/Icon.vue';
 import { CH_CONFIG } from '@/data/dashboardMock';
+import { useTokenUnit } from '@/Composables/useTokenUnit';
+
+const { withUnit } = useTokenUnit();
 
 const props = defineProps({
     comment: { type: Object, required: true },
@@ -41,7 +44,7 @@ function formatDate(value) {
                     <Icon name="sparkles" :size="11" /> Risposta AI
                 </span>
                 <span class="ps-comment__reply-time">{{ formatDate(comment.reply.time) }}</span>
-                <span class="ps-comment__reply-tokens" v-if="comment.reply.tokens">{{ comment.reply.tokens }} token</span>
+                <span class="ps-comment__reply-tokens" v-if="comment.reply.tokens">{{ withUnit(comment.reply.tokens) }}</span>
             </div>
             <div class="ps-comment__reply-text">{{ comment.reply.text }}</div>
         </div>

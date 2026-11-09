@@ -5,11 +5,15 @@ const props = defineProps({
     used: { type: Number, required: true },
     total: { type: Number, default: 0 },
     index: { type: Number, default: 0 },
+    // Formattazione dei valori (es. token -> crediti); la percentuale resta sui valori grezzi.
+    formatter: { type: Function, default: null },
 });
 
 const pct = computed(() => (props.total > 0 ? Math.min((props.used / props.total) * 100, 100) : 0));
 const warn = computed(() => pct.value >= 80);
-const fmt = (n) => Math.round(Number(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fmt = (n) => (props.formatter
+    ? props.formatter(n)
+    : Math.round(Number(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
 const ariaLabel = computed(() => `${fmt(props.used)} di ${fmt(props.total)}`);
 
 // Entrance: il fill parte da 0 e cresce fino a pct dopo il mount.

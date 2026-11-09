@@ -13,7 +13,10 @@ import SearchInput from '@/Components/UI/SearchInput.vue';
 import SortableTh from '@/Components/UI/SortableTh.vue';
 import Pagination from '@/Components/UI/Pagination.vue';
 import { useTableFilters } from '@/Composables/useTableFilters';
+import { useTokenUnit } from '@/Composables/useTokenUnit';
 import { CH_CONFIG } from '@/data/dashboardMock';
+
+const { formatTokens, unitTitle } = useTokenUnit();
 
 const props = defineProps({
     users: { type: Object, required: true },
@@ -106,7 +109,7 @@ function confirmDelete(id) {
                         <SortableTh label="Post" column="post" align="center" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
                         <SortableTh label="Reply" column="reply" align="center" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
                         <SortableTh label="Immagini" column="immagini" align="center" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
-                        <SortableTh label="Token" column="tokenUsed" align="right" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
+                        <SortableTh :label="unitTitle" column="tokenUsed" align="right" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
                         <th></th>
                     </tr>
                 </thead>
@@ -149,8 +152,8 @@ function confirmDelete(id) {
                                 <TokenBar v-if="u.imageTotal > 0" :used="u.immagini" :total="u.imageTotal" :index="i" />
                                 <span v-else class="num text-xs text-gray-500">- / -</span>
                             </td>
-                            <td class="token-td" data-label="Token">
-                                <TokenBar :used="u.tokenUsed" :total="u.tokenTotal" :index="i" />
+                            <td class="token-td" :data-label="unitTitle">
+                                <TokenBar :used="u.tokenUsed" :total="u.tokenTotal" :index="i" :formatter="formatTokens" />
                             </td>
                             <td data-label="">
                                 <div class="row-actions">

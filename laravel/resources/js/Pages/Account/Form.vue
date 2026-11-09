@@ -10,6 +10,7 @@ import ToggleSwitch from '@/Components/UI/ToggleSwitch.vue';
 import FieldRow from '@/Components/UI/FieldRow.vue';
 import OptionRow from '@/Components/UI/OptionRow.vue';
 import InlineUsageBar from '@/Components/UI/InlineUsageBar.vue';
+import { useTokenUnit } from '@/Composables/useTokenUnit';
 import ChannelSettingsRow from '@/Components/Domain/Account/ChannelSettingsRow.vue';
 import IntegrationMenu from '@/Components/Domain/Account/IntegrationMenu.vue';
 import IntegrationPanelHeader from '@/Components/Domain/Account/IntegrationPanelHeader.vue';
@@ -111,6 +112,14 @@ function buildForm(account) {
 }
 
 const form = reactive(buildForm(props.account));
+
+// Limite mensile: il backend salva token, il manager lo legge/scrive in crediti.
+const { showTokens, toUnit, fromUnit, formatTokens, unitLabel, unitTitle } = useTokenUnit();
+const tokensMonthInput = computed(() => (form.tokensMonth === '' || form.tokensMonth == null ? '' : toUnit(form.tokensMonth)));
+function setTokensMonth(value) {
+    set('tokensMonth', value === '' ? '' : String(fromUnit(value)));
+}
+
 const dirty = ref(false);
 
 function syncServerState(acc) {
@@ -448,15 +457,16 @@ function goToIntegration(chId) {
                             </select>
                         </FieldRow>
 
-                        <FieldRow id="acc-tokens-month" label="Token al mese" help="Numero di token utilizzabili al mese." style="margin-bottom:0">
+                        <FieldRow id="acc-tokens-month" :label="`${unitTitle} al mese`" :help="`Numero di ${unitLabel} utilizzabili al mese.`" style="margin-bottom:0">
                             <div class="acc-input-unit">
-                                <input id="acc-tokens-month" class="control" type="number" :value="form.tokensMonth" placeholder="50000"
-                                    @input="set('tokensMonth', $event.target.value)" />
-                                <span class="unit">token</span>
+                                <input id="acc-tokens-month" class="control" type="number" :step="showTokens ? 1 : 'any'" :value="tokensMonthInput"
+                                    :placeholder="showTokens ? '50000' : '50'"
+                                    @input="setTokensMonth($event.target.value)" />
+                                <span class="unit">{{ unitLabel }}</span>
                             </div>
-                            <InlineUsageBar v-if="mode === 'edit' && account?.usage" label="token usati questo mese"
+                            <InlineUsageBar v-if="mode === 'edit' && account?.usage" :label="`${unitLabel} usati questo mese`"
                                 :current="account.usage.tokensUsed" :max="Number(form.tokensMonth) || 50000"
-                                :formatter="(n) => n.toLocaleString('it')" />
+                                :formatter="formatTokens" />
                         </FieldRow>
 
                         <FieldRow id="acc-images-day" label="Immagini al giorno" help="Immagini generabili al giorno." style="margin-bottom:0">

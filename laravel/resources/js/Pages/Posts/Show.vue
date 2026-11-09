@@ -11,6 +11,9 @@ import PageHeader from '@/Components/Layout/PageHeader.vue';
 import PostChannelCard from '@/Components/Domain/PostChannelCard.vue';
 import PostCommentItem from '@/Components/Domain/PostCommentItem.vue';
 import { CH_CONFIG } from '@/data/dashboardMock';
+import { useTokenUnit } from '@/Composables/useTokenUnit';
+
+const { formatTokens, unitTitle, withUnit } = useTokenUnit();
 
 const props = defineProps({
     post: { type: Object, required: true },
@@ -201,8 +204,8 @@ function confirmDelete() {
                         <div class="ps-hero__sub-val is-nd">N/D</div>
                     </div>
                     <div>
-                        <div class="ps-hero__sub-lab">Token AI usati</div>
-                        <div class="ps-hero__sub-val">{{ post.totalTokens.toLocaleString('it-IT') }}</div>
+                        <div class="ps-hero__sub-lab">{{ unitTitle }} AI usati</div>
+                        <div class="ps-hero__sub-val">{{ formatTokens(post.totalTokens) }}</div>
                     </div>
                 </div>
             </div>
@@ -250,7 +253,7 @@ function confirmDelete() {
                         <span class="ps-card-icon ps-card-icon--sky"><Icon name="sparkles" :size="14" /></span>
                         <span class="ps-card-title">Contenuto generato dall'AI</span>
                     </div>
-                    <span class="ps-token-badge">{{ post.postTokens.toLocaleString('it-IT') }} token</span>
+                    <span class="ps-token-badge">{{ withUnit(post.postTokens) }}</span>
                 </div>
                 <div class="ps-ai-text" :class="{ 'is-clamped': !showFullContent }">{{ post.aiContent }}</div>
                 <button type="button" class="ps-readmore" @click="showFullContent = !showFullContent">
