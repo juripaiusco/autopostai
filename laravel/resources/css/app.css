@@ -231,7 +231,7 @@ main{ flex: 1; }
 .table-fade-enter-active, .table-fade-leave-active{ transition: opacity .15s ease; }
 .table-fade-enter-from, .table-fade-leave-to{ opacity: 0; }
 .row-actions{ display: flex; gap: 6px; justify-content: flex-end; }
-.icon-btn{ width: 34px; height: 34px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: #fff; }
+.icon-btn{ width: 34px; height: 34px; flex-shrink: 0; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: #fff; }
 .icon-btn svg{ width: 16px; height: 16px; }
 .icon-btn--ghost{ width: 32px; height: 32px; background: transparent; color: var(--g400); border: 1px solid var(--g200); transition: background .15s ease, color .15s ease, border-color .15s ease; }
 .icon-btn--ghost:hover{ background: var(--g50); color: var(--ink); border-color: var(--g300); }

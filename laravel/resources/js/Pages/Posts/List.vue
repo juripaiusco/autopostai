@@ -104,7 +104,7 @@ function formatDate(value) {
                     <col style="width: 16%">
                     <col style="width: 14%">
                     <col style="width: 10%">
-                    <col style="width: 88px">
+                    <col style="width: 104px">
                 </colgroup>
                 <thead>
                     <tr>
