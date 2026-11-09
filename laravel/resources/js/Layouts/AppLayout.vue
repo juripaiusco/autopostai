@@ -27,6 +27,8 @@ const canFilter = computed(() => usePage().props.isAdmin || usePage().props.isMa
 const filterableUsers = computed(() => usePage().props.filterableUsers ?? []);
 const activeUserId = computed(() => usePage().props.activeUserId ?? null);
 const activeUser = computed(() => usePage().props.activeUser ?? null);
+// Consumo AI del mese (HandleInertiaRequests::usage): null = barra nascosta.
+const usage = computed(() => usePage().props.usage ?? null);
 const { setScope } = useUserScope();
 
 // Toast globale alimentato dal flash di sessione (es. dopo un redirect post-save).
@@ -70,12 +72,12 @@ watch(
 
                 <GlobalSearch />
 
-                <div class="tb-credits-inline">
+                <div v-if="usage" class="tb-credits-inline">
                     <div class="tci-row">
                         <span class="tci-label">Crediti utilizzati</span>
-                        <span class="tci-pct">62%</span>
+                        <span class="tci-pct">{{ usage.percent }}%</span>
                     </div>
-                    <div class="tci-bar"><div class="tci-fill" style="width: 62%"></div></div>
+                    <div class="tci-bar"><div class="tci-fill" :class="{ 'is-full': usage.percent >= 90 }" :style="{ width: usage.percent + '%' }"></div></div>
                 </div>
 
                 <div class="topbar-right">

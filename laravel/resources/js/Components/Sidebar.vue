@@ -22,6 +22,7 @@ const acctOpen = ref(false);
 const isAdmin = computed(() => usePage().props.isAdmin);
 const isManager = computed(() => usePage().props.isManager);
 const contactsEnabled = computed(() => usePage().props.contactsEnabled);
+const usage = computed(() => usePage().props.usage ?? null);
 const roleLabel = computed(() => (isAdmin.value ? 'Amministratore' : isManager.value ? 'Manager' : 'Utente'));
 
 const allLinks = [
@@ -84,9 +85,9 @@ function logout() {
 
         <div class="sb-foot">
             <slot name="footer-top" />
-            <div class="sb-credits">
-                <div class="sb-credits-row"><span>Crediti utilizzati</span><span>62%</span></div>
-                <div class="sb-bar"><div class="sb-bar-fill" style="width: 62%"></div></div>
+            <div v-if="usage" class="sb-credits">
+                <div class="sb-credits-row"><span>Crediti utilizzati</span><span>{{ usage.percent }}%</span></div>
+                <div class="sb-bar"><div class="sb-bar-fill" :class="{ 'is-full': usage.percent >= 90 }" :style="{ width: usage.percent + '%' }"></div></div>
             </div>
             <div style="position: relative">
                 <div v-if="acctOpen" class="card sb-acct-menu">
