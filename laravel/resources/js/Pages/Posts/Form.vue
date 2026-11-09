@@ -184,17 +184,20 @@ function buildPayload(action) {
 function submit(action) {
     saving.value = true;
     const payload = buildPayload(action);
+    const options = {
+        forceFormData: true,
+        // Inertia 3 su post/put tiene lo stato del componente di default:
+        // "Salva e aggiungi" torna su questa stessa pagina (Modifica della
+        // copia) e il form restava quello dell'originale. Lo stato si tiene
+        // solo con errori di validazione, per non perdere quanto inserito.
+        preserveState: 'errors',
+        onFinish: () => { saving.value = false; },
+    };
     if (props.mode === 'edit') {
-        router.put(route('posts.update', props.post.id), payload, {
-            forceFormData: true,
-            onFinish: () => { saving.value = false; },
-        });
+        router.put(route('posts.update', props.post.id), payload, options);
         return;
     }
-    router.post(route('posts.store'), payload, {
-        forceFormData: true,
-        onFinish: () => { saving.value = false; },
-    });
+    router.post(route('posts.store'), payload, options);
 }
 </script>
 
