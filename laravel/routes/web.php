@@ -113,6 +113,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/riprova', [PostController::class, 'retry'])
         ->name('posts.retry');
 
+    Route::post('/posts/{post}/duplica', [PostController::class, 'duplicate'])
+        ->name('posts.duplicate');
+
     Route::put('/posts/{post}/canali/{channel}/contenuto', [PostController::class, 'updateChannelContent'])
         ->name('posts.channel-content.update');
 

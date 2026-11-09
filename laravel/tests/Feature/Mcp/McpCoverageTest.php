@@ -26,6 +26,7 @@ const MCP_COVERAGE = [
     'posts.store' => 'create_post, publish_post_now',
     'posts.update' => 'update_post, publish_post_now',
     'posts.retry' => 'retry_post',
+    'posts.duplicate' => 'duplicate_post',
     'posts.channel-content.update' => 'update_published_post',
     'posts.destroy' => 'delete_post',
     'posts.generate-text' => 'generate_post_text',

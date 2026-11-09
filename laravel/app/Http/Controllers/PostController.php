@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Posts\CreatePost;
+use App\Actions\Posts\DuplicatePost;
 use App\Actions\Posts\RetryPost;
 use App\Actions\Posts\UpdatePost;
 use App\Actions\Posts\UpdatePublishedChannelContent;
@@ -359,6 +360,21 @@ class PostController extends Controller
         $request->session()->flash('toast', 'Nuovo tentativo in coda: il worker riprova entro un minuto.');
 
         return back();
+    }
+
+    /**
+     * "Duplica" dalla lista post: copia come bozza senza data e apre il form
+     * della copia per scegliere quando inviarla (vedi DuplicatePost).
+     */
+    public function duplicate(Request $request, Post $post, DuplicatePost $duplicatePost): RedirectResponse
+    {
+        $this->authorize('update', $post);
+
+        $copy = $duplicatePost->handle($request->user(), $post);
+
+        $request->session()->flash('toast', 'Post duplicato: scegli la data di invio e salva.');
+
+        return redirect()->route('posts.edit', $copy);
     }
 
     /**

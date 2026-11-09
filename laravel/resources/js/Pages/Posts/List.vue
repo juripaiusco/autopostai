@@ -64,6 +64,17 @@ function confirmDelete(id) {
     });
 }
 
+// Copia come bozza senza data: il server apre il form della copia.
+const duplicatingId = ref(null);
+
+function duplicate(p) {
+    if (duplicatingId.value) return;
+    duplicatingId.value = p.id;
+    router.post(route('posts.duplicate', p.id), {}, {
+        onFinish: () => { duplicatingId.value = null; },
+    });
+}
+
 function formatDate(value) {
     if (!value) return '—';
     return new Date(value).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -93,7 +104,7 @@ function formatDate(value) {
                     <col style="width: 16%">
                     <col style="width: 14%">
                     <col style="width: 10%">
-                    <col style="width: 52px">
+                    <col style="width: 88px">
                 </colgroup>
                 <thead>
                     <tr>
@@ -142,6 +153,9 @@ function formatDate(value) {
                             <td class="num" data-label="Commenti">{{ p.comments }}</td>
                             <td data-label="">
                                 <div class="row-actions">
+                                    <button class="icon-btn icon-btn--ghost" title="Duplica" :aria-label="`Duplica ${p.title}`" :disabled="duplicatingId !== null" @click.stop="duplicate(p)">
+                                        <Icon name="copy" :size="15" />
+                                    </button>
                                     <button class="icon-btn icon-btn--ghost icon-btn--danger" title="Elimina" :aria-label="`Elimina ${p.title}`" @click.stop="openDelete(p)">
                                         <Icon name="trash" :size="15" />
                                     </button>
