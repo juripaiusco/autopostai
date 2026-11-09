@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Posts\GeneratePostTextPreview;
 use App\Models\User;
-use App\Services\PostTextGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use RuntimeException;
+use Illuminate\Validation\ValidationException;
 
 class PostContentController extends Controller
 {
@@ -16,8 +16,12 @@ class PostContentController extends Controller
      * servizio Python (nessun job/queue, coerente con v1 e con il worker
      * `queue` tenuto spento in dev). Non tocca il modello Post: la preview
      * avviene prima del salvataggio, come la generazione immagine.
+     *
+     * Passa da GeneratePostTextPreview (come il tool MCP): controllo del
+     * limite mensile e TokenLog del consumo. Il token_log_id torna al form,
+     * che lo rimanda al salvataggio per collegare il consumo al post.
      */
-    public function generateText(Request $request, User $user, PostTextGenerator $generator): JsonResponse
+    public function generateText(Request $request, User $user, GeneratePostTextPreview $preview): JsonResponse
     {
         abort_unless($request->user()->canActFor($user), 403);
 
@@ -34,16 +38,12 @@ class PostContentController extends Controller
 
         $data = $validator->validated();
 
-        if (empty($user->settings?->openai_api_key)) {
-            return response()->json(['message' => 'Nessuna chiave OpenAI collegata per questo account. Collegala in Impostazioni AI.'], 422);
-        }
-
         try {
-            $result = $generator->generate($user->settings, $data['ai_prompt_post'], $data['channel'] ?? null, $data['channels'] ?? []);
-        } catch (RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            $result = $preview->handle($user, $data['ai_prompt_post'], $data['channel'] ?? null, $data['channels'] ?? []);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => collect($e->errors())->flatten()->first()], 422);
         }
 
-        return response()->json(['content' => $result['content']]);
+        return response()->json(['content' => $result['content'], 'token_log_id' => $result['token_log_id']]);
     }
 }

@@ -39,6 +39,8 @@ class UpdatePost extends Tool
             'remove_images' => ['nullable', 'array'],
             'remove_images.*' => ['string'],
             'ai_looks_at_image' => ['sometimes', 'boolean'],
+            'preview_token_log_ids' => ['nullable', 'array', 'max:50'],
+            'preview_token_log_ids.*' => ['integer'],
         ], $this->publishedAtMessages());
 
         $post = $this->findPost($data['post_id'], 'update');
@@ -69,6 +71,7 @@ class UpdatePost extends Tool
             'img_ai_check_on' => $field('ai_looks_at_image', $post->img_ai_check_on == '1'),
             'published_at' => $field('published_at', $post->published_at),
             'action' => 'save',
+            'preview_token_log_ids' => $data['preview_token_log_ids'] ?? [],
         ], $files, $keep));
 
         return Response::structured($this->postSummary($post, $textQueued));
@@ -87,6 +90,7 @@ class UpdatePost extends Tool
             'archive_images' => $schema->array()->items($schema->string())->max(self::MAX_IMAGES)->description('Immagini d\'archivio da aggiungere.'),
             'remove_images' => $schema->array()->items($schema->string())->description('Filename (da get_post) da togliere dal post.'),
             'ai_looks_at_image' => $schema->boolean(),
+            'preview_token_log_ids' => $schema->array()->items($schema->integer())->description('token_log_id restituiti da generate_post_text per il testo di questo post: il consumo viene attribuito al post.'),
         ];
     }
 }

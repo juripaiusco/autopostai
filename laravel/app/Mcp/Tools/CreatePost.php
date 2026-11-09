@@ -39,6 +39,8 @@ class CreatePost extends Tool
             'archive_images' => ['nullable', 'array', 'max:'.self::MAX_IMAGES],
             'archive_images.*' => ['string'],
             'ai_looks_at_image' => ['nullable', 'boolean'],
+            'preview_token_log_ids' => ['nullable', 'array', 'max:50'],
+            'preview_token_log_ids.*' => ['integer'],
         ], $this->publishedAtMessages());
 
         $me = $this->me();
@@ -68,6 +70,7 @@ class CreatePost extends Tool
             'img_ai_check_on' => $data['ai_looks_at_image'] ?? false,
             'published_at' => $data['published_at'] ?? null,
             'action' => 'save',
+            'preview_token_log_ids' => $data['preview_token_log_ids'] ?? [],
         ], $files));
 
         return Response::structured($this->postSummary($post, $textQueued));
@@ -85,6 +88,7 @@ class CreatePost extends Tool
             'published_at' => $schema->string()->format('date-time')->description('Data/ora di uscita futura (ISO 8601). Ometti per una bozza.'),
             'archive_images' => $schema->array()->items($schema->string())->max(self::MAX_IMAGES)->description('Filename da list_image_archive o get_image_job.'),
             'ai_looks_at_image' => $schema->boolean()->description('L\'AI guarda la prima immagine quando scrive il testo.'),
+            'preview_token_log_ids' => $schema->array()->items($schema->integer())->description('token_log_id restituiti da generate_post_text per il testo di questo post: il consumo viene attribuito al post.'),
         ];
     }
 }

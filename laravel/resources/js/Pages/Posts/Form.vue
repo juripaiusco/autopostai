@@ -81,6 +81,7 @@ function buildForm() {
             newImages: [],
             img_ai_check_on: props.post.img_ai_check_on ?? false,
             published_at: props.post.published_at ?? '',
+            preview_token_log_ids: [],
         };
     }
 
@@ -95,6 +96,8 @@ function buildForm() {
         newImages: [],
         img_ai_check_on: false,
         published_at: '',
+        // Log dei token di ogni "Genera anteprima": al salvataggio il server li collega al post.
+        preview_token_log_ids: [],
     };
 }
 

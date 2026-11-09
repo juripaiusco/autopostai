@@ -4,6 +4,7 @@ namespace App\Actions\Posts\Concerns;
 
 use App\Jobs\GeneratePostContentJob;
 use App\Models\Post;
+use App\Models\TokenLog;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -75,5 +76,41 @@ trait SavesPosts
         GeneratePostContentJob::dispatch($post->id);
 
         return true;
+    }
+
+    /**
+     * Regole del campo che collega al post i token delle anteprime
+     * ("Genera anteprima" / generate_post_text): ogni rigenerazione è un log.
+     *
+     * @return array<string, mixed>
+     */
+    private static function previewTokenRules(): array
+    {
+        return [
+            'preview_token_log_ids' => ['nullable', 'array', 'max:50'],
+            'preview_token_log_ids.*' => ['integer'],
+        ];
+    }
+
+    /**
+     * I log delle anteprime nascono senza post (type "preview",
+     * reference_id 0): al salvataggio diventano consumo del post. Solo log
+     * dello stesso account e non ancora collegati, così un id altrui o già
+     * usato non sposta nulla. Le anteprime mai salvate restano "preview" e
+     * contano comunque nel mese.
+     *
+     * @param  array<int, int>  $ids
+     */
+    private function attachPreviewTokens(Post $post, array $ids): void
+    {
+        if ($ids === []) {
+            return;
+        }
+
+        TokenLog::whereIn('id', $ids)
+            ->where('user_id', $post->user_id)
+            ->where('type', 'preview')
+            ->where('reference_id', 0)
+            ->update(['type' => 'post', 'reference_id' => $post->id]);
     }
 }

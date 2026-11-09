@@ -6,6 +6,7 @@ use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -81,7 +82,12 @@ class AccountController extends Controller
         }
 
         $users = $query
-            ->withCount(['postLogs', 'replyLogs', 'imagesUsed'])
+            // Post distinti: uno stesso post può avere più log (anteprime + generazione).
+            ->withCount([
+                'postLogs as post_logs_count' => fn ($q) => $q->select(DB::raw('count(distinct reference_id)')),
+                'replyLogs',
+                'imagesUsed',
+            ])
             ->withSum(['tokensUsed as tokens_used_sum'], 'tokens_used')
             ->orderBy($sortColumn, $dir)
             ->whereNotNull('parent_id')

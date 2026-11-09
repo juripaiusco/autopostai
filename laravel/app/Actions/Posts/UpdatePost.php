@@ -37,6 +37,7 @@ class UpdatePost
             'img_ai_check_on' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
             'action' => ['nullable', 'string', Rule::in(['save', 'publish_now'])],
+            ...self::previewTokenRules(),
         ];
     }
 
@@ -92,6 +93,8 @@ class UpdatePost
             'channels' => $channels,
             'published_at' => $this->publishedAt($data),
         ]);
+
+        $this->attachPreviewTokens($post, $data['preview_token_log_ids'] ?? []);
 
         return $this->queueTextGeneration($post);
     }

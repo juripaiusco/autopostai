@@ -34,6 +34,7 @@ class CreatePost
             'img_ai_check_on' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
             'action' => ['required', 'string', Rule::in(['save', 'save_and_add', 'publish_now'])],
+            ...self::previewTokenRules(),
         ];
     }
 
@@ -70,6 +71,8 @@ class CreatePost
         if ($images !== []) {
             $post->update(['img' => $this->storeImages($post->id, $images)]);
         }
+
+        $this->attachPreviewTokens($post, $data['preview_token_log_ids'] ?? []);
 
         return [$post, $this->queueTextGeneration($post)];
     }

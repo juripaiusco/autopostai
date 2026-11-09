@@ -185,14 +185,17 @@ class PostController extends Controller
 
         $post->load([
             'user:id,name,email',
-            'token',
+            'tokens',
             'comments' => fn ($q) => $q->orderByDesc('message_created_time'),
             'comments.token',
         ]);
 
         $commentsByChannel = $post->comments->countBy('channel');
 
-        $totalTokens = ($post->token?->tokens_used ?? 0)
+        // Più log "post" per lo stesso post: anteprime collegate al
+        // salvataggio, job di generazione, worker. Conta la somma.
+        $postTokens = (int) $post->tokens->sum('tokens_used');
+        $totalTokens = $postTokens
             + $post->comments->sum(fn ($c) => $c->token?->tokens_used ?? 0);
 
         $images = $this->imageUrls($post);
@@ -228,7 +231,7 @@ class PostController extends Controller
                     ->all(),
                 'prompt' => $post->ai_prompt_post,
                 'aiContent' => $post->ai_content,
-                'postTokens' => $post->token?->tokens_used ?? 0,
+                'postTokens' => $postTokens,
                 'totalTokens' => $totalTokens,
                 'commentsEnabled' => $post->comments_enabled === '1',
                 'autoReplyEnabled' => $post->auto_reply_enabled === '1',

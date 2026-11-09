@@ -72,6 +72,9 @@ async function runPreview() {
             return;
         }
         emit('set', 'ai_content', json.content ?? '');
+        if (json.token_log_id) {
+            emit('set', 'preview_token_log_ids', [...(props.form.preview_token_log_ids ?? []), json.token_log_id]);
+        }
     } catch (e) {
         genError.value = 'Generazione non riuscita, riprova.';
     } finally {

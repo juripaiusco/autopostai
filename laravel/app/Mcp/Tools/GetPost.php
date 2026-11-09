@@ -29,7 +29,7 @@ class GetPost extends Tool
             'post_id' => ['required', 'integer'],
         ]);
 
-        $post = $this->findPost($data['post_id'])->load(['user:id,name', 'token']);
+        $post = $this->findPost($data['post_id'])->load(['user:id,name', 'tokens']);
 
         $comments = $post->comments()->with('token')->limit(self::COMMENTS_LIMIT)->get();
         $commentsTotal = Comment::where('post_id', $post->id)->count();
@@ -59,7 +59,7 @@ class GetPost extends Tool
                 ->values()
                 ->all(),
             'ai_tokens' => [
-                'post' => (int) ($post->token?->tokens_used ?? 0),
+                'post' => (int) $post->tokens->sum('tokens_used'),
                 'replies' => (int) $repliesTokens,
             ],
             'comments_total' => $commentsTotal,

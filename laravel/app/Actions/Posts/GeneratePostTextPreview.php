@@ -12,8 +12,9 @@ use RuntimeException;
  * Anteprima del testo di un post (non salva nulla sul post), con la stessa
  * regola di consumo del job e del worker: limite mensile di token
  * dell'account e TokenLog del consumo (type "preview", nessun post di
- * riferimento: reference_id 0). Usata dal tool MCP generate_post_text;
- * "Genera anteprima" del form non la usa ancora (non conta i token).
+ * riferimento: reference_id 0). Usata da "Genera anteprima" del form e dal
+ * tool MCP generate_post_text. Al salvataggio del post il log viene
+ * collegato al post (SavesPosts::attachPreviewTokens) tramite token_log_id.
  */
 class GeneratePostTextPreview
 {
@@ -21,7 +22,7 @@ class GeneratePostTextPreview
 
     /**
      * @param  array<int, string>  $channels  canali accesi, per il limite di caratteri (LinkedIn)
-     * @return array{content: string, tokens: int}
+     * @return array{content: string, tokens: int, token_log_id: int}
      *
      * @throws ValidationException chiave mancante, limite raggiunto o errore del servizio AI
      */
@@ -44,13 +45,13 @@ class GeneratePostTextPreview
             throw ValidationException::withMessages(['prompt' => $e->getMessage()]);
         }
 
-        TokenLog::create([
+        $log = TokenLog::create([
             'user_id' => $account->id,
             'type' => 'preview',
             'reference_id' => 0,
             'tokens_used' => $result['tokens'],
         ]);
 
-        return $result;
+        return [...$result, 'token_log_id' => $log->id];
     }
 }
