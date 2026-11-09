@@ -264,7 +264,10 @@ class Post extends Model
             return 'error';
         }
 
-        if ($this->published_at !== null && $this->published_at->isFuture()) {
+        // Con data è "schedulato" anche se l'orario è già passato: il worker
+        // prende ogni published_at <= adesso, quindi sta per uscire. Prima
+        // risultava "bozza" fino al giro del worker (es. "Pubblica subito").
+        if ($this->published_at !== null) {
             return 'scheduled';
         }
 
@@ -308,16 +311,15 @@ class Post extends Model
 
     /**
      * Filtri della lista post (tab in UI, argomento filter in MCP):
-     * pubblicati, programmati (data futura), bozze (senza data o con data
-     * passata mai uscita). Qualunque altro valore = tutti.
+     * pubblicati, programmati (con data, anche già passata ma non ancora
+     * uscita), bozze (senza data). Qualunque altro valore = tutti.
      */
     public function scopeListFilter(Builder $query, string $filter): Builder
     {
         return match ($filter) {
             'pubblicati' => $query->where('published', '1'),
-            'programmati' => $query->where('published', '0')->where('published_at', '>', now()),
-            'bozze' => $query->where('published', '0')
-                ->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now())),
+            'programmati' => $query->where('published', '0')->whereNotNull('published_at'),
+            'bozze' => $query->where('published', '0')->whereNull('published_at'),
             default => $query,
         };
     }
