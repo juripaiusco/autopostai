@@ -12,8 +12,9 @@ const props = defineProps({
     mode: { type: String, default: 'create' }, // 'create' | 'edit'
     channelsMeta: { type: Object, default: () => ({}) }, // { [channelId]: { available, replyOn } }
     users: { type: Array, default: () => [] },
-    prefill: { type: Object, default: null },
     post: { type: Object, default: null },
+    // Copia appena creata da "Salva e aggiungi": abilita l'avviso di doppia pubblicazione.
+    seriesCopy: { type: Boolean, default: false },
     imageModels: { type: Array, default: () => [] }, // [{ id, name, provider, description }]
     defaultImageModel: { type: String, default: null },
 });
@@ -86,11 +87,11 @@ function buildForm() {
     }
 
     return {
-        title: props.prefill?.title ?? '',
+        title: '',
         user_id: null,
         channels: {},
-        ai_prompt_post: props.prefill?.ai_prompt_post ?? '',
-        ai_prompt_comment: props.prefill?.ai_prompt_comment ?? '',
+        ai_prompt_post: '',
+        ai_prompt_comment: '',
         ai_content: '',
         existingImages: [],
         newImages: [],
@@ -102,6 +103,18 @@ function buildForm() {
 }
 
 const form = reactive(buildForm());
+
+// "Salva e aggiungi" crea la copia 1 minuto dopo l'originale, sugli stessi
+// canali: se esce entro un'ora e l'utente non la adatta, il contenuto viene
+// pubblicato due volte. Calcolato sulla data del form: spostandola oltre
+// l'ora l'avviso sparisce.
+const seriesCopyWarning = computed(() => {
+    if (!props.seriesCopy || !form.published_at) return null;
+    const at = new Date(form.published_at);
+    if (Number.isNaN(at.getTime()) || at.getTime() - Date.now() > 60 * 60 * 1000) return null;
+    return at.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+});
+
 const step = ref(0);
 const saving = ref(false);
 
@@ -196,6 +209,12 @@ function submit(action) {
         <div class="acc-content">
             <div class="card card-pad">
                 <StepBar :current="step" :labels="STEP_LABELS" :free-nav="mode === 'edit'" @goto="goto" />
+
+                <div v-if="seriesCopyWarning" class="pf-series-warn" role="alert">
+                    <strong>Attenzione: rischio doppia pubblicazione.</strong>
+                    Questa copia uscirà alle {{ seriesCopyWarning }}, tra meno di un'ora, sugli stessi canali del post originale.
+                    Adatta canali e contenuto (o cambia data) prima che parta, altrimenti verrà pubblicata due volte.
+                </div>
 
                 <div v-if="errorMessages.length" class="pf-errors" role="alert">
                     <strong>Il post non è stato salvato:</strong>

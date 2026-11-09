@@ -2,6 +2,7 @@
 
 namespace App\Actions\Posts;
 
+use App\Jobs\GeneratePostContentJob;
 use App\Models\ContactTag;
 use App\Models\Post;
 use App\Models\User;
@@ -11,13 +12,49 @@ use Illuminate\Support\Str;
 /**
  * Copia di un post (qualunque stato, anche già pubblicato) come nuova bozza
  * dello stesso account: testi, immagini e canali, senza data di invio. Come
- * in v1, la data si sceglie dopo dal form. Lista post e tool MCP.
+ * in v1, la data si sceglie dopo dal form. Lista post e tool MCP; variante
+ * nextInSeries() per "Salva e aggiungi".
  */
 class DuplicatePost
 {
     public function __construct(private PostChannels $channels) {}
 
     public function handle(User $actor, Post $post): Post
+    {
+        return $this->copy($actor, $post, [
+            'title' => Str::limit((string) $post->title, 255 - 8, '').' (copia)',
+            'ai_content' => $post->ai_content,
+            // Senza data resta una bozza: il worker non la prende finché
+            // l'utente non sceglie quando inviarla.
+            'published_at' => null,
+        ]);
+    }
+
+    /**
+     * "Salva e aggiungi" dal form post (come v1): copia programmata 1 minuto
+     * dopo l'originale, stesso titolo, testo AI azzerato perché venga
+     * riscritto. Serve a creare una serie di post sullo stesso tema su più
+     * canali con orari sfalsati. Originale senza data → copia senza data.
+     */
+    public function nextInSeries(User $actor, Post $post): Post
+    {
+        $copy = $this->copy($actor, $post, [
+            'title' => (string) $post->title,
+            'ai_content' => null,
+            'published_at' => $post->published_at?->copy()->addMinute(),
+        ]);
+
+        if ($copy->needsGeneratedText()) {
+            GeneratePostContentJob::dispatch($copy->id);
+        }
+
+        return $copy;
+    }
+
+    /**
+     * @param  array{title: string, ai_content: ?string, published_at: mixed}  $overrides
+     */
+    private function copy(User $actor, Post $post, array $overrides): Post
     {
         $account = $post->user;
 
@@ -27,18 +64,16 @@ class DuplicatePost
         $copy = Post::create([
             'user_id' => $post->user_id,
             'created_by_user_id' => $actor->id,
-            'title' => Str::limit((string) $post->title, 255 - 8, '').' (copia)',
+            'title' => $overrides['title'],
             'ai_prompt_post' => $post->ai_prompt_post,
-            'ai_content' => $post->ai_content,
+            'ai_content' => $overrides['ai_content'],
             'ai_prompt_comment' => $post->ai_prompt_comment,
             'img' => null,
             'img_ai_check_on' => $post->img_ai_check_on == '1' ? '1' : '0',
             'comments_enabled' => $commentsEnabled ? '1' : '0',
             'auto_reply_enabled' => $autoReplyEnabled ? '1' : '0',
             'channels' => $channels,
-            // Senza data resta una bozza: il worker non la prende finché
-            // l'utente non sceglie quando inviarla.
-            'published_at' => null,
+            'published_at' => $overrides['published_at'],
             'published' => '0',
         ]);
 

@@ -167,12 +167,9 @@ class PostController extends Controller
                 ->values();
         }
 
-        $prefill = $request->session()->pull('post_prefill');
-
         return Inertia::render('Posts/Form', [
             'channelsMeta' => $me->channelsMeta(),
             'users' => $users ?? [],
-            'prefill' => $prefill,
             ...$this->imageModelsProps(),
         ]);
     }
@@ -291,6 +288,7 @@ class PostController extends Controller
                 'img_ai_check_on' => $post->img_ai_check_on == '1',
                 'published_at' => $post->published_at?->format('Y-m-d\TH:i'),
             ],
+            'seriesCopy' => $request->session()->get('series_copy_id') === $post->id,
             ...$this->imageModelsProps(),
         ]);
     }
@@ -305,20 +303,28 @@ class PostController extends Controller
         [$post, $textQueued] = $createPost->handle($request->user(), $data, $request->file('images', []));
 
         if ($data['action'] === 'save_and_add') {
-            $request->session()->flash('post_prefill', [
-                'title' => $post->title,
-                'channels' => $data['channels'],
-                'ai_prompt_post' => $post->ai_prompt_post,
-                'ai_prompt_comment' => $post->ai_prompt_comment,
-            ]);
-            $request->session()->flash('toast', "Post salvato. Ne abbiamo creato una copia: adattala a un altro canale e salva.");
-
-            return redirect()->route('posts.create');
+            return $this->saveAndAdd($request, $post);
         }
 
         $request->session()->flash('toast', $this->savedToast($data, $textQueued ? self::TEXT_QUEUED_TOAST : 'Post salvato.'));
 
         return redirect()->route('posts');
+    }
+
+    /**
+     * "Salva e aggiungi" (come v1): dopo il salvataggio crea la copia
+     * programmata 1 minuto dopo e ne apre il form. series_copy_id fa
+     * mostrare nel form l'avviso di doppia pubblicazione se la copia esce
+     * entro un'ora (vedi DuplicatePost::nextInSeries).
+     */
+    private function saveAndAdd(Request $request, Post $post): RedirectResponse
+    {
+        $copy = app(DuplicatePost::class)->nextInSeries($request->user(), $post->refresh());
+
+        $request->session()->flash('series_copy_id', $copy->id);
+        $request->session()->flash('toast', 'Post salvato. Copia programmata 1 minuto dopo: adattala a un altro canale e salva.');
+
+        return redirect()->route('posts.edit', $copy);
     }
 
     private function savedToast(array $data, string $default): string
@@ -342,6 +348,10 @@ class PostController extends Controller
         $keep = isset($data['keep_images']) ? (json_decode($data['keep_images'], true) ?? []) : null;
 
         $textQueued = $updatePost->handle($post, $data, $request->file('images', []), $keep);
+
+        if (($data['action'] ?? null) === 'save_and_add') {
+            return $this->saveAndAdd($request, $post);
+        }
 
         $request->session()->flash('toast', $this->savedToast($data, $textQueued ? self::TEXT_QUEUED_TOAST : 'Post aggiornato.'));
 

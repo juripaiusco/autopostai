@@ -36,7 +36,7 @@ class UpdatePost
             'images.*' => self::IMAGE_RULES,
             'img_ai_check_on' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
-            'action' => ['nullable', 'string', Rule::in(['save', 'publish_now'])],
+            'action' => ['nullable', 'string', Rule::in(['save', 'save_and_add', 'publish_now'])],
             ...self::previewTokenRules(),
         ];
     }

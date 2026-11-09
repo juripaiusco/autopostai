@@ -170,8 +170,8 @@ async function runPreview() {
         <div class="pf-actions">
             <button type="button" class="btn btn-secondary" @click="emit('back')">← Indietro</button>
             <div class="spacer"></div>
-            <button v-if="mode !== 'edit'" type="button" class="btn btn-secondary" :disabled="!canSave || saving"
-                title="Salva questo post e creane subito una copia, da adattare a un altro canale"
+            <button type="button" class="btn btn-secondary" :disabled="!canSave || saving"
+                title="Salva e crea una copia programmata 1 minuto dopo, da adattare a un altro canale"
                 @click="emit('save-and-add')">
                 <span v-if="saving" class="btn-spinner" aria-hidden="true"></span>
                 <Icon v-else name="clone" :size="16" />{{ saving ? 'Salvataggio…' : 'Salva e aggiungi' }}
