@@ -175,6 +175,11 @@ function buildPayload(action) {
 
     return {
         ...rest,
+        // In FormData un array vuoto non viene inviato: WordPress senza
+        // categorie ({ categories: [] }) spariva e, se era l'unico canale,
+        // il server rispondeva "canali obbligatorio". 'on' tiene sempre la
+        // chiave del canale (PostChannels::build guarda solo la presenza).
+        channels: Object.fromEntries(Object.entries(rest.channels).map(([id, opts]) => [id, { ...opts, on: true }])),
         action,
         images: newImages.map((i) => i.file),
         keep_images: JSON.stringify(existingImages.map((i) => i.filename)),

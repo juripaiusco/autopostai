@@ -139,3 +139,22 @@ it('flags the copy form for the double publishing warning only right after save 
     $this->actingAs($owner)->get(route('posts.edit', $copy))
         ->assertInertia(fn (Assert $page) => $page->where('seriesCopy', false));
 });
+
+it('accepts WordPress as the only channel without categories, as the form sends it', function () {
+    $owner = saveAndAddOwner();
+    $original = mcpPost($owner, ['published_at' => now()->addDay()]);
+
+    // FormData non invia array vuoti: il form manda channels[wordpress][on]=1.
+    $this->actingAs($owner)->put(route('posts.update', $original), [
+        'title' => $original->title,
+        'channels' => ['wordpress' => ['on' => '1']],
+        'published_at' => $original->published_at->format('Y-m-d\TH:i'),
+        'action' => 'save_and_add',
+    ])->assertSessionHasNoErrors()->assertRedirect();
+
+    $copy = Post::whereKeyNot($original->id)->sole();
+
+    expect($original->fresh()->channels['wordpress'])->toBe(['on' => true, 'categories' => []])
+        ->and($copy->channels['wordpress']['on'])->toBeTrue()
+        ->and($copy->channels['facebook']['on'])->toBeFalse();
+});
