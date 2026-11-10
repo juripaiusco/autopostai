@@ -4,9 +4,12 @@ namespace Tests\Feature;
 
 use App\Actions\Posts\DuplicatePost;
 use App\Models\Post;
+use App\Models\Settings;
 use App\Models\User;
 use App\Services\PostHtmlSanitizer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -173,5 +176,65 @@ class PostContentFormatTest extends TestCase
         $this->assertSame('social', $copy->ai_content_social);
         $this->assertSame('markdown', $next->ai_content_format);
         $this->assertNull($next->ai_content_social);
+    }
+
+    public function test_edit_gives_the_rich_editor_html_converted_from_markdown(): void
+    {
+        $user = $this->makeUser();
+        $post = $this->makeDraft($user, ['ai_content' => "# Titolo\n\nTesto **forte** <script>x()</script>", 'ai_content_format' => 'markdown']);
+
+        $this->actingAs($user)->get(route('posts.edit', $post))->assertInertia(fn (Assert $page) => $page
+            ->where('post.ai_content_format', 'html')
+            ->where('post.ai_content', "<h1>Titolo</h1>\n<p>Testo <strong>forte</strong> &lt;script&gt;x()&lt;/script&gt;</p>")
+        );
+    }
+
+    public function test_edit_leaves_social_only_text_alone(): void
+    {
+        $user = $this->makeUser();
+        $post = $this->makeDraft($user, [
+            'channels' => ['facebook' => ['on' => true]],
+            'ai_content' => 'Promo **weekend**',
+            'ai_content_format' => 'text',
+        ]);
+
+        $this->actingAs($user)->get(route('posts.edit', $post))->assertInertia(fn (Assert $page) => $page
+            ->where('post.ai_content_format', 'text')
+            ->where('post.ai_content', 'Promo **weekend**')
+        );
+    }
+
+    public function test_show_renders_the_article_as_safe_html(): void
+    {
+        $user = $this->makeUser();
+        $post = $this->makeDraft($user, ['ai_content' => '<h1>Titolo</h1><p onclick="x()">Testo</p>', 'ai_content_format' => 'html']);
+        $social = $this->makeDraft($user, ['channels' => ['facebook' => ['on' => true]], 'ai_content' => 'Solo social']);
+
+        $this->actingAs($user)->get(route('posts.show', $post))->assertInertia(fn (Assert $page) => $page
+            ->where('post.aiContentHtml', '<h1>Titolo</h1><p>Testo</p>')
+        );
+        $this->actingAs($user)->get(route('posts.show', $social))->assertInertia(fn (Assert $page) => $page
+            ->where('post.aiContentHtml', null)
+            ->where('post.aiContent', 'Solo social')
+        );
+    }
+
+    public function test_preview_returns_html_for_article_channels_only(): void
+    {
+        $user = $this->makeUser();
+        $user->update(['tokens_limit' => 100000]);
+        Settings::factory()->create(['user_id' => $user->id, 'openai_api_key' => 'sk-test']);
+        Http::fake(['*/generate-text' => Http::response(['content' => "# Titolo\n\nCorpo", 'tokens' => 10])]);
+
+        $this->actingAs($user)
+            ->postJson(route('posts.generate-text', $user), ['ai_prompt_post' => 'Scrivi', 'channel' => 'wordpress'])
+            ->assertOk()
+            ->assertJsonPath('content', "# Titolo\n\nCorpo")
+            ->assertJsonPath('html', "<h1>Titolo</h1>\n<p>Corpo</p>");
+
+        $this->actingAs($user)
+            ->postJson(route('posts.generate-text', $user), ['ai_prompt_post' => 'Scrivi'])
+            ->assertOk()
+            ->assertJsonPath('html', null);
     }
 }

@@ -229,6 +229,10 @@ class PostController extends Controller
                     ->all(),
                 'prompt' => $post->ai_prompt_post,
                 'aiContent' => $post->ai_content,
+                // Testo articolo già in HTML sicuro (sanitizer o Markdown convertito).
+                'aiContentHtml' => $post->textChannel() !== null && trim((string) $post->ai_content) !== ''
+                    ? $post->contentHtml()
+                    : null,
                 'postTokens' => $postTokens,
                 'totalTokens' => $totalTokens,
                 'commentsEnabled' => $post->comments_enabled === '1',
@@ -282,7 +286,10 @@ class PostController extends Controller
                     : null,
                 'channels' => $post->channels ?? [],
                 'ai_prompt_post' => $post->ai_prompt_post,
-                'ai_content' => $post->ai_content,
+                // Con WordPress/Newsletter l'editor ricco lavora in HTML: il
+                // Markdown (testo AI, post vecchi) arriva già convertito.
+                ...$this->editorContent($post),
+                'ai_content_social' => $post->ai_content_social,
                 'ai_prompt_comment' => $post->ai_prompt_comment,
                 'images' => $this->imageUrls($post),
                 'img_ai_check_on' => $post->img_ai_check_on == '1',
@@ -291,6 +298,18 @@ class PostController extends Controller
             'seriesCopy' => $request->session()->get('series_copy_id') === $post->id,
             ...$this->imageModelsProps(),
         ]);
+    }
+
+    /**
+     * @return array{ai_content: ?string, ai_content_format: string}
+     */
+    private function editorContent(Post $post): array
+    {
+        if ($post->textChannel() === null || trim((string) $post->ai_content) === '') {
+            return ['ai_content' => $post->ai_content, 'ai_content_format' => $post->ai_content_format ?? Post::FORMAT_MARKDOWN];
+        }
+
+        return ['ai_content' => $post->contentHtml(), 'ai_content_format' => Post::FORMAT_HTML];
     }
 
     /**

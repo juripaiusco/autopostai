@@ -1,0 +1,48 @@
+/* ---------- Editor ricco (Components/Editor/RichEditor.vue) ---------- */
+.rte { border: 1px solid var(--g200); border-radius: var(--radius); background: #fff; }
+.rte:focus-within { border-color: var(--sky); box-shadow: 0 0 0 3px var(--sky-100); }
+.rte.is-disabled { opacity: .6; }
+
+.rte-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; padding: 6px 8px; border-bottom: 1px solid var(--g100); background: var(--g50); border-radius: var(--radius) var(--radius) 0 0; position: sticky; top: 0; z-index: 3; }
+.rte-toolbar .spacer { flex: 1; }
+.rte-sep { width: 1px; height: 20px; background: var(--g200); margin: 0 4px; }
+.rte-btn { min-width: 30px; height: 30px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: var(--radius-sm); background: none; color: var(--g700); font: 600 14px/1 inherit; cursor: pointer; transition: background .12s, color .12s; }
+.rte-btn:hover:not(:disabled) { background: var(--g100); color: var(--ink); }
+.rte-btn.is-active { background: var(--sky-100); color: var(--sky-strong); }
+.rte-btn:disabled { opacity: .4; cursor: default; }
+.rte-btn:focus-visible { outline: 2px solid var(--sky); outline-offset: 1px; }
+.rte-btn--b { font-weight: 800; }
+.rte-btn--i { font-style: italic; font-family: Georgia, serif; }
+.rte-btn--u { text-decoration: underline; }
+.rte-btn--quote { font-size: 18px; }
+.rte-btn--color { flex-direction: column; gap: 2px; font-weight: 700; }
+.rte-color-bar { width: 14px; height: 3px; border-radius: 2px; }
+.rte-select { height: 30px; padding: 0 26px 0 8px; border: 1px solid var(--g200); border-radius: var(--radius-sm); background-color: #fff; font: 500 13px inherit; color: var(--g700); }
+
+.rte-pop-wrap { position: relative; }
+.rte-pop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 10; background: #fff; border: 1px solid var(--g200); border-radius: var(--radius); box-shadow: var(--shadow-md); padding: 10px; }
+.rte-pop--colors { display: grid; grid-template-columns: repeat(4, 26px); gap: 8px; }
+.rte-pop--link { display: flex; gap: 6px; align-items: center; width: min(420px, 80vw); }
+.rte-pop--link .control { flex: 1; min-width: 0; }
+.rte-swatch { width: 26px; height: 26px; border-radius: var(--radius-full); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--g200); cursor: pointer; }
+.rte-swatch:hover { box-shadow: 0 0 0 2px var(--g400); }
+.rte-pop-link { grid-column: 1 / -1; border: none; background: none; padding: 2px 0 0; text-align: left; font-size: 12.5px; color: var(--sky-strong); cursor: pointer; font-family: inherit; }
+
+.rte-content .ProseMirror { min-height: 220px; padding: 14px 16px; outline: none; }
+.rte-content .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; height: 0; color: var(--g400); pointer-events: none; }
+
+/* Testo articolo: editor e pagina del post */
+.rich-text, .rte-content .ProseMirror { font-size: 14.5px; line-height: 1.7; color: var(--ink); overflow-wrap: anywhere; }
+.rich-text > * + *, .rte-content .ProseMirror > * + * { margin-top: .75em; }
+.rich-text h1 { font-size: 1.45em; font-weight: 700; line-height: 1.3; }
+.rich-text h2, .rte-content .ProseMirror h2 { font-size: 1.25em; font-weight: 700; line-height: 1.35; margin-top: 1.1em; }
+.rich-text h3, .rte-content .ProseMirror h3 { font-size: 1.08em; font-weight: 700; line-height: 1.4; margin-top: 1em; }
+.rich-text ul, .rte-content .ProseMirror ul { list-style: disc; padding-left: 1.4em; }
+.rich-text ol, .rte-content .ProseMirror ol { list-style: decimal; padding-left: 1.4em; }
+.rich-text li > p, .rte-content .ProseMirror li > p { margin: 0; }
+.rich-text blockquote, .rte-content .ProseMirror blockquote { border-left: 3px solid var(--g300); padding-left: 12px; color: var(--g600); font-style: italic; }
+.rich-text a, .rte-content .ProseMirror a { color: var(--sky-strong); text-decoration: underline; }
+.rich-text hr, .rte-content .ProseMirror hr { border: none; border-top: 1px solid var(--g200); margin: 1.2em 0; }
+
+/* Titolo articolo sopra l'editor */
+.pf-article-title { font-size: 17px; font-weight: 600; margin-bottom: 10px; }

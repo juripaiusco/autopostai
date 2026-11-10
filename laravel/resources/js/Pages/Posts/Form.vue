@@ -7,6 +7,7 @@ import StepBar from '@/Components/Posts/StepBar.vue';
 import StepWrite from '@/Components/Posts/StepWrite.vue';
 import StepMedia from '@/Components/Posts/StepMedia.vue';
 import StepPublish from '@/Components/Posts/StepPublish.vue';
+import { normalizeContent } from '@/lib/postText.js';
 
 const props = defineProps({
     mode: { type: String, default: 'create' }, // 'create' | 'edit'
@@ -78,6 +79,8 @@ function buildForm() {
             ai_prompt_post: props.post.ai_prompt_post ?? '',
             ai_prompt_comment: props.post.ai_prompt_comment ?? '',
             ai_content: props.post.ai_content ?? '',
+            ai_content_format: props.post.ai_content_format ?? 'markdown',
+            ai_content_social: props.post.ai_content_social ?? null,
             existingImages: (props.post.images ?? []).map((i) => ({ filename: i.filename, url: i.url })),
             newImages: [],
             img_ai_check_on: props.post.img_ai_check_on ?? false,
@@ -93,6 +96,8 @@ function buildForm() {
         ai_prompt_post: '',
         ai_prompt_comment: '',
         ai_content: '',
+        ai_content_format: 'markdown',
+        ai_content_social: null,
         existingImages: [],
         newImages: [],
         img_ai_check_on: false,
@@ -172,9 +177,15 @@ const targetUserId = computed(() => {
 
 function buildPayload(action) {
     const { existingImages, newImages, ...rest } = form;
+    // Il passo "Pubblica" adegua già il testo ai canali, ma si può salvare
+    // anche dopo aver cambiato i canali senza tornarci: qui l'ultima parola.
+    const { content, format } = normalizeContent(rest.ai_content, rest.ai_content_format, Object.keys(rest.channels));
 
     return {
         ...rest,
+        ai_content: content,
+        ai_content_format: format,
+        ai_content_social: rest.ai_content_social ?? '',
         // In FormData un array vuoto non viene inviato: WordPress senza
         // categorie ({ categories: [] }) spariva e, se era l'unico canale,
         // il server rispondeva "canali obbligatorio". 'on' tiene sempre la

@@ -255,7 +255,9 @@ function confirmDelete() {
                     </div>
                     <span class="ps-token-badge">{{ withUnit(post.postTokens) }}</span>
                 </div>
-                <div class="ps-ai-text" :class="{ 'is-clamped': !showFullContent }">{{ post.aiContent }}</div>
+                <!-- HTML già sanificato dal server (PostController::show, Post::contentHtml) -->
+                <div v-if="post.aiContentHtml" class="rich-text ps-ai-rich" :class="{ 'is-clamped': !showFullContent }" v-html="post.aiContentHtml"></div>
+                <div v-else class="ps-ai-text" :class="{ 'is-clamped': !showFullContent }">{{ post.aiContent }}</div>
                 <button type="button" class="ps-readmore" @click="showFullContent = !showFullContent">
                     {{ showFullContent ? 'Mostra meno' : 'Leggi tutto' }}
                     <Icon name="chevron" :size="13" :style="{ transform: showFullContent ? 'rotate(180deg)' : 'rotate(0)' }" />

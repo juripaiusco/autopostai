@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import ImageLightbox from '@/Components/Posts/ImageLightbox.vue';
+import RichEditor from '@/Components/Editor/RichEditor.vue';
+import { hasArticleChannel, splitArticle, joinArticle, htmlToText, normalizeContent } from '@/lib/postText.js';
 
 const props = defineProps({
     form: { type: Object, required: true },
@@ -43,7 +45,10 @@ const limitChannel = computed(() => {
     return id ? channelById.value[id] : null;
 });
 
-const overLimit = computed(() => charLimit.value !== null && (props.form.ai_content || '').length > charLimit.value);
+// Con WordPress/Newsletter il testo è HTML: sui social esce in testo
+// semplice (vedi publisher/domain/channel_text.py), il limite vale su quello.
+const plainText = computed(() => (isArticle.value ? htmlToText(props.form.ai_content) : (props.form.ai_content || '')));
+const overLimit = computed(() => charLimit.value !== null && plainText.value.length > charLimit.value);
 const canSave = computed(() => selectedChannelIds.value.length > 0 && !overLimit.value);
 
 // Solo WordPress e Newsletter hanno un formato di prompt differenziato
@@ -54,6 +59,50 @@ const primaryChannel = computed(() => {
     if (selectedChannelIds.value.includes('newsletter')) return 'newsletter';
     return null;
 });
+
+// Famiglia "articolo" (WordPress/Newsletter): editor ricco + titolo, testo HTML.
+const isArticle = computed(() => hasArticleChannel(selectedChannelIds.value));
+
+const titleLabel = computed(() => {
+    const wp = selectedChannelIds.value.includes('wordpress');
+    const nl = selectedChannelIds.value.includes('newsletter');
+    if (wp && nl) return "Titolo dell'articolo e oggetto dell'email";
+    return wp ? "Titolo dell'articolo" : "Oggetto dell'email";
+});
+
+const socialLabels = computed(() => selectedChannelIds.value
+    .filter((id) => channelById.value[id]?.limit != null)
+    .map((id) => channelById.value[id].label));
+
+// Titolo e corpo tenuti a parte mentre si scrive (il titolo non va
+// "ripulito" a ogni tasto); si riallineano quando il testo cambia da fuori
+// (nuova anteprima, cambio canali).
+const articleTitle = ref('');
+const articleBody = ref('');
+
+function syncArticle() {
+    if (joinArticle(articleTitle.value, articleBody.value) === (props.form.ai_content || '')) return;
+    const { title, body } = splitArticle(props.form.ai_content);
+    articleTitle.value = title;
+    articleBody.value = body;
+}
+
+function setArticle(title, body) {
+    articleTitle.value = title;
+    articleBody.value = body;
+    const content = articleBody.value || articleTitle.value.trim() ? joinArticle(title, body) : '';
+    emit('set', 'ai_content', content);
+    emit('set', 'ai_content_format', 'html');
+}
+
+// Canali cambiati dopo aver scritto: testo e formato si adeguano alla famiglia.
+watch(isArticle, () => {
+    const { content, format } = normalizeContent(props.form.ai_content, props.form.ai_content_format, selectedChannelIds.value);
+    if (content !== props.form.ai_content) emit('set', 'ai_content', content);
+    if (format !== props.form.ai_content_format) emit('set', 'ai_content_format', format);
+}, { immediate: true });
+
+watch(() => props.form.ai_content, syncArticle, { immediate: true });
 
 async function runPreview() {
     genLoading.value = true;
@@ -71,7 +120,13 @@ async function runPreview() {
             genError.value = json.message ?? 'Generazione non riuscita, riprova.';
             return;
         }
-        emit('set', 'ai_content', json.content ?? '');
+        if (isArticle.value) {
+            emit('set', 'ai_content', json.html ?? '');
+            emit('set', 'ai_content_format', 'html');
+        } else {
+            emit('set', 'ai_content', json.content ?? '');
+            emit('set', 'ai_content_format', 'text');
+        }
         if (json.token_log_id) {
             emit('set', 'preview_token_log_ids', [...(props.form.preview_token_log_ids ?? []), json.token_log_id]);
         }
@@ -125,7 +180,11 @@ async function runPreview() {
             <div class="pf-ai-head">
                 <label class="acc-row-label" style="margin:0">
                     Anteprima AI
-                    <span class="acc-row-help" style="margin:0">Testo generato dall'AI — puoi modificarlo prima di pubblicare.</span>
+                    <span v-if="isArticle" class="acc-row-help" style="margin:0">
+                        Testo per {{ primaryChannel === 'wordpress' && selectedChannelIds.includes('newsletter') ? 'WordPress e Newsletter' : (primaryChannel === 'wordpress' ? 'WordPress' : 'la Newsletter') }}: scrivilo tu o generalo con l'AI, poi formattalo con la barra.
+                        <template v-if="socialLabels.length"> Su {{ socialLabels.join(', ') }} esce lo stesso testo senza formattazione.</template>
+                    </span>
+                    <span v-else class="acc-row-help" style="margin:0">Testo generato dall'AI — puoi modificarlo prima di pubblicare.</span>
                 </label>
                 <button type="button" class="btn btn-secondary btn-sm" :disabled="genLoading || !form.ai_prompt_post" @click="runPreview">
                     <Icon name="sparkles" :size="14" />
@@ -136,7 +195,30 @@ async function runPreview() {
                 <Icon name="warning" :size="14" />
                 <span>{{ genError }}</span>
             </div>
-            <div class="pf-ai-box">
+            <div v-if="isArticle">
+                <label class="sr-only" for="article-title">{{ titleLabel }}</label>
+                <input id="article-title" class="control pf-article-title" type="text" :value="articleTitle" :placeholder="titleLabel"
+                    :disabled="genLoading" @input="setArticle($event.target.value, articleBody)" />
+                <div style="position:relative">
+                    <div v-if="genLoading" class="pf-ai-loading">
+                        <div class="pf-spinner pf-spinner--sm"></div>
+                    </div>
+                    <RichEditor :model-value="articleBody" :disabled="genLoading"
+                        placeholder="Scrivi l'articolo, oppure usa “Genera anteprima” per farlo scrivere all'AI."
+                        @update:model-value="setArticle(articleTitle, $event)" />
+                </div>
+                <div v-if="plainText && charLimit !== null" class="pf-ai-meta">
+                    <span class="pf-ai-count" :class="{ 'pf-ai-count--over': overLimit }">
+                        {{ plainText.length.toLocaleString('it-IT') }} / {{ charLimit.toLocaleString('it-IT') }} caratteri senza formattazione
+                        <template v-if="limitChannel"> · limite {{ limitChannel.label }}</template>
+                    </span>
+                    <div v-if="overLimit" class="pf-ai-warn pf-fade-in">
+                        <Icon name="warning" :size="14" />
+                        <span>Il testo supera il limite di {{ limitChannel.label }} ({{ charLimit.toLocaleString('it-IT') }} caratteri): accorcialo per poter salvare.</span>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="pf-ai-box">
                 <div v-if="genLoading" class="pf-ai-loading">
                     <div class="pf-spinner pf-spinner--sm"></div>
                 </div>

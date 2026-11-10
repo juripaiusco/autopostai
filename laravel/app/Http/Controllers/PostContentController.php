@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Posts\GeneratePostTextPreview;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -44,6 +45,13 @@ class PostContentController extends Controller
             return response()->json(['message' => collect($e->errors())->flatten()->first()], 422);
         }
 
-        return response()->json(['content' => $result['content'], 'token_log_id' => $result['token_log_id']]);
+        return response()->json([
+            'content' => $result['content'],
+            // Con WordPress/Newsletter l'AI scrive Markdown: l'editor ricco lo riceve in HTML.
+            'html' => !empty($data['channel']) && in_array($data['channel'], ['wordpress', 'newsletter'], true)
+                ? Post::markdownToHtml($result['content'])
+                : null,
+            'token_log_id' => $result['token_log_id'],
+        ]);
     }
 }

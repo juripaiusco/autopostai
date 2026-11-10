@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\PostHtmlSanitizer;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'user_id',
@@ -209,6 +211,30 @@ class Post extends Model
             $on('newsletter') => 'newsletter',
             default => null,
         };
+    }
+
+    /**
+     * Testo articolo (WordPress/Newsletter) in HTML, per l'editor ricco e la
+     * pagina del post: quello dell'editor ripassato dal sanitizer, oppure il
+     * Markdown del testo AI (e dei post precedenti all'editor) convertito.
+     */
+    public function contentHtml(): string
+    {
+        $content = (string) $this->ai_content;
+
+        return $this->ai_content_format === self::FORMAT_HTML
+            ? app(PostHtmlSanitizer::class)->clean($content)
+            : self::markdownToHtml($content);
+    }
+
+    /**
+     * Markdown del testo AI → HTML (stesso risultato del worker per titolo,
+     * titoletti, elenchi e grassetto). L'HTML scritto dentro il Markdown
+     * viene mostrato come testo, i link non sicuri tolti.
+     */
+    public static function markdownToHtml(string $markdown): string
+    {
+        return trim((string) Str::markdown($markdown, ['html_input' => 'escape', 'allow_unsafe_links' => false]));
     }
 
     /**
