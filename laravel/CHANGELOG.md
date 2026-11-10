@@ -1,0 +1,45 @@
+# Novità di FaPer3
+
+Qui trovi cosa cambia a ogni versione di FaPer3.
+Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il terzo con le sole correzioni.
+
+## [Non rilasciato]
+
+## [2.1.0] — 2026-11-10
+
+### Novità
+- **Editor di testo ricco** per WordPress e Newsletter: grassetto, titoli, elenchi e link direttamente nell'anteprima, senza scrivere codice.
+- **Editor per i social** con emoji e la scheda "Social": puoi personalizzare il testo dei social rispetto all'articolo, oppure farlo generare all'AI con "Genera versione social".
+- **Link a un tuo post e pulsante CTA**: scegli il post da un elenco con anteprima e lo inserisci nel testo, senza ricordare codici.
+- **Modifica dei post già pubblicati** con gli stessi editor della creazione.
+- **Duplica post**: dall'elenco dei post crei una copia (testo, immagini e canali) da programmare in un'altra data.
+- **"Salva e aggiungi"**: salva il post e crea subito una copia programmata un minuto dopo, pronta da modificare. Un avviso ti segnala se le due uscite sono troppo vicine.
+- **Modulo PrestaShop** per raccogliere iscrizioni alla newsletter dal tuo negozio (con privacy e captcha).
+
+### Miglioramenti
+- La barra **"Crediti utilizzati"** mostra il consumo reale del mese e diventa rossa oltre il 90%.
+- Anche la generazione dell'anteprima ora conta nei crediti del post.
+
+### Correzioni
+- Un post con data e non ancora uscito resta "Schedulato" anche dopo l'orario previsto (prima tornava "Bozza").
+- Con solo WordPress e nessuna categoria il form non inviava il canale.
+- Sui social il testo esce senza formattazione da articolo quando il post ha anche WordPress o Newsletter.
+
+## [2.0.0] — 2026-11-06
+
+La nuova versione di FaPer3, riscritta da zero.
+
+### Novità
+- Interfaccia completamente nuova, con dashboard basata sui dati reali: post pubblicati, commenti, risposte AI e aperture newsletter.
+- **Contatti e newsletter** con il tuo server di posta: anagrafica con nome, cognome e tag, import da CSV, invio filtrato per tag, gestione di disiscrizioni e indirizzi non validi.
+- **Immagini generate con l'AI**, con scelta del modello.
+- **Monitoraggio AI** dei post e stato "Completato"; le risposte AI ai commenti tengono conto del post e delle sue foto.
+- **Modifica del testo dopo la pubblicazione** su Facebook e WordPress.
+- Opzione esplicita "l'AI guarda l'immagine" per scrivere il testo partendo dalla foto.
+- Miniatura della prima immagine nell'elenco dei post e in dashboard.
+- **Server MCP**: collega FaPer3 al tuo assistente AI per leggere, scrivere e pianificare post e contatti.
+
+### Miglioramenti
+- Il testo per LinkedIn rispetta il limite di caratteri della piattaforma.
+- Liste newsletter e categorie WordPress selezionabili come etichette, con il numero di iscritti e articoli.
+- Messaggi dell'applicazione in italiano.
