@@ -21,7 +21,7 @@ Crea un post come bozza (senza published_at) o programmato (published_at futuro)
 Il testo: passa ai_content se l'hai già scritto (o generato con generate_post_text), oppure solo ai_prompt_post e FaPer3 lo genera con l'AI dell'account prima dell'uscita.
 Prima usa list_channel_options per canali attivi, categorie, liste e tag; get_calendar per evitare sovrapposizioni.
 Con WordPress o newsletter accesi ai_content è l'articolo in Markdown (prima riga `# Titolo` = titolo dell'articolo / oggetto dell'email); i social ne ricevono una versione in testo semplice, oppure ai_content_social se lo passi.
-Shortcode utilizzabili nel testo (li risolve FaPer3 all'uscita): `[wordpress url id=N]` (o facebook, instagram, linkedin, newsletter) = URL del post N di questo account su quel canale; `[cta url wordpress id=N text="Leggi"]` oppure `[cta url="https://…" text="Leggi"]` = pulsante call-to-action (solo newsletter; su WordPress diventa un link, sui social "testo: url").
+Shortcode utilizzabili nel testo (li risolve FaPer3 all'uscita): `[WordPress url id="123"]` (o Facebook, Instagram, LinkedIn, Newsletter) = URL del post 123 di questo account su quel canale; `[cta WordPress id="123" text="clicca qui"]` oppure `[cta url="https://…" text="clicca qui"]` = pulsante call-to-action (solo newsletter; su WordPress diventa un link, sui social "testo: url").
 MD)]
 class CreatePost extends Tool
 {

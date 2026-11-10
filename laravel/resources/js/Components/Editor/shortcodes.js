@@ -1,6 +1,9 @@
 // Shortcode degli editor, senza che l'utente debba scriverli:
-// - `[canale url id=N]`  → indirizzo del post N su quel canale (link a un tuo post)
-// - `[cta …]`            → pulsante call-to-action della newsletter
+// - `[WordPress url id="123"]`                   → indirizzo del post 123 su quel canale
+// - `[cta WordPress id="123" text="clicca qui"]` → pulsante CTA verso un tuo post
+// - `[cta url="https://…" text="clicca qui"]`    → pulsante CTA verso un indirizzo
+// Si leggono anche i formati precedenti: `id=123` senza virgolette e
+// `[cta url WordPress id=123 …]`.
 // Li risolve il worker all'uscita (publisher/integrations/shortcodes.py); qui
 // vengono scritti, riconosciuti e mostrati in modo leggibile.
 import { Node, mergeAttributes } from '@tiptap/vue-3';
@@ -13,13 +16,13 @@ export const CHANNEL_LABELS = {
     newsletter: 'Newsletter',
 };
 
-const POST_LINK_RE = /^\[(\w+) url id=(\d+)\]$/i;
+const POST_LINK_RE = /^\[(\w+) url id=["']?(\d+)["']?\]$/i;
 
 export function postLinkShortcode(channel, id) {
-    return `[${channel} url id=${id}]`;
+    return `[${CHANNEL_LABELS[channel] ?? channel} url id="${id}"]`;
 }
 
-// "[wordpress url id=12]" → { channel: 'wordpress', id: 12 } (null se non lo è).
+// '[WordPress url id="12"]' → { channel: 'wordpress', id: 12 } (null se non lo è).
 export function parsePostLink(value) {
     const m = String(value ?? '').trim().match(POST_LINK_RE);
     if (!m || !CHANNEL_LABELS[m[1].toLowerCase()]) return null;
@@ -41,7 +44,7 @@ function quoteSafe(text) {
 export function ctaShortcode({ text, url, channel, postId }) {
     const label = quoteSafe(text);
     return channel && postId
-        ? `[cta url ${channel} id=${postId} text="${label}"]`
+        ? `[cta ${CHANNEL_LABELS[channel] ?? channel} id="${postId}" text="${label}"]`
         : `[cta url="${String(url ?? '').replace(/"/g, '%22')}" text="${label}"]`;
 }
 
@@ -56,12 +59,13 @@ export function parseCta(value) {
     while ((a = attrRe.exec(raw)) !== null) attrs[a[1].toLowerCase()] = a[2] ?? a[3] ?? a[4];
     const flags = raw.replace(attrRe, ' ').toLowerCase().match(/[a-z]+/g) ?? [];
     const channel = flags.find((f) => CHANNEL_LABELS[f]) ?? null;
+    const postId = attrs.url === undefined && /^\d+$/.test(attrs.id ?? '') ? Number(attrs.id) : null;
 
     return {
         text: attrs.text ?? '',
         url: attrs.url ?? '',
-        channel: attrs.url === undefined ? channel : null,
-        postId: attrs.url === undefined && attrs.id ? Number(attrs.id) : null,
+        channel: postId ? channel : null,
+        postId,
     };
 }
 
@@ -141,7 +145,7 @@ export const CtaButton = Node.create({
 });
 
 /**
- * Link a un tuo post nel testo social: chip a video, `[canale url id=N]` nel
+ * Link a un tuo post nel testo social: chip a video, `[Facebook url id="N"]` nel
  * testo salvato (renderText), sostituito dall'indirizzo vero all'uscita.
  */
 export const PostLink = Node.create({

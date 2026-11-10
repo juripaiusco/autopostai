@@ -15,7 +15,7 @@ class PostLinkController extends Controller
     /**
      * Post già pubblicati dell'account, con l'indirizzo per canale: il
      * dialog "Un tuo post" degli editor li usa per inserire lo shortcode
-     * `[canale url id=N]` senza scriverlo a mano. Il worker risolve lo
+     * `[WordPress url id="123"]` senza scriverlo a mano. Il worker risolve lo
      * shortcode solo su post dello stesso account (posts_send::_url_resolver),
      * qui si propongono solo quelli.
      */

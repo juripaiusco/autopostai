@@ -77,6 +77,18 @@ class PostContentFormatTest extends TestCase
         $this->assertStringContainsString('[cta url="https://shop.test" text="Compra ora"]', $clean);
     }
 
+    public function test_sanitizer_keeps_the_quoted_shortcode_format(): void
+    {
+        // Come lo produce l'editor: virgolette dell'id codificate nell'attributo.
+        $html = '<p><a href="[WordPress url id=&quot;123&quot;]">articolo</a></p>'
+            .'<p>[cta WordPress id="123" text="clicca qui"]</p>';
+
+        $clean = app(PostHtmlSanitizer::class)->clean($html);
+
+        $this->assertStringContainsString('<a href="[WordPress url id=&quot;123&quot;]">articolo</a>', $clean);
+        $this->assertStringContainsString('[cta WordPress id="123" text="clicca qui"]', $clean);
+    }
+
     public function test_store_sanitizes_html_and_saves_format_and_social_text(): void
     {
         $user = $this->makeUser();

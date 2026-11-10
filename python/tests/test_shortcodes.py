@@ -26,3 +26,25 @@ def test_parse_cta_expands_template_with_text_and_resolved_url():
     template = '<a href="[url]">[text]</a>'
     out = shortcodes.parse_cta('[cta url Facebook id=7 text="Scopri"]', template, _resolver)
     assert out == '<a href="https://example.test/facebook/7">Scopri</a>'
+
+
+def test_crosslink_with_quoted_id_is_the_current_format():
+    out = shortcodes.parse_crosslinks('Vedi [WordPress url id="123"] e [Facebook url id=\'7\']', _resolver)
+    assert out == "Vedi https://example.test/wordpress/123 e https://example.test/facebook/7"
+
+
+def test_crosslink_inside_editor_html_href():
+    html = '<a href="[WordPress url id=&quot;123&quot;]">articolo</a>'
+    assert shortcodes.parse_crosslinks(html, _resolver) == '<a href="https://example.test/wordpress/123">articolo</a>'
+
+
+def test_cta_to_a_post_without_url_flag():
+    template = '<a href="[url]">[text]</a>'
+    out = shortcodes.parse_cta('[cta WordPress id="123" text="clicca qui"]', template, _resolver)
+    assert out == '<a href="https://example.test/wordpress/123">clicca qui</a>'
+
+
+def test_cta_with_an_address_is_unchanged():
+    template = '<a href="[url]">[text]</a>'
+    out = shortcodes.parse_cta('[cta url="https://shop.test" text="Compra"]', template, _resolver)
+    assert out == '<a href="https://shop.test">Compra</a>'

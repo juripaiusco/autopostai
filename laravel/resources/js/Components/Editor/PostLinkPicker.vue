@@ -1,7 +1,7 @@
 <script setup>
 // Dialog "Un tuo post": cerca tra i post già pubblicati dell'account e
 // sceglie su quale canale puntare. Chi lo usa ne ricava lo shortcode
-// `[canale url id=N]`, che il worker sostituisce con l'indirizzo vero
+// `[WordPress url id="123"]`, che il worker sostituisce con l'indirizzo vero
 // all'uscita (vedi publisher/integrations/shortcodes.py).
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';

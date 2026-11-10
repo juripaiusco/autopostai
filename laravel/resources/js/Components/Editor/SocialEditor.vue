@@ -2,7 +2,7 @@
 // Editor del testo social (Facebook, Instagram, LinkedIn): testo semplice,
 // niente formattazione (i social non la supportano), emoji. Ogni riga è un
 // paragrafo; il valore è il testo con gli a capo. I link a un tuo post sono
-// chip a video e `[canale url id=N]` nel testo.
+// chip a video e `[Facebook url id="123"]` nel testo.
 import { ref, watch, onBeforeUnmount } from 'vue';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import Document from '@tiptap/extension-document';
@@ -32,7 +32,7 @@ function escapeHtml(text) {
 function toDoc(text) {
     return String(text ?? '').split('\n').map((line) => {
         const html = escapeHtml(line).replace(
-            /\[(facebook|instagram|linkedin|wordpress|newsletter) url id=(\d+)\]/gi,
+            /\[(facebook|instagram|linkedin|wordpress|newsletter) url id=["']?(\d+)["']?\]/gi,
             (_, channel, id) => `<span data-post-link data-channel="${channel.toLowerCase()}" data-id="${id}"></span>`,
         );
         return `<p>${html}</p>`;

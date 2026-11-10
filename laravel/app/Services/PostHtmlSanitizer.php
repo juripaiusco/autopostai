@@ -13,9 +13,10 @@ use Illuminate\Support\Facades\File;
  * produce. Tutto il resto (script, eventi on*, iframe, stili di
  * posizionamento) viene tolto.
  *
- * Gli shortcode nei link (`href="[wordpress url id=12]"`) non sono URL
- * validi e HTMLPurifier li scarterebbe: vengono messi da parte prima della
- * pulizia e rimessi dopo. Il worker li risolve all'uscita.
+ * Gli shortcode nei link (`href="[WordPress url id=&quot;12&quot;]"`: le
+ * virgolette dentro l'attributo sono codificate) non sono URL validi e
+ * HTMLPurifier li scarterebbe: vengono messi da parte prima della pulizia e
+ * rimessi dopo, codificati una sola volta. Il worker li risolve all'uscita.
  */
 class PostHtmlSanitizer
 {
@@ -33,7 +34,7 @@ class PostHtmlSanitizer
         $html = preg_replace_callback(
             '/href=(["\'])\s*(\[[^\]"\'<>]+\])\s*\1/i',
             function (array $m) use (&$shortcodes) {
-                $shortcodes[] = $m[2];
+                $shortcodes[] = html_entity_decode($m[2], ENT_QUOTES | ENT_HTML5);
 
                 return 'href="'.self::PLACEHOLDER.(count($shortcodes) - 1).'"';
             },

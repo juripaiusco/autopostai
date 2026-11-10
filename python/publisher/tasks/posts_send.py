@@ -116,7 +116,7 @@ def _error_message(exc: Exception) -> str:
 
 
 def _url_resolver(post_repo: PostRepository, requesting_user_id: int):
-    """Risolve `[Canale url id=N]`: l'URL del post N su quel canale, solo se il
+    """Risolve `[Canale url id="N"]`: l'URL del post N su quel canale, solo se il
     post appartiene allo stesso utente che sta pubblicando (no leak tra account)."""
 
     def resolve(target_post_id: int, channel_key: str, _data_type: str) -> str:

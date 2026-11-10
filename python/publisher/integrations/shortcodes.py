@@ -2,8 +2,13 @@
 
 Consolida logica che in v1 era duplicata quasi identica in tre punti
 (`task/ai_content_get.py`, `services/mailchimp.py`, `services/brevo.py`):
-  - cross-link  `[Canale url id=N]`  -> URL del post pubblicato su quel canale
-  - call-to-action `[cta url id=N text="..."]` -> HTML dal template CTA dell'account
+  - cross-link  `[WordPress url id="123"]`  -> URL del post pubblicato su quel canale
+  - call-to-action `[cta WordPress id="123" text="clicca qui"]` oppure
+    `[cta url="https://..." text="clicca qui"]` -> HTML dal template CTA dell'account
+
+Formati precedenti ancora accettati (testi gia' salvati): `[WordPress url id=123]`
+senza virgolette e `[cta url WordPress id=123 text="..."]` con il flag `url`.
+Nell'HTML dell'editor le virgolette dentro un href arrivano come `&quot;`.
 
 La risoluzione dell'URL e' delegata a un `url_resolver(post_id, channel_key,
 data_type)` iniettato da chi chiama, cosi' questo modulo non tocca il DB.
@@ -16,7 +21,8 @@ from typing import Callable
 
 UrlResolver = Callable[[int, str, str], str]
 
-_CROSSLINK = re.compile(r"\[(\w+)\s+(\w+)\s+id=(\d+)\]")
+_QUOTE = r"(?:\"|'|&quot;|&#34;)?"
+_CROSSLINK = re.compile(r"\[(\w+)\s+(\w+)\s+id=" + _QUOTE + r"(\d+)" + _QUOTE + r"\]")
 _CTA = re.compile(r"\[cta(.*?)\]")
 # key=value con valore fra virgolette (singole/doppie) o senza spazi.
 _ATTR = re.compile(r"""(\w+)=(?:"([^"]*)"|'([^']*)'|(\S+))""")
@@ -64,11 +70,12 @@ def parse_cta(text: str, template_cta: str, url_resolver: UrlResolver) -> str:
         text_value = attrs.get("text") or ""
         url_value = attrs.get("url")
 
-        # `url` come flag (senza valore) => risolvi dal post indicato.
-        if url_value is None and "url" in flags:
+        # Senza url="..." il pulsante porta a un post: canale (flag) + id.
+        # Il vecchio formato aveva anche il flag `url`, non piu' necessario.
+        if url_value is None:
             post_id = attrs.get("id")
             channel = next((_CHANNEL_TOKENS[f] for f in flags if f in _CHANNEL_TOKENS), None)
-            url_value = url_resolver(int(post_id), channel, "url") if (post_id and channel) else ""
+            url_value = url_resolver(int(post_id), channel, "url") if (post_id and post_id.isdigit() and channel) else ""
 
         return (template_cta or "").replace("[text]", text_value).replace("[url]", url_value or "")
 
