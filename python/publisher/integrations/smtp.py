@@ -12,12 +12,13 @@ dell'account/server, non del contatto.
 
 from __future__ import annotations
 
-import html as html_lib
 import re
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr, formatdate, make_msgid
+
+from publisher.domain.channel_text import html_to_text
 
 
 class RecipientRefused(Exception):
@@ -73,24 +74,6 @@ def build_message(
     message.attach(MIMEText(html_to_text(html), "plain", "utf-8"))
     message.attach(MIMEText(html, "html", "utf-8"))
     return message
-
-
-def html_to_text(html: str) -> str:
-    """Versione testo leggibile dell'html newsletter: link come "testo (url)",
-    blocchi su righe separate, niente tag/stili/pixel."""
-    text = re.sub(r"(?is)<(style|script|head)\b.*?</\1>", "", html)
-    text = re.sub(
-        r'(?is)<a\b[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
-        lambda m: f"{re.sub(r'<[^>]+>', '', m.group(2)).strip()} ({m.group(1)})",
-        text,
-    )
-    text = re.sub(r"(?i)<br\s*/?>", "\n", text)
-    text = re.sub(r"(?i)</(p|div|h[1-6]|li|tr|table)>", "\n\n", text)
-    text = re.sub(r"<[^>]+>", "", text)
-    text = html_lib.unescape(text)
-    text = re.sub(r"[ \t]+", " ", text)
-    text = re.sub(r"\n\s*\n\s*(\n\s*)+", "\n\n", text)
-    return "\n".join(line.strip() for line in text.strip().splitlines())
 
 
 class SmtpClient:

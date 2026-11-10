@@ -23,6 +23,7 @@ from publisher import config
 from publisher.content import ContentService
 from publisher.db.engine import checkpoint
 from publisher.db.repositories import PostRepository, PushNotificationRepository, TokenLogRepository
+from publisher.domain import channel_text
 from publisher.domain.channels import Channels
 from publisher.notifications import notify_post_published
 from publisher.publishing import PUBLISHERS
@@ -64,6 +65,9 @@ def _send_one(post, post_repo, push_repo, token_repo, content_service, now) -> N
         log.info("posts_send: post %s canale '%s' - generazione contenuto e invio", post["id"], entry.key)
         try:
             content = content_service.resolve(post, publisher, resolver)
+            # Testo unico per post: Markdown se c'e' un canale articolo, sui social
+            # esce ripulito (niente # e ** letterali).
+            content = channel_text.for_channel(content, entry.key, resolver, markdown=channels.text_channel() is not None)
             result = publisher.simulate() if config.DRY_RUN else publisher.publish(content)
         except Exception as exc:  # noqa: BLE001 — un canale non deve far cadere gli altri
             log.exception("posts_send: canale '%s' fallito per il post %s", entry.key, post["id"])

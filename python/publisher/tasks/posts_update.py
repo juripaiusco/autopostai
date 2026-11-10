@@ -20,6 +20,7 @@ from sqlalchemy.engine import Connection
 
 from publisher import config
 from publisher.db.repositories import PostRepository
+from publisher.domain import channel_text
 from publisher.domain.channels import Channels
 from publisher.integrations import shortcodes
 from publisher.integrations.meta import Meta
@@ -47,7 +48,13 @@ def run(conn: Connection) -> None:
 
     for key in _keys_to_update(channels):
         entry = channels.entry(key)
-        text = shortcodes.parse_crosslinks(entry.data.get("content") or post.get("ai_content") or "", resolver)
+        own_text = entry.data.get("content")
+        text = shortcodes.parse_crosslinks(own_text or post.get("ai_content") or "", resolver)
+        # Il testo comune (Markdown con un canale articolo) va ripulito per i
+        # social; quello scritto apposta per il canale esce com'e'.
+        text = channel_text.for_channel(
+            text, key, resolver, markdown=not own_text and channels.text_channel() is not None,
+        )
         try:
             if not config.DRY_RUN:
                 _UPDATERS[key](post, entry.data, text)
