@@ -22,11 +22,12 @@ class GeneratePostTextPreview
 
     /**
      * @param  array<int, string>  $channels  canali accesi, per il limite di caratteri (LinkedIn)
+     * @param  string|null  $sourceText  articolo da riscrivere come post social (testo semplice)
      * @return array{content: string, tokens: int, token_log_id: int}
      *
      * @throws ValidationException chiave mancante, limite raggiunto o errore del servizio AI
      */
-    public function handle(User $account, string $prompt, ?string $channel, array $channels = []): array
+    public function handle(User $account, string $prompt, ?string $channel, array $channels = [], ?string $sourceText = null): array
     {
         $settings = $account->settings;
 
@@ -40,7 +41,7 @@ class GeneratePostTextPreview
         }
 
         try {
-            $result = $this->generator->generate($settings, $prompt, $channel, $channels);
+            $result = $this->generator->generate($settings, $prompt, $channel, $channels, $sourceText);
         } catch (RuntimeException $e) {
             throw ValidationException::withMessages(['prompt' => $e->getMessage()]);
         }

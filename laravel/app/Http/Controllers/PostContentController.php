@@ -27,7 +27,9 @@ class PostContentController extends Controller
         abort_unless($request->user()->canActFor($user), 403);
 
         $validator = Validator::make($request->all(), [
-            'ai_prompt_post' => ['required', 'string'],
+            'ai_prompt_post' => ['required_without:source_text', 'nullable', 'string'],
+            // "Genera versione social": l'articolo da riscrivere per i social.
+            'source_text' => ['nullable', 'string', 'max:60000'],
             'channel' => ['nullable', 'string', 'in:'.implode(',', array_keys(User::CHANNELS))],
             'channels' => ['nullable', 'array'],
             'channels.*' => ['string', 'in:'.implode(',', array_keys(User::CHANNELS))],
@@ -40,7 +42,13 @@ class PostContentController extends Controller
         $data = $validator->validated();
 
         try {
-            $result = $preview->handle($user, $data['ai_prompt_post'], $data['channel'] ?? null, $data['channels'] ?? []);
+            $result = $preview->handle(
+                $user,
+                (string) ($data['ai_prompt_post'] ?? ''),
+                $data['channel'] ?? null,
+                $data['channels'] ?? [],
+                $data['source_text'] ?? null,
+            );
         } catch (ValidationException $e) {
             return response()->json(['message' => collect($e->errors())->flatten()->first()], 422);
         }
@@ -48,7 +56,7 @@ class PostContentController extends Controller
         return response()->json([
             'content' => $result['content'],
             // Con WordPress/Newsletter l'AI scrive Markdown: l'editor ricco lo riceve in HTML.
-            'html' => !empty($data['channel']) && in_array($data['channel'], ['wordpress', 'newsletter'], true)
+            'html' => empty($data['source_text']) && in_array($data['channel'] ?? null, ['wordpress', 'newsletter'], true)
                 ? Post::markdownToHtml($result['content'])
                 : null,
             'token_log_id' => $result['token_log_id'],

@@ -7,6 +7,7 @@ from openai import OpenAIError
 from pydantic import BaseModel
 
 from providers import ImageGenerationError, provider_for_model
+from publisher.domain.channel_text import social_rewrite_prompt
 from publisher.domain.channels import with_length_instruction
 from publisher.publishing import PUBLISHERS
 from publisher.integrations import openai_text
@@ -38,10 +39,12 @@ def generate_image(data: GenerateImageRequest):
 
 class GenerateTextRequest(BaseModel):
     api_key: str
-    ai_prompt_post: str
+    ai_prompt_post: str = ""
     channel: str | None = None
     # Canali accesi sul post: servono per il limite di caratteri (LinkedIn).
     channels: list[str] | None = None
+    # "Genera versione social": articolo da riscrivere come post social.
+    source_text: str | None = None
     ai_personality: str | None = None
     ai_prompt_prefix: str | None = None
     model: str | None = None
@@ -50,11 +53,12 @@ class GenerateTextRequest(BaseModel):
 @app.post("/generate-text")
 def generate_text(data: GenerateTextRequest):
     publisher_cls = PUBLISHERS.get(data.channel) if data.channel else None
-    user_prompt = (
-        publisher_cls({"ai_prompt_post": data.ai_prompt_post}).build_prompt()
-        if publisher_cls
-        else data.ai_prompt_post
-    )
+    if (data.source_text or "").strip():
+        user_prompt = social_rewrite_prompt(data.source_text, data.ai_prompt_post)
+    elif publisher_cls:
+        user_prompt = publisher_cls({"ai_prompt_post": data.ai_prompt_post}).build_prompt()
+    else:
+        user_prompt = data.ai_prompt_post
     user_prompt = with_length_instruction(user_prompt, data.channels or [])
     system_prompt = " ".join(
         filter(

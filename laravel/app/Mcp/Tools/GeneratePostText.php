@@ -26,7 +26,8 @@ class GeneratePostText extends Tool
     {
         $data = $request->validate([
             'account_id' => ['nullable', 'integer'],
-            'prompt' => ['required', 'string', 'max:10000'],
+            'prompt' => ['required_without:source_text', 'nullable', 'string', 'max:10000'],
+            'source_text' => ['nullable', 'string', 'max:60000'],
             'channel' => ['nullable', Rule::in(array_keys(User::CHANNELS))],
             'channels' => ['nullable', 'array'],
             'channels.*' => [Rule::in(array_keys(User::CHANNELS))],
@@ -34,7 +35,7 @@ class GeneratePostText extends Tool
 
         $account = $this->targetAccount($request);
 
-        $result = $preview->handle($account, $data['prompt'], $data['channel'] ?? null, $data['channels'] ?? []);
+        $result = $preview->handle($account, (string) ($data['prompt'] ?? ''), $data['channel'] ?? null, $data['channels'] ?? [], $data['source_text'] ?? null);
 
         return Response::structured([
             'account_id' => $account->id,
@@ -48,7 +49,8 @@ class GeneratePostText extends Tool
     {
         return [
             'account_id' => $schema->integer()->description('Account per cui scrivere (vedi whoami). Default: il tuo.'),
-            'prompt' => $schema->string()->required()->description('Istruzioni per il testo (diventano ai_prompt_post).'),
+            'prompt' => $schema->string()->description('Istruzioni per il testo (diventano ai_prompt_post). Obbligatorio senza source_text.'),
+            'source_text' => $schema->string()->description('Testo di un articolo (WordPress/newsletter) da riscrivere come post social breve, in testo semplice: il risultato va in ai_content_social. Con questo channel non conta e prompt è facoltativo.'),
             'channel' => $schema->string()->enum(array_keys(User::CHANNELS))->description('Canale principale: wordpress e newsletter producono Markdown.'),
             'channels' => $schema->array()->items($schema->string()->enum(array_keys(User::CHANNELS)))->description('Tutti i canali su cui uscirà il post: con linkedin il testo resta sotto il limite di 3000 caratteri.'),
         ];

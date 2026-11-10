@@ -22,6 +22,11 @@
 .rte-pop-wrap { position: relative; }
 .rte-pop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 10; background: #fff; border: 1px solid var(--g200); border-radius: var(--radius); box-shadow: var(--shadow-md); padding: 10px; }
 .rte-pop--colors { display: grid; grid-template-columns: repeat(4, 26px); gap: 8px; }
+.rte-pop--emoji { padding: 0; overflow: hidden; }
+.rte-pop--emoji emoji-picker { --border-size: 0; --background: #fff; --indicator-color: var(--sky-strong); --outline-color: var(--sky); width: min(340px, 85vw); height: 320px; display: block; }
+.rte-btn--emoji { font-size: 16px; }
+.rte--social .rte-content .ProseMirror { min-height: 140px; }
+.rte--social .rte-content .ProseMirror > * + * { margin-top: 0; }
 .rte-pop--link { display: flex; gap: 6px; align-items: center; width: min(420px, 80vw); }
 .rte-pop--link .control { flex: 1; min-width: 0; }
 .rte-swatch { width: 26px; height: 26px; border-radius: var(--radius-full); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--g200); cursor: pointer; }
@@ -46,3 +51,13 @@
 
 /* Titolo articolo sopra l'editor */
 .pf-article-title { font-size: 17px; font-weight: 600; margin-bottom: 10px; }
+
+/* ---------- Schede Articolo / Social (StepPublish) ---------- */
+.pf-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--g200); margin-bottom: 14px; }
+.pf-tab { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; font: 500 14px inherit; color: var(--g500); cursor: pointer; }
+.pf-tab:hover { color: var(--ink); }
+.pf-tab.is-active { color: var(--sky-strong); border-bottom-color: var(--sky-strong); }
+.pf-tab-dot { width: 7px; height: 7px; border-radius: var(--radius-full); background: var(--danger); }
+.pf-social-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.pf-social-derived { border: 1px dashed var(--g300); border-radius: var(--radius); padding: 14px 16px; background: var(--g50); font-size: 14.5px; line-height: 1.65; color: var(--g700); white-space: pre-wrap; max-height: 320px; overflow: auto; }
+.pf-social-note { font-size: 12.5px; color: var(--g500); margin-bottom: 8px; }

@@ -85,6 +85,21 @@ def for_channel(text: str, key: str, url_resolver, fmt: str) -> str:
     return text
 
 
+def social_rewrite_prompt(article: str, instructions: str | None = None) -> str:
+    """Prompt di "Genera versione social": l'articolo riscritto come post
+    per Facebook/Instagram/LinkedIn, in testo semplice (i social non rendono
+    Markdown/HTML). Il limite di LinkedIn lo aggiunge with_length_instruction."""
+    prompt = (
+        "Riscrivi questo articolo come post per i social (Facebook, Instagram, LinkedIn): "
+        "breve, al massimo 1200 caratteri, coinvolgente, con qualche emoji se adatta e "
+        "al massimo 3 hashtag pertinenti alla fine. Solo testo semplice: niente Markdown, "
+        "niente HTML, niente titoli con #. Non inventare informazioni che non sono nell'articolo."
+    )
+    if (instructions or "").strip():
+        prompt = f"{prompt} Istruzioni originali del post: {instructions.strip()}"
+    return f"{prompt}\n\nArticolo:\n{article.strip()}"
+
+
 def for_post_channel(post: dict, channels, key: str, content: str, url_resolver) -> str:
     """Testo del post per il canale `key` alla pubblicazione. `content` e' il
     testo comune gia' risolto (ContentService.resolve)."""

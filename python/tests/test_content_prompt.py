@@ -92,3 +92,48 @@ def test_generate_text_endpoint_adds_the_limit_for_linkedin(monkeypatch):
 
     assert sent[0] == "Parla della pizza"
     assert sent[1].startswith("Parla della pizza ") and "LinkedIn" in sent[1]
+
+
+def test_generate_text_endpoint_rewrites_an_article_for_social(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import main
+
+    sent = []
+
+    def fake_generate(**kwargs):
+        sent.append(kwargs["user_prompt"])
+        return "Post social", 1
+
+    monkeypatch.setattr(openai_text, "generate", fake_generate)
+    client = TestClient(main.app)
+
+    response = client.post("/generate-text", json={
+        "api_key": "sk-fake",
+        "ai_prompt_post": "Tono allegro",
+        "channel": "wordpress",
+        "channels": ["wordpress", "linkedin"],
+        "source_text": "Novità di novembre\n\nArrivano i nuovi prodotti.",
+    })
+
+    assert response.status_code == 200 and response.json()["content"] == "Post social"
+    prompt = sent[0]
+    assert prompt.startswith("Riscrivi questo articolo come post per i social")
+    assert "niente Markdown" in prompt and "Generami un articolo" not in prompt
+    assert "Istruzioni originali del post: Tono allegro" in prompt
+    assert "Articolo:\nNovità di novembre" in prompt
+    assert "LinkedIn" in prompt.split("Articolo:")[1]
+
+
+def test_generate_text_endpoint_social_rewrite_without_prompt(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import main
+
+    sent = []
+    monkeypatch.setattr(openai_text, "generate", lambda **kw: (sent.append(kw["user_prompt"]) or ("ok", 1)))
+
+    response = TestClient(main.app).post("/generate-text", json={"api_key": "sk-fake", "source_text": "Articolo"})
+
+    assert response.status_code == 200
+    assert "Istruzioni originali" not in sent[0]

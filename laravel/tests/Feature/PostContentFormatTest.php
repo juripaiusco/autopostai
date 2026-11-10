@@ -237,4 +237,38 @@ class PostContentFormatTest extends TestCase
             ->assertOk()
             ->assertJsonPath('html', null);
     }
+
+    public function test_social_version_sends_the_article_and_returns_plain_text(): void
+    {
+        $user = $this->makeUser();
+        $user->update(['tokens_limit' => 100000]);
+        Settings::factory()->create(['user_id' => $user->id, 'openai_api_key' => 'sk-test']);
+        Http::fake(['*/generate-text' => Http::response(['content' => 'Novità! 🎉', 'tokens' => 10])]);
+
+        $response = $this->actingAs($user)
+            ->postJson(route('posts.generate-text', $user), [
+                'source_text' => "Titolo\n\nCorpo dell'articolo",
+                'channel' => 'wordpress',
+                'channels' => ['wordpress', 'facebook'],
+            ])
+            ->assertOk()
+            ->assertJsonPath('content', 'Novità! 🎉')
+            ->assertJsonPath('html', null);
+
+        $this->assertNotNull($response->json('token_log_id'));
+        Http::assertSent(fn ($request) => $request['source_text'] === "Titolo\n\nCorpo dell'articolo"
+            && $request['ai_prompt_post'] === '');
+    }
+
+    public function test_preview_needs_a_prompt_or_an_article(): void
+    {
+        $user = $this->makeUser();
+        Http::fake();
+
+        $this->actingAs($user)
+            ->postJson(route('posts.generate-text', $user), ['channels' => ['facebook']])
+            ->assertStatus(422);
+
+        Http::assertNothingSent();
+    }
 }

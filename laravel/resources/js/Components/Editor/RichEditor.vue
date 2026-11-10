@@ -10,6 +10,7 @@ import { TextStyle, Color } from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
 import { Placeholder } from '@tiptap/extensions';
 import Icon from '@/Components/Icon.vue';
+import EmojiButton from '@/Components/Editor/EmojiButton.vue';
 
 const props = defineProps({
     modelValue: { type: String, default: '' },
@@ -177,6 +178,7 @@ function setBlock(type) {
                     <button v-if="editor.isActive('link')" type="button" class="btn btn-secondary btn-sm" @click="removeLink">Rimuovi</button>
                 </form>
             </div>
+            <EmojiButton :disabled="disabled" @pick="editor.chain().focus().insertContent($event).run()" />
             <div class="spacer" />
             <button type="button" class="rte-btn" title="Annulla (Ctrl+Z)" :disabled="disabled || !editor.can().undo()"
                 @click="editor.chain().focus().undo().run()"><Icon name="undo" :size="16" /></button>

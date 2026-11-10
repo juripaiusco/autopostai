@@ -313,6 +313,18 @@ it('generate_post_text meters tokens and respects the monthly limit', function (
         ->assertHasErrors(['Limite mensile di token AI raggiunto per questo account.']);
 });
 
+it('generate_post_text rewrites an article for social with source_text', function () {
+    $user = mcpWriter();
+    Http::fake(['*/generate-text' => Http::response(['content' => 'Post breve', 'tokens' => 5])]);
+
+    FaPer3Server::actingAs(withMcp($user, 'write'))->tool(GeneratePostText::class, [
+        'source_text' => 'Articolo lungo',
+        'channels' => ['wordpress', 'facebook'],
+    ])->assertOk()->assertSee('Post breve');
+
+    Http::assertSent(fn ($request) => $request['source_text'] === 'Articolo lungo');
+});
+
 it('generate_post_text forwards the channels for the LinkedIn limit', function () {
     Http::fake(['*/generate-text' => Http::response(['content' => 'Testo AI', 'tokens' => 1])]);
 

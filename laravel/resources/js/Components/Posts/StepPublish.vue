@@ -3,7 +3,10 @@ import { ref, computed, watch } from 'vue';
 import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import ImageLightbox from '@/Components/Posts/ImageLightbox.vue';
+import ToggleSwitch from '@/Components/UI/ToggleSwitch.vue';
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 import RichEditor from '@/Components/Editor/RichEditor.vue';
+import SocialEditor from '@/Components/Editor/SocialEditor.vue';
 import { hasArticleChannel, splitArticle, joinArticle, htmlToText, normalizeContent } from '@/lib/postText.js';
 
 const props = defineProps({
@@ -16,9 +19,9 @@ const props = defineProps({
 
 const emit = defineEmits(['set', 'back', 'save', 'save-and-add', 'publish-now']);
 
-const genLoading = ref(false);
+const genLoading = ref(false); // anteprima (articolo o testo social unico)
+const socialLoading = ref(false); // "Genera versione social"
 const genError = ref(null);
-const editing = ref(false);
 
 function csrfToken() {
     const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
@@ -34,23 +37,6 @@ const allPreviews = computed(() => [
 ]);
 const lightboxIndex = ref(null);
 
-const charLimit = computed(() => {
-    const limits = selectedChannelIds.value.map((id) => channelById.value[id]?.limit).filter((l) => l != null);
-    return limits.length ? Math.min(...limits) : null;
-});
-
-const limitChannel = computed(() => {
-    if (charLimit.value === null) return null;
-    const id = selectedChannelIds.value.find((c) => channelById.value[c]?.limit === charLimit.value);
-    return id ? channelById.value[id] : null;
-});
-
-// Con WordPress/Newsletter il testo è HTML: sui social esce in testo
-// semplice (vedi publisher/domain/channel_text.py), il limite vale su quello.
-const plainText = computed(() => (isArticle.value ? htmlToText(props.form.ai_content) : (props.form.ai_content || '')));
-const overLimit = computed(() => charLimit.value !== null && plainText.value.length > charLimit.value);
-const canSave = computed(() => selectedChannelIds.value.length > 0 && !overLimit.value);
-
 // Solo WordPress e Newsletter hanno un formato di prompt differenziato
 // (Markdown, vedi publisher/publishing/{wordpress,newsletter}.py::build_prompt);
 // gli altri canali condividono lo stesso ai_prompt_post cosi' com'e'.
@@ -60,8 +46,17 @@ const primaryChannel = computed(() => {
     return null;
 });
 
-// Famiglia "articolo" (WordPress/Newsletter): editor ricco + titolo, testo HTML.
+// Due famiglie (docs/editor-anteprima.md): "articolo" (WordPress/Newsletter,
+// editor ricco + titolo, HTML) e "social" (Facebook/Instagram/LinkedIn, testo
+// semplice + emoji). Con entrambe: schede, social derivato o personalizzato.
 const isArticle = computed(() => hasArticleChannel(selectedChannelIds.value));
+const socialChannels = computed(() => selectedChannelIds.value
+    .filter((id) => channelById.value[id]?.limit != null)
+    .map((id) => channelById.value[id]));
+const hasSocial = computed(() => socialChannels.value.length > 0);
+const socialLabels = computed(() => socialChannels.value.map((c) => c.label).join(', '));
+const showTabs = computed(() => isArticle.value && hasSocial.value);
+const tab = ref('article');
 
 const titleLabel = computed(() => {
     const wp = selectedChannelIds.value.includes('wordpress');
@@ -70,10 +65,14 @@ const titleLabel = computed(() => {
     return wp ? "Titolo dell'articolo" : "Oggetto dell'email";
 });
 
-const socialLabels = computed(() => selectedChannelIds.value
-    .filter((id) => channelById.value[id]?.limit != null)
-    .map((id) => channelById.value[id].label));
+const articleLabel = computed(() => {
+    const wp = selectedChannelIds.value.includes('wordpress');
+    const nl = selectedChannelIds.value.includes('newsletter');
+    if (wp && nl) return 'WordPress e Newsletter';
+    return wp ? 'WordPress' : 'la Newsletter';
+});
 
+// ---------- Articolo ----------
 // Titolo e corpo tenuti a parte mentre si scrive (il titolo non va
 // "ripulito" a ogni tasto); si riallineano quando il testo cambia da fuori
 // (nuova anteprima, cambio canali).
@@ -95,6 +94,52 @@ function setArticle(title, body) {
     emit('set', 'ai_content_format', 'html');
 }
 
+const articleText = computed(() => (isArticle.value ? htmlToText(props.form.ai_content) : ''));
+
+// ---------- Social ----------
+// Personalizzato = ai_content_social non null (anche vuoto mentre si scrive).
+const customSocial = computed(() => props.form.ai_content_social !== null && props.form.ai_content_social !== undefined);
+const confirmDropSocial = ref(false);
+
+function setCustomSocial(on) {
+    if (on) {
+        // Si parte dal testo derivato: spesso basta accorciarlo.
+        emit('set', 'ai_content_social', articleText.value);
+        return;
+    }
+    const text = (props.form.ai_content_social ?? '').trim();
+    if (text && text !== articleText.value.trim()) {
+        confirmDropSocial.value = true;
+        return;
+    }
+    emit('set', 'ai_content_social', null);
+}
+
+function dropCustomSocial() {
+    confirmDropSocial.value = false;
+    emit('set', 'ai_content_social', null);
+}
+
+function setSocialOnly(text) {
+    emit('set', 'ai_content', text);
+    emit('set', 'ai_content_format', 'text');
+}
+
+// Testo che uscirà sui social: unico (solo social), personalizzato o ricavato
+// dall'articolo (stesse regole del worker, publisher/domain/channel_text.py).
+const socialText = computed(() => {
+    if (!isArticle.value) return props.form.ai_content || '';
+    return customSocial.value ? (props.form.ai_content_social || '') : articleText.value;
+});
+
+const charLimit = computed(() => {
+    const limits = socialChannels.value.map((c) => c.limit);
+    return limits.length ? Math.min(...limits) : null;
+});
+const limitChannel = computed(() => socialChannels.value.find((c) => c.limit === charLimit.value) ?? null);
+const overLimit = computed(() => charLimit.value !== null && socialText.value.length > charLimit.value);
+const canSave = computed(() => selectedChannelIds.value.length > 0 && !overLimit.value);
+
 // Canali cambiati dopo aver scritto: testo e formato si adeguano alla famiglia.
 watch(isArticle, () => {
     const { content, format } = normalizeContent(props.form.ai_content, props.form.ai_content_format, selectedChannelIds.value);
@@ -104,36 +149,51 @@ watch(isArticle, () => {
 
 watch(() => props.form.ai_content, syncArticle, { immediate: true });
 
+// ---------- AI ----------
+async function generate(body) {
+    const res = await fetch(route('posts.generate-text', props.targetUserId), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': csrfToken(), Accept: 'application/json' },
+        body: JSON.stringify({ ...body, channels: selectedChannelIds.value }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message ?? 'Generazione non riuscita, riprova.');
+    if (json.token_log_id) {
+        emit('set', 'preview_token_log_ids', [...(props.form.preview_token_log_ids ?? []), json.token_log_id]);
+    }
+    return json;
+}
+
 async function runPreview() {
     genLoading.value = true;
     genError.value = null;
-    editing.value = false;
-    emit('set', 'ai_content', '');
     try {
-        const res = await fetch(route('posts.generate-text', props.targetUserId), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': csrfToken(), Accept: 'application/json' },
-            body: JSON.stringify({ ai_prompt_post: props.form.ai_prompt_post, channel: primaryChannel.value, channels: selectedChannelIds.value }),
-        });
-        const json = await res.json();
-        if (!res.ok) {
-            genError.value = json.message ?? 'Generazione non riuscita, riprova.';
-            return;
-        }
+        const json = await generate({ ai_prompt_post: props.form.ai_prompt_post, channel: primaryChannel.value });
         if (isArticle.value) {
             emit('set', 'ai_content', json.html ?? '');
             emit('set', 'ai_content_format', 'html');
         } else {
-            emit('set', 'ai_content', json.content ?? '');
-            emit('set', 'ai_content_format', 'text');
-        }
-        if (json.token_log_id) {
-            emit('set', 'preview_token_log_ids', [...(props.form.preview_token_log_ids ?? []), json.token_log_id]);
+            setSocialOnly(json.content ?? '');
         }
     } catch (e) {
-        genError.value = 'Generazione non riuscita, riprova.';
+        genError.value = e.message || 'Generazione non riuscita, riprova.';
     } finally {
         genLoading.value = false;
+    }
+}
+
+// Post social riscritto dall'articolo (più breve, tono social): una chiamata
+// AI solo su richiesta.
+async function runSocialVersion() {
+    socialLoading.value = true;
+    genError.value = null;
+    try {
+        const json = await generate({ ai_prompt_post: props.form.ai_prompt_post, source_text: articleText.value });
+        emit('set', 'ai_content_social', json.content ?? '');
+    } catch (e) {
+        genError.value = e.message || 'Generazione non riuscita, riprova.';
+    } finally {
+        socialLoading.value = false;
     }
 }
 </script>
@@ -181,12 +241,12 @@ async function runPreview() {
                 <label class="acc-row-label" style="margin:0">
                     Anteprima AI
                     <span v-if="isArticle" class="acc-row-help" style="margin:0">
-                        Testo per {{ primaryChannel === 'wordpress' && selectedChannelIds.includes('newsletter') ? 'WordPress e Newsletter' : (primaryChannel === 'wordpress' ? 'WordPress' : 'la Newsletter') }}: scrivilo tu o generalo con l'AI, poi formattalo con la barra.
-                        <template v-if="socialLabels.length"> Su {{ socialLabels.join(', ') }} esce lo stesso testo senza formattazione.</template>
+                        Testo per {{ articleLabel }}: scrivilo tu o generalo con l'AI, poi formattalo con la barra.
                     </span>
-                    <span v-else class="acc-row-help" style="margin:0">Testo generato dall'AI — puoi modificarlo prima di pubblicare.</span>
+                    <span v-else class="acc-row-help" style="margin:0">Testo per {{ socialLabels }}: scrivilo tu o generalo con l'AI, poi modificalo come vuoi.</span>
                 </label>
-                <button type="button" class="btn btn-secondary btn-sm" :disabled="genLoading || !form.ai_prompt_post" @click="runPreview">
+                <button type="button" class="btn btn-secondary btn-sm" :disabled="genLoading || !form.ai_prompt_post"
+                    :title="form.ai_prompt_post ? '' : 'Inserisci un prompt nel passo 1'" @click="runPreview">
                     <Icon name="sparkles" :size="14" />
                     {{ genLoading ? 'Generazione…' : 'Genera anteprima' }}
                 </button>
@@ -195,7 +255,18 @@ async function runPreview() {
                 <Icon name="warning" :size="14" />
                 <span>{{ genError }}</span>
             </div>
-            <div v-if="isArticle">
+
+            <div v-if="showTabs" class="pf-tabs" role="tablist">
+                <button type="button" role="tab" class="pf-tab" :class="{ 'is-active': tab === 'article' }" :aria-selected="tab === 'article'"
+                    @click="tab = 'article'">Articolo</button>
+                <button type="button" role="tab" class="pf-tab" :class="{ 'is-active': tab === 'social' }" :aria-selected="tab === 'social'"
+                    @click="tab = 'social'">
+                    Social<span v-if="overLimit" class="pf-tab-dot" title="Testo social oltre il limite" />
+                </button>
+            </div>
+
+            <!-- Articolo: WordPress / Newsletter -->
+            <div v-if="isArticle" v-show="!showTabs || tab === 'article'">
                 <label class="sr-only" for="article-title">{{ titleLabel }}</label>
                 <input id="article-title" class="control pf-article-title" type="text" :value="articleTitle" :placeholder="titleLabel"
                     :disabled="genLoading" @input="setArticle($event.target.value, articleBody)" />
@@ -207,46 +278,66 @@ async function runPreview() {
                         placeholder="Scrivi l'articolo, oppure usa “Genera anteprima” per farlo scrivere all'AI."
                         @update:model-value="setArticle(articleTitle, $event)" />
                 </div>
-                <div v-if="plainText && charLimit !== null" class="pf-ai-meta">
-                    <span class="pf-ai-count" :class="{ 'pf-ai-count--over': overLimit }">
-                        {{ plainText.length.toLocaleString('it-IT') }} / {{ charLimit.toLocaleString('it-IT') }} caratteri senza formattazione
-                        <template v-if="limitChannel"> · limite {{ limitChannel.label }}</template>
-                    </span>
-                    <div v-if="overLimit" class="pf-ai-warn pf-fade-in">
-                        <Icon name="warning" :size="14" />
-                        <span>Il testo supera il limite di {{ limitChannel.label }} ({{ charLimit.toLocaleString('it-IT') }} caratteri): accorcialo per poter salvare.</span>
-                    </div>
-                </div>
             </div>
-            <div v-else class="pf-ai-box">
+
+            <!-- Social con articolo: derivato o personalizzato -->
+            <div v-if="showTabs" v-show="tab === 'social'">
+                <div class="pf-social-head">
+                    <label class="acc-row-label" style="margin:0;display:flex;align-items:center;gap:10px;cursor:pointer">
+                        <ToggleSwitch :model-value="customSocial" @update:model-value="setCustomSocial" />
+                        Personalizza testo social
+                    </label>
+                    <button v-if="customSocial" type="button" class="btn btn-secondary btn-sm" :disabled="socialLoading || !articleText"
+                        :title="articleText ? 'Riscrive l\'articolo come post per i social' : 'Scrivi o genera prima l\'articolo'" @click="runSocialVersion">
+                        <Icon name="sparkles" :size="14" />
+                        {{ socialLoading ? 'Generazione…' : 'Genera versione social' }}
+                    </button>
+                </div>
+                <template v-if="customSocial">
+                    <p class="pf-social-note">Su {{ socialLabels }} esce questo testo al posto dell'articolo.</p>
+                    <div style="position:relative">
+                        <div v-if="socialLoading" class="pf-ai-loading">
+                            <div class="pf-spinner pf-spinner--sm"></div>
+                        </div>
+                        <SocialEditor :model-value="form.ai_content_social ?? ''" :disabled="socialLoading"
+                            placeholder="Scrivi il post per i social, oppure usa “Genera versione social”."
+                            @update:model-value="emit('set', 'ai_content_social', $event)" />
+                    </div>
+                </template>
+                <template v-else>
+                    <p class="pf-social-note">Su {{ socialLabels }} esce il testo dell'articolo senza formattazione. Per un post più breve o con un tono diverso, attiva "Personalizza testo social".</p>
+                    <div v-if="articleText" class="pf-social-derived">{{ articleText }}</div>
+                    <div v-else class="pf-ai-empty">Scrivi o genera prima l'articolo.</div>
+                </template>
+            </div>
+
+            <!-- Solo social -->
+            <div v-if="!isArticle" style="position:relative">
                 <div v-if="genLoading" class="pf-ai-loading">
                     <div class="pf-spinner pf-spinner--sm"></div>
                 </div>
+                <SocialEditor :model-value="form.ai_content || ''" :disabled="genLoading"
+                    placeholder="Scrivi il post, oppure usa “Genera anteprima” per farlo scrivere all'AI."
+                    @update:model-value="setSocialOnly" />
+            </div>
 
-                <template v-if="form.ai_content">
-                    <textarea v-if="editing" class="control pf-ai-textarea" rows="6" :value="form.ai_content"
-                        @input="emit('set', 'ai_content', $event.target.value)" />
-                    <div v-else class="pf-ai-text pf-fade-in">{{ form.ai_content }}</div>
-                </template>
-                <div v-else class="pf-ai-empty">
-                    {{ form.ai_prompt_post ? 'Clicca "Genera anteprima" per vedere il testo che verrà pubblicato.' : 'Inserisci un prompt nello step 1 per generare l\'anteprima.' }}
-                </div>
-
-                <div v-if="form.ai_content && !genLoading" class="pf-ai-meta">
-                    <div class="pf-ai-meta-row">
-                        <button type="button" class="pf-ai-edit-btn" @click="editing = !editing">{{ editing ? '✓ Fatto' : 'Modifica' }}</button>
-                        <span class="pf-ai-count" :class="{ 'pf-ai-count--over': overLimit }">
-                            {{ form.ai_content.length.toLocaleString('it-IT') }}{{ charLimit !== null ? ` / ${charLimit.toLocaleString('it-IT')}` : '' }} caratteri
-                            <template v-if="charLimit !== null && limitChannel"> · limite {{ limitChannel.label }}</template>
-                        </span>
-                    </div>
-                    <div v-if="overLimit" class="pf-ai-warn pf-fade-in">
-                        <Icon name="warning" :size="14" />
-                        <span>Superi il limite di {{ limitChannel.label }} di {{ charLimit.toLocaleString('it-IT') }} caratteri: riduci il testo per poter salvare.</span>
-                    </div>
+            <div v-if="charLimit !== null && socialText" class="pf-ai-meta">
+                <span class="pf-ai-count" :class="{ 'pf-ai-count--over': overLimit }">
+                    <template v-if="isArticle">Testo social: </template>{{ socialText.length.toLocaleString('it-IT') }} / {{ charLimit.toLocaleString('it-IT') }} caratteri
+                    <template v-if="limitChannel"> · limite {{ limitChannel.label }}</template>
+                </span>
+                <div v-if="overLimit" class="pf-ai-warn pf-fade-in">
+                    <Icon name="warning" :size="14" />
+                    <span v-if="isArticle && !customSocial">L'articolo è troppo lungo per {{ limitChannel.label }} ({{ charLimit.toLocaleString('it-IT') }} caratteri): nella scheda Social attiva "Personalizza testo social" e scrivi un testo più breve.</span>
+                    <span v-else>Il testo supera il limite di {{ limitChannel.label }} ({{ charLimit.toLocaleString('it-IT') }} caratteri): accorcialo per poter salvare.</span>
                 </div>
             </div>
         </div>
+
+        <ConfirmModal v-if="confirmDropSocial" title="Tornare al testo dell'articolo?" confirm-label="Sì, usa l'articolo" danger
+            @confirm="dropCustomSocial" @cancel="confirmDropSocial = false">
+            Il testo social che hai scritto verrà eliminato e su {{ socialLabels }} uscirà l'articolo senza formattazione.
+        </ConfirmModal>
 
         <!-- Azioni -->
         <div class="pf-actions">

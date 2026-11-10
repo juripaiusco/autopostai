@@ -16,20 +16,23 @@ class PostTextGenerator
 {
     /**
      * $channels: canali accesi sul post, per il limite di caratteri (LinkedIn)
-     * che il servizio Python aggiunge al prompt.
+     * che il servizio Python aggiunge al prompt. $sourceText: testo
+     * dell'articolo da riscrivere come post social ("Genera versione
+     * social"); con questo $channel non conta e $prompt fa da istruzioni extra.
      *
      * @param  array<int, string>  $channels
      * @return array{content: string, tokens: int}
      *
      * @throws RuntimeException messaggio leggibile per l'utente
      */
-    public function generate(Settings $settings, string $prompt, ?string $channel, array $channels = []): array
+    public function generate(Settings $settings, string $prompt, ?string $channel, array $channels = [], ?string $sourceText = null): array
     {
         try {
             $response = Http::timeout(60)->post(config('services.python.url').'/generate-text', [
                 'ai_prompt_post' => $prompt,
                 'channel' => $channel,
                 'channels' => array_values($channels),
+                'source_text' => $sourceText,
                 'api_key' => $settings->openai_api_key,
                 'ai_personality' => $settings->ai_personality,
                 'ai_prompt_prefix' => $settings->ai_prompt_prefix,
