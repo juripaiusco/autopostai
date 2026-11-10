@@ -1,0 +1,128 @@
+/*
+ * FaPer3 Newsletter — stile minimo: colori, font e bottone (btn btn-primary) arrivano dal tema.
+ * Personalizzazione dal CSS del tema, es.
+ *   .f3n-block { color: #fff; --f3n-success: #7ddc9f; }
+ *   .f3n-submit { background-color: #f39200; border-color: #f39200; }
+ */
+.f3n-block {
+  --f3n-gap: 0.5rem;
+  --f3n-muted-opacity: 0.85;
+  --f3n-success: #3fb27f;
+  --f3n-error: #e5533d;
+
+  clear: both; /* non affiancarsi a blocchi in float del tema (es. social nel footer classic) */
+  width: 100%;
+  margin: 1rem 0;
+}
+
+/* Hook dentro una .row Bootstrap (displayFooterBefore del tema classic): stesso padding delle colonne. */
+.row > .f3n-block {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.f3n-intro {
+  margin-bottom: 0.75rem;
+}
+
+.f3n-title,
+.f3n-subtitle {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.35;
+  color: inherit;
+}
+
+.f3n-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--f3n-gap);
+  align-items: stretch;
+}
+
+.f3n-field {
+  flex: 1 1 9rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.f3n-field-email {
+  flex-basis: 13rem;
+}
+
+.f3n-input {
+  width: 100%;
+  height: 100%;
+  min-height: 2.5rem;
+}
+
+.f3n-submit {
+  flex: 0 0 auto;
+  text-transform: uppercase;
+}
+
+.f3n-submit[disabled] {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.f3n-privacy {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin: 0.6rem 0 0;
+  font-size: 0.85em;
+  font-weight: 400;
+  line-height: 1.4;
+  color: inherit; /* il tema classic dà a label colore fisso e text-align: right */
+  text-align: left;
+  opacity: var(--f3n-muted-opacity);
+  cursor: pointer;
+}
+
+.f3n-privacy input {
+  margin-top: 0.2em;
+  flex: 0 0 auto;
+}
+
+.f3n-privacy a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.f3n-turnstile {
+  margin-top: 0.6rem;
+}
+
+.f3n-message {
+  margin: 0.6rem 0 0;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.f3n-message--success {
+  color: var(--f3n-success);
+}
+
+.f3n-message--error {
+  color: var(--f3n-error);
+}
+
+.f3n-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 575px) {
+  .f3n-field,
+  .f3n-submit {
+    flex: 1 1 100%;
+  }
+}
