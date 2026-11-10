@@ -55,6 +55,8 @@ class Faper3newsletter extends Module implements WidgetInterface
             'Acconsento al trattamento dei miei dati per ricevere la newsletter.',
             'I agree to the processing of my data to receive the newsletter.',
         ],
+        // Informativa esterna (es. iubenda), una per lingua: se impostata vince sulla pagina CMS.
+        'F3N_PRIVACY_URL' => ['', ''],
     ];
 
     /** Campi segreti: se lasciati vuoti nel form di configurazione si mantiene il valore salvato. */
@@ -67,7 +69,7 @@ class Faper3newsletter extends Module implements WidgetInterface
     {
         $this->name = 'faper3newsletter';
         $this->tab = 'front_office_features';
-        $this->version = '1.1.0';
+        $this->version = '1.2.0';
         $this->author = 'FaPer3';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '1.7.6.0', 'max' => '1.7.99.99'];
@@ -255,6 +257,10 @@ class Faper3newsletter extends Module implements WidgetInterface
     {
         $idLang = (int) $this->context->language->id;
         $cmsId = (int) Configuration::get('F3N_PRIVACY_CMS');
+        $privacyUrl = (string) Configuration::get('F3N_PRIVACY_URL', $idLang);
+        if ($privacyUrl === '' && $cmsId > 0) {
+            $privacyUrl = $this->context->link->getCMSLink($cmsId);
+        }
         $btnColor = self::normalizeHexColor((string) Configuration::get('F3N_BTN_COLOR'));
 
         return ['f3n' => [
@@ -265,7 +271,7 @@ class Faper3newsletter extends Module implements WidgetInterface
             'title' => (string) Configuration::get('F3N_TITLE', $idLang),
             'subtitle' => (string) Configuration::get('F3N_SUBTITLE', $idLang),
             'privacy_text' => (string) Configuration::get('F3N_PRIVACY_TEXT', $idLang),
-            'privacy_url' => $cmsId > 0 ? $this->context->link->getCMSLink($cmsId) : '',
+            'privacy_url' => $privacyUrl,
             'captcha' => (string) Configuration::get('F3N_CAPTCHA'),
             'hook' => (string) $hookName,
         ]];
@@ -442,6 +448,16 @@ class Faper3newsletter extends Module implements WidgetInterface
             $errors[] = $this->l('Colore del pulsante non valido: usa il formato esadecimale, es. #f39200.');
         }
 
+        foreach (Language::getLanguages(false) as $lang) {
+            $privacyUrl = trim((string) Tools::getValue('F3N_PRIVACY_URL_' . (int) $lang['id_lang']));
+            if ($privacyUrl !== '' && (!preg_match('#^https?://#i', $privacyUrl) || !Validate::isAbsoluteUrl($privacyUrl))) {
+                $errors[] = sprintf(
+                    $this->l('URL informativa privacy non valido (%s): deve iniziare con https://'),
+                    $lang['iso_code']
+                );
+            }
+        }
+
         $score = str_replace(',', '.', (string) Tools::getValue('F3N_RECAPTCHA_SCORE'));
         if (!is_numeric($score) || (float) $score < 0 || (float) $score > 1) {
             $errors[] = $this->l('La soglia reCAPTCHA deve essere un numero tra 0 e 1.');
@@ -525,7 +541,10 @@ class Faper3newsletter extends Module implements WidgetInterface
                     ['type' => 'text', 'name' => 'F3N_SUBTITLE', 'label' => $this->l('Sottotitolo'), 'lang' => true],
                     ['type' => 'textarea', 'name' => 'F3N_PRIVACY_TEXT', 'label' => $this->l('Testo checkbox privacy'), 'lang' => true],
                     ['type' => 'select', 'name' => 'F3N_PRIVACY_CMS', 'label' => $this->l('Pagina informativa privacy'),
-                        'options' => ['query' => $cmsOptions, 'id' => 'id', 'name' => 'name']],
+                        'options' => ['query' => $cmsOptions, 'id' => 'id', 'name' => 'name'],
+                        'desc' => $this->l('Usata se l\'URL esterno qui sotto è vuoto.')],
+                    ['type' => 'text', 'name' => 'F3N_PRIVACY_URL', 'label' => $this->l('URL informativa privacy esterna'), 'lang' => true,
+                        'desc' => $this->l('Es. il link iubenda (https://www.iubenda.com/privacy-policy/...). Se compilato ha la precedenza sulla pagina CMS.')],
                 ],
                 'submit' => $submit,
             ]],
