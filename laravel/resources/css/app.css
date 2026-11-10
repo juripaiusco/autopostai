@@ -546,8 +546,11 @@ tr:hover .ch-chip{ background: var(--g200); }
 @media (max-width: 640px){
     .list-toolbar{ flex-direction: column; align-items: stretch; }
     .list-toolbar .btn{ width: 100%; }
-    .list-toolbar .filter-tabs{ width: 100%; justify-content: space-between; }
-    .list-toolbar .filter-tab{ flex: 1; justify-content: center; }
+    /* Tab a larghezza naturale su una riga, scorribili col dito: con 4-5 stati
+       non uscono più dallo schermo. */
+    .list-toolbar .filter-tabs{ width: 100%; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .list-toolbar .filter-tabs::-webkit-scrollbar{ display: none; }
+    .list-toolbar .filter-tab{ flex: 0 0 auto; white-space: nowrap; }
     .list-toolbar .search-box{ margin-left: 0; width: 100%; min-width: 0; }
     .list-toolbar__filter{ width: 100%; }
 
