@@ -632,7 +632,8 @@ tr:hover .ch-chip{ background: var(--g200); }
 @media (max-width: 900px){ .scope-topbar-slot{ display: none; } }
 @media (max-width: 640px){
     .scope-ctx{ padding: 8px 14px; }
-    .scope-trigger{ max-width: 190px; }
+    /* Il limite vale per il trigger compatto; nel menu resta largo quanto "Nuovo post". */
+    .scope-trigger:not(.scope-trigger--sidebar){ max-width: 190px; }
 }
 
 /* ============================================================
