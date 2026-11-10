@@ -69,6 +69,38 @@ class PostLinkTargetsTest extends TestCase
             ->assertJsonPath('posts.0.id', $pizza->id);
     }
 
+    public function test_each_post_has_thumbnail_and_plain_text_excerpt(): void
+    {
+        $user = $this->account();
+        $channels = ['wordpress' => ['on' => true, 'url' => 'https://blog.test/p']];
+        $html = $this->publishedPost($user, [
+            'title' => 'Editor',
+            'channels' => $channels,
+            'img' => ['foto.jpg'],
+            'ai_content' => '<h1>Titolo articolo</h1><p>Arrivano i <strong>nuovi</strong>, prodotti &amp; offerte.</p><p>Secondo paragrafo.</p>',
+            'ai_content_format' => 'html',
+        ]);
+        $markdown = $this->publishedPost($user, [
+            'title' => 'Markdown',
+            'channels' => $channels,
+            'img' => null,
+            'ai_content' => "# Titolo\n\nTesto **AI** ".str_repeat('lungo ', 40),
+            'ai_content_format' => 'markdown',
+        ]);
+
+        $posts = collect($this->actingAs($user)->getJson(route('posts.link-targets', $user))->json('posts'))->keyBy('id');
+
+        $this->assertSame('Arrivano i nuovi, prodotti & offerte. Secondo paragrafo.', $posts[$html->id]['excerpt']);
+        $this->assertStringEndsWith("posts/{$html->id}/foto.jpg", $posts[$html->id]['cover']);
+        $this->assertSame($html->thumbGradient(), $posts[$html->id]['thumb']);
+
+        $excerpt = $posts[$markdown->id]['excerpt'];
+        $this->assertStringStartsWith('Testo AI lungo', $excerpt);
+        $this->assertStringNotContainsString('Titolo', $excerpt);
+        $this->assertLessThanOrEqual(113, mb_strlen($excerpt));
+        $this->assertNull($posts[$markdown->id]['cover']);
+    }
+
     public function test_other_accounts_are_forbidden(): void
     {
         $user = $this->account();

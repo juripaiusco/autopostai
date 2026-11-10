@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PostLinkController extends Controller
 {
@@ -36,13 +37,17 @@ class PostLinkController extends Controller
             }))
             ->orderByDesc('published_at')
             ->limit(200)
-            ->get(['id', 'title', 'published_at', 'channels']);
+            ->get(['id', 'title', 'published_at', 'channels', 'img', 'ai_content', 'ai_content_format']);
 
         $targets = $posts
             ->map(fn (Post $post) => [
                 'id' => $post->id,
                 'title' => $post->title ?: "Post #{$post->id}",
                 'published_at' => $post->published_at?->toIso8601String(),
+                // Per riconoscere il post a colpo d'occhio (come in Lista post).
+                'cover' => $post->coverUrl(),
+                'thumb' => $post->thumbGradient(),
+                'excerpt' => $this->excerpt($post),
                 'channels' => collect($post->channels ?? [])
                     ->filter(fn ($c, $key) => isset(User::CHANNELS[$key]) && !empty($c['on']) && !empty($c['url']))
                     ->map(fn ($c, $key) => ['key' => $key, 'label' => User::CHANNELS[$key]['name'], 'url' => $c['url']])
@@ -54,5 +59,24 @@ class PostLinkController extends Controller
             ->values();
 
         return response()->json(['posts' => $targets]);
+    }
+
+    /**
+     * Inizio del testo in chiaro (senza tag né titolo dell'articolo).
+     */
+    private function excerpt(Post $post): ?string
+    {
+        $content = (string) $post->ai_content;
+        if (trim($content) === '') {
+            return null;
+        }
+
+        $html = $post->ai_content_format === Post::FORMAT_HTML ? $content : Post::markdownToHtml($content);
+        $html = preg_replace('#<h1\b[^>]*>.*?</h1>#is', '', $html, 1);
+        // Spazio tra i blocchi (paragrafi, elenchi), non dentro il grassetto.
+        $html = preg_replace('#</(p|h[1-6]|li|blockquote|div)>|<br\s*/?>#i', ' $0', $html);
+        $text = (string) Str::of(html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5))->squish();
+
+        return $text === '' ? null : Str::limit($text, 110);
     }
 }
