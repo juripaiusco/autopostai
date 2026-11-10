@@ -7,6 +7,7 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ### Miglioramenti
 - La versione dell'app è visibile in basso a destra in ogni pagina.
+- Le notifiche si aprono in un pannello più leggibile, con la data di ogni avviso; la campanella si muove quando ce ne sono di nuove.
 
 ### Correzioni
 - Su smartphone l'intestazione resta fissa in alto, anche con il menu aperto.
