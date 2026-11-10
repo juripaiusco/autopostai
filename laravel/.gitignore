@@ -6,6 +6,10 @@
 /docs/documentation
 _config.sh
 /public/assets
+# Asset PWA generati da `npm run pwa:generate` (anche a ogni deploy): sorgenti in resources/pwa e public/images
+/public/pwa
+/public/manifest.webmanifest
+/resources/views/partials/pwa-head.blade.php
 .editorconfig
 .env*
 # Modelli di configurazione e versione app: vanno versionati (niente segreti).

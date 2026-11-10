@@ -7,7 +7,7 @@
  * Gira sull'HOST (serve Chrome, usato da pwa-asset-generator via puppeteer).
  * Ogni lancio svuota e rigenera tutto: niente pulizia a mano.
  *
- * Output (versionato in git: il deploy prod parte dal repo pulito):
+ * Output (fuori da git, .gitignore; deploy.sh lo rigenera a ogni deploy):
  *   public/pwa/icons/                         favicon, apple-touch-icon, icone del manifest
  *   public/pwa/splash/                        splash iOS (apple-touch-startup-image)
  *   public/manifest.webmanifest               web app manifest

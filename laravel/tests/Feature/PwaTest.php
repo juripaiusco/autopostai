@@ -8,6 +8,7 @@ use Tests\TestCase;
 /**
  * Asset PWA generati da `npm run pwa:generate` (scripts/pwa-generate.mjs):
  * se mancano o il manifest punta a file inesistenti, l'app non è installabile.
+ * Sono fuori da git: su una checkout nuova lanciare prima `npm run pwa:generate`.
  */
 class PwaTest extends TestCase
 {

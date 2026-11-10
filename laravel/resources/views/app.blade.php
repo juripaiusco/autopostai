@@ -6,14 +6,14 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        {{-- PWA: icone/splash generati da `npm run pwa:generate` (docs/pwa.md) --}}
+        {{-- PWA: icone/splash/manifest generati da `npm run pwa:generate` (fuori da git, docs/pwa.md) --}}
         <link rel="manifest" href="/manifest.webmanifest?v={{ config('app.version') }}">
         <meta name="theme-color" content="#ffffff">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="{{ config('app.name', 'FaPer3') }}">
-        @include('partials.pwa-head')
+        @includeIf('partials.pwa-head')
 
         @fonts
         @routes
