@@ -70,8 +70,8 @@ function logout() {
             <Icon name="plus" :size="18" />Nuovo post
         </Link>
 
-        <div v-if="$slots['user-filter']" style="margin: 0 0 16px">
-            <div style="font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--g400); margin: 0 2px 7px">Filtra per utente</div>
+        <div v-if="$slots['user-filter']" class="sb-filter">
+            <div class="sb-filter-label">Filtra per utente</div>
             <slot name="user-filter" />
         </div>
 

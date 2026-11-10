@@ -10,6 +10,7 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ### Correzioni
 - Su smartphone l'intestazione resta fissa in alto, anche con il menu aperto.
+- Su smartphone il filtro per utente nel menu è allineato al pulsante "Nuovo post".
 
 ## [2.1.0] — 2026-11-10
 
