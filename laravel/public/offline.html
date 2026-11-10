@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <title>Sei offline · FaPer3</title>
+    <!-- Mostrata dal service worker quando una pagina non si carica per mancanza di rete. Niente asset esterni. -->
+    <style>
+        :root { color-scheme: light; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            background: #f3f4f6;
+            color: #1f2937;
+            font-family: Figtree, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+        main {
+            width: 100%;
+            max-width: 360px;
+            padding: 32px 24px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+            text-align: center;
+        }
+        img { width: 72px; height: 72px; border-radius: 16px; }
+        h1 { margin: 20px 0 8px; font-size: 1.25rem; }
+        p { margin: 0 0 24px; color: #4b5563; line-height: 1.5; }
+        button {
+            width: 100%;
+            padding: 12px 16px;
+            border: 0;
+            border-radius: 10px;
+            background: #0369a1;
+            color: #ffffff;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:hover { background: #075985; }
+    </style>
+</head>
+<body>
+    <main>
+        <img src="/pwa/icons/manifest-icon-192.png" alt="FaPer3">
+        <h1>Sei offline</h1>
+        <p>FaPer3 non riesce a raggiungere il server. Riprova quando torna la connessione.</p>
+        <button type="button" onclick="location.reload()">Riprova</button>
+    </main>
+    <script>
+        // Ricarica da sola appena torna la rete.
+        window.addEventListener('online', () => location.reload());
+    </script>
+</body>
+</html>

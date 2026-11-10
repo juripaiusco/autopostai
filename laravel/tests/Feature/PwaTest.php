@@ -41,6 +41,22 @@ class PwaTest extends TestCase
         }
     }
 
+    public function test_service_worker_offline_assets_exist(): void
+    {
+        $sw = file_get_contents(public_path('service-worker.js'));
+
+        preg_match('/OFFLINE_ASSETS = \[([^\]]+)\]/', $sw, $match);
+        $this->assertNotEmpty($match, 'OFFLINE_ASSETS non trovato nel service worker');
+
+        // cache.addAll() fallisce intera se anche un solo file manca: niente pagina offline.
+        $this->assertStringContainsString("OFFLINE_URL = '/offline.html'", $sw);
+        $this->assertFileExists(public_path('offline.html'));
+        preg_match_all("/'([^']+)'/", $match[1], $paths);
+        foreach ($paths[1] as $path) {
+            $this->assertFileExists(public_path(ltrim($path, '/')));
+        }
+    }
+
     public function test_generated_head_points_to_existing_files(): void
     {
         $head = file_get_contents(resource_path('views/partials/pwa-head.blade.php'));
