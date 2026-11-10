@@ -10,6 +10,7 @@ use App\Http\Controllers\LinkedInController;
 use App\Http\Controllers\McpTokenController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PostContentController;
+use App\Http\Controllers\PostLinkController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PushNotificationController;
 use App\Http\Controllers\PushSubscriptionController;
@@ -88,6 +89,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/posts/canali/{user}/genera-testo', [PostContentController::class, 'generateText'])
         ->name('posts.generate-text');
+
+    Route::get('/posts/canali/{user}/post-collegabili', [PostLinkController::class, 'targets'])
+        ->name('posts.link-targets');
 
     Route::delete('/posts/canali/{user}/archivio-immagini/{filename}', [ImageArchiveController::class, 'destroy'])
         ->name('posts.image-archive.destroy');

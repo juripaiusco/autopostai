@@ -27,8 +27,26 @@
 .rte-btn--emoji { font-size: 16px; }
 .rte--social .rte-content .ProseMirror { min-height: 140px; }
 .rte--social .rte-content .ProseMirror > * + * { margin-top: 0; }
-.rte-pop--link { display: flex; gap: 6px; align-items: center; width: min(420px, 80vw); }
-.rte-pop--link .control { flex: 1; min-width: 0; }
+.rte-pop--link { display: flex; flex-direction: column; gap: 8px; width: min(440px, 80vw); }
+.rte-pop--cta { display: flex; flex-direction: column; gap: 8px; width: min(360px, 85vw); right: 0; left: auto; }
+.rte-pop-row { display: flex; gap: 6px; align-items: center; }
+.rte-pop-row .control { flex: 1; min-width: 0; }
+.rte-pop-title { font-weight: 700; font-size: 14px; color: var(--ink); }
+.rte-pop-label { font-size: 12.5px; font-weight: 600; color: var(--g600); }
+.rte-pop-hint { margin: 0; font-size: 12px; color: var(--g500); line-height: 1.45; }
+.rte-pop-info { font-size: 13px; color: var(--g700); overflow-wrap: anywhere; }
+.rte-radio { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--g700); cursor: pointer; }
+.rte-btn--cta { font-size: 11.5px; letter-spacing: .04em; }
+
+/* Shortcode a video: link a un tuo post, pulsante CTA */
+.rte-content .ProseMirror a[href^="["] { background: var(--sky-50); border-radius: var(--radius-sm); padding: 0 3px; text-decoration-style: dashed; }
+.rte-chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 4px 1px 8px; margin: 0 1px; border-radius: var(--radius-full); background: var(--sky-50); border: 1px solid var(--sky-100); color: var(--sky-strong); font-size: .92em; white-space: nowrap; vertical-align: baseline; }
+.rte-chip-x { border: none; background: none; color: var(--g400); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 3px; }
+.rte-chip-x:hover { color: var(--danger); }
+.rte-cta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border: 1px dashed var(--g300); border-radius: var(--radius); background: var(--g50); }
+.rte-cta-btn { display: inline-block; padding: 8px 16px; border-radius: var(--radius); background: var(--ink); color: #fff; font-weight: 600; font-size: 14px; }
+.rte-cta-target { flex: 1; min-width: 0; font-size: 12.5px; color: var(--g500); overflow-wrap: anywhere; }
+.ProseMirror-selectednode.rte-cta, .ProseMirror-selectednode.rte-chip { outline: 2px solid var(--sky); outline-offset: 1px; }
 .rte-swatch { width: 26px; height: 26px; border-radius: var(--radius-full); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--g200); cursor: pointer; }
 .rte-swatch:hover { box-shadow: 0 0 0 2px var(--g400); }
 .rte-pop-link { grid-column: 1 / -1; border: none; background: none; padding: 2px 0 0; text-align: left; font-size: 12.5px; color: var(--sky-strong); cursor: pointer; font-family: inherit; }

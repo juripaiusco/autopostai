@@ -30,6 +30,7 @@ const MCP_COVERAGE = [
     'posts.channel-content.update' => 'update_published_post',
     'posts.destroy' => 'delete_post',
     'posts.generate-text' => 'generate_post_text',
+    'posts.link-targets' => 'list_posts, get_post',
     'posts.image-archive' => 'list_image_archive',
     'posts.image-generate' => 'generate_image',
     'posts.image-status' => 'get_image_job',

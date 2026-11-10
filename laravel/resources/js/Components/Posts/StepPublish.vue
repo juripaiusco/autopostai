@@ -274,7 +274,8 @@ async function runSocialVersion() {
                     <div v-if="genLoading" class="pf-ai-loading">
                         <div class="pf-spinner pf-spinner--sm"></div>
                     </div>
-                    <RichEditor :model-value="articleBody" :disabled="genLoading"
+                    <RichEditor :model-value="articleBody" :disabled="genLoading" :user-id="targetUserId"
+                        :allow-cta="selectedChannelIds.includes('newsletter')"
                         placeholder="Scrivi l'articolo, oppure usa “Genera anteprima” per farlo scrivere all'AI."
                         @update:model-value="setArticle(articleTitle, $event)" />
                 </div>
@@ -299,7 +300,7 @@ async function runSocialVersion() {
                         <div v-if="socialLoading" class="pf-ai-loading">
                             <div class="pf-spinner pf-spinner--sm"></div>
                         </div>
-                        <SocialEditor :model-value="form.ai_content_social ?? ''" :disabled="socialLoading"
+                        <SocialEditor :model-value="form.ai_content_social ?? ''" :disabled="socialLoading" :user-id="targetUserId"
                             placeholder="Scrivi il post per i social, oppure usa “Genera versione social”."
                             @update:model-value="emit('set', 'ai_content_social', $event)" />
                     </div>
@@ -316,7 +317,7 @@ async function runSocialVersion() {
                 <div v-if="genLoading" class="pf-ai-loading">
                     <div class="pf-spinner pf-spinner--sm"></div>
                 </div>
-                <SocialEditor :model-value="form.ai_content || ''" :disabled="genLoading"
+                <SocialEditor :model-value="form.ai_content || ''" :disabled="genLoading" :user-id="targetUserId"
                     placeholder="Scrivi il post, oppure usa “Genera anteprima” per farlo scrivere all'AI."
                     @update:model-value="setSocialOnly" />
             </div>

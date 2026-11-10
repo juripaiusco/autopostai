@@ -3,7 +3,8 @@
 // che il server lascia passare (App\Services\PostHtmlSanitizer): H2/H3,
 // grassetto, corsivo, sottolineato, elenchi, citazione, link, colore del
 // testo da palette e allineamento. Il titolo (H1) è un campo a parte.
-import { ref, watch, onBeforeUnmount } from 'vue';
+// Shortcode senza sintassi: link a un tuo post e pulsante CTA (newsletter).
+import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle, Color } from '@tiptap/extension-text-style';
@@ -11,11 +12,17 @@ import TextAlign from '@tiptap/extension-text-align';
 import { Placeholder } from '@tiptap/extensions';
 import Icon from '@/Components/Icon.vue';
 import EmojiButton from '@/Components/Editor/EmojiButton.vue';
+import PostLinkPicker from '@/Components/Editor/PostLinkPicker.vue';
+import { CtaButton, postLinkShortcode, describePostLink } from '@/Components/Editor/shortcodes.js';
 
 const props = defineProps({
     modelValue: { type: String, default: '' },
     placeholder: { type: String, default: 'Scrivi il testo…' },
     disabled: { type: Boolean, default: false },
+    // Account del post: serve al dialog "Un tuo post" (null = dialog nascosto).
+    userId: { type: [Number, String], default: null },
+    // Pulsante CTA: solo con la newsletter accesa (template CTA dell'account).
+    allowCta: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -53,6 +60,7 @@ const editor = useEditor({
         Color,
         TextAlign.configure({ types: ['heading', 'paragraph'] }),
         Placeholder.configure({ placeholder: () => props.placeholder }),
+        CtaButton,
     ],
     onUpdate: ({ editor: e }) => {
         emit('update:modelValue', e.isEmpty ? '' : e.getHTML());
@@ -71,8 +79,15 @@ watch(() => props.disabled, (disabled) => editor.value?.setEditable(!disabled));
 
 onBeforeUnmount(() => editor.value?.destroy());
 
-const popover = ref(null); // 'link' | 'color' | null
+const popover = ref(null); // 'link' | 'color' | 'cta' | null
 const linkUrl = ref('');
+const pickerFor = ref(null); // 'link' | 'cta' | null: dialog "Un tuo post" aperto
+const linkedPost = computed(() => describePostLink(linkUrl.value));
+
+const ctaText = ref('');
+const ctaTarget = ref('url'); // 'url' | 'post'
+const ctaUrl = ref('');
+const ctaPost = ref(null); // { id, title, channel, label }
 
 function toggle(name) {
     if (popover.value === name) {
@@ -80,7 +95,49 @@ function toggle(name) {
         return;
     }
     if (name === 'link') linkUrl.value = editor.value?.getAttributes('link').href ?? '';
+    if (name === 'cta') {
+        ctaText.value = 'Scopri di più';
+        ctaTarget.value = 'url';
+        ctaUrl.value = '';
+        ctaPost.value = null;
+    }
     popover.value = name;
+}
+
+function setLinkHref(href, text) {
+    const e = editor.value;
+    if (!e) return;
+    if (e.state.selection.empty && !e.isActive('link')) {
+        e.chain().focus().insertContent({ type: 'text', text, marks: [{ type: 'link', attrs: { href } }] }).run();
+    } else {
+        e.chain().focus().extendMarkRange('link').setLink({ href }).run();
+    }
+}
+
+function onPostPicked(post) {
+    const target = pickerFor.value;
+    pickerFor.value = null;
+    if (target === 'link') {
+        setLinkHref(postLinkShortcode(post.channel, post.id), post.title);
+        popover.value = null;
+    } else {
+        ctaPost.value = post;
+        ctaTarget.value = 'post';
+    }
+}
+
+const canInsertCta = computed(() => ctaText.value.trim() !== ''
+    && (ctaTarget.value === 'post' ? !!ctaPost.value : ctaUrl.value.trim() !== ''));
+
+function insertCta() {
+    if (!canInsertCta.value) return;
+    let url = ctaUrl.value.trim();
+    if (ctaTarget.value === 'url' && !/^(https?:|mailto:|tel:)/i.test(url)) url = `https://${url}`;
+    const attrs = ctaTarget.value === 'post'
+        ? { text: ctaText.value, channel: ctaPost.value.channel, postId: ctaPost.value.id, title: ctaPost.value.title }
+        : { text: ctaText.value, url };
+    editor.value?.chain().focus().insertContent({ type: 'ctaButton', attrs }).run();
+    popover.value = null;
 }
 
 function applyLink() {
@@ -91,11 +148,7 @@ function applyLink() {
         e.chain().focus().extendMarkRange('link').unsetLink().run();
     } else {
         if (!/^(https?:|mailto:|tel:|\[)/i.test(url)) url = `https://${url}`;
-        if (e.state.selection.empty && !e.isActive('link')) {
-            e.chain().focus().insertContent({ type: 'text', text: url, marks: [{ type: 'link', attrs: { href: url } }] }).run();
-        } else {
-            e.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-        }
+        setLinkHref(url, url);
     }
     popover.value = null;
 }
@@ -173,9 +226,35 @@ function setBlock(type) {
                 <button type="button" class="rte-btn" :class="{ 'is-active': editor.isActive('link') || popover === 'link' }" title="Link"
                     :disabled="disabled" @click="toggle('link')"><Icon name="link" :size="16" /></button>
                 <form v-if="popover === 'link'" class="rte-pop rte-pop--link" @submit.prevent="applyLink">
-                    <input v-model="linkUrl" class="control" type="text" placeholder="https://…" aria-label="Indirizzo del link" autofocus />
-                    <button type="submit" class="btn btn-dark btn-sm">Applica</button>
-                    <button v-if="editor.isActive('link')" type="button" class="btn btn-secondary btn-sm" @click="removeLink">Rimuovi</button>
+                    <div v-if="linkedPost" class="rte-pop-info">🔗 Collegato a: <strong>{{ linkedPost }}</strong></div>
+                    <div class="rte-pop-row">
+                        <input v-model="linkUrl" class="control" type="text" placeholder="https://…" aria-label="Indirizzo del link" autofocus />
+                        <button type="submit" class="btn btn-dark btn-sm">Applica</button>
+                        <button v-if="editor.isActive('link')" type="button" class="btn btn-secondary btn-sm" @click="removeLink">Rimuovi</button>
+                    </div>
+                    <button v-if="userId" type="button" class="rte-pop-link" @click="pickerFor = 'link'">…oppure collega un tuo post già pubblicato</button>
+                </form>
+            </div>
+            <div v-if="allowCta" class="rte-pop-wrap">
+                <button type="button" class="rte-btn rte-btn--cta" :class="{ 'is-active': popover === 'cta' }"
+                    title="Pulsante call-to-action (newsletter)" :disabled="disabled" @click="toggle('cta')">CTA</button>
+                <form v-if="popover === 'cta'" class="rte-pop rte-pop--cta" @submit.prevent="insertCta">
+                    <div class="rte-pop-title">Pulsante nella newsletter</div>
+                    <label class="rte-pop-label" for="cta-text">Testo del pulsante</label>
+                    <input id="cta-text" v-model="ctaText" class="control" type="text" maxlength="60" />
+                    <span class="rte-pop-label">Porta a</span>
+                    <label class="rte-radio"><input v-model="ctaTarget" type="radio" value="url" /> un indirizzo web</label>
+                    <input v-if="ctaTarget === 'url'" v-model="ctaUrl" class="control" type="text" placeholder="https://…" aria-label="Indirizzo del pulsante" />
+                    <label v-if="userId" class="rte-radio"><input v-model="ctaTarget" type="radio" value="post" /> un tuo post già pubblicato</label>
+                    <div v-if="ctaTarget === 'post'" class="rte-pop-row">
+                        <span v-if="ctaPost" class="rte-pop-info" style="flex:1">🔗 {{ ctaPost.title }} · {{ ctaPost.label }}</span>
+                        <button type="button" class="btn btn-secondary btn-sm" @click="pickerFor = 'cta'">{{ ctaPost ? 'Cambia' : 'Scegli il post' }}</button>
+                    </div>
+                    <p class="rte-pop-hint">Lo stile del pulsante è quello impostato in Account → Newsletter. Su WordPress diventa un link.</p>
+                    <div class="rte-pop-row" style="justify-content:flex-end">
+                        <button type="button" class="btn btn-secondary btn-sm" @click="popover = null">Annulla</button>
+                        <button type="submit" class="btn btn-dark btn-sm" :disabled="!canInsertCta">Inserisci</button>
+                    </div>
                 </form>
             </div>
             <EmojiButton :disabled="disabled" @pick="editor.chain().focus().insertContent($event).run()" />
@@ -186,5 +265,8 @@ function setBlock(type) {
                 @click="editor.chain().focus().redo().run()"><Icon name="redo" :size="16" /></button>
         </div>
         <EditorContent :editor="editor" class="rte-content" />
+        <PostLinkPicker v-if="pickerFor && userId" :user-id="userId"
+            :title="pickerFor === 'cta' ? 'Il pulsante porta a un tuo post' : 'Collega un tuo post'"
+            @pick="onPostPicked" @close="pickerFor = null" />
     </div>
 </template>

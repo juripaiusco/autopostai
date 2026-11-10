@@ -44,13 +44,20 @@ export function textToHtml(text) {
 
 // HTML → testo semplice, blocchi separati da una riga vuota, link come
 // "testo (url)". Stesse regole del worker (publisher/domain/channel_text.py):
-// qui serve per l'anteprima e il contatore dei social.
+// qui serve per l'anteprima e il contatore dei social. Gli shortcode
+// (link a un tuo post, CTA) li risolve il worker all'uscita: qui restano
+// leggibili come "(link al post)".
 export function htmlToText(html) {
     const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
     doc.querySelectorAll('a[href]').forEach((a) => {
-        const url = a.getAttribute('href');
+        const raw = a.getAttribute('href');
+        const url = raw.startsWith('[') ? 'link al post' : raw;
         const label = (a.textContent ?? '').trim();
-        a.replaceWith(!label || label === url ? url : `${label} (${url})`);
+        a.replaceWith(!label || label === raw ? url : `${label} (${url})`);
+    });
+    doc.querySelectorAll('p').forEach((p) => {
+        const cta = (p.textContent ?? '').trim().match(/^\[cta\b[\s\S]*?text="([^"]*)"[\s\S]*\]$/i);
+        if (cta) p.textContent = `${cta[1]}: (link)`;
     });
     doc.querySelectorAll('br').forEach((br) => br.replaceWith('\n'));
     doc.querySelectorAll('p, h1, h2, h3, li, blockquote').forEach((el) => el.append('\n\n'));
