@@ -5,6 +5,9 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ## [Non rilasciato]
 
+### Novità
+- Puoi installare FaPer3 sul telefono come un'app, con la sua icona e la schermata di avvio.
+
 ## [2.1.1] — 2026-11-10
 
 ### Miglioramenti

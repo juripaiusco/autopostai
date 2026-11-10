@@ -10,7 +10,7 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
         self.registration.showNotification(title, {
             body: payload.body || '',
-            icon: '/images/faper3-logo.png',
+            icon: '/pwa/icons/manifest-icon-192.png',
             data: payload.data || {},
             actions: payload.actions || [],
         }),

@@ -24,6 +24,11 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
+# Manifest PWA (public/manifest.webmanifest): MIME corretto anche dove mime.types non lo conosce.
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+</IfModule>
+
 # Stessi limiti di .user.ini quando PHP gira come modulo Apache (Docker locale),
 # che non legge .user.ini. Con PHP-FPM/FastCGI questo blocco viene saltato.
 <IfModule mod_php.c>
