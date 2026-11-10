@@ -254,5 +254,12 @@
 /* ---------- Actions / footer ---------- */
 .pf-actions { display: flex; gap: 10px; align-items: center; padding-top: 4px; flex-wrap: wrap; }
 .pf-actions .spacer { flex: 1; }
+/* Mobile: pulsanti impilati a tutta larghezza. column-reverse mette l'azione
+   principale (Salva) in cima e "Indietro" in fondo, senza toccare il DOM. */
+@media (max-width: 640px) {
+    .pf-actions { flex-direction: column-reverse; align-items: stretch; }
+    .pf-actions .btn { width: 100%; }
+    .pf-actions .spacer { display: none; }
+}
 .pf-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--g100); }
 .pf-footer .spacer { flex: 1; }
