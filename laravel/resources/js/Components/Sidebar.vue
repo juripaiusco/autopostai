@@ -23,7 +23,6 @@ const isAdmin = computed(() => usePage().props.isAdmin);
 const isManager = computed(() => usePage().props.isManager);
 const contactsEnabled = computed(() => usePage().props.contactsEnabled);
 const usage = computed(() => usePage().props.usage ?? null);
-const appVersion = computed(() => usePage().props.app?.version);
 const roleLabel = computed(() => (isAdmin.value ? 'Amministratore' : isManager.value ? 'Manager' : 'Utente'));
 
 const allLinks = [
@@ -108,7 +107,6 @@ function logout() {
                     </div>
                     <span class="sb-user-caret"><Icon name="chevron" :size="16" /></span>
                 </button>
-                <div v-if="appVersion" class="sb-version">FaPer3 - v.{{ appVersion }}</div>
             </div>
         </div>
     </aside>

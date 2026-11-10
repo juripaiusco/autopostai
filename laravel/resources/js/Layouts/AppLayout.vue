@@ -29,6 +29,7 @@ const activeUserId = computed(() => usePage().props.activeUserId ?? null);
 const activeUser = computed(() => usePage().props.activeUser ?? null);
 // Consumo AI del mese (HandleInertiaRequests::usage): null = barra nascosta.
 const usage = computed(() => usePage().props.usage ?? null);
+const appVersion = computed(() => usePage().props.app?.version);
 const { setScope } = useUserScope();
 
 // Toast globale alimentato dal flash di sessione (es. dopo un redirect post-save).
@@ -100,6 +101,7 @@ watch(
                 <div class="container">
                     <slot />
                 </div>
+                <footer v-if="appVersion" class="app-foot">FaPer3 - v.{{ appVersion }}</footer>
             </main>
         </div>
 

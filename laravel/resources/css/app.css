@@ -389,7 +389,6 @@ tr:hover .ch-chip{ background: var(--g200); }
 .sb-avatar{ width: 34px; height: 34px; border-radius: 50%; background: var(--sky); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
 .sb-user-name{ font-size: 13.5px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sb-user-role{ font-size: 11.5px; color: var(--g500); }
-.sb-version{ font-size: 11px; color: var(--g400); padding: 6px 10px 0; }
 
 .sb-user{ display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 1px solid transparent; border-radius: var(--radius); background: transparent; cursor: pointer; text-align: left; font-family: inherit; transition: background .15s ease, border-color .15s ease; }
 .sb-user:hover, .sb-user.open{ background: var(--g50); border-color: var(--g200); }
@@ -407,7 +406,9 @@ tr:hover .ch-chip{ background: var(--g200); }
 .sidebar-overlay.sb-open{ display: block; }
 
 .app.has-sidebar .main-col{ flex: 1; min-width: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-.app.has-sidebar .main-col main{ flex: 1; overflow-y: auto; }
+.app.has-sidebar .main-col main{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.app.has-sidebar .main-col main > .container{ flex: 1 0 auto; }
+.app-foot{ padding: 0 30px 14px; text-align: right; font-size: 9.5px; color: var(--g400); }
 
 .topbar{ height: 62px; background: #fff; border-bottom: 1px solid var(--g200); display: flex; align-items: center; gap: 16px; padding: 0 24px; position: sticky; top: 0; z-index: 20; }
 .topbar-search{ position: relative; flex: 1; max-width: 420px; display: flex; align-items: center; gap: 10px; background: var(--g100); border-radius: 9999px; padding: 9px 16px; color: var(--g400); }
@@ -497,7 +498,7 @@ tr:hover .ch-chip{ background: var(--g200); }
     .sidebar .sb-link{ font-size: 15.5px; padding: 15px 20px; border-radius: 0; border-bottom: 1px solid var(--g100); }
     .sidebar .sb-foot{ margin-top: auto; padding: 8px 14px calc(16px + env(safe-area-inset-bottom, 0px)); border-top: none; background: #fff; flex-shrink: 0; }
     .sidebar .sb-credits{ display: none; }
-    .sidebar .sb-version{ display: none; }
+    .app-foot{ display: none; }
     .sidebar-overlay{ display: none !important; }
 
     .topbar-search{ display: none; }
