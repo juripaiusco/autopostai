@@ -2,10 +2,12 @@
  * FaPer3 Newsletter — stile minimo: colori, font e bottone (btn btn-primary) arrivano dal tema.
  * Personalizzazione dal CSS del tema, es.
  *   .f3n-block { color: #fff; --f3n-success: #7ddc9f; }
- *   .f3n-submit { background-color: #f39200; border-color: #f39200; }
+ *   .f3n-block { --f3n-radius: 4px; }   (angoli di input e bottone)
+ * Il colore del bottone si imposta dal back office del modulo.
  */
 .f3n-block {
   --f3n-gap: 0.5rem;
+  --f3n-radius: 8px;
   --f3n-muted-opacity: 0.85;
   --f3n-success: #3fb27f;
   --f3n-error: #e5533d;
@@ -50,15 +52,33 @@
   flex-basis: 13rem;
 }
 
-.f3n-input {
+/* due classi: battono .form-control / .btn del tema a prescindere dall'ordine dei CSS */
+.f3n-block .f3n-input {
   width: 100%;
   height: 100%;
   min-height: 2.5rem;
+  border-radius: var(--f3n-radius);
 }
 
-.f3n-submit {
+.f3n-block .f3n-submit {
   flex: 0 0 auto;
   text-transform: uppercase;
+  border-radius: var(--f3n-radius);
+}
+
+/* Colore scelto nel back office (variabili impostate inline solo se il colore è configurato). */
+.f3n-custom-btn .f3n-submit,
+.f3n-custom-btn .f3n-submit:focus {
+  background-color: var(--f3n-btn-bg);
+  border-color: var(--f3n-btn-bg);
+  color: var(--f3n-btn-text);
+}
+
+.f3n-custom-btn .f3n-submit:hover {
+  background-color: var(--f3n-btn-bg);
+  border-color: var(--f3n-btn-bg);
+  color: var(--f3n-btn-text);
+  filter: brightness(0.9);
 }
 
 .f3n-submit[disabled] {
@@ -122,7 +142,7 @@
 
 @media (max-width: 575px) {
   .f3n-field,
-  .f3n-submit {
+  .f3n-block .f3n-submit {
     flex: 1 1 100%;
   }
 }

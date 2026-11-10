@@ -31,6 +31,7 @@ class Faper3newsletter extends Module implements WidgetInterface
         'F3N_TAG_FORM' => 'prestashop',
         'F3N_SOURCE_FORM' => 'prestashop-newsletter',
         'F3N_PRIVACY_CMS' => 0,
+        'F3N_BTN_COLOR' => '',
         'F3N_CAPTCHA' => 'none',
         'F3N_CAPTCHA_SITE' => '',
         'F3N_CAPTCHA_SECRET' => '',
@@ -66,7 +67,7 @@ class Faper3newsletter extends Module implements WidgetInterface
     {
         $this->name = 'faper3newsletter';
         $this->tab = 'front_office_features';
-        $this->version = '1.0.0';
+        $this->version = '1.1.0';
         $this->author = 'FaPer3';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '1.7.6.0', 'max' => '1.7.99.99'];
@@ -254,8 +255,11 @@ class Faper3newsletter extends Module implements WidgetInterface
     {
         $idLang = (int) $this->context->language->id;
         $cmsId = (int) Configuration::get('F3N_PRIVACY_CMS');
+        $btnColor = self::normalizeHexColor((string) Configuration::get('F3N_BTN_COLOR'));
 
         return ['f3n' => [
+            'btn_color' => $btnColor,
+            'btn_text_color' => $btnColor !== '' ? self::contrastTextColor($btnColor) : '',
             'action' => $this->context->link->getModuleLink($this->name, 'subscribe', [], true),
             'token' => Tools::getToken(false),
             'title' => (string) Configuration::get('F3N_TITLE', $idLang),
@@ -265,6 +269,46 @@ class Faper3newsletter extends Module implements WidgetInterface
             'captcha' => (string) Configuration::get('F3N_CAPTCHA'),
             'hook' => (string) $hookName,
         ]];
+    }
+
+    /**
+     * "#F39" / "f39200" → "#ff3399" / "#f39200"; valore non valido o vuoto → "".
+     *
+     * @param string $color
+     *
+     * @return string
+     */
+    public static function normalizeHexColor($color)
+    {
+        $hex = ltrim(trim((string) $color), '#');
+        if (!preg_match('/^([0-9a-f]{3}|[0-9a-f]{6})$/i', $hex)) {
+            return '';
+        }
+        if (strlen($hex) === 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+
+        return '#' . strtolower($hex);
+    }
+
+    /**
+     * Testo del bottone: bianco come nei temi (arancio, azzurro, rosso… col bianco), scuro solo su
+     * sfondi molto chiari dove il bianco quasi sparisce (contrasto WCAG col bianco < 2: giallo, grigio chiaro).
+     *
+     * @param string $hex colore normalizzato "#rrggbb"
+     *
+     * @return string
+     */
+    public static function contrastTextColor($hex)
+    {
+        $channels = [];
+        foreach ([1, 3, 5] as $offset) {
+            $c = hexdec(substr($hex, $offset, 2)) / 255;
+            $channels[] = $c <= 0.03928 ? $c / 12.92 : pow(($c + 0.055) / 1.055, 2.4);
+        }
+        $luminance = 0.2126 * $channels[0] + 0.7152 * $channels[1] + 0.0722 * $channels[2];
+
+        return 1.05 / ($luminance + 0.05) >= 2 ? '#ffffff' : '#1a1a1a';
     }
 
     /* ------------------------------------------------------------------ */
@@ -393,6 +437,11 @@ class Faper3newsletter extends Module implements WidgetInterface
             }
         }
 
+        $btnColor = trim((string) Tools::getValue('F3N_BTN_COLOR'));
+        if ($btnColor !== '' && self::normalizeHexColor($btnColor) === '') {
+            $errors[] = $this->l('Colore del pulsante non valido: usa il formato esadecimale, es. #f39200.');
+        }
+
         $score = str_replace(',', '.', (string) Tools::getValue('F3N_RECAPTCHA_SCORE'));
         if (!is_numeric($score) || (float) $score < 0 || (float) $score > 1) {
             $errors[] = $this->l('La soglia reCAPTCHA deve essere un numero tra 0 e 1.');
@@ -410,6 +459,8 @@ class Faper3newsletter extends Module implements WidgetInterface
             }
             if ($key === 'F3N_API_URL') {
                 $value = rtrim($value, '/');
+            } elseif ($key === 'F3N_BTN_COLOR') {
+                $value = self::normalizeHexColor($value);
             } elseif ($key === 'F3N_RECAPTCHA_SCORE') {
                 $value = (string) (float) str_replace(',', '.', $value);
             } elseif ($key === 'F3N_PRIVACY_CMS' || $key === 'F3N_SYNC_CUSTOMERS') {
@@ -466,8 +517,10 @@ class Faper3newsletter extends Module implements WidgetInterface
                 'submit' => $submit,
             ]],
             ['form' => [
-                'legend' => ['title' => $this->l('Testi e privacy'), 'icon' => 'icon-pencil'],
+                'legend' => ['title' => $this->l('Testi, aspetto e privacy'), 'icon' => 'icon-pencil'],
                 'input' => [
+                    ['type' => 'color', 'name' => 'F3N_BTN_COLOR', 'label' => $this->l('Colore pulsante'),
+                        'desc' => $this->l('Lascia vuoto per usare il colore del tema. Il colore del testo (bianco o scuro) è scelto in automatico.')],
                     ['type' => 'text', 'name' => 'F3N_TITLE', 'label' => $this->l('Titolo'), 'lang' => true],
                     ['type' => 'text', 'name' => 'F3N_SUBTITLE', 'label' => $this->l('Sottotitolo'), 'lang' => true],
                     ['type' => 'textarea', 'name' => 'F3N_PRIVACY_TEXT', 'label' => $this->l('Testo checkbox privacy'), 'lang' => true],

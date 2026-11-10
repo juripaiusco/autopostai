@@ -34,8 +34,9 @@ Fino a quando URL e API key non sono impostati, il form non viene mostrato.
 |---|---|---|
 | Connessione | Tag iscritti dal form | Più tag separati da virgola. Default `prestashop`. |
 | Connessione | Origine consenso (form) | Salvata in FaPer3 come provenienza del consenso. Default `prestashop-newsletter`. |
-| Testi e privacy | Titolo, sottotitolo, testo checkbox | Un valore per ogni lingua. |
-| Testi e privacy | Pagina informativa privacy | Pagina CMS collegata accanto alla checkbox. |
+| Testi, aspetto e privacy | Colore pulsante | Vuoto = colore del tema. Il testo diventa bianco, oppure scuro sui colori molto chiari. |
+| Testi, aspetto e privacy | Titolo, sottotitolo, testo checkbox | Un valore per ogni lingua. |
+| Testi, aspetto e privacy | Pagina informativa privacy | Pagina CMS collegata accanto alla checkbox. |
 | Anti-spam | Captcha | Nessuno, reCAPTCHA v3 o Turnstile. Servono site key e secret key. |
 | Anti-spam | Soglia reCAPTCHA v3 | Da 0 a 1, default 0.5. Sotto questo punteggio l'iscrizione è rifiutata. |
 | Clienti | Sincronizza clienti | Se attivo, invia a FaPer3 chi attiva la newsletter in registrazione o dal proprio account. Default tag `prestashop-clienti`. |
@@ -46,13 +47,15 @@ Le chiavi dei captcha si creano su:
 
 ## Personalizzare l'aspetto
 
-Il bottone usa le classi `btn btn-primary` del tema. Colori e font arrivano dal tema.
+Il bottone usa le classi `btn btn-primary` del tema. Il suo colore si può cambiare dalla
+configurazione del modulo (**Colore pulsante**). Gli altri colori e i font arrivano dal tema.
+Input e bottone hanno gli angoli arrotondati (8px).
 
 - **Template**: copialo in `themes/<tema>/modules/faper3newsletter/views/templates/hook/faper3newsletter.tpl`.
 - **CSS**: aggiungi le regole nel CSS del tema, per esempio:
   ```css
-  .f3n-block  { color: #fff; }
-  .f3n-submit { background-color: #f39200; border-color: #f39200; }
+  .f3n-block { color: #fff; }          /* testi chiari su sfondo scuro */
+  .f3n-block { --f3n-radius: 4px; }    /* angoli di input e bottone (0 = squadrati) */
   ```
 - **Posizione**: puoi spostare il form da Design → Posizioni, oppure inserirlo in un
   template del tema con `{widget name='faper3newsletter'}`.

@@ -2,7 +2,8 @@
  * FaPer3 Newsletter — form di iscrizione.
  * Per personalizzarlo dal tema: themes/<tema>/modules/faper3newsletter/views/templates/hook/faper3newsletter.tpl
  *}
-<div class="f3n-block f3n-hook-{$f3n.hook|escape:'html':'UTF-8'}">
+<div class="f3n-block f3n-hook-{$f3n.hook|escape:'html':'UTF-8'}{if $f3n.btn_color} f3n-custom-btn{/if}"
+  {if $f3n.btn_color}style="--f3n-btn-bg: {$f3n.btn_color|escape:'html':'UTF-8'}; --f3n-btn-text: {$f3n.btn_text_color|escape:'html':'UTF-8'};"{/if}>
   <div class="f3n-inner">
     {if $f3n.title || $f3n.subtitle}
       <div class="f3n-intro">
