@@ -34,7 +34,8 @@ class UpdatePublishedPost extends Tool
 
         $post = $this->findPost($data['post_id'], 'update');
 
-        $this->guard(fn () => $updateContent->handle($post, $data['channel'], $data['content']));
+        // Via MCP il testo WordPress è Markdown (come ai_content in create_post).
+        $this->guard(fn () => $updateContent->handle($post, $data['channel'], $data['content'], Post::FORMAT_MARKDOWN));
 
         return Response::structured([
             'post_id' => $post->id,
@@ -48,7 +49,7 @@ class UpdatePublishedPost extends Tool
         return [
             'post_id' => $schema->integer()->required(),
             'channel' => $schema->string()->enum(Post::EDITABLE_AFTER_PUBLISH)->required(),
-            'content' => $schema->string()->required()->description('Nuovo testo completo per quel canale (Markdown per WordPress).'),
+            'content' => $schema->string()->required()->description('Nuovo testo completo per quel canale: Markdown per WordPress (prima riga `#` = titolo), testo semplice per Facebook. Shortcode come in create_post.'),
         ];
     }
 }

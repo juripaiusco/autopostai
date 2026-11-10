@@ -115,8 +115,68 @@ class PostChannelContentTest extends TestCase
                 ->where('post.channelEdit.facebook.pending', false)
                 ->where('post.channelEdit.facebook.error', 'Token scaduto')
                 ->where('post.channelEdit.instagram.editable', false)
-                ->where('post.channelEdit.instagram.content', 'Testo comune')
+                // Con WordPress acceso il testo comune è l'articolo: ai social arriva
+                // in HTML, la pagina lo mostra ripulito (htmlToText).
+                ->where('post.channelEdit.instagram.content', '<p>Testo comune</p>')
+                ->where('post.channelEdit.instagram.format', 'html')
                 ->where('post.channelEdit.wordpress.editable', false)
             );
+    }
+
+    public function test_wordpress_edit_from_the_page_is_sanitized_html(): void
+    {
+        $user = $this->simpleUser();
+        $post = $this->publishedPost($user);
+        $post->update(['channels' => [...$post->channels, 'wordpress' => ['on' => true, 'id' => 9, 'url' => 'https://blog.test/p']]]);
+
+        $this->actingAs($user)->put(route('posts.channel-content.update', [$post, 'wordpress']), [
+            'content' => '<h1>Titolo</h1><p onclick="x()">Testo <a href="[facebook url id=3]">fb</a></p>',
+            'format' => 'html',
+        ])->assertRedirect();
+
+        $wp = $post->fresh()->channels['wordpress'];
+        $this->assertSame('<h1>Titolo</h1><p>Testo <a href="[facebook url id=3]">fb</a></p>', $wp['content']);
+        $this->assertSame('html', $wp['content_format']);
+    }
+
+    public function test_facebook_edit_is_always_plain_text(): void
+    {
+        $user = $this->simpleUser();
+        $post = $this->publishedPost($user);
+
+        $this->actingAs($user)->put(route('posts.channel-content.update', [$post, 'facebook']), [
+            'content' => 'Ciao <b>mondo</b>',
+            'format' => 'html',
+        ]);
+
+        $fb = $post->fresh()->channels['facebook'];
+        $this->assertSame('Ciao <b>mondo</b>', $fb['content']);
+        $this->assertSame('text', $fb['content_format']);
+    }
+
+    public function test_show_gives_each_editor_its_format(): void
+    {
+        $user = $this->simpleUser();
+        $post = Post::factory()->create([
+            'user_id' => $user->id,
+            'created_by_user_id' => $user->id,
+            'ai_content' => '<h1>Titolo</h1><p>Articolo</p>',
+            'ai_content_format' => 'html',
+            'ai_content_social' => 'Post social 🎉',
+            'published' => '1',
+            'published_at' => now()->subHour(),
+            'channels' => [
+                'facebook' => ['on' => true, 'id' => '1_2', 'url' => 'https://facebook.test/1'],
+                'wordpress' => ['on' => true, 'id' => 9, 'url' => 'https://blog.test/p', 'content' => "# Vecchio\n\nMarkdown"],
+            ],
+        ]);
+
+        $this->actingAs($user)->get(route('posts.show', $post))->assertInertia(fn (Assert $page) => $page
+            ->where('post.channelEdit.facebook.content', 'Post social 🎉')
+            ->where('post.channelEdit.facebook.format', 'text')
+            ->where('post.channelEdit.wordpress.content', "<h1>Vecchio</h1>\n<p>Markdown</p>")
+            ->where('post.channelEdit.wordpress.format', 'html')
+            ->where('post.ownerId', $user->id)
+        );
     }
 }

@@ -9,6 +9,7 @@ use App\Actions\Posts\UpdatePost;
 use App\Actions\Posts\UpdatePublishedChannelContent;
 use App\Models\Post;
 use App\Models\User;
+use App\Services\PostHtmlSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -216,12 +217,13 @@ class PostController extends Controller
                     ->filter(fn ($c) => !empty($c['on']))
                     ->map(fn ($c, $channel) => [
                         'editable' => in_array($channel, Post::EDITABLE_AFTER_PUBLISH, true) && !empty($c['id']),
-                        'content' => $c['content'] ?? $post->ai_content,
+                        ...$this->publishedChannelContent($post, $channel, $c),
                         'pending' => !empty($c['update_pending']),
                         'error' => $c['update_error'] ?? null,
                     ])
                     ->all(),
                 'owner' => ['name' => $post->user->name, 'email' => $post->user->email],
+                'ownerId' => $post->user_id,
                 'channels' => collect($post->channels ?? [])
                     ->filter(fn ($c) => !empty($c['on']))
                     ->keys()
@@ -298,6 +300,35 @@ class PostController extends Controller
             'seriesCopy' => $request->session()->get('series_copy_id') === $post->id,
             ...$this->imageModelsProps(),
         ]);
+    }
+
+    /**
+     * Testo attuale di un canale pubblicato per il box "Modifica post":
+     * WordPress in HTML per l'editor ricco, i social in testo semplice
+     * ('html' = articolo da ripulire in pagina, stesse regole del worker).
+     *
+     * @return array{content: ?string, format: string}
+     */
+    private function publishedChannelContent(Post $post, string $channel, array $c): array
+    {
+        $own = $c['content'] ?? null;
+
+        if ($channel === 'wordpress' || $channel === 'newsletter') {
+            $html = match (true) {
+                $own === null => $post->contentHtml(),
+                ($c['content_format'] ?? null) === Post::FORMAT_HTML => app(PostHtmlSanitizer::class)->clean($own),
+                default => Post::markdownToHtml($own),
+            };
+
+            return ['content' => $html, 'format' => Post::FORMAT_HTML];
+        }
+
+        return match (true) {
+            $own !== null => ['content' => $own, 'format' => Post::FORMAT_TEXT],
+            filled($post->ai_content_social) && $post->textChannel() !== null => ['content' => $post->ai_content_social, 'format' => Post::FORMAT_TEXT],
+            $post->textChannel() !== null => ['content' => $post->contentHtml(), 'format' => Post::FORMAT_HTML],
+            default => ['content' => $post->ai_content, 'format' => Post::FORMAT_TEXT],
+        };
     }
 
     /**
@@ -416,7 +447,7 @@ class PostController extends Controller
 
         $data = $request->validate(UpdatePublishedChannelContent::rules());
 
-        $updateContent->handle($post, $channel, $data['content']);
+        $updateContent->handle($post, $channel, $data['content'], $data['format'] ?? null);
 
         $label = User::CHANNELS[$channel]['name'];
         $request->session()->flash('toast', "Modifica in coda: {$label} viene aggiornato entro un minuto.");

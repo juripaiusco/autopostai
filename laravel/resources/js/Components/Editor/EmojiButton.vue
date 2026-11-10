@@ -35,7 +35,9 @@ function onDocumentClick(event) {
 }
 
 function onKeydown(event) {
-    if (event.key === 'Escape') close();
+    if (event.key !== 'Escape') return;
+    event.stopPropagation(); // non chiudere anche il modal che contiene l'editor
+    close();
 }
 
 async function toggle() {
@@ -47,13 +49,13 @@ async function toggle() {
     await nextTick();
     host.value?.appendChild(picker ?? await createPicker());
     document.addEventListener('mousedown', onDocumentClick);
-    document.addEventListener('keydown', onKeydown);
+    window.addEventListener('keydown', onKeydown, true);
 }
 
 function close() {
     open.value = false;
     document.removeEventListener('mousedown', onDocumentClick);
-    document.removeEventListener('keydown', onKeydown);
+    window.removeEventListener('keydown', onKeydown, true);
 }
 
 onBeforeUnmount(close);

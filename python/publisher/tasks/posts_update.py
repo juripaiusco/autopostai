@@ -51,8 +51,9 @@ def run(conn: Connection) -> None:
         own_text = entry.data.get("content")
         if own_text:
             # Testo scritto apposta per il canale dal box "Modifica post":
-            # esce com'e' (Markdown su WordPress, testo semplice sui social).
-            fmt = "markdown" if key == "wordpress" else "text"
+            # su WordPress HTML dell'editor (content_format) o Markdown (MCP,
+            # testi precedenti), sui social testo semplice.
+            fmt = (entry.data.get("content_format") or "markdown") if key == "wordpress" else "text"
             text = channel_text.for_channel(shortcodes.parse_crosslinks(own_text, resolver), key, resolver, fmt)
         else:
             fmt = channel_text.source_format(post, channels)

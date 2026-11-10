@@ -4,13 +4,14 @@ import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import StatusPill from '@/Components/StatusPill.vue';
 import { CH_CONFIG } from '@/data/dashboardMock';
+import { htmlToText } from '@/lib/postText.js';
 
 const props = defineProps({
     channelId: { type: String, required: true },
     status: { type: String, required: true },
     publishedAt: { type: String, default: null },
     commentsCount: { type: Number, default: 0 },
-    // post.channelEdit[canale]: { editable, content, pending, error }
+    // post.channelEdit[canale]: { editable, content, format (html|text), pending, error }
     edit: { type: Object, default: null },
 });
 
@@ -19,7 +20,7 @@ const emit = defineEmits(['edit']);
 const def = CH_CONFIG[props.channelId] ?? { label: props.channelId, color: '#6b7280' };
 
 const excerpt = computed(() => {
-    const text = props.edit?.content ?? '';
+    const text = props.edit?.format === 'html' ? htmlToText(props.edit.content) : (props.edit?.content ?? '');
     return text.length > 220 ? `${text.slice(0, 220)}…` : text;
 });
 

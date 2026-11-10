@@ -43,17 +43,21 @@ watch(q, () => {
     timer = setTimeout(load, 250);
 });
 
+// In cattura e senza propagazione: Esc chiude solo questo dialog, non il
+// modal che lo contiene (es. "Modifica post" nella pagina del post).
 function onKeydown(e) {
-    if (e.key === 'Escape') emit('close');
+    if (e.key !== 'Escape') return;
+    e.stopPropagation();
+    emit('close');
 }
 
 onMounted(() => {
     load();
-    window.addEventListener('keydown', onKeydown);
+    window.addEventListener('keydown', onKeydown, true);
 });
 onUnmounted(() => {
     clearTimeout(timer);
-    window.removeEventListener('keydown', onKeydown);
+    window.removeEventListener('keydown', onKeydown, true);
 });
 
 function formatDate(iso) {

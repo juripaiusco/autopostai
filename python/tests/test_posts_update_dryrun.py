@@ -132,6 +132,46 @@ def test_wordpress_update_of_editor_html_takes_the_title_from_h1(monkeypatch):
     assert calls == {"title": "Titolo & co", "body": "<p><strong>Corpo</strong></p>"}
 
 
+def test_own_wordpress_html_is_published_as_is(monkeypatch):
+    sent = {}
+
+    class FakeRepo:
+        def __init__(self, _conn):
+            pass
+
+        def due_for_update(self):
+            return {"id": 1, "user_id": 1, "title": "Interno", "ai_content": "# Comune", "ai_content_format": "markdown",
+                    "wordpress_url": "u", "wordpress_username": "u", "wordpress_password": "p",
+                    "channels": {"wordpress": {
+                        "on": True, "id": "77", "update_pending": True, "content_format": "html",
+                        "content": '<h1>Nuovo</h1><p>[cta url="https://shop.test" text="Compra"]</p>',
+                    }}}
+
+        def channels_of(self, _post_id):
+            return None
+
+        def save_channels(self, _post_id, channels):
+            pass
+
+        def set_updated(self, _post_id, value):
+            pass
+
+    class FakeWordPress:
+        def __init__(self, **_):
+            pass
+
+        def update(self, post_id, title, body):
+            sent.update(title=title, body=body)
+
+    monkeypatch.setattr(posts_update, "PostRepository", FakeRepo)
+    monkeypatch.setattr(posts_update, "WordPress", FakeWordPress)
+    monkeypatch.setattr(posts_update.config, "DRY_RUN", False)
+
+    posts_update.run(conn=None)
+
+    assert sent == {"title": "Nuovo", "body": '<p><a href="https://shop.test">Compra</a></p>'}
+
+
 def test_failed_update_is_recorded_and_not_retried(monkeypatch):
     saved = {}
 

@@ -79,3 +79,7 @@
 .pf-social-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
 .pf-social-derived { border: 1px dashed var(--g300); border-radius: var(--radius); padding: 14px 16px; background: var(--g50); font-size: 14.5px; line-height: 1.65; color: var(--g700); white-space: pre-wrap; max-height: 320px; overflow: auto; }
 .pf-social-note { font-size: 12.5px; color: var(--g500); margin-bottom: 8px; }
+
+/* Editor dentro un modal ("Modifica post" nella pagina del post): il modal
+   taglia ciò che esce dai bordi, l'area di testo lascia spazio ai popup. */
+.modal .rte-content .ProseMirror { min-height: 320px; max-height: 55vh; overflow-y: auto; }

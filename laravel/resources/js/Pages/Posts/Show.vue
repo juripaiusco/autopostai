@@ -10,7 +10,10 @@ import ConfirmModal from '@/Components/ConfirmModal.vue';
 import PageHeader from '@/Components/Layout/PageHeader.vue';
 import PostChannelCard from '@/Components/Domain/PostChannelCard.vue';
 import PostCommentItem from '@/Components/Domain/PostCommentItem.vue';
+import RichEditor from '@/Components/Editor/RichEditor.vue';
+import SocialEditor from '@/Components/Editor/SocialEditor.vue';
 import { CH_CONFIG } from '@/data/dashboardMock';
+import { splitArticle, joinArticle, htmlToText } from '@/lib/postText.js';
 import { useTokenUnit } from '@/Composables/useTokenUnit';
 
 const { formatTokens, unitTitle, withUnit } = useTokenUnit();
@@ -58,15 +61,25 @@ function retry() {
 
 // "Modifica post" dal box di un canale già pubblicato: il testo vale solo per
 // quel canale, il worker (posts_update) lo rimanda alla piattaforma.
+// WordPress: titolo + editor ricco (HTML); Facebook: editor social (testo).
 const editChannel = ref(null);
 const editText = ref('');
+const editTitle = ref('');
 const savingEdit = ref(false);
 const editError = ref(null);
+const editIsArticle = computed(() => editChannel.value === 'wordpress');
 
 function openEdit(id) {
+    const current = props.post.channelEdit?.[id] ?? {};
     editChannel.value = id;
-    editText.value = props.post.channelEdit?.[id]?.content ?? '';
     editError.value = null;
+    if (id === 'wordpress') {
+        const { title, body } = splitArticle(current.content ?? '');
+        editTitle.value = title;
+        editText.value = body;
+    } else {
+        editText.value = current.format === 'html' ? htmlToText(current.content) : (current.content ?? '');
+    }
 }
 
 function cancelEdit() {
@@ -77,7 +90,10 @@ function cancelEdit() {
 function saveEdit() {
     savingEdit.value = true;
     editError.value = null;
-    router.put(route('posts.channel-content.update', [props.post.id, editChannel.value]), { content: editText.value }, {
+    const payload = editIsArticle.value
+        ? { content: editText.value || editTitle.value.trim() ? joinArticle(editTitle.value, editText.value) : '', format: 'html' }
+        : { content: editText.value };
+    router.put(route('posts.channel-content.update', [props.post.id, editChannel.value]), payload, {
         preserveScroll: true,
         onSuccess: () => { editChannel.value = null; },
         onError: (errors) => { editError.value = errors.content ?? 'Salvataggio non riuscito. Riprova.'; },
@@ -309,12 +325,16 @@ function confirmDelete() {
             @cancel="cancelEdit"
             @confirm="saveEdit"
         >
-            <label class="acc-row-label" for="ps-edit-text">Testo pubblicato</label>
-            <span class="acc-row-help">
+            <span class="acc-row-help" style="display:block;margin-bottom:10px">
                 Cambia solo questo canale: entro un minuto il post viene aggiornato sulla piattaforma.
-                <template v-if="editChannel === 'wordpress'"> Markdown: la prima riga con # è il titolo.</template>
             </span>
-            <textarea id="ps-edit-text" v-model="editText" class="control" rows="10" :disabled="savingEdit"></textarea>
+            <template v-if="editIsArticle">
+                <label class="sr-only" for="ps-edit-title">Titolo dell'articolo</label>
+                <input id="ps-edit-title" v-model="editTitle" class="control pf-article-title" type="text"
+                    placeholder="Titolo dell'articolo" :disabled="savingEdit" />
+                <RichEditor v-model="editText" :disabled="savingEdit" :user-id="post.ownerId" />
+            </template>
+            <SocialEditor v-else v-model="editText" :disabled="savingEdit" :user-id="post.ownerId" />
         </ConfirmModal>
 
         <ConfirmModal
