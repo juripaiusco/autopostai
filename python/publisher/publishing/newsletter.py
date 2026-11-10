@@ -5,7 +5,7 @@ from publisher.domain.channels import Channels
 from publisher.integrations import shortcodes
 from publisher.integrations.brevo import Brevo
 from publisher.integrations.mailchimp import Mailchimp
-from publisher.publishing.base import ChannelPublisher, PublishResult, split_markdown
+from publisher.publishing.base import ChannelPublisher, PublishResult
 
 
 class NewsletterPublisher(ChannelPublisher):
@@ -50,7 +50,7 @@ class NewsletterPublisher(ChannelPublisher):
         """Oggetto + html pronti (template account, immagine, CTA espansa).
         Punto di ingresso condiviso fra publish() (mailchimp/brevo) e
         newsletter_send.py (smtp_custom)."""
-        subject, body = split_markdown(content)
+        subject, body = self.split(content)
         return subject, self._assemble_html(body)
 
     def publish(self, content: str) -> PublishResult:

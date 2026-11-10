@@ -25,7 +25,7 @@ from publisher.domain.channels import Channels
 from publisher.integrations import shortcodes
 from publisher.integrations.meta import Meta
 from publisher.integrations.wordpress import WordPress
-from publisher.publishing.base import split_markdown
+from publisher.publishing.base import split_content
 from publisher.tasks.posts_send import _error_message, _url_resolver
 
 log = logging.getLogger(__name__)
@@ -49,15 +49,18 @@ def run(conn: Connection) -> None:
     for key in _keys_to_update(channels):
         entry = channels.entry(key)
         own_text = entry.data.get("content")
-        text = shortcodes.parse_crosslinks(own_text or post.get("ai_content") or "", resolver)
-        # Il testo comune (Markdown con un canale articolo) va ripulito per i
-        # social; quello scritto apposta per il canale esce com'e'.
-        text = channel_text.for_channel(
-            text, key, resolver, markdown=not own_text and channels.text_channel() is not None,
-        )
+        if own_text:
+            # Testo scritto apposta per il canale dal box "Modifica post":
+            # esce com'e' (Markdown su WordPress, testo semplice sui social).
+            fmt = "markdown" if key == "wordpress" else "text"
+            text = channel_text.for_channel(shortcodes.parse_crosslinks(own_text, resolver), key, resolver, fmt)
+        else:
+            fmt = channel_text.source_format(post, channels)
+            text = shortcodes.parse_crosslinks(post.get("ai_content") or "", resolver)
+            text = channel_text.for_post_channel(post, channels, key, text, resolver)
         try:
             if not config.DRY_RUN:
-                _UPDATERS[key](post, entry.data, text)
+                _UPDATERS[key](post, entry.data, text, fmt)
             entry.data["id_update"] = entry.data["id"]
             entry.data.pop("update_error", None)
             log.info("posts_update: post %s canale '%s' - aggiornato", post["id"], key)
@@ -81,8 +84,9 @@ def _keys_to_update(channels: Channels) -> list[str]:
     return pending or [key for key in published if key == "wordpress"]
 
 
-def _wordpress_update(post: dict, data: dict, text: str) -> None:
-    title, body = split_markdown(text)
+def _wordpress_update(post: dict, data: dict, text: str, fmt: str) -> None:
+    title, body = split_content(text, fmt)
+    title = title or (post.get("title") or "")
     # La galleria (dalla seconda immagine in poi) era stata messa in testa al
     # contenuto in pubblicazione: senza rimetterla l'update la cancellerebbe.
     if data.get("gallery_html"):
@@ -91,7 +95,7 @@ def _wordpress_update(post: dict, data: dict, text: str) -> None:
     wp.update(data["id"], title, body)
 
 
-def _facebook_update(post: dict, data: dict, text: str) -> None:
+def _facebook_update(post: dict, data: dict, text: str, _fmt: str) -> None:
     meta = Meta(page_id=post["meta_page_id"], user_access_token=config.META_USER_ACCESS_TOKEN)
     if not meta.fb_update(data["id"], text):
         raise RuntimeError("Facebook non ha confermato l'aggiornamento")

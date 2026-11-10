@@ -3,7 +3,7 @@ from __future__ import annotations
 from publisher.domain import media
 from publisher.domain.channels import Channels
 from publisher.integrations.wordpress import WordPress
-from publisher.publishing.base import ChannelPublisher, PublishResult, split_markdown
+from publisher.publishing.base import ChannelPublisher, PublishResult
 
 
 class WordPressPublisher(ChannelPublisher):
@@ -20,7 +20,7 @@ class WordPressPublisher(ChannelPublisher):
         return prompt
 
     def publish(self, content: str) -> PublishResult:
-        title, body = split_markdown(content)
+        title, body = self.split(content)
 
         # Categorie: prima quelle selezionate nel canale, altrimenti il default account.
         entry = Channels.parse(self.post["channels"]).entry("wordpress")

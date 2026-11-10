@@ -36,6 +36,8 @@ class PostRepository:
                         p.title                  AS title,
                         p.ai_prompt_post         AS ai_prompt_post,
                         p.ai_content             AS ai_content,
+                        p.ai_content_format      AS ai_content_format,
+                        p.ai_content_social      AS ai_content_social,
                         p.img                    AS img,
                         p.img_ai_check_on        AS img_ai_check_on,
                         p.channels               AS channels,
@@ -99,6 +101,8 @@ class PostRepository:
                         p.published_at         AS published_at,
                         p.ai_prompt_post       AS ai_prompt_post,
                         p.ai_content           AS ai_content,
+                        p.ai_content_format    AS ai_content_format,
+                        p.ai_content_social    AS ai_content_social,
                         p.img                  AS img,
                         p.img_ai_check_on      AS img_ai_check_on,
                         p.channels             AS channels,
@@ -147,7 +151,9 @@ class PostRepository:
     def save_ai_content(self, post_id: int, content: str) -> None:
         posts = config.table("posts")
         self.conn.execute(
-            text(f"UPDATE {posts} SET ai_content = :content WHERE id = :id"),
+            # Il testo AI e' Markdown: il formato va allineato (Laravel lo riporta
+            # gia' a markdown quando il testo e' vuoto, qui per sicurezza).
+            text(f"UPDATE {posts} SET ai_content = :content, ai_content_format = 'markdown' WHERE id = :id"),
             {"content": content, "id": post_id},
         )
 
@@ -227,7 +233,10 @@ class PostRepository:
                 f"""
                 SELECT  p.id                 AS id,
                         p.user_id            AS user_id,
+                        p.title              AS title,
                         p.ai_content         AS ai_content,
+                        p.ai_content_format  AS ai_content_format,
+                        p.ai_content_social  AS ai_content_social,
                         p.channels           AS channels,
                         s.meta_page_id       AS meta_page_id,
                         s.wordpress_url      AS wordpress_url,
@@ -460,6 +469,8 @@ class CommentRepository:
                         p.user_id                AS user_id,
                         p.ai_prompt_post          AS ai_prompt_post,
                         p.ai_content              AS ai_content,
+                        p.ai_content_format       AS ai_content_format,
+                        p.ai_content_social       AS ai_content_social,
                         p.ai_prompt_comment       AS ai_prompt_comment,
                         p.img                     AS img,
                         p.img_ai_check_on         AS img_ai_check_on,

@@ -13,7 +13,7 @@ from datetime import datetime
 from publisher import config
 from publisher.db.repositories import PostRepository, TokenLogRepository
 from publisher.integrations import openai_text, shortcodes
-from publisher.domain import media
+from publisher.domain import channel_text, media
 from publisher.domain.channels import Channels, with_length_instruction
 from publisher.publishing import PUBLISHERS
 from publisher.publishing.base import ChannelPublisher
@@ -83,8 +83,9 @@ class ContentService:
         post_prompt = (comment.get("ai_prompt_post") or "").strip()
         if post_prompt or img_path:
             context.append({"role": "user", "content": openai_text.user_content(post_prompt, img_path)})
-        if (comment.get("ai_content") or "").strip():
-            context.append({"role": "assistant", "content": comment["ai_content"]})
+        published = self._published_social_text(comment)
+        if published.strip():
+            context.append({"role": "assistant", "content": published})
 
         text, tokens = openai_text.generate(
             api_key=comment["openai_api_key"],
@@ -96,6 +97,17 @@ class ContentService:
         now = datetime.now(config.LOCAL_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
         self.token_repo.log(comment["user_id"], "reply", comment["id"], tokens, now)
         return text
+
+    @staticmethod
+    def _published_social_text(comment: dict) -> str:
+        """Il testo uscito sul social del commento: quello social del post se
+        c'e', altrimenti il testo comune (l'HTML dell'editor in testo semplice,
+        il Markdown va bene all'LLM cosi' com'e')."""
+        social = channel_text.custom_social_text(comment)
+        if social is not None:
+            return social
+        text = comment.get("ai_content") or ""
+        return channel_text.html_to_text(text) if comment.get("ai_content_format") == "html" else text
 
     def _generate(self, post: dict, publisher: ChannelPublisher, url_resolver) -> str:
         if not (post.get("ai_prompt_post") or "").strip():

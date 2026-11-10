@@ -76,6 +76,14 @@ def test_missing_prompt_and_content_are_omitted(calls):
     assert calls[0]["context"] == []
 
 
+def test_published_text_is_the_social_one_or_the_editor_html_as_text(calls):
+    _reply(_comment(ai_content="<h1>Pizza</h1><p>Del <strong>giorno</strong></p>", ai_content_format="html"))
+    _reply(_comment(ai_content="<h1>Pizza</h1>", ai_content_format="html", ai_content_social="Pizza del giorno! 🍕"))
+
+    assert calls[0]["context"][1] == {"role": "assistant", "content": "Pizza\n\nDel giorno"}
+    assert calls[1]["context"][1] == {"role": "assistant", "content": "Pizza del giorno! 🍕"}
+
+
 def test_openai_messages_order_system_context_user(monkeypatch):
     captured = {}
 

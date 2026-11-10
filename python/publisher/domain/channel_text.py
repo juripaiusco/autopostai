@@ -1,9 +1,11 @@
 """Adatta il testo del post al canale su cui esce.
 
-Il testo AI e' uno per post (`posts.ai_content`). Se tra i canali accesi c'e'
-WordPress o Newsletter e' in Markdown (titolo `#`, `**grassetto**`, link): va
-bene per l'articolo e per l'email, ma sui social usciva con i simboli letterali.
-Qui i social ricevono la versione in testo semplice; i link restano come URL.
+Il testo e' uno per post (`posts.ai_content`). Se tra i canali accesi c'e'
+WordPress o Newsletter e' l'articolo: Markdown (testo AI, `ai_content_format =
+markdown`) o HTML (editor ricco, `html`). Va bene per l'articolo e per l'email,
+ma sui social usciva con i simboli letterali: qui i social ricevono il testo
+personalizzato (`ai_content_social`) se c'e', altrimenti l'articolo in testo
+semplice, con i link come URL.
 
 Lo shortcode `[cta ...]` ha un template HTML solo per la newsletter (Account →
 Newsletter). Sugli altri canali diventa un link semplice (WordPress) o
@@ -52,13 +54,41 @@ def markdown_to_text(md: str) -> str:
     return html_to_text(markdown_lib.markdown(md or ""))
 
 
-def for_channel(text: str, key: str, url_resolver, markdown: bool) -> str:
-    """Testo pronto per il canale `key`. `markdown` = il testo e' quello AI in
-    Markdown (post con WordPress/Newsletter accesi); un testo scritto apposta per
-    il canale (modifica dopo la pubblicazione) non va riconvertito."""
+def source_format(post: dict, channels) -> str:
+    """Formato del testo comune ai fini della conversione: senza canali
+    articolo e' il testo dei social (anche se la colonna dice `markdown`, il
+    default dei post precedenti all'editor)."""
+    if channels.text_channel() is None:
+        return "text"
+    return post.get("ai_content_format") or "markdown"
+
+
+def custom_social_text(post: dict) -> str | None:
+    """Testo social scritto/generato apposta (`ai_content_social`), se c'e'."""
+    social = post.get("ai_content_social")
+    return social if (social or "").strip() else None
+
+
+def for_channel(text: str, key: str, url_resolver, fmt: str) -> str:
+    """Testo pronto per il canale `key`. `fmt` = formato di `text`
+    (markdown/html/text): sui social markdown e html diventano testo semplice,
+    un testo scritto apposta per il canale (`text`) esce com'e'."""
     if key in SOCIAL_KEYS:
         text = shortcodes.parse_cta(text, CTA_SOCIAL_TEMPLATE, url_resolver)
-        return markdown_to_text(text) if markdown else text
+        if fmt == "markdown":
+            return markdown_to_text(text)
+        if fmt == "html":
+            return html_to_text(text)
+        return text
     if key == "wordpress":
         return shortcodes.parse_cta(text, CTA_LINK_TEMPLATE, url_resolver)
     return text
+
+
+def for_post_channel(post: dict, channels, key: str, content: str, url_resolver) -> str:
+    """Testo del post per il canale `key` alla pubblicazione. `content` e' il
+    testo comune gia' risolto (ContentService.resolve)."""
+    social = custom_social_text(post) if key in SOCIAL_KEYS else None
+    if social is not None:
+        return for_channel(shortcodes.parse_crosslinks(social, url_resolver), key, url_resolver, "text")
+    return for_channel(content, key, url_resolver, source_format(post, channels))

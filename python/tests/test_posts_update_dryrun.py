@@ -106,12 +106,30 @@ def test_wordpress_update_keeps_the_gallery(monkeypatch):
     monkeypatch.setattr(posts_update, "WordPress", FakeWordPress)
     post = {"wordpress_url": "https://wp.test", "wordpress_username": "u", "wordpress_password": "p"}
 
-    posts_update._wordpress_update(post, {"id": "77", "gallery_html": "<figure>G</figure>"}, "# Titolo\nCorpo nuovo")
+    posts_update._wordpress_update(post, {"id": "77", "gallery_html": "<figure>G</figure>"}, "# Titolo\nCorpo nuovo", "markdown")
 
     assert calls["post_id"] == "77"
     assert calls["title"] == "Titolo"
     assert calls["body"].startswith("<figure>G</figure><br>")
     assert "Corpo nuovo" in calls["body"]
+
+
+def test_wordpress_update_of_editor_html_takes_the_title_from_h1(monkeypatch):
+    calls = {}
+
+    class FakeWordPress:
+        def __init__(self, **_):
+            pass
+
+        def update(self, post_id, title, body):
+            calls.update(title=title, body=body)
+
+    monkeypatch.setattr(posts_update, "WordPress", FakeWordPress)
+    post = {"title": "Interno", "wordpress_url": "u", "wordpress_username": "u", "wordpress_password": "p"}
+
+    posts_update._wordpress_update(post, {"id": "77"}, "<h1>Titolo &amp; co</h1><p><strong>Corpo</strong></p>", "html")
+
+    assert calls == {"title": "Titolo & co", "body": "<p><strong>Corpo</strong></p>"}
 
 
 def test_failed_update_is_recorded_and_not_retried(monkeypatch):
