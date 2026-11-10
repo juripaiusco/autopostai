@@ -5,6 +5,8 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ## [Non rilasciato]
 
+## [2.1.1] — 2026-11-10
+
 ### Miglioramenti
 - La versione dell'app è visibile in basso a destra in ogni pagina.
 - Le notifiche si aprono in un pannello più leggibile, con la data di ogni avviso; la campanella si muove quando ce ne sono di nuove.
