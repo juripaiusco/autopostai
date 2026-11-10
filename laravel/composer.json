@@ -7,6 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "ezyang/htmlpurifier": "^4.19",
         "inertiajs/inertia-laravel": "^3.1",
         "laravel-notification-channels/webpush": "^11.0",
         "laravel/fortify": "^1.37",

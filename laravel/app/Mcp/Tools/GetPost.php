@@ -53,6 +53,8 @@ class GetPost extends Tool
             'ai_prompt_post' => $post->ai_prompt_post,
             'ai_prompt_comment' => $post->ai_prompt_comment,
             'ai_content' => $post->ai_content,
+            'ai_content_format' => $post->ai_content_format,
+            'ai_content_social' => $post->ai_content_social,
             'ai_looks_at_image' => $post->img_ai_check_on == '1',
             'images' => collect($post->img ?? [])
                 ->map(fn ($f) => ['filename' => $f, 'url' => Storage::disk('public')->url("posts/{$post->id}/{$f}")])

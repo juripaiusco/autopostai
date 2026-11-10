@@ -200,6 +200,38 @@ it('update_post changes only the given fields', function () {
     expect($post->fresh()->status())->toBe('draft');
 });
 
+it('create_post saves the social text; update_post keeps the editor format unless the text changes', function () {
+    $user = mcpWriter();
+
+    FaPer3Server::actingAs(withMcp($user, 'write'))->tool(CreatePost::class, [
+        'title' => 'Articolo MCP',
+        'channels' => ['facebook' => [], 'wordpress' => []],
+        'ai_content' => "# Titolo\n\nCorpo",
+        'ai_content_social' => 'Nuovo articolo! 🎉',
+    ])->assertOk();
+
+    $created = Post::where('title', 'Articolo MCP')->firstOrFail();
+    expect($created->ai_content_format)->toBe('markdown')
+        ->and($created->ai_content_social)->toBe('Nuovo articolo! 🎉');
+
+    $post = mcpPost($user, [
+        'channels' => ['facebook' => ['on' => true], 'wordpress' => ['on' => true, 'categories' => []]],
+        'ai_content' => '<h1>Titolo</h1><p>Editor</p>',
+        'ai_content_format' => 'html',
+    ]);
+
+    FaPer3Server::actingAs(withMcp($user->fresh(), 'write'))->tool(UpdatePost::class, ['post_id' => $post->id, 'title' => 'Solo titolo'])
+        ->assertOk();
+    expect($post->fresh()->ai_content_format)->toBe('html');
+
+    FaPer3Server::actingAs(withMcp($user->fresh(), 'write'))->tool(UpdatePost::class, [
+        'post_id' => $post->id,
+        'ai_content' => "# Nuovo\n\nMarkdown",
+        'ai_content_social' => '',
+    ])->assertOk();
+    expect($post->fresh())->ai_content_format->toBe('markdown')->ai_content_social->toBeNull();
+});
+
 it('update_post refuses posts already out and posts of other accounts', function () {
     ['alice' => $alice, 'other' => $other] = mcpTree();
     $published = mcpPost($alice, ['published' => '1', 'published_at' => now()->subDay()]);

@@ -69,6 +69,6 @@ class GeneratePostContentJob implements ShouldQueue
         Post::whereKey($post->id)
             ->where('published', '0')
             ->whereRaw("TRIM(COALESCE(ai_content, '')) = ''")
-            ->update(['ai_content' => $result['content']]);
+            ->update(['ai_content' => $result['content'], 'ai_content_format' => Post::FORMAT_MARKDOWN]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Actions\Posts\UpdatePost as UpdatePostAction;
 use App\Mcp\Tools\Concerns\WritesPosts;
+use App\Models\Post;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\ValidationException;
 use Laravel\Mcp\Request;
@@ -32,6 +33,7 @@ class UpdatePost extends Tool
             ...$this->channelsRules(false),
             'ai_prompt_post' => ['sometimes', 'nullable', 'string', 'max:10000'],
             'ai_content' => ['sometimes', 'nullable', 'string', 'max:60000'],
+            'ai_content_social' => ['sometimes', 'nullable', 'string', 'max:60000'],
             'ai_prompt_comment' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'published_at' => ['sometimes', ...$this->publishedAtRules()],
             'archive_images' => ['nullable', 'array', 'max:'.self::MAX_IMAGES],
@@ -67,6 +69,9 @@ class UpdatePost extends Tool
             'channels' => $channels,
             'ai_prompt_post' => $field('ai_prompt_post', $post->ai_prompt_post),
             'ai_content' => $field('ai_content', $post->ai_content),
+            // Un testo nuovo via MCP è Markdown; omesso resta il formato attuale.
+            'ai_content_format' => array_key_exists('ai_content', $data) ? Post::FORMAT_MARKDOWN : $post->ai_content_format,
+            'ai_content_social' => $field('ai_content_social', $post->ai_content_social),
             'ai_prompt_comment' => $field('ai_prompt_comment', $post->ai_prompt_comment),
             'img_ai_check_on' => $field('ai_looks_at_image', $post->img_ai_check_on == '1'),
             'published_at' => $field('published_at', $post->published_at),
@@ -84,7 +89,8 @@ class UpdatePost extends Tool
             'title' => $schema->string(),
             'channels' => $this->channelsSchema($schema)->description('Se presente sostituisce TUTTI i canali del post (stesso formato di create_post).'),
             'ai_prompt_post' => $schema->string(),
-            'ai_content' => $schema->string()->description('Testo definitivo. Svuotalo (stringa vuota) per farlo rigenerare dall\'AI dal prompt.'),
+            'ai_content' => $schema->string()->description('Testo definitivo (Markdown con titolo `#` per WordPress/newsletter, shortcode come in create_post). Svuotalo (stringa vuota) per farlo rigenerare dall\'AI dal prompt.'),
+            'ai_content_social' => $schema->string()->nullable()->description('Testo semplice per i social quando ci sono anche WordPress/newsletter. Stringa vuota = torna all\'articolo ripulito.'),
             'ai_prompt_comment' => $schema->string(),
             'published_at' => $schema->string()->format('date-time')->nullable()->description('Data futura (ISO 8601), oppure null per tornare a bozza.'),
             'archive_images' => $schema->array()->items($schema->string())->max(self::MAX_IMAGES)->description('Immagini d\'archivio da aggiungere.'),

@@ -24,6 +24,8 @@ class DuplicatePost
         return $this->copy($actor, $post, [
             'title' => Str::limit((string) $post->title, 255 - 8, '').' (copia)',
             'ai_content' => $post->ai_content,
+            'ai_content_format' => $post->ai_content_format ?? Post::FORMAT_MARKDOWN,
+            'ai_content_social' => $post->ai_content_social,
             // Senza data resta una bozza: il worker non la prende finché
             // l'utente non sceglie quando inviarla.
             'published_at' => null,
@@ -41,6 +43,8 @@ class DuplicatePost
         $copy = $this->copy($actor, $post, [
             'title' => (string) $post->title,
             'ai_content' => null,
+            'ai_content_format' => Post::FORMAT_MARKDOWN,
+            'ai_content_social' => null,
             'published_at' => $post->published_at?->copy()->addMinute(),
         ]);
 
@@ -52,7 +56,7 @@ class DuplicatePost
     }
 
     /**
-     * @param  array{title: string, ai_content: ?string, published_at: mixed}  $overrides
+     * @param  array{title: string, ai_content: ?string, ai_content_format: string, ai_content_social: ?string, published_at: mixed}  $overrides
      */
     private function copy(User $actor, Post $post, array $overrides): Post
     {
@@ -67,6 +71,8 @@ class DuplicatePost
             'title' => $overrides['title'],
             'ai_prompt_post' => $post->ai_prompt_post,
             'ai_content' => $overrides['ai_content'],
+            'ai_content_format' => $overrides['ai_content_format'],
+            'ai_content_social' => $overrides['ai_content_social'],
             'ai_prompt_comment' => $post->ai_prompt_comment,
             'img' => null,
             'img_ai_check_on' => $post->img_ai_check_on == '1' ? '1' : '0',

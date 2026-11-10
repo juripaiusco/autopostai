@@ -31,7 +31,7 @@ class UpdatePost
             'channels' => ['required', 'array', 'min:1'],
             'ai_prompt_post' => ['nullable', 'string'],
             'ai_prompt_comment' => ['nullable', 'string'],
-            'ai_content' => ['nullable', 'string'],
+            ...self::contentRules(),
             'images' => ['nullable', 'array'],
             'images.*' => self::IMAGE_RULES,
             'img_ai_check_on' => ['nullable', 'boolean'],
@@ -84,7 +84,7 @@ class UpdatePost
         $post->update([
             'title' => $data['title'] ?? '',
             'ai_prompt_post' => $data['ai_prompt_post'] ?? null,
-            'ai_content' => $data['ai_content'] ?? null,
+            ...$this->contentFields($data, $post),
             'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
             'img' => $img,
             'img_ai_check_on' => $imgAiCheckOn,

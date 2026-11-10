@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Storage;
     'title',
     'ai_prompt_post',
     'ai_content',
+    'ai_content_format',
+    'ai_content_social',
     'ai_prompt_comment',
     'img',
     'img_ai_check_on',
@@ -62,6 +64,19 @@ class Post extends Model
      * arriverà dopo il passaggio alla Posts API.
      */
     public const EDITABLE_AFTER_PUBLISH = ['facebook', 'wordpress'];
+
+    /**
+     * Formato di ai_content. markdown: testo AI (e post precedenti all'editor),
+     * il worker lo converte per WordPress/newsletter. html: editor ricco,
+     * già sanificato (PostHtmlSanitizer). text: post solo social.
+     */
+    public const FORMAT_MARKDOWN = 'markdown';
+
+    public const FORMAT_HTML = 'html';
+
+    public const FORMAT_TEXT = 'text';
+
+    public const CONTENT_FORMATS = [self::FORMAT_MARKDOWN, self::FORMAT_HTML, self::FORMAT_TEXT];
 
     /**
      * Giorni dalla pubblicazione oltre i quali il worker smette comunque di
