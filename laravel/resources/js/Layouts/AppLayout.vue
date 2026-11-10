@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import Icon from '@/Components/Icon.vue';
 import Sidebar from '@/Components/Sidebar.vue';
@@ -19,6 +19,11 @@ defineProps({
 });
 
 const sidebarOpen = ref(false);
+
+// Mobile: a menu aperto blocca lo scroll della pagina dietro (classe su <html>,
+// vedi app.css). Su desktop il menu non si apre mai, quindi resta inerte.
+watch(sidebarOpen, (open) => document.documentElement.classList.toggle('sb-lock', open));
+onUnmounted(() => document.documentElement.classList.remove('sb-lock'));
 
 // "Filtra per utente": condiviso globalmente (HandleInertiaRequests), quindi
 // disponibile identico su ogni pagina che usa questo layout, non solo Dashboard.

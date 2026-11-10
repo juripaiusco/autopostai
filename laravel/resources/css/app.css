@@ -479,9 +479,17 @@ tr:hover .ch-chip{ background: var(--g200); }
     .hamburger{ display: flex; }
     .topbar{ z-index: 45; padding: 0 14px; gap: 10px; }
 
-    .app.has-sidebar{ flex-direction: column; height: auto; overflow: auto; }
+    /* Niente scroll container sopra la topbar: overflow auto/hidden qui
+       sganciava position:sticky dal viewport e l'header scorreva via con
+       la pagina (buco sopra il menu aperto). overflow-x:clip taglia senza
+       creare uno scroll container. */
+    .app.has-sidebar{ flex-direction: column; height: auto; overflow: visible; }
     .app.has-sidebar .main-col{ flex: 1; height: auto; overflow: visible; }
     .app.has-sidebar .main-col main{ overflow: visible; }
+    /* Con la topbar fissa il breadcrumb non deve incastrarsi sotto di lei. */
+    .page-header-slot{ position: static; }
+    /* Menu aperto: la pagina dietro non scorre (AppLayout). */
+    html.sb-lock{ overflow: hidden; }
 
     .sidebar{
         position: fixed; top: 62px; left: 0; right: 0; bottom: auto; width: 100%;
@@ -524,7 +532,7 @@ tr:hover .ch-chip{ background: var(--g200); }
     .stat-body{ margin-bottom: 8px; }
     .stat-body svg{ display: none !important; }
 
-    .app.has-sidebar, .main-col{ overflow-x: hidden; }
+    .app.has-sidebar, .main-col{ overflow-x: clip; }
 }
 
 @media (max-width: 1100px){ .stat-grid{ grid-template-columns: repeat(2, 1fr); } }

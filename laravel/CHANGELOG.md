@@ -8,6 +8,9 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 ### Miglioramenti
 - La versione dell'app è visibile in basso a destra in ogni pagina.
 
+### Correzioni
+- Su smartphone l'intestazione resta fissa in alto, anche con il menu aperto.
+
 ## [2.1.0] — 2026-11-10
 
 ### Novità
