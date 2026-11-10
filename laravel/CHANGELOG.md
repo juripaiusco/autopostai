@@ -14,6 +14,7 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 - Su smartphone i filtri per stato di post, contatti e account non escono più dallo schermo: si scorrono col dito.
 - Su smartphone, nel primo passo del post, i campi Account e Titolo sono uno sotto l'altro invece che schiacciati affiancati.
 - Su smartphone, nell'ultimo passo del post, i pulsanti Salva, Pubblica subito e Salva e aggiungi sono allineati a tutta larghezza.
+- Su smartphone la paginazione delle liste non esce più dallo schermo ed è più facile da toccare.
 
 ## [2.1.0] — 2026-11-10
 

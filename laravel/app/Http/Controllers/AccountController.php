@@ -92,6 +92,7 @@ class AccountController extends Controller
             ->orderBy($sortColumn, $dir)
             ->whereNotNull('parent_id')
             ->paginate(15)
+            ->onEachSide(1)
             ->withQueryString()
             ->through(fn (User $u) => [
                 'id' => $u->id,

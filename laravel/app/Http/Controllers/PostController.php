@@ -74,6 +74,7 @@ class PostController extends Controller
             ->orderBy($sortColumn, $dir)
             ->orderByDesc('id')
             ->paginate(15)
+            ->onEachSide(1)
             ->withQueryString()
             ->through(fn (Post $p) => [
                 'id' => $p->id,

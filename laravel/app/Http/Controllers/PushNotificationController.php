@@ -35,6 +35,7 @@ class PushNotificationController extends Controller
             ->with(['user:id,name', 'createdBy:id,name'])
             ->orderByDesc('id')
             ->paginate(15)
+            ->onEachSide(1)
             ->withQueryString()
             ->through(fn (PushNotification $n) => [
                 'id' => $n->id,

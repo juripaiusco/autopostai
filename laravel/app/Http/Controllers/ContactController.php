@@ -69,6 +69,7 @@ class ContactController extends Controller
         $contacts = $query
             ->orderBy($sortColumn, $dir)
             ->paginate(20)
+            ->onEachSide(1)
             ->withQueryString()
             ->through(fn (Contact $c) => [
                 'id' => $c->id,

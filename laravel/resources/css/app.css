@@ -338,7 +338,9 @@ tr:hover .ch-chip{ background: var(--g200); }
 .list-footer{ display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--g100); }
 .list-footer__info{ font-size: 12.5px; color: var(--g400); }
 .list-footer__clear{ font-size: 12px; color: var(--sky-strong); background: none; border: none; cursor: pointer; text-decoration: underline; }
-.pagination{ display: flex; align-items: center; gap: 4px; }
+.pagination{ display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.pagination__arrow--prev{ transform: rotate(90deg); }
+.pagination__arrow--next{ transform: rotate(-90deg); }
 .pagination__link{ display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 30px; padding: 0 8px; border: 1px solid var(--g200); border-radius: var(--radius); background: #fff; color: var(--g600); font-size: 12.5px; font-weight: 600; text-decoration: none; }
 .pagination__link--active{ background: var(--sky-50); color: var(--sky-strong); }
 .pagination__link--disabled{ color: var(--g300); pointer-events: none; }
@@ -577,6 +579,11 @@ tr:hover .ch-chip{ background: var(--g200); }
     .table--responsive-cards td.user-td .user-cell{ width: 100%; }
     .table--responsive-cards .row-actions{ width: 100%; justify-content: flex-end; }
     .table--responsive-cards td.table-empty{ display: block; text-align: center; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+
+    /* Footer lista: conteggio sopra, pagine centrate sotto, link più grandi al tocco. */
+    .list-footer{ flex-direction: column; align-items: center; }
+    .pagination{ justify-content: center; }
+    .pagination__link{ min-width: 36px; height: 36px; }
 
     .card:has(.table--responsive-cards) .list-footer{ margin-top: 12px; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-top: none; }
 }
