@@ -117,9 +117,9 @@ function pickNewsletterTag(tagId) {
 <template>
     <div style="display:flex;flex-direction:column;gap:12px">
 
-        <div class="flex w-full flex-row gap-4">
+        <div class="flex w-full flex-col gap-4 sm:flex-row">
 
-            <div v-if="showAccount" class="acc-field w-1/3" style="margin-bottom:0">
+            <div v-if="showAccount" class="acc-field w-full sm:w-1/3" style="margin-bottom:0">
                 <label class="acc-row-label" for="post-user">Account</label>
                 <span class="acc-row-help">Il post verrà pubblicato con i canali collegati a questo account.</span>
                 <ComboboxSelect v-if="mode === 'create'" id="post-user"
@@ -131,7 +131,7 @@ function pickNewsletterTag(tagId) {
                 </div>
             </div>
 
-            <div class="acc-field" :class="showAccount ? 'w-2/3' : 'w-full'" style="margin-bottom:0">
+            <div class="acc-field" :class="showAccount ? 'w-full sm:w-2/3' : 'w-full'" style="margin-bottom:0">
                 <label class="acc-row-label" for="post-title">Titolo</label>
                 <span class="acc-row-help">Solo ad uso interno, non viene pubblicato.</span>
                 <input id="post-title" class="control" type="text" :value="form.title"
