@@ -5,6 +5,9 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ## [Non rilasciato]
 
+### Miglioramenti
+- La versione dell'app è visibile in basso a sinistra, sotto il tuo profilo.
+
 ## [2.1.0] — 2026-11-10
 
 ### Novità
