@@ -169,8 +169,16 @@ def _save_progress(post, channels, entry, post_repo, contact_repo) -> bool:
     if first_batch:
         entry.set_result(f"smtp-{post['id']}", None)
 
+    stats = contact_repo.stats_for_post(post["id"])
     channels_dict = channels.to_dict()
-    channels_dict["newsletter"]["stats"] = contact_repo.stats_for_post(post["id"])
+    channels_dict["newsletter"]["stats"] = stats
+    # Totale destinatari = invii gia' registrati (ogni stato) + contatti ancora
+    # da servire. Chiave separata da `stats`: Post::refreshNewsletterStats()
+    # (Laravel, pixel apertura) riscrive stats per intero. Ricalcolato a ogni
+    # giro: riflette disiscrizioni/suppression intervenute durante l'invio.
+    channels_dict["newsletter"]["recipients"] = sum(stats.values()) + contact_repo.count_sendable_for_post(
+        post["user_id"], post["id"], audience_cutoff=post["published_at"], tag_id=entry.newsletter_tag_id(),
+    )
     post_repo.save_channels(post["id"], channels_dict)
 
     if first_batch and channels.all_on_published():

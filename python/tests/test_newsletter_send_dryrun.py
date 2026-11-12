@@ -153,6 +153,8 @@ def test_newsletter_send_throttles_to_batch_size_per_tick():
             text("SELECT COUNT(*) FROM email_sends WHERE post_id = :pid"), {"pid": post_id}
         ).scalar()
         assert sent_count == config.NEWSLETTER_SMTP_BATCH_SIZE
+        # Totale destinatari noto gia' dal primo giro (lista post: "4/7").
+        assert _post_row(conn, post_id)["channels"]["newsletter"]["recipients"] == len(contact_ids)
 
         # Secondo giro: prosegue sui contatti rimasti (post gia' pubblicato,
         # ma non ancora esaurito) invece di fermarsi perche' published=1.
@@ -161,6 +163,7 @@ def test_newsletter_send_throttles_to_batch_size_per_tick():
             text("SELECT COUNT(*) FROM email_sends WHERE post_id = :pid"), {"pid": post_id}
         ).scalar()
         assert sent_count_after == len(contact_ids)
+        assert _post_row(conn, post_id)["channels"]["newsletter"]["recipients"] == len(contact_ids)
     finally:
         trans.rollback()
         conn.close()
@@ -195,6 +198,8 @@ def test_newsletter_send_filters_by_tag_when_tag_id_is_set():
         ).scalars().all()
         assert sent_contact_ids == [tagged]
         assert untagged not in sent_contact_ids
+        # Il totale rispetta lo stesso filtro tag dell'invio.
+        assert _post_row(conn, post_id)["channels"]["newsletter"]["recipients"] == 1
     finally:
         trans.rollback()
         conn.close()
@@ -296,6 +301,7 @@ def test_newsletter_send_zero_recipients_publishes_and_completes():
         assert row["channels"]["newsletter"]["id"] == f"smtp-{post_id}"
         assert row["channels"]["newsletter"]["completed_at"]
         assert row["channels"]["newsletter"]["stats"]["sent"] == 0
+        assert row["channels"]["newsletter"]["recipients"] == 0
     finally:
         trans.rollback()
         conn.close()

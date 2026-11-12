@@ -567,26 +567,18 @@ class ContactRepository:
     def __init__(self, conn: Connection):
         self.conn = conn
 
-    def sendable_for_post(
-        self, user_id: int, post_id: int, limit: int, audience_cutoff, tag_id: int | None = None
-    ) -> list[dict]:
-        """Contatti attivi, non in suppression list, non ancora processati per
-        QUESTO post (nessuna riga email_sends esistente) — i piu' vecchi prima,
-        cosi' un batch limitato avanza sempre sui prossimi al giro successivo.
-        Pubblico congelato a `audience_cutoff` (published_at del post): un
-        contatto registrato dopo non riceve le newsletter gia' uscite.
-        Se tag_id e' valorizzato, restringe ai contatti che hanno quel tag
-        (filtro opzionale impostato in compose sul canale newsletter smtp_custom)."""
+    @staticmethod
+    def _sendable_sql() -> str:
+        """FROM + WHERE condivisi da sendable_for_post e count_sendable_for_post:
+        un'unica definizione del pubblico, cosi' "da inviare" e "totale
+        destinatari" non possono divergere. Parametri: user_id, post_id,
+        audience_cutoff, tag_id."""
         contacts = config.table("contacts")
         suppression = config.table("suppression_list")
         email_sends = config.table("email_sends")
         contact_tag = config.table("contact_contact_tag")
-
-        rows = self.conn.execute(
-            text(
-                f"""
-                SELECT c.id AS id, c.email AS email
-                    FROM {contacts} c
+        return f"""
+                FROM {contacts} c
                 WHERE c.user_id = :user_id
                     AND c.status = 'active'
                     AND c.deleted_at IS NULL
@@ -606,10 +598,20 @@ class ContactRepository:
                             WHERE cct.contact_id = c.id AND cct.contact_tag_id = :tag_id
                         )
                     )
-                ORDER BY c.id
-                LIMIT :limit
-                """
-            ),
+        """
+
+    def sendable_for_post(
+        self, user_id: int, post_id: int, limit: int, audience_cutoff, tag_id: int | None = None
+    ) -> list[dict]:
+        """Contatti attivi, non in suppression list, non ancora processati per
+        QUESTO post (nessuna riga email_sends esistente) — i piu' vecchi prima,
+        cosi' un batch limitato avanza sempre sui prossimi al giro successivo.
+        Pubblico congelato a `audience_cutoff` (published_at del post): un
+        contatto registrato dopo non riceve le newsletter gia' uscite.
+        Se tag_id e' valorizzato, restringe ai contatti che hanno quel tag
+        (filtro opzionale impostato in compose sul canale newsletter smtp_custom)."""
+        rows = self.conn.execute(
+            text(f"SELECT c.id AS id, c.email AS email {self._sendable_sql()} ORDER BY c.id LIMIT :limit"),
             {
                 "user_id": user_id, "post_id": post_id, "limit": limit,
                 "audience_cutoff": audience_cutoff, "tag_id": tag_id,
@@ -617,6 +619,17 @@ class ContactRepository:
         ).mappings().all()
 
         return [dict(r) for r in rows]
+
+    def count_sendable_for_post(
+        self, user_id: int, post_id: int, audience_cutoff, tag_id: int | None = None
+    ) -> int:
+        """Quanti contatti restano da servire per questo post (stesso pubblico
+        di sendable_for_post, senza limit). Sommato agli invii gia' registrati
+        da' il totale destinatari mostrato nella lista post (es. 50/100)."""
+        return int(self.conn.execute(
+            text(f"SELECT COUNT(*) {self._sendable_sql()}"),
+            {"user_id": user_id, "post_id": post_id, "audience_cutoff": audience_cutoff, "tag_id": tag_id},
+        ).scalar() or 0)
 
     def create_placeholder(self, contact_id: int, post_id: int, now: str) -> int:
         """Riserva la riga (status='queued') PRIMA di inviare: serve l'id per

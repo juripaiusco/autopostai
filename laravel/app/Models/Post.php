@@ -48,7 +48,7 @@ class Post extends Model
      * remote (id/url del post pubblicato, rimozione, update, stats newsletter).
      * Il form non le conosce: vanno preservate quando Laravel riscrive channels.
      */
-    public const WORKER_CHANNEL_KEYS = ['id', 'url', 'gallery_html', 'id_del', 'id_update', 'stats', 'completed_at'];
+    public const WORKER_CHANNEL_KEYS = ['id', 'url', 'gallery_html', 'id_del', 'id_update', 'stats', 'recipients', 'completed_at'];
 
     /**
      * Tentativi di pubblicazione per canale dopo i quali il worker si ferma
