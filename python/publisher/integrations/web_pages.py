@@ -43,6 +43,21 @@ class PageInfo:
     image: str | None
 
 
+@dataclass
+class FetchFailure:
+    url: str
+    reason: str
+
+
+@dataclass
+class Enrichment:
+    prompt: str
+    #: percorsi delle immagini lette davvero; None se il prompt non ha URL
+    image_paths: set[str] | None
+    #: avvisi per l'utente (pagine non leggibili)
+    warnings: list[str]
+
+
 def extract_urls(prompt: str) -> list[str]:
     """URL http/https del prompt, senza duplicati, al massimo MAX_URLS."""
     urls: list[str] = []
@@ -71,13 +86,13 @@ def is_public_url(url: str) -> bool:
     return True
 
 
-def fetch(url: str) -> PageInfo | None:
-    """Scarica e analizza la pagina; None se non raggiungibile, non HTML o non pubblica."""
+def fetch(url: str) -> PageInfo | FetchFailure:
+    """Scarica e analizza la pagina; FetchFailure con un motivo leggibile se non si puo'."""
     current = url
     try:
         for _ in range(MAX_REDIRECTS + 1):
             if not is_public_url(current):
-                return None
+                return FetchFailure(url, "indirizzo non ammesso")
             resp = http.get(
                 current,
                 timeout=TIMEOUT,
@@ -91,13 +106,13 @@ def fetch(url: str) -> PageInfo | None:
                 continue
             break
         else:
-            return None
+            return FetchFailure(url, "troppi reindirizzamenti")
 
         with resp:
             if resp.status_code != 200:
-                return None
+                return FetchFailure(url, _status_reason(resp))
             if "html" not in (resp.headers.get("Content-Type") or "").lower():
-                return None
+                return FetchFailure(url, "non è una pagina web")
             body = b""
             for chunk in resp.iter_content(chunk_size=65536):
                 body += chunk
@@ -108,13 +123,23 @@ def fetch(url: str) -> PageInfo | None:
             charset = re.search(r"charset=([\w-]+)", resp.headers.get("Content-Type") or "", re.IGNORECASE)
             encoding = charset.group(1) if charset else "utf-8"
     except requests.RequestException:
-        return None
+        return FetchFailure(url, "il sito non ha risposto")
 
     try:
         html = body.decode(encoding, errors="replace")
     except LookupError:
         html = body.decode("utf-8", errors="replace")
     return parse_html(html, current)
+
+
+def _status_reason(resp) -> str:
+    """403/429/503 da Cloudflare (verifica "Just a moment...", Under Attack) = blocco anti-bot."""
+    server = (resp.headers.get("Server") or "").lower()
+    if resp.status_code in (403, 429, 503) and ("cloudflare" in server or resp.headers.get("cf-mitigated")):
+        return "accesso bloccato dal sito (protezione anti-bot)"
+    if resp.status_code == 403:
+        return "accesso negato dal sito"
+    return f"errore HTTP {resp.status_code}"
 
 
 def parse_html(html: str, base_url: str) -> PageInfo:
@@ -132,21 +157,27 @@ def parse_html(html: str, base_url: str) -> PageInfo:
     return PageInfo(url=base_url, title=re.sub(r"\s+", " ", title), text=text, image=image)
 
 
-def enrich_prompt(prompt: str) -> str:
-    """Aggiunge al prompt il contenuto delle pagine citate. Senza URL lo
-    restituisce invariato, senza chiamate di rete."""
+def enrich(prompt: str) -> Enrichment:
+    """Aggiunge al prompt il contenuto delle pagine citate. Senza URL il prompt
+    resta invariato e non parte nessuna chiamata di rete (image_paths None:
+    nessun controllo sulle immagini del testo generato)."""
     urls = extract_urls(prompt)
     if not urls:
-        return prompt
+        return Enrichment(prompt, None, [])
 
     with ThreadPoolExecutor(max_workers=len(urls)) as pool:
         pages = list(pool.map(fetch, urls))
 
-    blocks = []
+    blocks, image_paths, warnings = [], set(), []
     for url, page in zip(urls, pages):
-        if page is None:
-            blocks.append(f"Pagina: {url}\nNon raggiungibile: non inventare dati su questa pagina, scrivi che non è stato possibile leggerla.")
+        if isinstance(page, FetchFailure):
+            warnings.append(f"Non è stato possibile leggere {_short(url)}: {page.reason}. "
+                            "Il testo potrebbe non contenere i dati di quella pagina.")
+            blocks.append(f"Pagina: {url}\nNon leggibile: non inventare dati su questa pagina, "
+                          "non inserire immagini per questa pagina e scrivi che non è stato possibile leggerla.")
             continue
+        if page.image:
+            image_paths.add(urlparse(page.image).path)
         lines = [f"Pagina: {url}", f"Titolo: {page.title or '(nessuno)'}"]
         lines.append(f"Immagine: {page.image}" if page.image else "Immagine: nessuna")
         lines.append(f"Testo: {page.text or '(vuoto)'}")
@@ -156,10 +187,47 @@ def enrich_prompt(prompt: str) -> str:
         "Contenuto delle pagine indicate (letto da FaPer3, il modello non può aprire i link). "
         "Usa solo queste informazioni per i dati delle pagine: non inventare prezzi, caratteristiche o dettagli. "
         "Per ogni pagina che ha un'immagine, inserisci l'immagine sotto la parte che ne parla con la sintassi "
-        "Markdown ![titolo](url immagine), usando esattamente l'URL indicato in \"Immagine:\". "
+        "Markdown ![titolo](url immagine), usando l'URL indicato in \"Immagine:\". Se le istruzioni chiedono di "
+        "cambiare il dominio delle immagini puoi cambiare solo il dominio, mai il percorso del file. "
         "Non inventare mai URL di immagini e non inserire immagini per le pagine che non ne hanno."
     )
-    return f"{prompt}\n\n{instructions}\n\n" + "\n\n---\n\n".join(blocks)
+    return Enrichment(f"{prompt}\n\n{instructions}\n\n" + "\n\n---\n\n".join(blocks), image_paths, warnings)
+
+
+_MD_IMAGE = re.compile(r"!\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+\"[^\"]*\")?\s*\)")
+_HTML_IMAGE = re.compile(r"<img\b[^>]*?\bsrc\s*=\s*([\"'])(.*?)\1[^>]*>", re.IGNORECASE)
+
+
+def keep_known_images(text: str, image_paths: set[str] | None) -> tuple[str, int]:
+    """Toglie dal testo generato le immagini (Markdown o <img>) il cui percorso
+    non e' quello di un'immagine letta davvero. Il dominio puo' cambiare (es.
+    www -> img chiesto dall'utente), il file no. Ritorna (testo, rimosse).
+    image_paths None = nessun URL nel prompt: testo intatto."""
+    if image_paths is None:
+        return text, 0
+    removed = 0
+
+    def check(match, url):
+        nonlocal removed
+        if urlparse(url.strip()).path in image_paths:
+            return match.group(0)
+        removed += 1
+        return ""
+
+    text = _MD_IMAGE.sub(lambda m: check(m, m.group(1)), text)
+    text = _HTML_IMAGE.sub(lambda m: check(m, m.group(2)), text)
+    return text, removed
+
+
+def removed_images_warning(removed: int) -> str:
+    return ("Rimossa un'immagine non presente nelle pagine lette." if removed == 1
+            else f"Rimosse {removed} immagini non presenti nelle pagine lette.")
+
+
+def _short(url: str) -> str:
+    parsed = urlparse(url)
+    path = parsed.path if len(parsed.path) <= 60 else parsed.path[:57] + "…"
+    return f"{parsed.hostname}{path}"
 
 
 class _PageParser(HTMLParser):

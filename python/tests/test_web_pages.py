@@ -100,7 +100,7 @@ def test_fetch_parses_title_text_and_absolute_og_image(web):
 
 def test_private_url_is_never_requested(web):
     _, calls = web
-    assert web_pages.fetch("http://mariadb/") is None
+    assert web_pages.fetch("http://mariadb/").reason == "indirizzo non ammesso"
     assert calls == []
 
 
@@ -108,7 +108,7 @@ def test_redirect_to_private_ip_is_blocked(web):
     routes, calls = web
     routes["https://shop.example/r"] = lambda: _response(302, "", {"Location": "http://10.0.0.1/admin"})
 
-    assert web_pages.fetch("https://shop.example/r") is None
+    assert isinstance(web_pages.fetch("https://shop.example/r"), web_pages.FetchFailure)
     assert calls == ["https://shop.example/r"]
 
 
@@ -124,7 +124,7 @@ def test_non_html_is_ignored(web):
     routes, _ = web
     routes["https://shop.example/f.pdf"] = lambda: _response(headers={"Content-Type": "application/pdf"})
 
-    assert web_pages.fetch("https://shop.example/f.pdf") is None
+    assert web_pages.fetch("https://shop.example/f.pdf").reason == "non è una pagina web"
 
 
 def test_text_is_truncated():
@@ -134,20 +134,131 @@ def test_text_is_truncated():
 
 def test_prompt_without_urls_is_unchanged(monkeypatch):
     monkeypatch.setattr(http, "get", lambda *a, **k: pytest.fail("nessuna chiamata di rete attesa"))
-    assert web_pages.enrich_prompt("Parla della pizza") == "Parla della pizza"
+    result = web_pages.enrich("Parla della pizza")
+    assert (result.prompt, result.image_paths, result.warnings) == ("Parla della pizza", None, [])
 
 
-def test_enrich_prompt_adds_page_content_and_unreachable_notice(web):
+def test_enrich_adds_page_content_and_warns_on_unreadable_pages(web):
     routes, _ = web
     routes["https://shop.example/p"] = lambda: _response()
 
-    prompt = web_pages.enrich_prompt("Newsletter su https://shop.example/p e http://mariadb/x")
+    result = web_pages.enrich("Newsletter su https://shop.example/p e http://mariadb/x")
 
-    assert "Titolo: Scarpa Trail X" in prompt
-    assert "Immagine: https://shop.example/img/trail-x.jpg" in prompt
-    assert "Prezzo 129 €" in prompt
-    assert "Pagina: http://mariadb/x\nNon raggiungibile" in prompt
-    assert "Non inventare mai URL di immagini" in prompt
+    assert "Titolo: Scarpa Trail X" in result.prompt
+    assert "Immagine: https://shop.example/img/trail-x.jpg" in result.prompt
+    assert "Prezzo 129 €" in result.prompt
+    assert "Pagina: http://mariadb/x\nNon leggibile" in result.prompt
+    assert "Non inventare mai URL di immagini" in result.prompt
+    assert result.image_paths == {"/img/trail-x.jpg"}
+    assert result.warnings == [
+        "Non è stato possibile leggere mariadb/x: indirizzo non ammesso. "
+        "Il testo potrebbe non contenere i dati di quella pagina."
+    ]
+
+
+CLOUDFLARE_CHALLENGE = "<html><head><title>Just a moment...</title></head><body></body></html>"
+
+
+def test_cloudflare_challenge_is_reported_as_anti_bot(web):
+    routes, _ = web
+    routes["https://shop.example/p"] = lambda: _response(403, CLOUDFLARE_CHALLENGE, {
+        "Content-Type": "text/html; charset=UTF-8", "Server": "cloudflare", "cf-mitigated": "challenge",
+    })
+
+    assert web_pages.fetch("https://shop.example/p").reason == "accesso bloccato dal sito (protezione anti-bot)"
+
+
+def test_plain_403_and_other_errors(web):
+    routes, _ = web
+    routes["https://shop.example/a"] = lambda: _response(403, "no", {"Content-Type": "text/html", "Server": "nginx"})
+    routes["https://shop.example/b"] = lambda: _response(500, "ko")
+
+    assert web_pages.fetch("https://shop.example/a").reason == "accesso negato dal sito"
+    assert web_pages.fetch("https://shop.example/b").reason == "errore HTTP 500"
+
+
+def test_timeout_is_reported(monkeypatch, dns):
+    def boom(*a, **k):
+        raise requests.Timeout("lento")
+
+    monkeypatch.setattr(http, "get", boom)
+    assert web_pages.fetch("https://shop.example/p").reason == "il sito non ha risposto"
+
+
+# --- Controllo delle immagini nel testo generato -------------------------------
+
+KNOWN = {"/img/trail-x.jpg"}
+
+
+def test_image_with_changed_domain_but_same_path_is_kept():
+    text = "Scarpa\n\n![Trail X](https://img.shop.example/img/trail-x.jpg)"
+    assert web_pages.keep_known_images(text, KNOWN) == (text, 0)
+
+
+def test_invented_markdown_image_is_removed():
+    # Il caso reale: percorso ricavato dall'URL .html della pagina.
+    text = "Scarpa\n\n![Trail X](https://img.shop.example/scarpe/123-trail-x.jpg)\nFine"
+    cleaned, removed = web_pages.keep_known_images(text, KNOWN)
+    assert removed == 1
+    assert "123-trail-x.jpg" not in cleaned and "Scarpa" in cleaned and "Fine" in cleaned
+
+
+def test_invented_html_image_is_removed_and_known_one_kept():
+    text = ('<p>A</p><img src="https://img.shop.example/x/inventata.jpg" alt="x">'
+            "<img alt='ok' src='https://shop.example/img/trail-x.jpg'>")
+    cleaned, removed = web_pages.keep_known_images(text, KNOWN)
+    assert removed == 1
+    assert "inventata" not in cleaned and "trail-x.jpg" in cleaned
+
+
+def test_unreadable_pages_leave_no_image():
+    cleaned, removed = web_pages.keep_known_images("![x](https://img.shop.example/a.jpg)", set())
+    assert (cleaned, removed) == ("", 1)
+
+
+def test_no_urls_in_prompt_means_no_image_check():
+    text = "![logo](https://altro.example/logo.png)"
+    assert web_pages.keep_known_images(text, None) == (text, 0)
+
+
+def test_generate_text_endpoint_returns_warnings_and_drops_invented_images(monkeypatch, web):
+    from fastapi.testclient import TestClient
+
+    import main
+
+    routes, _ = web
+    routes["https://shop.example/p"] = lambda: _response()
+    routes["https://altro.example/q"] = lambda: _response(403, CLOUDFLARE_CHALLENGE, {
+        "Content-Type": "text/html", "Server": "cloudflare",
+    })
+    reply = ("# Novità\n\n![A](https://img.shop.example/img/trail-x.jpg)\n\n"
+             "![B](https://img.altro.example/q.jpg)")
+    monkeypatch.setattr(openai_text, "generate", lambda **kw: (reply, 7))
+
+    res = TestClient(main.app).post("/generate-text", json={
+        "api_key": "sk-fake", "channel": "newsletter",
+        "ai_prompt_post": "Proponi https://shop.example/p e https://altro.example/q",
+    })
+
+    body = res.json()
+    assert "img/trail-x.jpg" in body["content"] and "q.jpg" not in body["content"]
+    assert body["warnings"] == [
+        "Non è stato possibile leggere altro.example/q: accesso bloccato dal sito (protezione anti-bot). "
+        "Il testo potrebbe non contenere i dati di quella pagina.",
+        "Rimossa un'immagine non presente nelle pagine lette.",
+    ]
+
+
+def test_generate_text_endpoint_social_has_no_warnings(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import main
+
+    monkeypatch.setattr(openai_text, "generate", lambda **kw: ("Testo", 1))
+    res = TestClient(main.app).post("/generate-text", json={
+        "api_key": "sk-fake", "channel": "facebook", "ai_prompt_post": "Parla di https://shop.example/p",
+    })
+    assert res.json()["warnings"] == []
 
 
 # --- Aggancio al worker: solo newsletter/WordPress leggono i link -----------------

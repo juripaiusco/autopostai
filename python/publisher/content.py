@@ -8,6 +8,7 @@ sempre risolti al volo (dipendono dallo stato di pubblicazione corrente).
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 
 from publisher import config
@@ -17,6 +18,8 @@ from publisher.domain import channel_text, media
 from publisher.domain.channels import Channels, with_length_instruction
 from publisher.publishing import PUBLISHERS
 from publisher.publishing.base import ChannelPublisher
+
+log = logging.getLogger(__name__)
 
 
 class EmptyContentError(Exception):
@@ -136,8 +139,9 @@ class ContentService:
         prompt_publisher = PUBLISHERS[text_key](post) if text_key else publisher
         prompt = prompt_publisher.build_prompt()
         # Newsletter/WordPress: il modello non apre i link, FaPer3 gli passa il contenuto delle pagine.
-        if getattr(prompt_publisher, "reads_urls", False):
-            prompt = web_pages.enrich_prompt(prompt)
+        enrichment = web_pages.enrich(prompt) if getattr(prompt_publisher, "reads_urls", False) else None
+        if enrichment:
+            prompt = enrichment.prompt
 
         text, tokens = openai_text.generate(
             api_key=post["openai_api_key"],
@@ -149,6 +153,12 @@ class ContentService:
 
         now = datetime.now(config.LOCAL_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
         self.token_repo.log(post["user_id"], "post", post["id"], tokens, now)
+
+        if enrichment:
+            text, removed = web_pages.keep_known_images(text, enrichment.image_paths)
+            warnings = enrichment.warnings + ([web_pages.removed_images_warning(removed)] if removed else [])
+            for warning in warnings:
+                log.warning("post %s: %s", post["id"], warning)
 
         if not text.strip():
             raise EmptyContentError("L'AI ha restituito un testo vuoto.")
