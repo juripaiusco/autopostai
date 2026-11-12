@@ -20,6 +20,7 @@
         "@headlessui/vue": "^1.7.23",
         "@inertiajs/vue3": "^3.3.1",
         "@tiptap/extension-document": "^3.33.0",
+        "@tiptap/extension-image": "^3.33.1",
         "@tiptap/extension-paragraph": "^3.33.0",
         "@tiptap/extension-text": "^3.33.0",
         "@tiptap/extension-text-align": "^3.33.0",

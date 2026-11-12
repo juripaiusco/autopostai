@@ -2,13 +2,16 @@
 // Editor ricco del testo articolo (WordPress, Newsletter). Produce solo ciò
 // che il server lascia passare (App\Services\PostHtmlSanitizer): H2/H3,
 // grassetto, corsivo, sottolineato, elenchi, citazione, link, colore del
-// testo da palette e allineamento. Il titolo (H1) è un campo a parte.
+// testo da palette, allineamento e immagini (solo URL http/https: arrivano
+// dall'AI, che le prende dalle pagine linkate nel prompt; niente pulsante di
+// inserimento). Il titolo (H1) è un campo a parte.
 // Shortcode senza sintassi: link a un tuo post e pulsante CTA (newsletter).
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle, Color } from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
+import Image from '@tiptap/extension-image';
 import { Placeholder } from '@tiptap/extensions';
 import Icon from '@/Components/Icon.vue';
 import EmojiButton from '@/Components/Editor/EmojiButton.vue';
@@ -59,6 +62,7 @@ const editor = useEditor({
         TextStyle,
         Color,
         TextAlign.configure({ types: ['heading', 'paragraph'] }),
+        Image.configure({ inline: false, allowBase64: false }),
         Placeholder.configure({ placeholder: () => props.placeholder }),
         CtaButton,
     ],

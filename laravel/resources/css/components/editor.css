@@ -66,6 +66,8 @@
 .rich-text blockquote, .rte-content .ProseMirror blockquote { border-left: 3px solid var(--g300); padding-left: 12px; color: var(--g600); font-style: italic; }
 .rich-text a, .rte-content .ProseMirror a { color: var(--sky-strong); text-decoration: underline; }
 .rich-text hr, .rte-content .ProseMirror hr { border: none; border-top: 1px solid var(--g200); margin: 1.2em 0; }
+.rich-text img, .rte-content .ProseMirror img { display: block; max-width: 100%; height: auto; border-radius: var(--radius-sm); }
+.rte-content .ProseMirror img.ProseMirror-selectednode { outline: 2px solid var(--sky); outline-offset: 1px; }
 
 /* Titolo articolo sopra l'editor */
 .pf-article-title { font-size: 17px; font-weight: 600; margin-bottom: 10px; }

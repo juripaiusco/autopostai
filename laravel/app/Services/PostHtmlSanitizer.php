@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\File;
  * prima di salvarlo: esce su siti e caselle email di terzi e viene mostrato
  * nella pagina del post, quindi passano solo i tag e gli stili che l'editor
  * produce. Tutto il resto (script, eventi on*, iframe, stili di
- * posizionamento) viene tolto.
+ * posizionamento) viene tolto. Le immagini passano solo con src http/https
+ * (le prende l'AI dalle pagine linkate nel prompt; niente data: né javascript:).
  *
  * Gli shortcode nei link (`href="[WordPress url id=&quot;12&quot;]"`: le
  * virgolette dentro l'attributo sono codificate) non sono URL validi e
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\File;
 class PostHtmlSanitizer
 {
     private const ALLOWED = 'h1[style],h2[style],h3[style],p[style],br,hr,strong,b,em,i,u,s,'
-        .'ul,ol,li,blockquote,a[href|target],span[style]';
+        .'ul,ol,li,blockquote,a[href|target],span[style],img[src|alt]';
 
     /** Segnaposto (URL valido) al posto degli shortcode negli href. */
     private const PLACEHOLDER = 'https://shortcode.faper3.invalid/';

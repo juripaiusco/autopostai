@@ -66,6 +66,21 @@ class PostContentFormatTest extends TestCase
         }
     }
 
+    public function test_sanitizer_keeps_https_images_and_drops_unsafe_ones(): void
+    {
+        // Immagini prodotto inserite dall'AI dalle pagine linkate nel prompt.
+        $html = '<p>Scarpa</p><img src="https://shop.test/img/x.jpg" alt="Scarpa" onerror="alert(1)" style="position:fixed">'
+            .'<img src="javascript:alert(2)" alt="js">'
+            .'<img src="data:image/png;base64,AAAA" alt="b64">';
+
+        $clean = app(PostHtmlSanitizer::class)->clean($html);
+
+        $this->assertStringContainsString('<img src="https://shop.test/img/x.jpg" alt="Scarpa"', $clean);
+        foreach (['onerror', 'alert', 'position', 'javascript', 'data:image'] as $bad) {
+            $this->assertStringNotContainsString($bad, $clean);
+        }
+    }
+
     public function test_sanitizer_keeps_shortcodes_in_links_and_text(): void
     {
         $html = '<p><a href="[wordpress url id=12]">articolo</a></p>'

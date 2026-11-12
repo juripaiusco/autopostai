@@ -9,6 +9,7 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 - Puoi installare FaPer3 sul telefono come un'app, con la sua icona e la schermata di avvio.
 - Senza connessione l'app mostra una pagina dedicata invece dell'errore del browser, e si ricarica da sola quando torna la rete.
 - Newsletter e articoli WordPress: se nel prompt inserisci dei link, FaPer3 legge quelle pagine e scrive il testo con i loro contenuti reali, invece di immaginarli.
+- Le immagini dei prodotti trovate in quei link compaiono nel testo di newsletter e articoli WordPress, sotto il prodotto a cui si riferiscono.
 
 ## [2.1.1] — 2026-11-10
 

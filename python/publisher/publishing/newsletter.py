@@ -1,11 +1,19 @@
 from __future__ import annotations
 
+import re
+
 from publisher.domain import media
 from publisher.domain.channels import Channels
 from publisher.integrations import shortcodes
 from publisher.integrations.brevo import Brevo
 from publisher.integrations.mailchimp import Mailchimp
 from publisher.publishing.base import ChannelPublisher, PublishResult
+
+
+# Immagini del corpo senza stile (es. prodotti dalle pagine linkate nel prompt):
+# i client di posta le mostrerebbero a grandezza naturale, oltre la larghezza della mail.
+_BODY_IMG_WITHOUT_STYLE = re.compile(r"<img\b(?![^>]*\bstyle=)", re.IGNORECASE)
+_BODY_IMG_STYLE = 'style="max-width:100%; height:auto; display:block; margin: 0 auto;"'
 
 
 class NewsletterPublisher(ChannelPublisher):
@@ -37,6 +45,7 @@ class NewsletterPublisher(ChannelPublisher):
 
     def _assemble_html(self, body_html: str) -> str:
         """Inietta l'immagine, avvolge nel template account, espande gli shortcode CTA."""
+        body_html = _BODY_IMG_WITHOUT_STYLE.sub(f"<img {_BODY_IMG_STYLE}", body_html)
         image_urls = media.public_urls(self.post)
         if image_urls:
             body_html = (
