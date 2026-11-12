@@ -69,6 +69,8 @@ class ListPosts extends Tool
                 'channels' => $p->activeChannels(),
                 'published_at' => $p->published_at?->toIso8601String(),
                 'comments' => $p->comments_count,
+                // Invio newsletter: sent/total/opened per smtp_custom, campaign=true per Mailchimp/Brevo, null se assente.
+                'newsletter' => $p->newsletterProgress(),
                 'url' => route('posts.show', $p),
             ])->all(),
         ]);

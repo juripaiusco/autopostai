@@ -51,7 +51,6 @@ class PostController extends Controller
         $sortable = [
             'title' => 'title',
             'publishedAt' => 'published_at',
-            'comments' => 'comments_count',
         ];
         $sortColumn = $sortable[$sortKey] ?? 'published_at';
 
@@ -63,7 +62,7 @@ class PostController extends Controller
 
         // Ordinando per data le bozze (senza data) restano in cima in entrambe
         // le direzioni: sono i post da ultimare. MariaDB in DESC metterebbe i
-        // NULL in fondo. Titolo/commenti: ordine scelto dall'utente, senza pin.
+        // NULL in fondo. Titolo: ordine scelto dall'utente, senza pin.
         if ($sortColumn === 'published_at') {
             $query->orderByRaw('published_at IS NULL DESC');
         }
@@ -89,6 +88,7 @@ class PostController extends Controller
                 'monitoringUntil' => $p->monitoringUntil(),
                 'publishedAt' => $p->published_at?->toIso8601String(),
                 'comments' => $p->comments_count,
+                'newsletter' => $p->newsletterProgress(),
                 'cover' => $p->coverUrl(),
                 'thumb' => $p->thumbGradient(),
             ]);

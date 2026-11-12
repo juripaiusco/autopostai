@@ -64,6 +64,7 @@ class GetPost extends Tool
                 'post' => (int) $post->tokens->sum('tokens_used'),
                 'replies' => (int) $repliesTokens,
             ],
+            'newsletter_progress' => $post->newsletterProgress(),
             'comments_total' => $commentsTotal,
             'comments' => $comments->map(fn ($c) => [
                 'id' => $c->id,

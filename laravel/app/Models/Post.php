@@ -169,6 +169,53 @@ class Post extends Model
     }
 
     /**
+     * Avanzamento invio newsletter per la lista post (colonna Attività) e MCP.
+     * null se il canale è spento o non ancora uscito (nessun id).
+     *
+     * smtp_custom: dai bucket di channels.newsletter.stats (un invio sta in un
+     * solo stato) — sent = processati (bounce inclusi), opened = aperte
+     * (clicked implica aperta). total = channels.newsletter.recipients scritto
+     * dal worker, null sui post in invio prima che esistesse la chiave.
+     * Mailchimp/Brevo: nessun dato di invio salvato, solo "campagna inviata".
+     *
+     * @return array{provider: string, sent: ?int, total: ?int, opened: ?int, bounced: ?int, sending: bool, campaign: bool}|null
+     */
+    public function newsletterProgress(): ?array
+    {
+        $nl = $this->channels['newsletter'] ?? null;
+        if (empty($nl['on']) || empty($nl['id'])) {
+            return null;
+        }
+
+        $provider = $nl['provider'] ?? 'smtp_custom';
+
+        if ($provider !== 'smtp_custom') {
+            return [
+                'provider' => $provider,
+                'sent' => null,
+                'total' => null,
+                'opened' => null,
+                'bounced' => null,
+                'sending' => false,
+                'campaign' => true,
+            ];
+        }
+
+        $stats = array_map('intval', $nl['stats'] ?? []);
+        $bucket = fn (string $s) => $stats[$s] ?? 0;
+
+        return [
+            'provider' => $provider,
+            'sent' => array_sum($stats),
+            'total' => isset($nl['recipients']) ? (int) $nl['recipients'] : null,
+            'opened' => $bucket('opened') + $bucket('clicked'),
+            'bounced' => $bucket('bounced'),
+            'sending' => empty($nl['completed_at']),
+            'campaign' => false,
+        ];
+    }
+
+    /**
      * Almeno un canale acceso ha già un id remoto: il worker lo ha pubblicato.
      * Con published=0 significa che un altro canale è fallito (il worker
      * marca published=1 solo quando tutti i canali accesi hanno un id).

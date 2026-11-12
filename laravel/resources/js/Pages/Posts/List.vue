@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 import StatusPill from '@/Components/StatusPill.vue';
+import PostActivity from '@/Components/Domain/PostActivity.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import PostThumb from '@/Components/PostThumb.vue';
 import PageHeader from '@/Components/Layout/PageHeader.vue';
@@ -98,12 +99,12 @@ function formatDate(value) {
         <div class="card table-wrap">
             <table class="table table--responsive-cards">
                 <colgroup>
-                    <col style="width: 29%">
+                    <col style="width: 25%">
                     <col v-if="showAuthor" style="width: 13%">
                     <col style="width: 12%">
                     <col style="width: 16%">
                     <col style="width: 14%">
-                    <col style="width: 10%">
+                    <col style="width: 14%">
                     <col style="width: 104px">
                 </colgroup>
                 <thead>
@@ -113,7 +114,7 @@ function formatDate(value) {
                         <th>Canali</th>
                         <th>Stato</th>
                         <SortableTh label="Pubblicazione" column="publishedAt" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
-                        <SortableTh label="Commenti" column="comments" align="center" :sort="filters.sort" :dir="filters.dir" @sort="handleSort" />
+                        <th>Attività</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -148,9 +149,11 @@ function formatDate(value) {
                                     </span>
                                 </div>
                             </td>
-                            <td class="status-td" data-label="Stato"><StatusPill :status="p.status" :monitoring-until="p.monitoringUntil" /></td>
+                            <td class="status-td" data-label="Stato"><StatusPill :status="p.status" :monitoring-until="p.monitoringUntil" :sending="p.newsletter?.sending ?? false" /></td>
                             <td data-label="Pubblicazione">{{ formatDate(p.publishedAt) }}</td>
-                            <td class="num" data-label="Commenti">{{ p.comments }}</td>
+                            <td data-label="Attività">
+                                <PostActivity :comments="p.comments" :channels="p.channels" :newsletter="p.newsletter" />
+                            </td>
                             <td data-label="">
                                 <div class="row-actions">
                                     <button class="icon-btn icon-btn--ghost" title="Duplica" :aria-label="`Duplica ${p.title}`" :disabled="duplicatingId !== null" @click.stop="duplicate(p)">
