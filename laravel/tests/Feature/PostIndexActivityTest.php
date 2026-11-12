@@ -133,3 +133,16 @@ test('list_posts exposes the newsletter progress', function () {
             ->etc()
         );
 });
+
+test('post detail exposes the newsletter progress for the channel card', function () {
+    $account = User::factory()->create(['parent_id' => null]);
+    $post = activityPost($account, smtpChannel());
+
+    $this->actingAs($account)->get(route('posts.show', $post))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('post.newsletter.sent', 51)
+            ->where('post.newsletter.total', 100)
+            ->where('post.newsletter.sending', true)
+        );
+});

@@ -127,7 +127,7 @@ function confirmDelete() {
         <div class="ps-head">
             <div class="ps-head__main">
                 <div class="ps-head__meta">
-                    <StatusPill :status="post.status" :monitoring-until="post.monitoringUntil" />
+                    <StatusPill :status="post.status" :monitoring-until="post.monitoringUntil" :sending="post.newsletter?.sending ?? false" />
                     <span class="ps-head__date">
                         <Icon name="clock" :size="14" /> {{ formatDate(post.publishedAt) }}
                     </span>
@@ -241,6 +241,7 @@ function confirmDelete() {
                 :published-at="post.publishedAt"
                 :comments-count="post.commentsByChannel[id] ?? 0"
                 :edit="post.channelEdit?.[id]"
+                :newsletter="id === 'newsletter' ? post.newsletter : null"
                 @edit="openEdit(id)"
             />
         </div>

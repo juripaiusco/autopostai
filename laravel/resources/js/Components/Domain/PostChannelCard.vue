@@ -13,6 +13,8 @@ const props = defineProps({
     commentsCount: { type: Number, default: 0 },
     // post.channelEdit[canale]: { editable, content, format (html|text), pending, error }
     edit: { type: Object, default: null },
+    // Solo canale newsletter: Post::newsletterProgress() (null se non uscita).
+    newsletter: { type: Object, default: null },
 });
 
 const emit = defineEmits(['edit']);
@@ -35,14 +37,48 @@ const lockedReason = computed(() => (
     props.edit?.editable ? null : (NOT_EDITABLE[props.channelId] ?? 'Non ancora pubblicato su questo canale.')
 ));
 
-const METRICS = [
-    { lab: 'Views', key: 'views' },
-    { lab: 'Reach', key: 'reach' },
-    { lab: 'Reazioni', key: 'reactions' },
-    { lab: 'Commenti', key: 'comments' },
-    { lab: 'Condivisioni', key: 'shares' },
-    { lab: 'Salvataggi', key: 'saves' },
-];
+const fmt = (n) => (n === null || n === undefined ? null : n.toLocaleString('it-IT'));
+
+// Social: solo i commenti sono reali, il resto arriva con gli insights (fase F).
+// Newsletter smtp_custom: numeri da channels.newsletter (stats + recipients).
+// Mailchimp/Brevo: nessun dato salvato, tutto N/D.
+const metrics = computed(() => {
+    const nl = props.newsletter;
+    if (props.channelId === 'newsletter') {
+        const smtp = nl && !nl.campaign;
+        const delivered = smtp ? nl.sent - nl.bounced : null;
+        return [
+            { lab: 'Destinatari', val: smtp ? fmt(nl.total) : null },
+            { lab: 'Inviate', val: smtp ? fmt(nl.sent) : null },
+            { lab: 'Da inviare', val: smtp && nl.total !== null ? fmt(Math.max(0, nl.total - nl.sent)) : null },
+            { lab: 'Aperte', val: smtp ? fmt(nl.opened) : null },
+            { lab: 'Tasso apertura', val: smtp && delivered > 0 ? `${Math.round((nl.opened / delivered) * 100)}%` : null },
+            { lab: 'Rimbalzate', val: smtp ? fmt(nl.bounced) : null },
+        ];
+    }
+    return [
+        { lab: 'Views', val: null },
+        { lab: 'Reach', val: null },
+        { lab: 'Reazioni', val: null },
+        { lab: 'Commenti', val: fmt(props.commentsCount) },
+        { lab: 'Condivisioni', val: null },
+        { lab: 'Salvataggi', val: null },
+    ];
+});
+
+const sending = computed(() => props.newsletter?.sending ?? false);
+const pct = computed(() => {
+    const nl = props.newsletter;
+    return nl?.total ? Math.min(100, Math.round((nl.sent / nl.total) * 100)) : 0;
+});
+const foot = computed(() => {
+    const nl = props.newsletter;
+    if (nl && !nl.campaign) {
+        if (!nl.sending) return 'Invio completato';
+        return nl.total !== null ? `Invio in corso · ${fmt(nl.sent)} di ${fmt(nl.total)}` : 'Invio in corso';
+    }
+    return 'Andamento non disponibile';
+});
 
 function formatDate(value) {
     if (!value) return '—';
@@ -59,7 +95,7 @@ function formatDate(value) {
             <div class="ps-ch-card__head-text">
                 <div class="ps-ch-card__head-row">
                     <span class="ps-ch-card__label">{{ def.label }}</span>
-                    <StatusPill :status="status" />
+                    <StatusPill :status="status" :sending="sending" />
                 </div>
                 <div class="ps-ch-card__date">Pubblicato {{ formatDate(publishedAt) }}</div>
             </div>
@@ -70,10 +106,10 @@ function formatDate(value) {
         </div>
 
         <div class="ps-ch-card__metrics">
-            <div v-for="m in METRICS" :key="m.key" class="ps-ch-card__metric">
+            <div v-for="m in metrics" :key="m.lab" class="ps-ch-card__metric">
                 <div class="ps-ch-card__metric-lab">{{ m.lab }}</div>
-                <div class="ps-ch-card__metric-val" :class="{ 'is-nd': m.key !== 'comments' }">
-                    {{ m.key === 'comments' ? commentsCount.toLocaleString('it-IT') : 'N/D' }}
+                <div class="ps-ch-card__metric-val" :class="{ 'is-nd': m.val === null }">
+                    {{ m.val ?? 'N/D' }}
                 </div>
             </div>
         </div>
@@ -91,6 +127,12 @@ function formatDate(value) {
             </template>
         </div>
 
-        <div class="ps-ch-card__foot">Andamento non disponibile</div>
+        <div class="ps-ch-card__foot">
+            <span v-if="sending && newsletter?.total" class="ps-ch-card__bar" role="progressbar"
+                  :aria-valuenow="pct" aria-valuemin="0" aria-valuemax="100" :aria-label="foot">
+                <span class="ps-ch-card__bar-fill" :style="{ transform: `scaleX(${pct / 100})` }"></span>
+            </span>
+            {{ foot }}
+        </div>
     </div>
 </template>

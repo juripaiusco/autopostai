@@ -207,6 +207,7 @@ class PostController extends Controller
                 'status' => $post->status(),
                 'monitoringUntil' => $post->monitoringUntil(),
                 'channelStatus' => $post->channelStatuses(),
+                'newsletter' => $post->newsletterProgress(),
                 'channelErrors' => collect($post->channelErrors())
                     ->map(fn ($e, $channel) => ['channel' => $channel, ...$e])
                     ->values()
