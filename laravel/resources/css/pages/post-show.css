@@ -34,6 +34,7 @@
 .ps-kpi__lab { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--g500); }
 .ps-kpi__val { font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1.15; }
 .ps-kpi__val.is-nd, .ps-hero__sub-val.is-nd { color: var(--g400); font-weight: 600; }
+.ps-kpi__note { font-size: 11px; color: var(--g400); line-height: 1.2; }
 
 .ps-hero__sub-row { display: flex; gap: 16px; padding-top: 4px; border-top: 1px dashed var(--g200); flex-wrap: wrap; }
 .ps-hero__sub-lab { font-size: 11px; color: var(--g500); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }

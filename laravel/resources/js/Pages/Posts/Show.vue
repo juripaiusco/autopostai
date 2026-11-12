@@ -49,6 +49,20 @@ function formatDate(value) {
 // Canali su cui la pubblicazione è fallita. Il worker riprova da solo fino a
 // post.maxAttempts, poi si ferma: "Riprova" azzera il conteggio.
 const channelErrors = computed(() => props.post.channelErrors ?? []);
+
+// Risultati complessivi: per ora l'unica fonte reale oltre ai commenti è la
+// newsletter smtp_custom (pixel + email_sends). Views = email aperte, persone
+// raggiunte = email consegnate (inviate − rimbalzate). Mailchimp/Brevo e social
+// restano N/D finché non arrivano i report/insights (fase F); se il post ha
+// anche canali social la cifra è parziale e lo diciamo.
+const nlStats = computed(() => {
+    const nl = props.post.newsletter;
+    return nl && !nl.campaign ? nl : null;
+});
+const kpiViews = computed(() => nlStats.value?.opened ?? null);
+const kpiReach = computed(() => (nlStats.value ? Math.max(0, nlStats.value.sent - nlStats.value.bounced) : null));
+const kpiPartial = computed(() => nlStats.value !== null && props.post.channels.some((c) => c !== 'newsletter'));
+const kpiNote = computed(() => (kpiPartial.value ? 'Solo newsletter: i dati dei social non sono ancora disponibili.' : 'Dalla newsletter.'));
 const retrying = ref(false);
 
 function retry() {
@@ -191,13 +205,21 @@ function confirmDelete() {
                 <div>
                     <div class="ps-hero__kpi-title">Risultati complessivi</div>
                     <div class="ps-kpi-grid">
-                        <div class="ps-kpi">
+                        <div class="ps-kpi" :title="kpiViews !== null ? `Email aperte. ${kpiNote}` : null">
                             <div class="ps-kpi__lab"><Icon name="eye" :size="12" /> Views</div>
-                            <div class="ps-kpi__val is-nd">N/D</div>
+                            <div v-if="kpiViews === null" class="ps-kpi__val is-nd">N/D</div>
+                            <template v-else>
+                                <div class="ps-kpi__val">{{ kpiViews.toLocaleString('it-IT') }}</div>
+                                <div class="ps-kpi__note">{{ kpiPartial ? 'solo newsletter' : 'email aperte' }}</div>
+                            </template>
                         </div>
-                        <div class="ps-kpi">
+                        <div class="ps-kpi" :title="kpiReach !== null ? `Email consegnate. ${kpiNote}` : null">
                             <div class="ps-kpi__lab"><Icon name="users" :size="12" /> Persone raggiunte</div>
-                            <div class="ps-kpi__val is-nd">N/D</div>
+                            <div v-if="kpiReach === null" class="ps-kpi__val is-nd">N/D</div>
+                            <template v-else>
+                                <div class="ps-kpi__val">{{ kpiReach.toLocaleString('it-IT') }}</div>
+                                <div class="ps-kpi__note">{{ kpiPartial ? 'solo newsletter' : 'email consegnate' }}</div>
+                            </template>
                         </div>
                         <div class="ps-kpi">
                             <div class="ps-kpi__lab">Reazioni</div>

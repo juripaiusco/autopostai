@@ -13,6 +13,7 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 - Nella lista post la colonna «Attività» mostra, oltre ai commenti, a quante persone è arrivata la newsletter (es. 50/100, con una barra mentre l'invio prosegue) e quante l'hanno aperta.
 - I post la cui newsletter è ancora in consegna hanno lo stato «In invio» finché tutti i contatti non l'hanno ricevuta.
 - Nel dettaglio del post la scheda Newsletter mostra destinatari, email inviate e da inviare, aperture, tasso di apertura e rimbalzi, con l'avanzamento dell'invio.
+- Nel dettaglio del post, i «Risultati complessivi» contano le email aperte come views e quelle consegnate come persone raggiunte.
 
 ### Miglioramenti
 - Anche i post recenti della Dashboard mostrano la colonna «Attività» (commenti, invii e aperture newsletter) e lo stato «In invio».
