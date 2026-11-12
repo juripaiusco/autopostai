@@ -23,7 +23,7 @@ class GeneratePostTextPreview
     /**
      * @param  array<int, string>  $channels  canali accesi, per il limite di caratteri (LinkedIn)
      * @param  string|null  $sourceText  articolo da riscrivere come post social (testo semplice)
-     * @return array{content: string, tokens: int, token_log_id: int}
+     * @return array{content: string, tokens: int, warnings: array<int, string>, token_log_id: int}
      *
      * @throws ValidationException chiave mancante, limite raggiunto o errore del servizio AI
      */

@@ -22,6 +22,8 @@ const emit = defineEmits(['set', 'back', 'save', 'save-and-add', 'publish-now'])
 const genLoading = ref(false); // anteprima (articolo o testo social unico)
 const socialLoading = ref(false); // "Genera versione social"
 const genError = ref(null);
+// Avvisi della generazione (link del prompt non leggibili, immagini inventate tolte).
+const genWarnings = ref([]);
 
 function csrfToken() {
     const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
@@ -167,8 +169,10 @@ async function generate(body) {
 async function runPreview() {
     genLoading.value = true;
     genError.value = null;
+    genWarnings.value = [];
     try {
         const json = await generate({ ai_prompt_post: props.form.ai_prompt_post, channel: primaryChannel.value });
+        genWarnings.value = json.warnings ?? [];
         if (isArticle.value) {
             emit('set', 'ai_content', json.html ?? '');
             emit('set', 'ai_content_format', 'html');
@@ -254,6 +258,10 @@ async function runSocialVersion() {
             <div v-if="genError" class="pf-ai-warn pf-fade-in" style="margin-bottom:8px">
                 <Icon name="warning" :size="14" />
                 <span>{{ genError }}</span>
+            </div>
+            <div v-if="genWarnings.length" class="pf-ai-notice pf-fade-in" role="status">
+                <Icon name="warning" :size="14" />
+                <ul><li v-for="(w, i) in genWarnings" :key="i">{{ w }}</li></ul>
             </div>
 
             <div v-if="showTabs" class="pf-tabs" role="tablist">

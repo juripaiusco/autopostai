@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsOpenWorld;
 
 #[Name('generate_post_text')]
 #[Title('Genera testo con l\'AI dell\'account')]
-#[Description('Come "Genera anteprima": scrive il testo di un post con la chiave OpenAI, la personalità e le conoscenze AI dell\'account. Non salva nulla: usa il risultato come ai_content in create_post/update_post e passa token_log_id in preview_token_log_ids, così il consumo viene attribuito al post. Consuma token del limite mensile dell\'account.')]
+#[Description('Come "Genera anteprima": scrive il testo di un post con la chiave OpenAI, la personalità e le conoscenze AI dell\'account. Non salva nulla: usa il risultato come ai_content in create_post/update_post e passa token_log_id in preview_token_log_ids, così il consumo viene attribuito al post. warnings segnala i link del prompt che non è stato possibile leggere (newsletter/WordPress) e le immagini inventate tolte dal testo. Consuma token del limite mensile dell\'account.')]
 #[IsOpenWorld]
 class GeneratePostText extends Tool
 {
@@ -42,6 +42,7 @@ class GeneratePostText extends Tool
             'content' => $result['content'],
             'tokens_used' => $result['tokens'],
             'token_log_id' => $result['token_log_id'],
+            'warnings' => $result['warnings'],
         ]);
     }
 

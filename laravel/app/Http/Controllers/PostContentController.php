@@ -60,6 +60,8 @@ class PostContentController extends Controller
                 ? Post::markdownToHtml($result['content'])
                 : null,
             'token_log_id' => $result['token_log_id'],
+            // Link del prompt non leggibili o immagini inventate tolte: avviso sotto "Genera anteprima".
+            'warnings' => $result['warnings'],
         ]);
     }
 }

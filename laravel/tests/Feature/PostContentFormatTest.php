@@ -265,6 +265,34 @@ class PostContentFormatTest extends TestCase
             ->assertJsonPath('html', null);
     }
 
+    public function test_preview_passes_through_the_warnings_of_the_ai_service(): void
+    {
+        $user = $this->makeUser();
+        $user->update(['tokens_limit' => 100000]);
+        Settings::factory()->create(['user_id' => $user->id, 'openai_api_key' => 'sk-test']);
+        $warning = 'Non è stato possibile leggere shop.test/p: accesso bloccato dal sito (protezione anti-bot).';
+        Http::fake(['*/generate-text' => Http::response(['content' => "# T\n\nC", 'tokens' => 3, 'warnings' => [$warning]])]);
+
+        $this->actingAs($user)
+            ->postJson(route('posts.generate-text', $user), ['ai_prompt_post' => 'Vedi https://shop.test/p', 'channel' => 'newsletter'])
+            ->assertOk()
+            ->assertJsonPath('warnings', [$warning]);
+    }
+
+    public function test_preview_warnings_default_to_an_empty_list(): void
+    {
+        // Servizio Python senza il campo (versione precedente): lista vuota.
+        $user = $this->makeUser();
+        $user->update(['tokens_limit' => 100000]);
+        Settings::factory()->create(['user_id' => $user->id, 'openai_api_key' => 'sk-test']);
+        Http::fake(['*/generate-text' => Http::response(['content' => 'Testo', 'tokens' => 1])]);
+
+        $this->actingAs($user)
+            ->postJson(route('posts.generate-text', $user), ['ai_prompt_post' => 'Scrivi'])
+            ->assertOk()
+            ->assertJsonPath('warnings', []);
+    }
+
     public function test_social_version_sends_the_article_and_returns_plain_text(): void
     {
         $user = $this->makeUser();

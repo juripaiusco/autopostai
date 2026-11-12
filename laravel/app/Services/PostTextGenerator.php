@@ -20,8 +20,11 @@ class PostTextGenerator
      * dell'articolo da riscrivere come post social ("Genera versione
      * social"); con questo $channel non conta e $prompt fa da istruzioni extra.
      *
+     * `warnings`: avvisi per l'utente dal servizio Python (link del prompt non
+     * leggibili, immagini inventate tolte dal testo), vuoto se nulla da segnalare.
+     *
      * @param  array<int, string>  $channels
-     * @return array{content: string, tokens: int}
+     * @return array{content: string, tokens: int, warnings: array<int, string>}
      *
      * @throws RuntimeException messaggio leggibile per l'utente
      */
@@ -48,6 +51,7 @@ class PostTextGenerator
         return [
             'content' => (string) $response->json('content'),
             'tokens' => (int) $response->json('tokens'),
+            'warnings' => array_values(array_map('strval', (array) $response->json('warnings', []))),
         ];
     }
 }

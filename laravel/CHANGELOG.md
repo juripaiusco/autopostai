@@ -11,6 +11,9 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 - Newsletter e articoli WordPress: se nel prompt inserisci dei link, FaPer3 legge quelle pagine e scrive il testo con i loro contenuti reali, invece di immaginarli.
 - Le immagini dei prodotti trovate in quei link compaiono nel testo di newsletter e articoli WordPress, sotto il prodotto a cui si riferiscono.
 
+### Miglioramenti
+- Se un link nel prompt non si può leggere (per esempio perché il sito blocca gli accessi automatici), l'anteprima te lo segnala.
+
 ### Correzioni
 - Nel testo di newsletter e articoli non compaiono più immagini inventate dall'AI: restano solo quelle trovate davvero nei link.
 

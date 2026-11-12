@@ -313,6 +313,16 @@ it('generate_post_text meters tokens and respects the monthly limit', function (
         ->assertHasErrors(['Limite mensile di token AI raggiunto per questo account.']);
 });
 
+it('generate_post_text returns the warnings of the ai service', function () {
+    Http::fake(['*/generate-text' => Http::response([
+        'content' => 'Testo AI', 'tokens' => 1, 'warnings' => ['Rimossa un\'immagine non presente nelle pagine lette.'],
+    ])]);
+
+    FaPer3Server::actingAs(withMcp(mcpWriter(), 'write'))
+        ->tool(GeneratePostText::class, ['prompt' => 'Scrivi', 'channel' => 'newsletter'])
+        ->assertOk()->assertSee('Rimossa un\'immagine non presente nelle pagine lette.');
+});
+
 it('generate_post_text rewrites an article for social with source_text', function () {
     $user = mcpWriter();
     Http::fake(['*/generate-text' => Http::response(['content' => 'Post breve', 'tokens' => 5])]);
