@@ -23,6 +23,7 @@ class NewsletterPublisher(ChannelPublisher):
     """
 
     key = "newsletter"
+    reads_urls = True
 
     def build_prompt(self) -> str:
         prompt = (

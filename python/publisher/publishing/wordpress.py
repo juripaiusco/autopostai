@@ -8,6 +8,7 @@ from publisher.publishing.base import ChannelPublisher, PublishResult
 
 class WordPressPublisher(ChannelPublisher):
     key = "wordpress"
+    reads_urls = True
 
     def build_prompt(self) -> str:
         prompt = (

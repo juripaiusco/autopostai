@@ -12,7 +12,7 @@ from datetime import datetime
 
 from publisher import config
 from publisher.db.repositories import PostRepository, TokenLogRepository
-from publisher.integrations import openai_text, shortcodes
+from publisher.integrations import openai_text, shortcodes, web_pages
 from publisher.domain import channel_text, media
 from publisher.domain.channels import Channels, with_length_instruction
 from publisher.publishing import PUBLISHERS
@@ -134,12 +134,16 @@ class ContentService:
         channels = Channels.parse(post["channels"])
         text_key = channels.text_channel()
         prompt_publisher = PUBLISHERS[text_key](post) if text_key else publisher
+        prompt = prompt_publisher.build_prompt()
+        # Newsletter/WordPress: il modello non apre i link, FaPer3 gli passa il contenuto delle pagine.
+        if getattr(prompt_publisher, "reads_urls", False):
+            prompt = web_pages.enrich_prompt(prompt)
 
         text, tokens = openai_text.generate(
             api_key=post["openai_api_key"],
             system_prompt=system_prompt,
             # Limite caratteri (LinkedIn) dei canali accesi: il testo e' uno per tutti.
-            user_prompt=with_length_instruction(prompt_publisher.build_prompt(), channels.on_keys()),
+            user_prompt=with_length_instruction(prompt, channels.on_keys()),
             img_path=img_path,
         )
 

@@ -10,7 +10,7 @@ from providers import ImageGenerationError, provider_for_model
 from publisher.domain.channel_text import social_rewrite_prompt
 from publisher.domain.channels import with_length_instruction
 from publisher.publishing import PUBLISHERS
-from publisher.integrations import openai_text
+from publisher.integrations import openai_text, web_pages
 
 load_dotenv()
 
@@ -57,6 +57,8 @@ def generate_text(data: GenerateTextRequest):
         user_prompt = social_rewrite_prompt(data.source_text, data.ai_prompt_post)
     elif publisher_cls:
         user_prompt = publisher_cls({"ai_prompt_post": data.ai_prompt_post}).build_prompt()
+        if publisher_cls.reads_urls:
+            user_prompt = web_pages.enrich_prompt(user_prompt)
     else:
         user_prompt = data.ai_prompt_post
     user_prompt = with_length_instruction(user_prompt, data.channels or [])

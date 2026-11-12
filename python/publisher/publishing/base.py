@@ -59,6 +59,9 @@ class PublishResult:
 class ChannelPublisher(ABC):
     #: chiave del canale nel JSON channels (facebook, wordpress, ...)
     key: str = ""
+    #: True se il prompt di questo canale va arricchito col contenuto delle
+    #: pagine citate (integrations/web_pages): articoli e newsletter, non i social.
+    reads_urls: bool = False
 
     def __init__(self, post: dict, url_resolver=None):
         self.post = post
