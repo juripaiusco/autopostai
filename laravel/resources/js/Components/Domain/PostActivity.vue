@@ -25,12 +25,6 @@ function fmt(n) {
     return n.toLocaleString('it-IT');
 }
 
-const pct = computed(() => {
-    const n = smtp.value;
-    return n?.total ? Math.min(100, Math.round((n.sent / n.total) * 100)) : 0;
-});
-const showBar = computed(() => Boolean(smtp.value?.sending && smtp.value.total));
-
 const delivered = computed(() => (smtp.value ? Math.max(0, smtp.value.sent - smtp.value.bounced) : 0));
 const openRate = computed(() => (delivered.value ? Math.round((smtp.value.opened / delivered.value) * 100) : 0));
 
@@ -72,14 +66,6 @@ const nlTitle = computed(() => {
                     <span v-if="nl.total !== null" class="activity__muted">/ {{ fmt(nl.total) }}</span>
                 </span>
 
-                <span v-if="showBar" class="activity__row activity__progress">
-                    <span class="activity__bar" role="progressbar"
-                          :aria-valuenow="pct" aria-valuemin="0" aria-valuemax="100" :aria-label="nlTitle">
-                        <span class="activity__fill" :style="{ transform: `scaleX(${pct / 100})` }"></span>
-                    </span>
-                    <span class="activity__pct">{{ pct }}%</span>
-                </span>
-
                 <span v-if="delivered > 0" class="activity__row">
                     <Icon name="eye" :size="13" class="activity__icon" />
                     <span class="activity__val">{{ fmt(nl.opened) }}</span>
@@ -97,13 +83,8 @@ const nlTitle = computed(() => {
 .activity__icon{ color: var(--g400); flex-shrink: 0; }
 .activity__val{ color: var(--fg1); font-weight: 600; }
 .activity__muted{ color: var(--fg3); font-weight: 500; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
-.activity__progress{ width: 100%; gap: 6px; }
-.activity__bar{ display: block; flex: 1; min-width: 40px; height: 4px; border-radius: 2px; background: var(--g200); overflow: hidden; }
-.activity__fill{ display: block; width: 100%; height: 100%; background: var(--st-sch-fg); transform-origin: left center; }
-.activity__pct{ flex-shrink: 0; min-width: 3.5ch; text-align: right; color: var(--fg2); font-size: 11.5px; font-weight: 600; }
 
 @media (max-width: 640px){
     .activity{ align-items: flex-end; margin-left: auto; }
-    .activity__progress{ width: 150px; }
 }
 </style>
