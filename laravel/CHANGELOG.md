@@ -15,6 +15,7 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 - Nel dettaglio del post la scheda Newsletter mostra destinatari, email inviate e da inviare, aperture, tasso di apertura e rimbalzi, con l'avanzamento dell'invio.
 
 ### Miglioramenti
+- Anche i post recenti della Dashboard mostrano la colonna «Attività» (commenti, invii e aperture newsletter) e lo stato «In invio».
 - Se un link nel prompt non si può leggere (per esempio perché il sito blocca gli accessi automatici), l'anteprima te lo segnala.
 
 ### Correzioni

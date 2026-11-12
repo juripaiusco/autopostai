@@ -6,15 +6,16 @@ import ChannelIcon from '@/Components/ChannelIcon.vue';
 import StatusPill from '@/Components/StatusPill.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import PostThumb from '@/Components/PostThumb.vue';
+import PostActivity from '@/Components/Domain/PostActivity.vue';
 import { CH_CONFIG } from '@/data/dashboardMock';
 
 defineProps({
     posts: { type: Array, required: true },
 });
 
-const HEADERS = ['', 'Titolo', 'Canali', 'Data', 'Commenti', ''];
+const HEADERS = ['', 'Titolo', 'Canali', 'Data', 'Attività', ''];
 function alignFor(h) {
-    if (h === 'Commenti') return 'right';
+    if (h === 'Attività') return 'right';
     if (h === '') return 'center';
     return 'left';
 }
@@ -69,7 +70,7 @@ function confirmDelete(id) {
                                     max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
                             {{ p.title }}
                         </div>
-                        <StatusPill :status="p.status" :monitoring-until="p.monitoringUntil" />
+                        <StatusPill :status="p.status" :monitoring-until="p.monitoringUntil" :sending="p.newsletter?.sending ?? false" />
                     </td>
                     <td>
                         <div style="display: flex; gap: 6px; align-items: center">
@@ -79,9 +80,8 @@ function confirmDelete(id) {
                         </div>
                     </td>
                     <td style="color: var(--g500); font-size: 13px; white-space: nowrap">{{ p.date }}</td>
-                    <td style="text-align: right; color: var(--g600)">
-                        <span v-if="p.comments > 0">{{ p.comments }}</span>
-                        <span v-else style="color: var(--g300)">—</span>
+                    <td style="text-align: right">
+                        <PostActivity :comments="p.comments" :channels="p.channels" :newsletter="p.newsletter" />
                     </td>
                     <td style="padding-right: 16px">
                         <div class="row-actions">

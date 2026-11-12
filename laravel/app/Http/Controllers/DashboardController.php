@@ -52,6 +52,7 @@ class DashboardController extends Controller
                 'monitoringUntil' => $p->monitoringUntil(),
                 'date' => $p->published_at ? $this->formatDateIt($p->published_at) : '—',
                 'comments' => $p->comments_count,
+                'newsletter' => $p->newsletterProgress(),
                 'cover' => $p->coverUrl(),
                 'thumb' => $p->thumbGradient(),
             ])

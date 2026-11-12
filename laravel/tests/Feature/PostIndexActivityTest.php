@@ -146,3 +146,15 @@ test('post detail exposes the newsletter progress for the channel card', functio
             ->where('post.newsletter.sending', true)
         );
 });
+
+test('dashboard recent posts expose the newsletter progress', function () {
+    $account = User::factory()->create(['parent_id' => null]);
+    activityPost($account, smtpChannel());
+
+    $this->actingAs($account)->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('recentPosts.0.newsletter.sent', 51)
+            ->where('recentPosts.0.newsletter.sending', true)
+        );
+});
