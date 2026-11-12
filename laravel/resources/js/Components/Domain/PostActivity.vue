@@ -3,8 +3,9 @@ import { computed } from 'vue';
 import Icon from '@/Components/Icon.vue';
 import ChannelIcon from '@/Components/ChannelIcon.vue';
 
-// Cella "Attività" della lista post: commenti social + invio newsletter.
-// newsletter = Post::newsletterProgress() (null se il canale non è uscito).
+// Cella "Attività" (lista post, post recenti Dashboard): commenti social +
+// invio newsletter, una metrica per riga così restano leggibili anche con
+// numeri grandi in una colonna stretta. newsletter = Post::newsletterProgress().
 const props = defineProps({
     comments: { type: Number, default: 0 },
     channels: { type: Array, default: () => [] },
@@ -13,13 +14,27 @@ const props = defineProps({
 
 const hasSocial = computed(() => props.channels.some((c) => c !== 'newsletter'));
 const nl = computed(() => props.newsletter);
+const smtp = computed(() => (nl.value && !nl.value.campaign ? nl.value : null));
+
+// Il locale it non abbrevia le migliaia: 4.448 per intero, da 10.000 in su 12,4k / 1,2M.
+// Il tooltip mantiene i numeri esatti.
+function fmt(n) {
+    const short = (v, unit) => `${v.toLocaleString('it-IT', { maximumFractionDigits: 1 })}${unit}`;
+    if (n >= 1_000_000) return short(Math.floor(n / 100_000) / 10, 'M');
+    if (n >= 10_000) return short(Math.floor(n / 100) / 10, 'k');
+    return n.toLocaleString('it-IT');
+}
 
 const pct = computed(() => {
-    if (!nl.value?.total) return 0;
-    return Math.min(100, Math.round((nl.value.sent / nl.value.total) * 100));
+    const n = smtp.value;
+    return n?.total ? Math.min(100, Math.round((n.sent / n.total) * 100)) : 0;
 });
+const showBar = computed(() => Boolean(smtp.value?.sending && smtp.value.total));
 
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+const delivered = computed(() => (smtp.value ? Math.max(0, smtp.value.sent - smtp.value.bounced) : 0));
+const openRate = computed(() => (delivered.value ? Math.round((smtp.value.opened / delivered.value) * 100) : 0));
+
+const plural = (n, one, many) => `${n.toLocaleString('it-IT')} ${n === 1 ? one : many}`;
 
 const nlTitle = computed(() => {
     const n = nl.value;
@@ -27,53 +42,68 @@ const nlTitle = computed(() => {
     if (n.campaign) return 'Campagna newsletter inviata';
 
     const head = n.sending
-        ? (n.total !== null ? `Invio in corso: ${n.sent} di ${n.total} email` : `Invio in corso: ${plural(n.sent, 'email inviata', 'email inviate')}`)
+        ? (n.total !== null
+            ? `Invio in corso: ${n.sent.toLocaleString('it-IT')} di ${n.total.toLocaleString('it-IT')} email`
+            : `Invio in corso: ${plural(n.sent, 'email inviata', 'email inviate')}`)
         : plural(n.sent, 'email inviata', 'email inviate');
-    const parts = [head, plural(n.opened, 'aperta', 'aperte')];
+    const parts = [head, `${plural(n.opened, 'aperta', 'aperte')} (${openRate.value}%)`];
     if (n.bounced) parts.push(plural(n.bounced, 'rimbalzata', 'rimbalzate'));
     return parts.join(' · ');
 });
 </script>
 
 <template>
-    <div v-if="hasSocial || nl" class="activity">
+    <div v-if="hasSocial || nl" class="activity" :title="nlTitle || null">
         <span v-if="hasSocial" class="activity__row" :title="plural(comments, 'commento', 'commenti')">
             <Icon name="chat" :size="13" class="activity__icon" />
-            <span class="activity__val">{{ comments }}</span>
+            <span class="activity__val">{{ fmt(comments) }}</span>
         </span>
 
-        <span v-if="nl" class="activity__row" :title="nlTitle">
-            <ChannelIcon id="newsletter" :size="13" class="activity__icon" />
-            <span v-if="nl.campaign" class="activity__muted">Inviata</span>
+        <template v-if="nl">
+            <span v-if="nl.campaign" class="activity__row">
+                <ChannelIcon id="newsletter" :size="13" class="activity__icon" />
+                <span class="activity__muted">Inviata</span>
+            </span>
+
             <template v-else>
-                <span class="activity__val">
-                    {{ nl.sent }}<span v-if="nl.total !== null" class="activity__muted">/{{ nl.total }}</span>
+                <span class="activity__row">
+                    <ChannelIcon id="newsletter" :size="13" class="activity__icon" />
+                    <span class="activity__val">{{ fmt(nl.sent) }}</span>
+                    <span v-if="nl.total !== null" class="activity__muted">/ {{ fmt(nl.total) }}</span>
                 </span>
-                <span v-if="nl.opened" class="activity__opened">
-                    <Icon name="eye" :size="12" />{{ nl.opened }}
+
+                <span v-if="showBar" class="activity__row activity__progress">
+                    <span class="activity__bar" role="progressbar"
+                          :aria-valuenow="pct" aria-valuemin="0" aria-valuemax="100" :aria-label="nlTitle">
+                        <span class="activity__fill" :style="{ transform: `scaleX(${pct / 100})` }"></span>
+                    </span>
+                    <span class="activity__pct">{{ pct }}%</span>
+                </span>
+
+                <span v-if="delivered > 0" class="activity__row">
+                    <Icon name="eye" :size="13" class="activity__icon" />
+                    <span class="activity__val">{{ fmt(nl.opened) }}</span>
+                    <span class="activity__muted">aperte · {{ openRate }}%</span>
                 </span>
             </template>
-        </span>
-
-        <span v-if="nl?.sending && nl.total" class="activity__bar" role="progressbar"
-              :aria-valuenow="pct" aria-valuemin="0" aria-valuemax="100" :aria-label="nlTitle">
-            <span class="activity__fill" :style="{ transform: `scaleX(${pct / 100})` }"></span>
-        </span>
+        </template>
     </div>
     <span v-else class="activity__muted">—</span>
 </template>
 
 <style scoped>
-.activity{ display: inline-flex; flex-direction: column; align-items: flex-start; gap: 3px; font-variant-numeric: tabular-nums; font-size: 13px; line-height: 1.2; }
-.activity__row{ display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.activity{ display: inline-flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; min-width: 0; max-width: 150px; font-variant-numeric: tabular-nums; font-size: 13px; line-height: 1.2; }
+.activity__row{ display: flex; align-items: center; gap: 5px; max-width: 100%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .activity__icon{ color: var(--g400); flex-shrink: 0; }
 .activity__val{ color: var(--fg1); font-weight: 600; }
-.activity__muted{ color: var(--fg3); font-weight: 500; }
-.activity__opened{ display: inline-flex; align-items: center; gap: 2px; color: var(--fg2); font-size: 12px; margin-left: 2px; }
-.activity__bar{ display: block; width: 100%; min-width: 56px; height: 3px; border-radius: 2px; background: var(--g200); overflow: hidden; }
+.activity__muted{ color: var(--fg3); font-weight: 500; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+.activity__progress{ width: 100%; gap: 6px; }
+.activity__bar{ display: block; flex: 1; min-width: 40px; height: 4px; border-radius: 2px; background: var(--g200); overflow: hidden; }
 .activity__fill{ display: block; width: 100%; height: 100%; background: var(--st-sch-fg); transform-origin: left center; }
+.activity__pct{ flex-shrink: 0; min-width: 3.5ch; text-align: right; color: var(--fg2); font-size: 11.5px; font-weight: 600; }
 
 @media (max-width: 640px){
-    .activity{ align-items: flex-end; }
+    .activity{ align-items: flex-end; margin-left: auto; }
+    .activity__progress{ width: 150px; }
 }
 </style>
