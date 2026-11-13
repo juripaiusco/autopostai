@@ -43,6 +43,11 @@ class NewsletterPublisher(ChannelPublisher):
             prompt = f"{prompt} {self.post['ai_prompt_post']}"
         return prompt
 
+    def needs_content(self) -> bool:
+        """Template (del post o dell'account) senza `[content]`: email scritta per
+        intero dall'utente, il testo del post (e quindi l'LLM) non serve."""
+        return "[content]" in (self.post.get("nl_template") or "[content]")
+
     def _assemble_html(self, body_html: str) -> str:
         """Inietta l'immagine, avvolge nel template, espande gli shortcode immagine e CTA.
 

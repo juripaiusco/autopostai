@@ -63,7 +63,7 @@ class PostRepository:
                         s.nl_brevo_list_id        AS nl_brevo_list_id,
                         s.nl_brevo_from_name      AS nl_brevo_from_name,
                         s.nl_brevo_from_email     AS nl_brevo_from_email,
-                        s.nl_template             AS nl_template,
+                        COALESCE(NULLIF(p.nl_template_custom, ''), s.nl_template) AS nl_template,
                         s.nl_template_cta         AS nl_template_cta
                     FROM {posts} p
                     INNER JOIN {settings} s ON s.user_id = p.user_id
@@ -109,7 +109,7 @@ class PostRepository:
                         s.ai_personality       AS ai_personality,
                         s.ai_prompt_prefix     AS ai_prompt_prefix,
                         s.openai_api_key       AS openai_api_key,
-                        s.nl_template          AS nl_template,
+                        COALESCE(NULLIF(p.nl_template_custom, ''), s.nl_template) AS nl_template,
                         s.nl_template_cta      AS nl_template_cta,
                         s.nl_smtp_host         AS nl_smtp_host,
                         s.nl_smtp_port         AS nl_smtp_port,

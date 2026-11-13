@@ -23,6 +23,7 @@ use Illuminate\Support\Str;
     'ai_content',
     'ai_content_format',
     'ai_content_social',
+    'nl_template_custom',
     'ai_prompt_comment',
     'img',
     'img_ai_check_on',
@@ -293,7 +294,31 @@ class Post extends Model
     {
         return $this->published_at?->isFuture()
             && trim((string) $this->ai_content) === ''
-            && trim((string) $this->ai_prompt_post) !== '';
+            && trim((string) $this->ai_prompt_post) !== ''
+            && $this->needsCommonText();
+    }
+
+    /**
+     * Il template newsletter del post usa il testo del post ([content]).
+     * Senza template proprio vale quello dell'account, che lo usa.
+     */
+    public function nlUsesContent(): bool
+    {
+        $template = trim((string) $this->nl_template_custom);
+
+        return $template === '' || str_contains($template, '[content]');
+    }
+
+    /**
+     * Serve un testo del post (scritto o generato)? No solo per una newsletter
+     * da sola con template senza [content]: l'email è tutta nel template.
+     * Stessa regola del worker (NewsletterPublisher.needs_content).
+     */
+    public function needsCommonText(): bool
+    {
+        $on = array_keys(array_filter($this->channels ?? [], fn ($c) => !empty($c['on'])));
+
+        return $on !== ['newsletter'] || $this->nlUsesContent();
     }
 
     /** Modificabile solo finché nessun canale è stato pubblicato. */

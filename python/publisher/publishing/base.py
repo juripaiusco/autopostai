@@ -75,6 +75,11 @@ class ChannelPublisher(ABC):
         title, body = split_content(content, self.post.get("ai_content_format"))
         return title or (self.post.get("title") or ""), body
 
+    def needs_content(self) -> bool:
+        """True se il canale usa il testo comune del post (da generare se manca).
+        Solo la newsletter con un template senza `[content]` ne fa a meno."""
+        return True
+
     def build_prompt(self) -> str:
         """Prompt di default: le sole istruzioni dell'utente. I canali che
         richiedono un formato specifico (WordPress/Newsletter -> Markdown) fanno override."""

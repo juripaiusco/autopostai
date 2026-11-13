@@ -5,6 +5,7 @@ namespace App\Actions\Posts\Concerns;
 use App\Jobs\GeneratePostContentJob;
 use App\Models\Post;
 use App\Models\TokenLog;
+use App\Services\EmailHtmlSanitizer;
 use App\Services\PostHtmlSanitizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -92,7 +93,25 @@ trait SavesPosts
             'ai_content' => ['nullable', 'string'],
             'ai_content_format' => ['nullable', 'string', Rule::in(Post::CONTENT_FORMATS)],
             'ai_content_social' => ['nullable', 'string'],
+            'nl_template_custom' => ['nullable', 'string', 'max:500000'],
         ];
+    }
+
+    /**
+     * Template newsletter del post: pulito (EmailHtmlSanitizer), null se vuoto
+     * o se la newsletter non è fra i canali. Assente dai dati = quello attuale.
+     */
+    private function nlTemplateField(array $data, array $channels, ?Post $current = null): ?string
+    {
+        if (empty($channels['newsletter']['on'])) {
+            return null;
+        }
+
+        $template = array_key_exists('nl_template_custom', $data)
+            ? (string) $data['nl_template_custom']
+            : (string) $current?->nl_template_custom;
+
+        return trim($template) === '' ? null : app(EmailHtmlSanitizer::class)->clean($template);
     }
 
     /**

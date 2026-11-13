@@ -70,16 +70,16 @@ def _process_one(post, post_repo, contact_repo, token_repo, content_service, now
     # l'account ha esaurito i token, il post viene abbandonato senza inviare
     # (published=1 + task_complete=1, non piu' rivalutato da nessun task).
     # completed_at: senza, due_smtp_custom_posts lo ripescherebbe ogni minuto.
-    if not post.get("ai_content") and token_repo.is_over_limit(post["user_id"]):
+    publisher = NewsletterPublisher(post, url_resolver=_url_resolver(post_repo, post["user_id"]))
+    if publisher.needs_content() and not post.get("ai_content") and token_repo.is_over_limit(post["user_id"]):
         post_repo.abandon_over_limit(post["id"])
         entry.data["completed_at"] = now
         post_repo.save_channels(post["id"], channels.to_dict())
         log.info("newsletter_send: post %s abbandonato (limite token superato)", post["id"])
         return
 
-    publisher = NewsletterPublisher(post, url_resolver=_url_resolver(post_repo, post["user_id"]))
     try:
-        content = content_service.resolve(post, publisher, publisher.url_resolver)
+        content = content_service.resolve(post, publisher, publisher.url_resolver) if publisher.needs_content() else ""
         subject, html = publisher.render(content)
     except Exception:  # noqa: BLE001 — un errore di rendering non deve bloccare gli altri post
         log.exception("newsletter_send: rendering fallito per il post %s", post["id"])

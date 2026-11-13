@@ -52,19 +52,22 @@ def _send_one(post, post_repo, push_repo, token_repo, content_service, now) -> N
     # (fedele a v1). Se ai_content e' gia' presente non si spende nulla, quindi
     # nessun blocco: il controllo scattava solo dentro ai_generate, mai sul contenuto
     # gia' generato.
-    if not (post.get("ai_content") or "").strip() and token_repo.is_over_limit(post["user_id"]):
+    # Il controllo vale solo se almeno un canale usa il testo comune: una newsletter
+    # con template senza [content] non genera nulla.
+    channels = Channels.parse(post["channels"])
+    resolver = _url_resolver(post_repo, post["user_id"])
+    targets = [(entry, PUBLISHERS[entry.key](post, url_resolver=resolver)) for entry in channels.publishable()]
+    needs_text = any(publisher.needs_content() for _, publisher in targets)
+
+    if needs_text and not (post.get("ai_content") or "").strip() and token_repo.is_over_limit(post["user_id"]):
         post_repo.abandon_over_limit(post["id"])
         log.info("posts_send: post %s abbandonato (limite token superato)", post["id"])
         return
 
-    channels = Channels.parse(post["channels"])
-    resolver = _url_resolver(post_repo, post["user_id"])
-
-    for entry in channels.publishable():
-        publisher = PUBLISHERS[entry.key](post, url_resolver=resolver)
+    for entry, publisher in targets:
         log.info("posts_send: post %s canale '%s' - generazione contenuto e invio", post["id"], entry.key)
         try:
-            content = content_service.resolve(post, publisher, resolver)
+            content = content_service.resolve(post, publisher, resolver) if publisher.needs_content() else ""
             # Sui social: testo social del post, oppure l'articolo ripulito.
             content = channel_text.for_post_channel(post, channels, entry.key, content, resolver)
             result = publisher.simulate() if config.DRY_RUN else publisher.publish(content)

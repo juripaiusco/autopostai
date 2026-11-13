@@ -57,3 +57,18 @@ def test_template_without_content_placeholder_ignores_the_text(monkeypatch):
 
     assert "Corpo" not in html
     assert 'src="https://app.test/1.jpg"' in html
+
+
+def test_needs_content_only_when_template_has_the_placeholder():
+    assert NewsletterPublisher({"nl_template": None}).needs_content()
+    assert NewsletterPublisher({"nl_template": "<div>[content]</div>"}).needs_content()
+    assert not NewsletterPublisher({"nl_template": "<html><body>Tutto mio</body></html>"}).needs_content()
+
+
+def test_render_without_content_uses_the_post_title_as_subject():
+    post = {"img": None, "title": "Oggetto custom", "ai_content_format": "markdown",
+            "nl_template": "<html><body>Tutto mio</body></html>"}
+    subject, html = NewsletterPublisher(post).render("")
+
+    assert subject == "Oggetto custom"
+    assert html == "<html><body>Tutto mio</body></html>"

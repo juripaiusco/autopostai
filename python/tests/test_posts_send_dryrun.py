@@ -210,3 +210,49 @@ def test_posts_send_does_not_block_when_content_already_generated():
     finally:
         trans.rollback()
         conn.close()
+
+
+@pytest.mark.skipif(not config.DRY_RUN, reason="richiede PUBLISHER_DRY_RUN=1")
+def test_posts_send_newsletter_template_without_content_skips_text_generation():
+    """Newsletter da sola con template del post senza [content] e senza prompt:
+    esce lo stesso, senza generare (ne' mettere in cache) alcun testo."""
+    engine = get_engine()
+    conn = engine.connect()
+    trans = conn.begin()
+    try:
+        user_id = conn.execute(text("SELECT user_id FROM settings LIMIT 1")).scalar()
+
+        channels = {
+            "facebook": {"on": False},
+            "instagram": {"on": False},
+            "linkedin": {"on": False},
+            "wordpress": {"on": False},
+            "newsletter": {"on": True, "provider": "mailchimp", "list": None},
+        }
+        post_id = conn.execute(
+            text(
+                """
+                INSERT INTO posts
+                    (user_id, created_by_user_id, title, ai_prompt_post, ai_content, nl_template_custom,
+                     img, channels, preview, published, published_at, created_at, updated_at)
+                VALUES
+                    (:uid, :uid, 'Oggetto custom', NULL, NULL, '<html><body>Tutto mio</body></html>',
+                     NULL, :channels, 0, 0, DATE_SUB(NOW(), INTERVAL 5 MINUTE), NOW(), NOW())
+                """
+            ),
+            {"uid": user_id, "channels": json.dumps(channels)},
+        ).lastrowid
+
+        posts_send.run(conn)
+
+        row = conn.execute(
+            text("SELECT channels, published, ai_content FROM posts WHERE id = :id"), {"id": post_id}
+        ).mappings().first()
+        saved = json.loads(row["channels"])
+
+        assert saved["newsletter"]["id"].startswith("dry-newsletter-"), saved["newsletter"]
+        assert str(row["published"]) == "1"
+        assert row["ai_content"] is None, "nessun testo doveva essere generato"
+    finally:
+        trans.rollback()
+        conn.close()

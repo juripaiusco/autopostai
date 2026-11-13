@@ -27,7 +27,8 @@ class UpdatePost
     public static function rules(): array
     {
         return [
-            'title' => ['nullable', 'string', 'max:255'],
+            // Con un template newsletter proprio il titolo è l'oggetto dell'email.
+            'title' => ['nullable', 'required_with:nl_template_custom', 'string', 'max:255'],
             'channels' => ['required', 'array', 'min:1'],
             'ai_prompt_post' => ['nullable', 'string'],
             'ai_prompt_comment' => ['nullable', 'string'],
@@ -85,6 +86,7 @@ class UpdatePost
             'title' => $data['title'] ?? '',
             'ai_prompt_post' => $data['ai_prompt_post'] ?? null,
             ...$this->contentFields($data, $post),
+            'nl_template_custom' => $this->nlTemplateField($data, $channels, $post),
             'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
             'img' => $img,
             'img_ai_check_on' => $imgAiCheckOn,

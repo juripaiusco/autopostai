@@ -64,6 +64,9 @@ class FakePublisher:
     def __init__(self, post, url_resolver=None):
         self.post = post
 
+    def needs_content(self):
+        return True
+
     def build_prompt(self):
         return self.post.get("ai_prompt_post") or ""
 

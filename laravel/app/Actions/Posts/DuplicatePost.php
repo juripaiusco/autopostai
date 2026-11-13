@@ -73,6 +73,7 @@ class DuplicatePost
             'ai_content' => $overrides['ai_content'],
             'ai_content_format' => $overrides['ai_content_format'],
             'ai_content_social' => $overrides['ai_content_social'],
+            'nl_template_custom' => !empty($channels['newsletter']['on']) ? $post->nl_template_custom : null,
             'ai_prompt_comment' => $post->ai_prompt_comment,
             'img' => null,
             'img_ai_check_on' => $post->img_ai_check_on == '1' ? '1' : '0',

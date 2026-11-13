@@ -63,6 +63,9 @@ def _publisher(outcomes, calls):
         def __init__(self, post, url_resolver=None):
             pass
 
+        def needs_content(self):
+            return True
+
         def publish(self, content):
             calls.append(content)
             outcome = outcomes.pop(0)
