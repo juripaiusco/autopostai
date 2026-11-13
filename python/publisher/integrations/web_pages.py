@@ -13,6 +13,7 @@ raggiungono mariadb, laravel o altri servizi interni.
 from __future__ import annotations
 
 import ipaddress
+import json
 import re
 import socket
 from concurrent.futures import ThreadPoolExecutor
@@ -28,6 +29,11 @@ MAX_URLS = 5
 MAX_REDIRECTS = 3
 MAX_BYTES = 2 * 1024 * 1024
 MAX_TEXT_CHARS = 3000
+#: testo grezzo complessivo nel prompt (solo pagine senza descrizione strutturata),
+#: diviso tra le pagine: con pochi link resta MAX_TEXT_CHARS, con molti scende.
+TEXT_BUDGET = 24000
+MIN_TEXT_CHARS = 400
+MAX_DESCRIPTION_CHARS = 600
 TIMEOUT = (4, 8)  # connessione, lettura
 USER_AGENT = "Mozilla/5.0 (compatible; FaPer3/2.0; +https://faper3.it)"
 
@@ -41,6 +47,11 @@ class PageInfo:
     title: str
     text: str
     image: str | None
+    # Scheda prodotto da JSON-LD schema.org / meta product:* (se la pagina li ha).
+    description: str | None = None
+    price: str | None = None
+    availability: str | None = None
+    brand: str | None = None
 
 
 @dataclass
@@ -146,15 +157,114 @@ def parse_html(html: str, base_url: str) -> PageInfo:
     parser = _PageParser()
     parser.feed(html)
     parser.close()
-    text = re.sub(r"\s+", " ", " ".join(parser.text)).strip()
-    if len(text) > MAX_TEXT_CHARS:
-        text = text[:MAX_TEXT_CHARS].rsplit(" ", 1)[0] + "…"
-    image = parser.meta.get("og:image") or parser.meta.get("og:image:url") or parser.meta.get("twitter:image")
+    meta = parser.meta
+    product = _product_from_jsonld(parser.jsonld) or {}
+
+    text = _truncate(re.sub(r"\s+", " ", " ".join(parser.text)).strip(), MAX_TEXT_CHARS)
+    image = meta.get("og:image") or meta.get("og:image:url") or meta.get("twitter:image") or product.get("image")
     image = urljoin(base_url, image.strip()) if image else None
     if image and urlparse(image).scheme not in ("http", "https"):
         image = None
-    title = (parser.meta.get("og:title") or " ".join(parser.title)).strip()
-    return PageInfo(url=base_url, title=re.sub(r"\s+", " ", title), text=text, image=image)
+    title = (meta.get("og:title") or product.get("name") or " ".join(parser.title)).strip()
+
+    description = product.get("description") or meta.get("og:description") or meta.get("description")
+    description = _truncate(_clean(description), MAX_DESCRIPTION_CHARS) or None
+    price = product.get("price")
+    if not price and meta.get("product:price:amount"):
+        price = " ".join(filter(None, [meta["product:price:amount"], meta.get("product:price:currency")]))
+    return PageInfo(
+        url=base_url,
+        title=re.sub(r"\s+", " ", title),
+        text=text,
+        image=image,
+        description=description,
+        price=price or None,
+        availability=product.get("availability"),
+        brand=product.get("brand"),
+    )
+
+
+def _clean(value) -> str:
+    """Testo di un campo strutturato: senza tag HTML residui e spazi multipli."""
+    if not isinstance(value, str):
+        return ""
+    parser = _PageParser()
+    parser.feed(value)
+    parser.close()
+    return re.sub(r"\s+", " ", " ".join(parser.text)).strip()
+
+
+def _truncate(text: str, limit: int) -> str:
+    return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0] + "…"
+
+
+_PRODUCT_TYPES = {"product", "productgroup"}
+
+
+def _product_from_jsonld(blocks: list[str]) -> dict | None:
+    """Primo oggetto schema.org Product/ProductGroup dei blocchi ld+json:
+    nome, descrizione, marca, prezzo, disponibilita' e immagine. JSON non valido
+    o senza prodotto: None (si ripiega sui meta e sul testo)."""
+    for block in blocks:
+        try:
+            data = json.loads(block)
+        except ValueError:
+            continue
+        for node in _jsonld_nodes(data):
+            types = node.get("@type")
+            types = types if isinstance(types, list) else [types]
+            if any(isinstance(t, str) and t.lower() in _PRODUCT_TYPES for t in types):
+                return _product_fields(node)
+    return None
+
+
+def _jsonld_nodes(data):
+    """Tutti gli oggetti di un blocco: lista in testa e @graph."""
+    if isinstance(data, list):
+        for item in data:
+            yield from _jsonld_nodes(item)
+    elif isinstance(data, dict):
+        yield data
+        if "@graph" in data:
+            yield from _jsonld_nodes(data["@graph"])
+
+
+def _product_fields(node: dict) -> dict:
+    brand = node.get("brand")
+    if isinstance(brand, list):
+        brand = brand[0] if brand else None
+    if isinstance(brand, dict):
+        brand = brand.get("name")
+
+    offers = node.get("offers")
+    if isinstance(offers, list):
+        offers = offers[0] if offers else None
+    price = availability = None
+    if isinstance(offers, dict):
+        amount = offers.get("price") or offers.get("lowPrice")
+        if amount is None and isinstance(offers.get("priceSpecification"), dict):
+            amount = offers["priceSpecification"].get("price")
+        if amount not in (None, ""):
+            price = " ".join(filter(None, [str(amount), offers.get("priceCurrency")]))
+        state = str(offers.get("availability") or "").rsplit("/", 1)[-1].lower()
+        if state:
+            availability = "disponibile" if state in ("instock", "limitedavailability", "onlineonly") else (
+                "esaurito" if state in ("outofstock", "soldout", "discontinued") else None)
+
+    image = node.get("image")
+    if isinstance(image, list):
+        image = image[0] if image else None
+    if isinstance(image, dict):
+        image = image.get("url") or image.get("contentUrl")
+
+    return {
+        "name": node.get("name") if isinstance(node.get("name"), str) else None,
+        "description": node.get("description"),
+        "brand": brand if isinstance(brand, str) else None,
+        "price": price,
+        "availability": availability,
+        "image": image if isinstance(image, str) else None,
+    }
 
 
 def enrich(prompt: str) -> Enrichment:
@@ -168,6 +278,9 @@ def enrich(prompt: str) -> Enrichment:
     with ThreadPoolExecutor(max_workers=len(urls)) as pool:
         pages = list(pool.map(fetch, urls))
 
+    # Testo grezzo solo come ripiego, diviso tra le pagine: con molti link il
+    # prompt resta corto e il modello non perde pagine per strada.
+    text_chars = max(MIN_TEXT_CHARS, min(MAX_TEXT_CHARS, TEXT_BUDGET // len(urls)))
     blocks, image_paths, warnings = [], set(), []
     for url, page in zip(urls, pages):
         if isinstance(page, FetchFailure):
@@ -178,10 +291,7 @@ def enrich(prompt: str) -> Enrichment:
             continue
         if page.image:
             image_paths.add(urlparse(page.image).path)
-        lines = [f"Pagina: {url}", f"Titolo: {page.title or '(nessuno)'}"]
-        lines.append(f"Immagine: {page.image}" if page.image else "Immagine: nessuna")
-        lines.append(f"Testo: {page.text or '(vuoto)'}")
-        blocks.append("\n".join(lines))
+        blocks.append(_card(url, page, text_chars))
 
     instructions = (
         "Contenuto delle pagine indicate (letto da FaPer3, il modello non può aprire i link). "
@@ -189,9 +299,27 @@ def enrich(prompt: str) -> Enrichment:
         "Per ogni pagina che ha un'immagine, inserisci l'immagine sotto la parte che ne parla con la sintassi "
         "Markdown ![titolo](url immagine), usando l'URL indicato in \"Immagine:\". Se le istruzioni chiedono di "
         "cambiare il dominio delle immagini puoi cambiare solo il dominio, mai il percorso del file. "
-        "Non inventare mai URL di immagini e non inserire immagini per le pagine che non ne hanno."
+        "Non inventare mai URL di immagini e non inserire immagini per le pagine che non ne hanno. "
+        "Dedica una parte a ogni pagina, nell'ordine dato, senza saltarne nessuna."
     )
     return Enrichment(f"{prompt}\n\n{instructions}\n\n" + "\n\n---\n\n".join(blocks), image_paths, warnings)
+
+
+def _card(url: str, page: PageInfo, text_chars: int) -> str:
+    """Scheda compatta della pagina: dati strutturati se ci sono, altrimenti testo troncato."""
+    lines = [f"Pagina: {url}", f"Titolo: {page.title or '(nessuno)'}"]
+    if page.price:
+        lines.append("Prezzo: " + " · ".join(filter(None, [page.price, page.availability])))
+    elif page.availability:
+        lines.append(f"Disponibilità: {page.availability}")
+    if page.brand:
+        lines.append(f"Marca: {page.brand}")
+    lines.append(f"Immagine: {page.image}" if page.image else "Immagine: nessuna")
+    if page.description:
+        lines.append(f"Descrizione: {page.description}")
+    else:
+        lines.append(f"Testo: {_truncate(page.text, text_chars) or '(vuoto)'}")
+    return "\n".join(lines)
 
 
 _MD_IMAGE = re.compile(r"!\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+\"[^\"]*\")?\s*\)")
@@ -236,8 +364,11 @@ class _PageParser(HTMLParser):
         self.meta: dict[str, str] = {}
         self.title: list[str] = []
         self.text: list[str] = []
+        #: contenuto dei <script type="application/ld+json"> (dati schema.org)
+        self.jsonld: list[str] = []
         self._skip = 0
         self._in_title = False
+        self._in_jsonld = False
 
     def handle_starttag(self, tag, attrs):
         if tag == "meta":
@@ -249,15 +380,24 @@ class _PageParser(HTMLParser):
             self._in_title = True
         elif tag in _SKIP_TAGS:
             self._skip += 1
+            if tag == "script" and (dict(attrs).get("type") or "").lower().strip() == "application/ld+json":
+                self._in_jsonld = True
+                self.jsonld.append("")
 
     def handle_endtag(self, tag):
         if tag == "title":
             self._in_title = False
+        elif tag == "script" and self._in_jsonld:
+            self._in_jsonld = False
+            if self._skip:
+                self._skip -= 1
         elif tag in _SKIP_TAGS and self._skip:
             self._skip -= 1
 
     def handle_data(self, data):
-        if self._in_title:
+        if self._in_jsonld:
+            self.jsonld[-1] += data
+        elif self._in_title:
             self.title.append(data)
         elif not self._skip:
             self.text.append(data)

@@ -132,6 +132,80 @@ def test_text_is_truncated():
     assert len(page.text) <= web_pages.MAX_TEXT_CHARS + 1
 
 
+PRODUCT_PAGE = """<html><head><title>Trail X | Shop</title>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [
+  {"@type": "BreadcrumbList", "name": "briciole"},
+  {"@type": ["Product"], "name": "Scarpa Trail X", "description": "<p>Suola <b>Vibram</b>, 280 g.</p>",
+   "brand": {"@type": "Brand", "name": "Montura"},
+   "image": [{"@type": "ImageObject", "url": "https://shop.example/img/ld.jpg"}],
+   "offers": {"@type": "AggregateOffer", "lowPrice": "129.90", "priceCurrency": "EUR",
+              "availability": "https://schema.org/InStock"}}]}</script>
+</head><body><p>Recensioni, prodotti correlati, cookie...</p></body></html>"""
+
+
+def test_product_card_from_jsonld_graph():
+    page = web_pages.parse_html(PRODUCT_PAGE, "https://shop.example/p")
+
+    assert page.title == "Scarpa Trail X"
+    assert page.description == "Suola Vibram , 280 g."
+    assert (page.price, page.availability, page.brand) == ("129.90 EUR", "disponibile", "Montura")
+    assert page.image == "https://shop.example/img/ld.jpg"
+    assert "@graph" not in page.text
+
+
+def test_og_image_wins_over_jsonld_image():
+    html = PRODUCT_PAGE.replace("</head>", '<meta property="og:image" content="/img/og.jpg"></head>')
+    assert web_pages.parse_html(html, "https://shop.example/p").image == "https://shop.example/img/og.jpg"
+
+
+def test_invalid_jsonld_is_ignored_and_meta_price_is_used():
+    html = """<html><head><title>Casco</title>
+    <script type="application/ld+json">{non valido</script>
+    <meta property="product:price:amount" content="59.00"><meta property="product:price:currency" content="EUR">
+    <meta name="description" content="Casco leggero"></head><body>testo</body></html>"""
+    page = web_pages.parse_html(html, "https://shop.example/c")
+
+    assert (page.price, page.description, page.title) == ("59.00 EUR", "Casco leggero", "Casco")
+
+
+def test_offer_list_out_of_stock():
+    html = """<script type="application/ld+json">[{"@type": "Product", "name": "Tenda",
+      "offers": [{"@type": "Offer", "price": 89, "priceCurrency": "EUR",
+                  "availability": "http://schema.org/OutOfStock"}], "image": "/t.jpg"}]</script>"""
+    page = web_pages.parse_html(html, "https://shop.example/t")
+
+    assert (page.price, page.availability, page.image) == ("89 EUR", "esaurito", "https://shop.example/t.jpg")
+
+
+def test_card_uses_description_instead_of_raw_text(web):
+    routes, _ = web
+    routes["https://shop.example/p"] = lambda: _response(body=PRODUCT_PAGE)
+
+    prompt = web_pages.enrich("Newsletter su https://shop.example/p").prompt
+
+    assert "Prezzo: 129.90 EUR · disponibile" in prompt
+    assert "Marca: Montura" in prompt
+    assert "Descrizione: Suola Vibram" in prompt
+    assert "Testo:" not in prompt and "Recensioni" not in prompt
+    assert "senza saltarne nessuna" in prompt
+
+
+def test_raw_text_budget_shrinks_with_many_pages(monkeypatch):
+    long_page = web_pages.PageInfo(url="", title="T", text="parola " * 1000, image=None)
+    monkeypatch.setattr(web_pages, "fetch", lambda url: long_page)
+    monkeypatch.setattr(web_pages, "MAX_URLS", 30)
+
+    def text_lengths(n):
+        prompt = web_pages.enrich(" ".join(f"https://shop.example/{i}" for i in range(n))).prompt
+        return [len(part.split("\n")[0]) for part in prompt.split("Testo: ")[1:]]
+
+    assert 2900 < text_lengths(1)[0] <= web_pages.MAX_TEXT_CHARS + 1  # pochi link: limite pieno
+    many = text_lengths(30)
+    assert len(many) == 30
+    assert max(many) <= web_pages.TEXT_BUDGET // 30 + 1
+    assert sum(many) <= web_pages.TEXT_BUDGET + 30
+
+
 def test_prompt_without_urls_is_unchanged(monkeypatch):
     monkeypatch.setattr(http, "get", lambda *a, **k: pytest.fail("nessuna chiamata di rete attesa"))
     result = web_pages.enrich("Parla della pizza")

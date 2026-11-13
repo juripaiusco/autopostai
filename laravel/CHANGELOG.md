@@ -5,6 +5,9 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ## [Non rilasciato]
 
+### Miglioramenti
+- Newsletter e articoli WordPress: dai link dei prodotti nel prompt FaPer3 prende nome, prezzo, disponibilità, marca e descrizione dalla scheda del prodotto, invece di tutto il testo della pagina. Anche con molti link il testo resta preciso.
+
 ## [2.2.0] — 2026-11-13
 
 ### Novità
