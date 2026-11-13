@@ -37,7 +37,7 @@ class PublishPostNow extends Tool
         if ($channels === []) {
             throw ValidationException::withMessages(['post_id' => 'Il post non ha canali attivi.']);
         }
-        if (blank($post->ai_content) && blank($post->ai_prompt_post)) {
+        if ($post->needsCommonText() && blank($post->ai_content) && blank($post->ai_prompt_post)) {
             throw ValidationException::withMessages(['post_id' => 'Il post non ha né testo né prompt: aggiungili con update_post.']);
         }
         $this->ensureInstagramHasImages($channels, count($post->img ?? []));

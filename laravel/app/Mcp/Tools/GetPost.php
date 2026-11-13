@@ -55,6 +55,7 @@ class GetPost extends Tool
             'ai_content' => $post->ai_content,
             'ai_content_format' => $post->ai_content_format,
             'ai_content_social' => $post->ai_content_social,
+            'newsletter_html' => $post->nl_template_custom,
             'ai_looks_at_image' => $post->img_ai_check_on == '1',
             'images' => collect($post->img ?? [])
                 ->map(fn ($f) => ['filename' => $f, 'url' => Storage::disk('public')->url("posts/{$post->id}/{$f}")])

@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\User;
 use App\Services\EmailHtmlSanitizer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -31,7 +32,7 @@ class PostNewsletterTemplateTest extends TestCase
         ]);
     }
 
-    private function store(User $user, array $data): \Illuminate\Testing\TestResponse
+    private function store(User $user, array $data): TestResponse
     {
         return $this->actingAs($user)->post(route('posts.store'), [
             'channels' => ['newsletter' => []],

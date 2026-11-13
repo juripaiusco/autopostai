@@ -394,3 +394,62 @@ it('offers the planning prompt only to tokens that can write', function () {
     FaPer3Server::actingAs(withMcp($user->fresh(), 'write'))->prompt(PianificaSeriePost::class, ['tema' => 'Menu autunnale', 'periodo' => '2 settimane'])
         ->assertOk()->assertSee(['Menu autunnale', 'create_post']);
 });
+
+it('create_post schedules a newsletter made only of custom html without text or prompt', function () {
+    $user = smtpNewsletterWriter();
+    $html = '<html><body><p>Solo mio</p><script>x()</script></body></html>';
+
+    FaPer3Server::actingAs(withMcp($user, 'write'))->tool(CreatePost::class, [
+        'title' => 'Oggetto custom',
+        'channels' => ['newsletter' => []],
+        'newsletter_html' => $html,
+        'published_at' => now()->addDays(2)->toIso8601String(),
+    ])->assertOk()->assertSee('"text_queued":false');
+
+    $post = Post::where('title', 'Oggetto custom')->firstOrFail();
+    expect($post->nl_template_custom)->toContain('<p>Solo mio</p>')->not->toContain('script');
+    Bus::assertNotDispatched(GeneratePostContentJob::class);
+});
+
+it('create_post requires the subject for custom html without [content]', function () {
+    $user = smtpNewsletterWriter();
+
+    FaPer3Server::actingAs(withMcp($user, 'write'))->tool(CreatePost::class, [
+        'channels' => ['newsletter' => []],
+        'newsletter_html' => '<p>Solo mio</p>',
+    ])->assertHasErrors();
+
+    expect(Post::count())->toBe(0);
+});
+
+it('update_post sets and clears the newsletter html', function () {
+    $user = smtpNewsletterWriter();
+    $post = mcpPost($user, ['channels' => ['newsletter' => ['on' => true]], 'ai_content' => '# Titolo']);
+
+    FaPer3Server::actingAs(withMcp($user, 'write'))->tool(UpdatePost::class, [
+        'post_id' => $post->id,
+        'newsletter_html' => '<div>[content]</div>',
+    ])->assertOk();
+    expect($post->fresh()->nl_template_custom)->toBe('<div>[content]</div>');
+
+    FaPer3Server::actingAs(withMcp($user->fresh(), 'write'))->tool(UpdatePost::class, [
+        'post_id' => $post->id,
+        'title' => 'Altro',
+    ])->assertOk();
+    expect($post->fresh()->nl_template_custom)->toBe('<div>[content]</div>');
+
+    FaPer3Server::actingAs(withMcp($user->fresh(), 'write'))->tool(UpdatePost::class, [
+        'post_id' => $post->id,
+        'newsletter_html' => null,
+    ])->assertOk();
+    expect($post->fresh()->nl_template_custom)->toBeNull();
+});
+
+/** Utente con la sola newsletter, provider SMTP (nessuna lista esterna da scegliere). */
+function smtpNewsletterWriter(): User
+{
+    $user = mcpWriter(['newsletter']);
+    $user->settings->update(['nl_smtp_host' => 'smtp.example.test']);
+
+    return $user->fresh();
+}

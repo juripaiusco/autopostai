@@ -38,6 +38,7 @@ class CreatePost extends Tool
             'ai_prompt_post' => ['nullable', 'string', 'max:10000'],
             'ai_content' => ['nullable', 'string', 'max:60000'],
             'ai_content_social' => ['nullable', 'string', 'max:60000'],
+            'newsletter_html' => ['nullable', 'string', 'max:500000'],
             'ai_prompt_comment' => ['nullable', 'string', 'max:5000'],
             'published_at' => $this->publishedAtRules(),
             'archive_images' => ['nullable', 'array', 'max:'.self::MAX_IMAGES],
@@ -56,7 +57,12 @@ class CreatePost extends Tool
             throw ValidationException::withMessages(['account_id' => 'Indica account_id: il post va creato per uno degli account che gestisci (vedi whoami).']);
         }
 
-        if (!empty($data['published_at']) && blank($data['ai_prompt_post'] ?? null) && blank($data['ai_content'] ?? null)) {
+        $needsText = (new Post([
+            'channels' => array_map(fn () => ['on' => true], $data['channels']),
+            'nl_template_custom' => $data['newsletter_html'] ?? null,
+        ]))->needsCommonText();
+
+        if ($needsText && !empty($data['published_at']) && blank($data['ai_prompt_post'] ?? null) && blank($data['ai_content'] ?? null)) {
             throw ValidationException::withMessages(['ai_content' => 'Un post programmato ha bisogno di ai_content o di ai_prompt_post.']);
         }
 
@@ -72,6 +78,7 @@ class CreatePost extends Tool
             'ai_content' => $data['ai_content'] ?? null,
             'ai_content_format' => Post::FORMAT_MARKDOWN,
             'ai_content_social' => $data['ai_content_social'] ?? null,
+            'nl_template_custom' => $data['newsletter_html'] ?? null,
             'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
             'img_ai_check_on' => $data['ai_looks_at_image'] ?? false,
             'published_at' => $data['published_at'] ?? null,
@@ -91,6 +98,7 @@ class CreatePost extends Tool
             'ai_prompt_post' => $schema->string()->description('Istruzioni per l\'AI che scrive il testo.'),
             'ai_content' => $schema->string()->description('Testo definitivo del post. Markdown con titolo `#` se WordPress o newsletter sono accesi, testo semplice per i soli social.'),
             'ai_content_social' => $schema->string()->description('Solo con WordPress/newsletter accesi: testo semplice (niente Markdown) per Facebook, Instagram e LinkedIn. Ometti per usare l\'articolo ripulito.'),
+            'newsletter_html' => $schema->string()->description('HTML completo dell\'email (solo con la newsletter accesa): sostituisce il modello newsletter dell\'account. Shortcode: [content] = testo del post (ai_content), [image N] = immagine N del post, [cta url="…" text="…"], [unsubscribe]. Senza [content] l\'email è solo questo HTML: con la sola newsletter l\'AI non scrive nulla e title (obbligatorio) è l\'oggetto.'),
             'ai_prompt_comment' => $schema->string()->description('Istruzioni per le risposte automatiche ai commenti.'),
             'published_at' => $schema->string()->format('date-time')->description('Data/ora di uscita futura (ISO 8601). Ometti per una bozza.'),
             'archive_images' => $schema->array()->items($schema->string())->max(self::MAX_IMAGES)->description('Filename da list_image_archive o get_image_job.'),

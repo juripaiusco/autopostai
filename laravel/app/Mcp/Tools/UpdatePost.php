@@ -34,6 +34,7 @@ class UpdatePost extends Tool
             'ai_prompt_post' => ['sometimes', 'nullable', 'string', 'max:10000'],
             'ai_content' => ['sometimes', 'nullable', 'string', 'max:60000'],
             'ai_content_social' => ['sometimes', 'nullable', 'string', 'max:60000'],
+            'newsletter_html' => ['sometimes', 'nullable', 'string', 'max:500000'],
             'ai_prompt_comment' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'published_at' => ['sometimes', ...$this->publishedAtRules()],
             'archive_images' => ['nullable', 'array', 'max:'.self::MAX_IMAGES],
@@ -72,6 +73,7 @@ class UpdatePost extends Tool
             // Un testo nuovo via MCP è Markdown; omesso resta il formato attuale.
             'ai_content_format' => array_key_exists('ai_content', $data) ? Post::FORMAT_MARKDOWN : $post->ai_content_format,
             'ai_content_social' => $field('ai_content_social', $post->ai_content_social),
+            'nl_template_custom' => $field('newsletter_html', $post->nl_template_custom),
             'ai_prompt_comment' => $field('ai_prompt_comment', $post->ai_prompt_comment),
             'img_ai_check_on' => $field('ai_looks_at_image', $post->img_ai_check_on == '1'),
             'published_at' => $field('published_at', $post->published_at),
@@ -91,6 +93,7 @@ class UpdatePost extends Tool
             'ai_prompt_post' => $schema->string(),
             'ai_content' => $schema->string()->description('Testo definitivo (Markdown con titolo `#` per WordPress/newsletter, shortcode come in create_post). Svuotalo (stringa vuota) per farlo rigenerare dall\'AI dal prompt.'),
             'ai_content_social' => $schema->string()->nullable()->description('Testo semplice per i social quando ci sono anche WordPress/newsletter. Stringa vuota = torna all\'articolo ripulito.'),
+            'newsletter_html' => $schema->string()->nullable()->description('HTML personalizzato dell\'email (vedi create_post). Stringa vuota o null = torna al modello dell\'account.'),
             'ai_prompt_comment' => $schema->string(),
             'published_at' => $schema->string()->format('date-time')->nullable()->description('Data futura (ISO 8601), oppure null per tornare a bozza.'),
             'archive_images' => $schema->array()->items($schema->string())->max(self::MAX_IMAGES)->description('Immagini d\'archivio da aggiungere.'),
