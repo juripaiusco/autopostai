@@ -25,7 +25,9 @@ import requests
 
 from publisher.integrations import http
 
-MAX_URLS = 5
+MAX_URLS = 30
+#: letture in parallelo (con 30 link: 4 giri da al massimo ~12 s)
+MAX_WORKERS = 8
 MAX_REDIRECTS = 3
 MAX_BYTES = 2 * 1024 * 1024
 MAX_TEXT_CHARS = 3000
@@ -71,12 +73,16 @@ class Enrichment:
 
 def extract_urls(prompt: str) -> list[str]:
     """URL http/https del prompt, senza duplicati, al massimo MAX_URLS."""
+    return _all_urls(prompt)[:MAX_URLS]
+
+
+def _all_urls(prompt: str) -> list[str]:
     urls: list[str] = []
     for match in _URL.finditer(prompt or ""):
         url = match.group(0).rstrip(".,;:!?")
         if url not in urls:
             urls.append(url)
-    return urls[:MAX_URLS]
+    return urls
 
 
 def is_public_url(url: str) -> bool:
@@ -271,11 +277,12 @@ def enrich(prompt: str) -> Enrichment:
     """Aggiunge al prompt il contenuto delle pagine citate. Senza URL il prompt
     resta invariato e non parte nessuna chiamata di rete (image_paths None:
     nessun controllo sulle immagini del testo generato)."""
-    urls = extract_urls(prompt)
-    if not urls:
+    found = _all_urls(prompt)
+    if not found:
         return Enrichment(prompt, None, [])
+    urls, skipped = found[:MAX_URLS], found[MAX_URLS:]
 
-    with ThreadPoolExecutor(max_workers=len(urls)) as pool:
+    with ThreadPoolExecutor(max_workers=min(len(urls), MAX_WORKERS)) as pool:
         pages = list(pool.map(fetch, urls))
 
     # Testo grezzo solo come ripiego, diviso tra le pagine: con molti link il
@@ -292,6 +299,17 @@ def enrich(prompt: str) -> Enrichment:
         if page.image:
             image_paths.add(urlparse(page.image).path)
         blocks.append(_card(url, page, text_chars))
+
+    # Oltre il limite: il modello vede comunque l'URL nel prompt, quindi va detto
+    # che non e' stato letto, altrimenti ne inventa il contenuto.
+    for url in skipped:
+        blocks.append(f"Pagina: {url}\nNon letta (oltre il limite di {MAX_URLS} link): non inventare dati su questa "
+                      "pagina e non inserire immagini per questa pagina.")
+    if skipped:
+        warnings.append(f"Lette solo le prime {MAX_URLS} pagine indicate: "
+                        + (f"ignorata {_short(skipped[0])}." if len(skipped) == 1
+                           else f"ignorate le altre {len(skipped)} ({_short(skipped[0])} e seguenti).")
+                        + " Dividi i link in più post o riducili.")
 
     instructions = (
         "Contenuto delle pagine indicate (letto da FaPer3, il modello non può aprire i link). "

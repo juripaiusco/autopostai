@@ -69,7 +69,7 @@ def test_extract_urls_dedupes_strips_punctuation_and_caps():
     prompt = "Vedi https://shop.example/a, poi https://shop.example/a e (http://altro.example/b)."
     assert web_pages.extract_urls(prompt) == ["https://shop.example/a", "http://altro.example/b"]
 
-    many = " ".join(f"https://shop.example/{i}" for i in range(9))
+    many = " ".join(f"https://shop.example/{i}" for i in range(web_pages.MAX_URLS + 4))
     assert len(web_pages.extract_urls(many)) == web_pages.MAX_URLS
 
 
@@ -204,6 +204,51 @@ def test_raw_text_budget_shrinks_with_many_pages(monkeypatch):
     assert len(many) == 30
     assert max(many) <= web_pages.TEXT_BUDGET // 30 + 1
     assert sum(many) <= web_pages.TEXT_BUDGET + 30
+
+
+def test_links_over_the_limit_are_not_fetched_and_are_reported(monkeypatch):
+    fetched = []
+
+    def fake_fetch(url):
+        fetched.append(url)
+        return web_pages.PageInfo(url=url, title="T", text="", image=None, description="D")
+
+    monkeypatch.setattr(web_pages, "fetch", fake_fetch)
+    urls = [f"https://shop.example/{i}" for i in range(web_pages.MAX_URLS + 2)]
+
+    result = web_pages.enrich("Prodotti: " + " ".join(urls))
+
+    assert fetched == urls[:web_pages.MAX_URLS]
+    assert f"Pagina: {urls[-1]}\nNon letta (oltre il limite" in result.prompt
+    assert result.warnings == [
+        f"Lette solo le prime {web_pages.MAX_URLS} pagine indicate: ignorate le altre 2 "
+        f"(shop.example/{web_pages.MAX_URLS} e seguenti). Dividi i link in più post o riducili."
+    ]
+
+
+def test_fetches_run_in_a_bounded_pool(monkeypatch):
+    sizes = []
+
+    class FakePool:
+        def __init__(self, max_workers):
+            sizes.append(max_workers)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def map(self, fn, items):
+            return map(fn, items)
+
+    monkeypatch.setattr(web_pages, "ThreadPoolExecutor", FakePool)
+    monkeypatch.setattr(web_pages, "fetch", lambda url: web_pages.FetchFailure(url, "x"))
+
+    web_pages.enrich(" ".join(f"https://shop.example/{i}" for i in range(20)))
+    web_pages.enrich("https://shop.example/a https://shop.example/b")
+
+    assert sizes == [web_pages.MAX_WORKERS, 2]
 
 
 def test_prompt_without_urls_is_unchanged(monkeypatch):

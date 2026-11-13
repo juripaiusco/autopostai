@@ -59,7 +59,8 @@ APP_KEY = _env("APP_KEY")
 OPENAI_MODEL = _env("OPENAI_MODEL", "gpt-4o-mini")
 OPENAI_BASE_URL = _env("OPENAI_API_URL")  # None => default SDK ufficiale
 # Default SDK: 600s x 3 tentativi, troppo per un run al minuto con lock.
-OPENAI_TIMEOUT = float(_env("OPENAI_TIMEOUT", "90"))
+# 150s: newsletter/WordPress con molti link (fino a 30 prodotti) = risposta lunga.
+OPENAI_TIMEOUT = float(_env("OPENAI_TIMEOUT", "150"))
 OPENAI_MAX_RETRIES = int(_env("OPENAI_MAX_RETRIES", "1"))
 
 # --- HTTP verso i provider (integrations/http.py) --------------------------

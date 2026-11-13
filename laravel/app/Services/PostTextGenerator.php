@@ -14,6 +14,9 @@ use RuntimeException;
  */
 class PostTextGenerator
 {
+    /** Secondi di attesa del servizio Python (lettura link + generazione). */
+    private const TIMEOUT = 180;
+
     /**
      * $channels: canali accesi sul post, per il limite di caratteri (LinkedIn)
      * che il servizio Python aggiunge al prompt. $sourceText: testo
@@ -30,8 +33,12 @@ class PostTextGenerator
      */
     public function generate(Settings $settings, string $prompt, ?string $channel, array $channels = [], ?string $sourceText = null): array
     {
+        // Con molti link nel prompt (fino a 30 pagine lette dal servizio Python)
+        // lettura + generazione possono superare il minuto.
+        @set_time_limit(self::TIMEOUT + 30);
+
         try {
-            $response = Http::timeout(60)->post(config('services.python.url').'/generate-text', [
+            $response = Http::timeout(self::TIMEOUT)->post(config('services.python.url').'/generate-text', [
                 'ai_prompt_post' => $prompt,
                 'channel' => $channel,
                 'channels' => array_values($channels),
