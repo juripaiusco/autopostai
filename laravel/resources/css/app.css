@@ -537,7 +537,7 @@ a.notif-item:hover{ background: var(--g50); }
     .sidebar .sb-link{ font-size: 15.5px; padding: 15px 20px; border-radius: 0; border-bottom: 1px solid var(--g100); }
     .sidebar .sb-foot{ margin-top: auto; padding: 8px 14px calc(16px + env(safe-area-inset-bottom, 0px)); border-top: none; background: #fff; flex-shrink: 0; }
     .sidebar .sb-credits{ display: none; }
-    .app-foot{ display: none; }
+    .app-foot{ padding: 0 14px 14px; text-align: center; }
     .sidebar-overlay{ display: none !important; }
 
     .topbar-search{ display: none; }
@@ -553,7 +553,7 @@ a.notif-item:hover{ background: var(--g50); }
     .dash-grid{ grid-template-columns: 1fr !important; }
     .dash-head{ flex-direction: column; align-items: flex-start; gap: 10px; }
     .dash-head h1{ font-size: 28px !important; }
-    .app.has-sidebar .container{ padding: 20px 14px 60px !important; }
+    .app.has-sidebar .container{ padding: 20px 14px 24px !important; }
 
     .stat{ padding: 12px 14px; }
     .stat-header{ margin-bottom: 10px; }

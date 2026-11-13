@@ -10,6 +10,9 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 - Newsletter e articoli WordPress leggono fino a 30 link del prompt (prima 5). Se ne inserisci di più, l'anteprima ti avvisa quali sono stati ignorati.
 - Nella lista post, nei post recenti della Dashboard e nel dettaglio del post le icone dei canali aprono in una nuova scheda il post pubblicato su quel canale.
 
+### Correzioni
+- Su smartphone la versione dell'app torna visibile in fondo alla pagina.
+
 ## [2.2.0] — 2026-11-13
 
 ### Novità
