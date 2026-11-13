@@ -5,6 +5,8 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ## [Non rilasciato]
 
+## [2.3.0] — 2026-11-13
+
 ### Novità
 - Su smartphone una barra fissa in basso porta a Dashboard, Posts e Nuovo post con un tocco, come in un'app.
 - Su smartphone trascinando la pagina verso il basso quando sei in cima si aggiornano i dati, come nelle app.
