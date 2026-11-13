@@ -5,6 +5,9 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ## [Non rilasciato]
 
+### Novità
+- Su smartphone una barra fissa in basso porta a Dashboard, Posts e Nuovo post con un tocco, come in un'app.
+
 ### Miglioramenti
 - Newsletter e articoli WordPress: dai link dei prodotti nel prompt FaPer3 prende nome, prezzo, disponibilità, marca e descrizione dalla scheda del prodotto, invece di tutto il testo della pagina. Anche con molti link il testo resta preciso.
 - Newsletter e articoli WordPress leggono fino a 30 link del prompt (prima 5). Se ne inserisci di più, l'anteprima ti avvisa quali sono stati ignorati.

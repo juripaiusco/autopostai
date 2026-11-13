@@ -7,6 +7,7 @@ import GlobalSearch from '@/Components/GlobalSearch.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import ScopeSelector from '@/Components/ScopeSelector.vue';
 import ScopeContextBar from '@/Components/ScopeContextBar.vue';
+import MobileTabBar from '@/Components/Layout/MobileTabBar.vue';
 import { useUserScope } from '@/Composables/useUserScope';
 
 // Asset statico servito da public/ — niente trasformazione asset di Vite
@@ -109,6 +110,8 @@ watch(
                 <footer v-if="appVersion" class="app-foot">FaPer3 - v.{{ appVersion }}</footer>
             </main>
         </div>
+
+        <MobileTabBar :current="current" @navigate="sidebarOpen = false" />
 
         <Teleport to="body">
             <div v-if="toast" class="acc-toast">

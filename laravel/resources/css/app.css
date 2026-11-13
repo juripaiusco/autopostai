@@ -416,6 +416,10 @@ a.ch-chip:focus-visible{ outline: 2px solid var(--ch-hue, var(--g500)); outline-
 .app.has-sidebar .main-col main > .container{ flex: 1 0 auto; }
 .app-foot{ padding: 0 30px 14px; text-align: right; font-size: 9.5px; color: var(--g400); }
 
+/* Tab bar mobile (MobileTabBar.vue): fuori dal mobile non esiste e non occupa spazio. */
+:root{ --tabbar-h: 0px; }
+.tabbar{ display: none; }
+
 .topbar{ height: 62px; background: #fff; border-bottom: 1px solid var(--g200); display: flex; align-items: center; gap: 16px; padding: 0 24px; position: sticky; top: 0; z-index: 20; }
 .topbar-search{ position: relative; flex: 1; max-width: 420px; display: flex; align-items: center; gap: 10px; background: var(--g100); border-radius: 9999px; padding: 9px 16px; color: var(--g400); }
 .topbar-search input{ border: none; background: none; outline: none; font-family: var(--font-ui); font-size: 14px; color: var(--ink); width: 100%; }
@@ -539,6 +543,33 @@ a.notif-item:hover{ background: var(--g50); }
     .sidebar .sb-credits{ display: none; }
     .app-foot{ padding: 0 14px 14px; text-align: center; }
     .sidebar-overlay{ display: none !important; }
+
+    /* Tab bar fissa in basso: il contenuto, il menu aperto e i toast le stanno sopra. */
+    :root{ --tabbar-h: calc(62px + env(safe-area-inset-bottom, 0px)); }
+    .app.has-sidebar .main-col main{ padding-bottom: var(--tabbar-h); }
+    .sidebar{ height: calc(100dvh - 62px - var(--tabbar-h)); }
+    html .acc-toast{ bottom: calc(var(--tabbar-h) + 16px); }
+    .tabbar{
+        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 42;
+        height: var(--tabbar-h); padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: rgba(255,255,255,.96); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+        border-top: 1px solid var(--g200); box-shadow: 0 -4px 16px rgba(0,0,0,.04);
+    }
+    .tabbar .tab{
+        flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+        font-size: 11px; font-weight: 500; color: var(--g400); text-decoration: none;
+        -webkit-tap-highlight-color: transparent; transition: color .15s ease, transform .1s ease;
+    }
+    .tabbar .tab:active{ transform: scale(.94); }
+    .tabbar .tab.active{ color: var(--sky-strong); font-weight: 600; }
+    .tabbar .tab-new{ justify-content: flex-end; padding-bottom: 7px; }
+    .tabbar .tab-new-btn{
+        width: 54px; height: 54px; margin-top: -26px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--ink); color: #fff; border: 4px solid #fff;
+        box-shadow: 0 6px 16px rgba(31,41,55,.28);
+    }
+    .tabbar .tab-new.active .tab-new-btn{ background: var(--sky-strong); }
 
     .topbar-search{ display: none; }
     .tb-logo-link{ display: flex; }
