@@ -27,8 +27,7 @@ class UpdatePost
     public static function rules(): array
     {
         return [
-            // Con un template newsletter proprio il titolo è l'oggetto dell'email.
-            'title' => ['nullable', 'required_with:nl_template_custom', 'string', 'max:255'],
+            'title' => ['nullable', 'string', 'max:255'],
             'channels' => ['required', 'array', 'min:1'],
             'ai_prompt_post' => ['nullable', 'string'],
             'ai_prompt_comment' => ['nullable', 'string'],
@@ -68,6 +67,8 @@ class UpdatePost
             $post->fresh()->channels ?? [],
         );
         [$commentsEnabled, $autoReplyEnabled] = $this->channels->commentsAggregate($channels);
+        // Prima di toccare le immagini: può fallire la validazione (oggetto mancante).
+        $nlTemplate = $this->nlTemplateField($data, $channels, $post);
 
         $existing = $post->img ?? [];
         $kept = array_values(array_filter($keepImages ?? $existing, fn ($f) => in_array($f, $existing, true)));
@@ -86,7 +87,7 @@ class UpdatePost
             'title' => $data['title'] ?? '',
             'ai_prompt_post' => $data['ai_prompt_post'] ?? null,
             ...$this->contentFields($data, $post),
-            'nl_template_custom' => $this->nlTemplateField($data, $channels, $post),
+            'nl_template_custom' => $nlTemplate,
             'ai_prompt_comment' => $data['ai_prompt_comment'] ?? null,
             'img' => $img,
             'img_ai_check_on' => $imgAiCheckOn,

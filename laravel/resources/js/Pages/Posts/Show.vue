@@ -18,6 +18,9 @@ import { useTokenUnit } from '@/Composables/useTokenUnit';
 
 const { formatTokens, unitTitle, withUnit } = useTokenUnit();
 
+import NewsletterPreview from '@/Components/Posts/NewsletterPreview.vue';
+import { renderNewsletterPreview, usesContent } from '@/lib/newsletterTemplate.js';
+
 const props = defineProps({
     post: { type: Object, required: true },
     comments: { type: Array, required: true },
@@ -27,6 +30,15 @@ const userName = computed(() => usePage().props.auth?.user?.name ?? '');
 
 const filter = ref('all');
 const showFullContent = ref(false);
+
+// Email con HTML personalizzato: template + testo (senza titolo, che è l'oggetto) + immagini.
+const nlPreviewHtml = computed(() => (props.post.nlTemplateCustom
+    ? renderNewsletterPreview(
+        props.post.nlTemplateCustom,
+        usesContent(props.post.nlTemplateCustom) ? splitArticle(props.post.aiContentHtml ?? '').body : '',
+        (props.post.images ?? []).map((i) => i.url),
+    )
+    : ''));
 
 const filterTabs = computed(() => [
     { id: 'all', label: 'Tutti', count: props.post.commentsTotal },
@@ -286,7 +298,7 @@ function confirmDelete() {
                 </div>
             </div>
 
-            <div class="card card-pad">
+            <div v-if="post.aiContent || !post.nlTemplateCustom" class="card card-pad">
                 <div class="ps-card-head ps-card-head--between">
                     <div class="ps-card-head">
                         <span class="ps-card-icon ps-card-icon--sky"><Icon name="sparkles" :size="14" /></span>
@@ -302,6 +314,15 @@ function confirmDelete() {
                     <Icon name="chevron" :size="13" :style="{ transform: showFullContent ? 'rotate(180deg)' : 'rotate(0)' }" />
                 </button>
             </div>
+        </div>
+
+        <!-- Newsletter con HTML personalizzato: solo in iframe sandbox, mai v-html -->
+        <div v-if="post.nlTemplateCustom" class="card card-pad" style="margin-top:16px">
+            <div class="ps-card-head">
+                <span class="ps-card-icon ps-card-icon--sky"><ChannelIcon id="newsletter" :size="14" /></span>
+                <span class="ps-card-title">Email newsletter (HTML personalizzato)</span>
+            </div>
+            <NewsletterPreview :html="nlPreviewHtml" :height="640" />
         </div>
 
         <!-- Commenti -->

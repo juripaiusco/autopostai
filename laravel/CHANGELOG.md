@@ -15,6 +15,7 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 - Nel dettaglio del post la scheda Newsletter mostra destinatari, email inviate e da inviare, aperture, tasso di apertura e rimbalzi, con l'avanzamento dell'invio.
 - Nel dettaglio del post, i «Risultati complessivi» contano le email aperte come views e quelle consegnate come persone raggiunte.
 - Nel template della newsletter puoi posizionare le immagini del post dove vuoi con `[image 1]`, `[image 2]`…
+- Per una singola newsletter puoi incollare il tuo HTML al posto del modello dell'account, con l'anteprima dell'email prima di salvare. Senza `[content]` l'email è solo il tuo HTML e l'AI non scrive nulla.
 
 ### Miglioramenti
 - Anche i post recenti della Dashboard mostrano la colonna «Attività» (commenti, invii e aperture newsletter) e lo stato «In invio».

@@ -81,6 +81,8 @@ function buildForm() {
             ai_content: props.post.ai_content ?? '',
             ai_content_format: props.post.ai_content_format ?? 'markdown',
             ai_content_social: props.post.ai_content_social ?? null,
+            // null = template newsletter dell'account
+            nl_template_custom: props.post.nl_template_custom ?? null,
             existingImages: (props.post.images ?? []).map((i) => ({ filename: i.filename, url: i.url })),
             newImages: [],
             img_ai_check_on: props.post.img_ai_check_on ?? false,
@@ -98,6 +100,7 @@ function buildForm() {
         ai_content: '',
         ai_content_format: 'markdown',
         ai_content_social: null,
+        nl_template_custom: null,
         existingImages: [],
         newImages: [],
         img_ai_check_on: false,
@@ -186,6 +189,8 @@ function buildPayload(action) {
         ai_content: content,
         ai_content_format: format,
         ai_content_social: rest.ai_content_social ?? '',
+        // Senza newsletter fra i canali il template non vale (il server lo scarta comunque).
+        nl_template_custom: rest.channels.newsletter ? (rest.nl_template_custom ?? '') : '',
         // In FormData un array vuoto non viene inviato: WordPress senza
         // categorie ({ categories: [] }) spariva e, se era l'unico canale,
         // il server rispondeva "canali obbligatorio". 'on' tiene sempre la

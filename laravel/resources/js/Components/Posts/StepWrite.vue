@@ -5,6 +5,8 @@ import ComboboxSelect from '@/Components/UI/ComboboxSelect.vue';
 import SocialOptions from '@/Components/Posts/ChannelOptions/SocialOptions.vue';
 import WordpressOptions from '@/Components/Posts/ChannelOptions/WordpressOptions.vue';
 import NewsletterOptions from '@/Components/Posts/ChannelOptions/NewsletterOptions.vue';
+import NewsletterTemplateField from '@/Components/Posts/NewsletterTemplateField.vue';
+import { needsCommonText } from '@/lib/newsletterTemplate.js';
 
 const props = defineProps({
     form: { type: Object, required: true },
@@ -27,6 +29,9 @@ function toggleChannel(ch) {
 // users/owner arrivano valorizzati solo per admin/manager (PostController::create/edit):
 // l'utente singolo pubblica sempre sul proprio account, il campo non serve.
 const showAccount = computed(() => (props.mode === 'create' && props.users.length > 0) || (props.mode === 'edit' && !!props.owner));
+
+// Newsletter da sola con HTML senza [content]: il titolo è l'oggetto e l'AI non scrive.
+const subjectIsTitle = computed(() => !needsCommonText(props.form));
 
 const selectedSocialWithAutoReply =computed(() => SOCIAL_IDS.some((id) => props.form.channels[id]?.auto_reply_enabled));
 
@@ -133,7 +138,8 @@ function pickNewsletterTag(tagId) {
 
             <div class="acc-field" :class="showAccount ? 'w-full sm:w-2/3' : 'w-full'" style="margin-bottom:0">
                 <label class="acc-row-label" for="post-title">Titolo</label>
-                <span class="acc-row-help">Solo ad uso interno, non viene pubblicato.</span>
+                <span v-if="subjectIsTitle" class="acc-row-help">È anche l'oggetto dell'email.</span>
+                <span v-else class="acc-row-help">Solo ad uso interno, non viene pubblicato.</span>
                 <input id="post-title" class="control" type="text" :value="form.title"
                     placeholder="Es. Promo del venerdì"
                     @input="emit('set', 'title', $event.target.value)" />
@@ -143,7 +149,8 @@ function pickNewsletterTag(tagId) {
 
         <div class="acc-field" style="margin-bottom:0">
             <label class="acc-row-label" for="post-prompt">Prompt</label>
-            <span class="acc-row-help">L'AI genera il testo del post in base a queste indicazioni.</span>
+            <span v-if="subjectIsTitle" class="acc-row-help">Non serve: la newsletter usa solo il tuo HTML, senza testo dell'AI.</span>
+            <span v-else class="acc-row-help">L'AI genera il testo del post in base a queste indicazioni.</span>
             <textarea id="post-prompt" class="control" rows="5" :value="form.ai_prompt_post"
                 placeholder="Esempio:&#10;Crea un post per annunciare il nuovo menù estivo. Tono caldo e invitante, max 400 caratteri."
                 @input="emit('set', 'ai_prompt_post', $event.target.value)" />
@@ -185,6 +192,11 @@ function pickNewsletterTag(tagId) {
                 @fetch="fetchNewsletterLists" @pick="pickNewsletterList"
                 @fetch-tags="fetchNewsletterTags" @pick-tag="pickNewsletterTag" />
         </template>
+
+        <NewsletterTemplateField v-if="form.channels.newsletter" class="pf-fade-in"
+            :model-value="form.nl_template_custom" :title="form.title"
+            @update:model-value="emit('set', 'nl_template_custom', $event)"
+            @update:title="emit('set', 'title', $event)" />
 
         <div v-if="selectedSocialWithAutoReply" class="acc-field pf-fade-in" style="margin-bottom:0">
             <label class="acc-row-label" for="post-comment-prompt">Prompt per le risposte</label>

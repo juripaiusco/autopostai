@@ -237,6 +237,9 @@ class PostController extends Controller
                 'aiContentHtml' => $post->textChannel() !== null && trim((string) $post->ai_content) !== ''
                     ? $post->contentHtml()
                     : null,
+                // Template newsletter del post (già pulito al salvataggio): la
+                // pagina lo mostra solo in un iframe sandbox, mai con v-html.
+                'nlTemplateCustom' => $post->nl_template_custom,
                 'postTokens' => $postTokens,
                 'totalTokens' => $totalTokens,
                 'commentsEnabled' => $post->comments_enabled === '1',
@@ -294,6 +297,7 @@ class PostController extends Controller
                 // Markdown (testo AI, post vecchi) arriva già convertito.
                 ...$this->editorContent($post),
                 'ai_content_social' => $post->ai_content_social,
+                'nl_template_custom' => $post->nl_template_custom,
                 'ai_prompt_comment' => $post->ai_prompt_comment,
                 'images' => $this->imageUrls($post),
                 'img_ai_check_on' => $post->img_ai_check_on == '1',

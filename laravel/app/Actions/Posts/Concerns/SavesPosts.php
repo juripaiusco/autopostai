@@ -11,6 +11,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Pezzi comuni a CreatePost e UpdatePost.
@@ -100,6 +101,10 @@ trait SavesPosts
     /**
      * Template newsletter del post: pulito (EmailHtmlSanitizer), null se vuoto
      * o se la newsletter non è fra i canali. Assente dai dati = quello attuale.
+     *
+     * Senza [content] l'email non ha un testo da cui prendere il titolo: il
+     * titolo del post diventa l'oggetto ed è obbligatorio. Con [content]
+     * l'oggetto resta il titolo del testo, come con il template dell'account.
      */
     private function nlTemplateField(array $data, array $channels, ?Post $current = null): ?string
     {
@@ -111,7 +116,17 @@ trait SavesPosts
             ? (string) $data['nl_template_custom']
             : (string) $current?->nl_template_custom;
 
-        return trim($template) === '' ? null : app(EmailHtmlSanitizer::class)->clean($template);
+        if (trim($template) === '') {
+            return null;
+        }
+
+        if (!str_contains($template, '[content]') && trim((string) ($data['title'] ?? '')) === '') {
+            throw ValidationException::withMessages([
+                'title' => "Inserisci l'oggetto dell'email: con un HTML personalizzato senza [content] è il titolo del post.",
+            ]);
+        }
+
+        return app(EmailHtmlSanitizer::class)->clean($template);
     }
 
     /**

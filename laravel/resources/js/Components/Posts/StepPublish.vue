@@ -8,6 +8,8 @@ import ConfirmModal from '@/Components/ConfirmModal.vue';
 import RichEditor from '@/Components/Editor/RichEditor.vue';
 import SocialEditor from '@/Components/Editor/SocialEditor.vue';
 import { hasArticleChannel, splitArticle, joinArticle, htmlToText, normalizeContent } from '@/lib/postText.js';
+import NewsletterPreview from '@/Components/Posts/NewsletterPreview.vue';
+import { hasCustomTemplate, needsCommonText, usesContent, renderNewsletterPreview } from '@/lib/newsletterTemplate.js';
 
 const props = defineProps({
     form: { type: Object, required: true },
@@ -140,7 +142,16 @@ const charLimit = computed(() => {
 });
 const limitChannel = computed(() => socialChannels.value.find((c) => c.limit === charLimit.value) ?? null);
 const overLimit = computed(() => charLimit.value !== null && socialText.value.length > charLimit.value);
-const canSave = computed(() => selectedChannelIds.value.length > 0 && !overLimit.value);
+// ---------- Newsletter con HTML personalizzato ----------
+const customTemplate = computed(() => hasCustomTemplate(props.form));
+// Newsletter da sola senza [content]: niente testo del post, l'oggetto è il titolo.
+const templateOnly = computed(() => !needsCommonText(props.form));
+const missingSubject = computed(() => templateOnly.value && !(props.form.title || '').trim());
+const nlPreviewHtml = computed(() => (customTemplate.value
+    ? renderNewsletterPreview(props.form.nl_template_custom, usesContent(props.form.nl_template_custom) ? articleBody.value : '', allPreviews.value)
+    : ''));
+
+const canSave = computed(() => selectedChannelIds.value.length > 0 && !overLimit.value && !missingSubject.value);
 
 // Canali cambiati dopo aver scritto: testo e formato si adeguano alla famiglia.
 watch(isArticle, () => {
@@ -239,8 +250,8 @@ async function runSocialVersion() {
             </div>
         </div>
 
-        <!-- Anteprima AI -->
-        <div>
+        <!-- Anteprima AI (non serve se la newsletter è tutta nell'HTML personalizzato) -->
+        <div v-if="!templateOnly">
             <div class="pf-ai-head">
                 <label class="acc-row-label" style="margin:0">
                     Anteprima AI
@@ -341,6 +352,32 @@ async function runSocialVersion() {
                     <span v-else>Il testo supera il limite di {{ limitChannel.label }} ({{ charLimit.toLocaleString('it-IT') }} caratteri): accorcialo per poter salvare.</span>
                 </div>
             </div>
+        </div>
+
+        <!-- Newsletter: HTML personalizzato -->
+        <div v-if="customTemplate">
+            <label class="acc-row-label" for="publish-nl-template" style="margin:0">
+                Email newsletter
+                <span class="acc-row-help" style="margin:0">
+                    <template v-if="templateOnly">L'email è il tuo HTML: ultime modifiche qui sotto, l'anteprima si aggiorna mentre scrivi.</template>
+                    <template v-else>Il testo dell'articolo entra al posto di <code>[content]</code>; l'oggetto è il titolo dell'articolo.</template>
+                </span>
+            </label>
+            <div v-if="templateOnly" class="acc-field" style="margin:10px 0 0">
+                <label class="acc-row-label" for="publish-nl-subject">Oggetto dell'email</label>
+                <input id="publish-nl-subject" class="control" type="text" :value="form.title"
+                    @input="emit('set', 'title', $event.target.value)" />
+                <div v-if="missingSubject" class="pf-ai-warn pf-fade-in" style="margin-top:6px">
+                    <Icon name="warning" :size="14" />
+                    <span>Inserisci l'oggetto dell'email per poter salvare.</span>
+                </div>
+            </div>
+            <textarea id="publish-nl-template" class="control pf-nl-code" rows="10" spellcheck="false" style="margin-top:10px"
+                :value="form.nl_template_custom" @input="emit('set', 'nl_template_custom', $event.target.value)" />
+            <div class="pf-check-help" style="margin:12px 0 6px">
+                Anteprima — i pulsanti <code>[cta]</code> e il link di disiscrizione vengono completati all'invio.
+            </div>
+            <NewsletterPreview :html="nlPreviewHtml" />
         </div>
 
         <ConfirmModal v-if="confirmDropSocial" title="Tornare al testo dell'articolo?" confirm-label="Sì, usa l'articolo" danger

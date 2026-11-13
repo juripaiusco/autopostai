@@ -6,6 +6,7 @@ import ConfirmModal from '@/Components/ConfirmModal.vue';
 import ComboboxSelect from '@/Components/UI/ComboboxSelect.vue';
 import OptionRow from '@/Components/UI/OptionRow.vue';
 import ToggleSwitch from '@/Components/UI/ToggleSwitch.vue';
+import { hasCustomTemplate } from '@/lib/newsletterTemplate.js';
 
 const props = defineProps({
     form: { type: Object, required: true },
@@ -17,6 +18,19 @@ const props = defineProps({
 const emit = defineEmits(['set']);
 
 const tab = ref('carica');
+
+// HTML newsletter personalizzato: ogni immagine mostra il suo [image N] da copiare.
+const showShortcodes = computed(() => hasCustomTemplate(props.form));
+const copiedIndex = ref(null);
+async function copyShortcode(index) {
+    try {
+        await navigator.clipboard.writeText(`[image ${index + 1}]`);
+        copiedIndex.value = index;
+        setTimeout(() => { if (copiedIndex.value === index) copiedIndex.value = null; }, 1500);
+    } catch {
+        // Clipboard non disponibile (http, permessi): lo shortcode resta leggibile.
+    }
+}
 const fileInput = ref(null);
 
 const TABS = [
@@ -355,12 +369,16 @@ async function confirmDeleteArchive() {
                             :aria-label="'Apri anteprima immagine ' + (i + 1)"
                             @click="lightboxIndex = i" @keydown.enter.prevent="lightboxIndex = i" @keydown.space.prevent="lightboxIndex = i" />
                         <button type="button" class="pf-media-grid-remove" aria-label="Rimuovi immagine" @click="removeExisting(i)">×</button>
+                        <button v-if="showShortcodes" type="button" class="pf-media-shortcode" title="Copia lo shortcode per l'HTML della newsletter"
+                            @click="copyShortcode(i)">{{ copiedIndex === i ? 'Copiato!' : `[image ${i + 1}]` }}</button>
                     </div>
                     <div v-for="(img, i) in form.newImages" :key="'new-' + i" class="pf-media-grid-item">
                         <img :src="img.previewUrl" :alt="'Nuova immagine ' + (i + 1)" role="button" tabindex="0" loading="lazy"
                             :aria-label="'Apri anteprima nuova immagine ' + (i + 1)"
                             @click="lightboxIndex = form.existingImages.length + i" @keydown.enter.prevent="lightboxIndex = form.existingImages.length + i" @keydown.space.prevent="lightboxIndex = form.existingImages.length + i" />
                         <button type="button" class="pf-media-grid-remove" aria-label="Rimuovi immagine" @click="removeNew(i)">×</button>
+                        <button v-if="showShortcodes" type="button" class="pf-media-shortcode" title="Copia lo shortcode per l'HTML della newsletter"
+                            @click="copyShortcode(form.existingImages.length + i)">{{ copiedIndex === form.existingImages.length + i ? 'Copiato!' : `[image ${form.existingImages.length + i + 1}]` }}</button>
                     </div>
                 </div>
                 <div v-else class="pf-media-empty">

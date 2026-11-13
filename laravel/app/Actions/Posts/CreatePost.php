@@ -23,8 +23,7 @@ class CreatePost
     public static function rules(): array
     {
         return [
-            // Con un template newsletter proprio il titolo è l'oggetto dell'email.
-            'title' => ['nullable', 'required_with:nl_template_custom', 'string', 'max:255'],
+            'title' => ['nullable', 'string', 'max:255'],
             'user_id' => ['nullable', 'integer'],
             'channels' => ['required', 'array', 'min:1'],
             'ai_prompt_post' => ['nullable', 'string'],

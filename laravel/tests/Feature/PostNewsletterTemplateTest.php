@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\User;
 use App\Services\EmailHtmlSanitizer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -56,6 +57,16 @@ class PostNewsletterTemplateTest extends TestCase
     {
         $this->store($this->makeUser(), ['title' => '', 'nl_template_custom' => self::TEMPLATE])
             ->assertSessionHasErrors('title');
+    }
+
+    public function test_template_with_content_placeholder_keeps_the_subject_from_the_text(): void
+    {
+        $user = $this->makeUser();
+
+        $this->store($user, ['title' => '', 'nl_template_custom' => '<div>[content]</div>'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('<div>[content]</div>', Post::latest('id')->firstOrFail()->nl_template_custom);
     }
 
     public function test_template_is_dropped_when_newsletter_is_not_a_channel(): void
@@ -114,5 +125,23 @@ class PostNewsletterTemplateTest extends TestCase
 
         $this->assertTrue($withContent->needsCommonText());
         $this->assertTrue($withFacebook->needsCommonText());
+    }
+
+    public function test_edit_and_show_pass_the_post_template_to_the_page(): void
+    {
+        $user = $this->makeUser();
+        $post = Post::factory()->create([
+            'user_id' => $user->id,
+            'created_by_user_id' => $user->id,
+            'published' => '0',
+            'published_at' => null,
+            'channels' => ['newsletter' => ['on' => true]],
+            'nl_template_custom' => self::TEMPLATE,
+        ]);
+
+        $this->actingAs($user)->get(route('posts.edit', $post))
+            ->assertInertia(fn (Assert $page) => $page->where('post.nl_template_custom', self::TEMPLATE));
+        $this->actingAs($user)->get(route('posts.show', $post))
+            ->assertInertia(fn (Assert $page) => $page->where('post.nlTemplateCustom', self::TEMPLATE));
     }
 }

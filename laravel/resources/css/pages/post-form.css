@@ -135,6 +135,14 @@
 .pf-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
 .pf-media-grid-item { position: relative; height: 110px; border-radius: var(--radius); overflow: hidden; background: var(--g100); }
 .pf-media-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
+.pf-media-shortcode {
+    position: absolute; left: 6px; bottom: 6px;
+    padding: 2px 6px; border: 0; border-radius: 6px;
+    background: rgba(17, 24, 39, .78); color: #fff;
+    font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    cursor: pointer;
+}
+.pf-media-shortcode:hover { background: rgba(17, 24, 39, .92); }
 .pf-media-grid-remove {
     position: absolute; top: 6px; right: 6px;
     background: rgba(0,0,0,.55); border: none; border-radius: 50%;
@@ -267,3 +275,12 @@
 }
 .pf-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--g100); }
 .pf-footer .spacer { flex: 1; }
+
+/* HTML personalizzato della newsletter (NewsletterTemplateField, StepPublish) */
+.pf-nl-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    white-space: pre;
+    tab-size: 2;
+}
