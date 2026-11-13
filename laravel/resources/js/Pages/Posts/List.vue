@@ -144,9 +144,13 @@ function formatDate(value) {
                             <td v-if="showAuthor" data-label="Autore">{{ p.author }}</td>
                             <td data-label="Canali">
                                 <div class="ch-list">
-                                    <span v-for="c in p.channels" :key="c" class="ch-chip" :title="CH_CONFIG[c]?.label ?? c">
+                                    <component :is="p.channelUrls?.[c] ? 'a' : 'span'" v-for="c in p.channels" :key="c" class="ch-chip"
+                                        :href="p.channelUrls?.[c]" :target="p.channelUrls?.[c] ? '_blank' : null"
+                                        :rel="p.channelUrls?.[c] ? 'noopener noreferrer' : null"
+                                        :title="p.channelUrls?.[c] ? `Apri su ${CH_CONFIG[c]?.label ?? c}` : (CH_CONFIG[c]?.label ?? c)"
+                                        @click.stop>
                                         <ChannelIcon :id="c" :size="13" />
-                                    </span>
+                                    </component>
                                 </div>
                             </td>
                             <td class="status-td" data-label="Stato"><StatusPill :status="p.status" :monitoring-until="p.monitoringUntil" :sending="p.newsletter?.sending ?? false" /></td>

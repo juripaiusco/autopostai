@@ -27,6 +27,9 @@
 .ps-hero__owner-email { font-size: 12px; color: var(--g500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ps-hero__channels { display: flex; gap: 6px; flex-shrink: 0; }
 .ps-hero__ch { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+a.ps-hero__ch { text-decoration: none; transition: filter .15s ease; }
+a.ps-hero__ch:hover { filter: brightness(.94); }
+a.ps-hero__ch:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 .ps-hero__kpi-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
 .ps-kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }

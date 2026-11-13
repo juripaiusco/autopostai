@@ -48,6 +48,7 @@ class DashboardController extends Controller
                     ->keys()
                     ->values()
                     ->all(),
+                'channelUrls' => $p->channelUrls(),
                 'status' => $p->status(),
                 'monitoringUntil' => $p->monitoringUntil(),
                 'date' => $p->published_at ? $this->formatDateIt($p->published_at) : '—',

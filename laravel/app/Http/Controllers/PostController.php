@@ -84,6 +84,7 @@ class PostController extends Controller
                     ->keys()
                     ->values()
                     ->all(),
+                'channelUrls' => $p->channelUrls(),
                 'status' => $p->status(),
                 'monitoringUntil' => $p->monitoringUntil(),
                 'publishedAt' => $p->published_at?->toIso8601String(),
@@ -207,6 +208,7 @@ class PostController extends Controller
                 'status' => $post->status(),
                 'monitoringUntil' => $post->monitoringUntil(),
                 'channelStatus' => $post->channelStatuses(),
+                'channelUrls' => $post->channelUrls(),
                 'newsletter' => $post->newsletterProgress(),
                 'channelErrors' => collect($post->channelErrors())
                     ->map(fn ($e, $channel) => ['channel' => $channel, ...$e])

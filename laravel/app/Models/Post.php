@@ -423,6 +423,22 @@ class Post extends Model
     }
 
     /**
+     * URL pubblico per canale acceso e già uscito (salvato dal worker in
+     * channels.<canale>.url). Solo http(s): il valore arriva dai provider e
+     * finisce in un href.
+     *
+     * @return array<string, string>
+     */
+    public function channelUrls(): array
+    {
+        return collect($this->channels ?? [])
+            ->filter(fn ($c) => !empty($c['on']) && !empty($c['id'])
+                && is_string($c['url'] ?? null) && preg_match('#^https?://#i', $c['url']))
+            ->map(fn ($c) => $c['url'])
+            ->all();
+    }
+
+    /**
      * Filtri della lista post (tab in UI, argomento filter in MCP):
      * pubblicati, programmati (con data, anche già passata ma non ancora
      * uscita), bozze (senza data). Qualunque altro valore = tutti.

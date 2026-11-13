@@ -74,9 +74,14 @@ function confirmDelete(id) {
                     </td>
                     <td>
                         <div style="display: flex; gap: 6px; align-items: center">
-                            <span v-for="c in p.channels" :key="c" class="ch-chip" :title="CH_CONFIG[c].label" :style="{ '--ch-hue': CH_CONFIG[c].color }">
+                            <component :is="p.channelUrls?.[c] ? 'a' : 'span'" v-for="c in p.channels" :key="c" class="ch-chip"
+                                :href="p.channelUrls?.[c]" :target="p.channelUrls?.[c] ? '_blank' : null"
+                                :rel="p.channelUrls?.[c] ? 'noopener noreferrer' : null"
+                                :title="p.channelUrls?.[c] ? `Apri su ${CH_CONFIG[c].label}` : CH_CONFIG[c].label"
+                                :style="{ '--ch-hue': CH_CONFIG[c].color }"
+                                @click.stop>
                                 <ChannelIcon :id="c" :size="13" />
-                            </span>
+                            </component>
                         </div>
                     </td>
                     <td style="color: var(--g500); font-size: 13px; white-space: nowrap">{{ p.date }}</td>

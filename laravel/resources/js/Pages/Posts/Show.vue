@@ -206,11 +206,13 @@ function confirmDelete() {
                         <div class="ps-hero__owner-email">{{ post.owner.email }}</div>
                     </div>
                     <div class="ps-hero__channels">
-                        <span v-for="id in post.channels" :key="id" class="ps-hero__ch"
-                            :title="CH_CONFIG[id]?.label ?? id"
+                        <component :is="post.channelUrls?.[id] ? 'a' : 'span'" v-for="id in post.channels" :key="id" class="ps-hero__ch"
+                            :href="post.channelUrls?.[id]" :target="post.channelUrls?.[id] ? '_blank' : null"
+                            :rel="post.channelUrls?.[id] ? 'noopener noreferrer' : null"
+                            :title="post.channelUrls?.[id] ? `Apri su ${CH_CONFIG[id]?.label ?? id}` : (CH_CONFIG[id]?.label ?? id)"
                             :style="{ background: `color-mix(in srgb, ${CH_CONFIG[id]?.color ?? '#6b7280'} 12%, white)`, color: CH_CONFIG[id]?.color ?? '#6b7280' }">
                             <ChannelIcon :id="id" :size="16" />
-                        </span>
+                        </component>
                     </div>
                 </div>
 

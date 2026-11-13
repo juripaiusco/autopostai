@@ -265,6 +265,8 @@ main{ flex: 1; }
 .ch-chip{ width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; background: var(--g100); color: var(--g500); transition: background .15s ease, color .15s ease; }
 tr:hover .ch-chip{ background: var(--g200); }
 .ch-chip:hover{ background: color-mix(in srgb, var(--ch-hue) 14%, white); color: var(--ch-hue); }
+a.ch-chip{ cursor: pointer; text-decoration: none; }
+a.ch-chip:focus-visible{ outline: 2px solid var(--ch-hue, var(--g500)); outline-offset: 2px; }
 
 /* ============================================================
    Lista con filtri (Account; riuso futuro: Posts)
