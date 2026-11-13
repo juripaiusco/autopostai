@@ -17,7 +17,7 @@
 .ps-hero__img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ps-hero__placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--g400); }
 .ps-hero__gallery { position: absolute; left: 10px; bottom: 10px; right: 10px; display: flex; gap: 6px; overflow-x: auto; }
-.ps-hero__gallery img { width: 46px; height: 46px; object-fit: cover; border-radius: var(--radius-sm); flex-shrink: 0; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.ps-hero__gallery img { width: 46px; height: 46px; object-fit: cover; border-radius: var(--radius-sm); flex-shrink: 0; border: 2px solid var(--bg-surface); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
 .ps-hero__side { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 
 .ps-hero__owner { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px dashed var(--g200); }
@@ -33,7 +33,7 @@ a.ps-hero__ch:focus-visible { outline: 2px solid currentColor; outline-offset: 2
 
 .ps-hero__kpi-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
 .ps-kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.ps-kpi { background: #fff; border-radius: 10px; border: 1px solid var(--g100); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ps-kpi { background: var(--bg-surface); border-radius: 10px; border: 1px solid var(--g100); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .ps-kpi__lab { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--g500); }
 .ps-kpi__val { font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1.15; }
 .ps-kpi__val.is-nd, .ps-hero__sub-val.is-nd { color: var(--g400); font-weight: 600; }
@@ -119,7 +119,7 @@ a.ps-hero__ch:focus-visible { outline: 2px solid currentColor; outline-offset: 2
 .ps-comments-count { margin-left: 10px; font-size: 13px; font-weight: 600; color: var(--g400); }
 .ps-filters { display: flex; gap: 6px; background: var(--g100); padding: 4px; border-radius: 9999px; flex-wrap: wrap; }
 .ps-filter { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border: none; border-radius: 9999px; background: transparent; color: var(--g500); font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s; }
-.ps-filter.is-active { background: #fff; color: var(--ink); box-shadow: var(--shadow-sm); }
+.ps-filter.is-active { background: var(--bg-surface); color: var(--ink); box-shadow: var(--shadow-sm); }
 .ps-filter__count { font-size: 11px; font-weight: 700; color: var(--g400); background: var(--g100); padding: 1px 7px; border-radius: 9999px; margin-left: 2px; }
 
 .ps-empty { text-align: center; color: var(--g500); padding: 36px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
@@ -131,7 +131,7 @@ a.ps-hero__ch:focus-visible { outline: 2px solid currentColor; outline-offset: 2
 .ps-comment__avatar-wrap { position: relative; flex-shrink: 0; }
 .ps-comment__ch-badge {
     position: absolute; bottom: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%;
-    background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px #fff;
+    background: var(--bg-surface); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px var(--bg-surface);
 }
 .ps-comment__body { flex: 1; min-width: 0; }
 .ps-comment__meta { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
@@ -141,7 +141,7 @@ a.ps-hero__ch:focus-visible { outline: 2px solid currentColor; outline-offset: 2
 
 .ps-comment__reply {
     margin: 0 16px 14px; padding: 12px 14px 12px 16px;
-    background: linear-gradient(180deg, var(--sky-50), #fff);
+    background: linear-gradient(180deg, var(--sky-50), var(--bg-surface));
     border: 1px solid var(--sky-100); border-radius: 8px;
 }
 .ps-comment__reply-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
@@ -152,16 +152,16 @@ a.ps-hero__ch:focus-visible { outline: 2px solid currentColor; outline-offset: 2
 .ps-comment__reply-failed {
     display: flex; align-items: center; gap: 6px;
     margin: 0 16px 14px; padding: 8px 12px; border-radius: 8px;
-    background: color-mix(in srgb, var(--danger) 6%, white);
-    border: 1px solid color-mix(in srgb, var(--danger) 25%, white);
+    background: color-mix(in srgb, var(--danger) 6%, var(--bg-surface));
+    border: 1px solid color-mix(in srgb, var(--danger) 25%, var(--bg-surface));
     color: var(--danger); font-size: 12.5px;
 }
 
 /* ---------- Errori di pubblicazione per canale ---------- */
 .ps-errors {
     margin-bottom: 18px; padding: 12px 16px; border-radius: var(--radius);
-    background: color-mix(in srgb, var(--danger) 6%, white);
-    border: 1px solid color-mix(in srgb, var(--danger) 25%, white);
+    background: color-mix(in srgb, var(--danger) 6%, var(--bg-surface));
+    border: 1px solid color-mix(in srgb, var(--danger) 25%, var(--bg-surface));
     color: var(--danger); font-size: 13px;
 }
 .ps-errors__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }

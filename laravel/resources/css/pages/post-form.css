@@ -18,7 +18,7 @@
 /* Bottone step: area cliccabile minima 44x44 anche se il pallino visivo resta 26px */
 .pf-step { min-height: 44px; padding: 0 4px; }
 .pf-step--clickable { min-width: 44px; }
-.pf-step--done .pf-step-circle { background: var(--ink); color: #fff; }
+.pf-step--done .pf-step-circle { background: var(--bg-ink); color: var(--fg-on-ink); }
 .pf-step--active .pf-step-circle { background: var(--sky); color: #fff; box-shadow: 0 0 0 3px var(--sky-100); animation: pfStepPop .15s var(--ease-out-quart); }
 
 @keyframes pfStepPop { from { transform: scale(.9); } to { transform: scale(1); } }
@@ -36,9 +36,9 @@
 
 /* ---------- Step content wrapper ---------- */
 .pf-step-content { margin-top: 22px; }
-.pf-errors { margin-top: 18px; padding: 10px 14px; border-radius: var(--radius); background: color-mix(in srgb, var(--danger) 8%, white); border: 1px solid color-mix(in srgb, var(--danger) 30%, white); color: var(--danger); font-size: 13px; }
+.pf-errors { margin-top: 18px; padding: 10px 14px; border-radius: var(--radius); background: color-mix(in srgb, var(--danger) 8%, var(--bg-surface)); border: 1px solid color-mix(in srgb, var(--danger) 30%, var(--bg-surface)); color: var(--danger); font-size: 13px; }
 .pf-errors ul { margin: 6px 0 0; padding-left: 18px; }
-.pf-series-warn { margin-top: 18px; padding: 10px 14px; border-radius: var(--radius); background: color-mix(in srgb, var(--warning) 18%, white); border: 1px solid color-mix(in srgb, var(--warning) 70%, white); color: var(--dark); font-size: 13px; line-height: 1.5; }
+.pf-series-warn { margin-top: 18px; padding: 10px 14px; border-radius: var(--radius); background: color-mix(in srgb, var(--warning) 18%, var(--bg-surface)); border: 1px solid color-mix(in srgb, var(--warning) 70%, var(--bg-surface)); color: var(--dark); font-size: 13px; line-height: 1.5; }
 
 /* ---------- Step transition ---------- */
 .pf-step-enter-active, .pf-step-leave-active { transition: opacity .2s var(--ease-out-quart), transform .2s var(--ease-out-quart); }
@@ -54,7 +54,7 @@
 .pf-channel-btn {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     width: 100%; padding: 9px 12px; border-radius: var(--radius);
-    border: 1.5px solid var(--g200); background: #fff; color: var(--g600);
+    border: 1.5px solid var(--g200); background: var(--bg-surface); color: var(--g600);
     font-size: 13.5px; font-weight: 600; white-space: nowrap;
     cursor: pointer; transition: all .15s ease;
 }
@@ -246,8 +246,8 @@
 
 /* ---------- Step 3: AI preview ---------- */
 .pf-ai-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
-.pf-ai-box { position: relative; min-height: 96px; border: 1px solid var(--g200); border-radius: var(--radius); padding: 14px 16px; background: #fff; }
-.pf-ai-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.82); border-radius: var(--radius); z-index: 2; }
+.pf-ai-box { position: relative; min-height: 96px; border: 1px solid var(--g200); border-radius: var(--radius); padding: 14px 16px; background: var(--bg-surface); }
+.pf-ai-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--bg-surface) 82%, transparent); border-radius: var(--radius); z-index: 2; }
 .pf-ai-empty { color: var(--g300); font-size: 13.5px; }
 .pf-ai-text { font-size: 14.5px; line-height: 1.75; color: var(--ink); white-space: pre-wrap; }
 .pf-ai-textarea { border: none; padding: 0; box-shadow: none; resize: vertical; }
@@ -259,7 +259,7 @@
 .pf-ai-warn { margin-top: 8px; font-size: 12.5px; color: var(--danger); display: flex; gap: 6px; align-items: flex-start; line-height: 1.45; }
 .pf-ai-warn svg { margin-top: 2px; flex-shrink: 0; width: 14px; height: 14px; }
 /* Avvisi non bloccanti della generazione (es. link del prompt non leggibili) */
-.pf-ai-notice { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; padding: 8px 12px; border-radius: var(--radius); background: color-mix(in srgb, var(--warning) 18%, white); border: 1px solid color-mix(in srgb, var(--warning) 70%, white); color: var(--dark); font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere; }
+.pf-ai-notice { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; padding: 8px 12px; border-radius: var(--radius); background: color-mix(in srgb, var(--warning) 18%, var(--bg-surface)); border: 1px solid color-mix(in srgb, var(--warning) 70%, var(--bg-surface)); color: var(--dark); font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere; }
 .pf-ai-notice svg { margin-top: 2px; flex-shrink: 0; width: 14px; height: 14px; }
 .pf-ai-notice ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
 

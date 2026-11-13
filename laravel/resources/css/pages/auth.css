@@ -8,7 +8,7 @@
 .auth-card__title { font-size: var(--text-2xl); font-weight: var(--w-bold); letter-spacing: -0.01em; margin: 0 0 6px; color: var(--fg1); }
 .auth-card__sub { font-size: var(--text-sm); color: var(--fg2); margin: 0; line-height: 1.5; }
 
-.status-banner { margin-bottom: 18px; font-size: var(--text-sm); font-weight: var(--w-medium); color: var(--status-published-fg); background: color-mix(in srgb, var(--status-published-bg) 55%, white); border: 1px solid var(--status-published-border); border-radius: var(--radius); padding: 10px 12px; }
+.status-banner { margin-bottom: 18px; font-size: var(--text-sm); font-weight: var(--w-medium); color: var(--status-published-fg); background: color-mix(in srgb, var(--status-published-bg) 55%, var(--bg-surface)); border: 1px solid var(--status-published-border); border-radius: var(--radius); padding: 10px 12px; }
 
 /* Toggle mostra/nascondi password (adornment dello slot #trailing di FormField) */
 .pw-toggle { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: none; background: transparent; color: var(--fg3); border-radius: var(--radius); cursor: pointer; transition: color .15s ease, background .15s ease; }
@@ -30,9 +30,9 @@
 .btn-submit { width: 100%; height: 50px; border: 1px solid transparent; border-radius: var(--radius); font-family: inherit; font-size: var(--text-sm); font-weight: var(--w-semibold); text-transform: uppercase; letter-spacing: .12em; color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: background .15s ease, box-shadow .15s ease, transform .05s ease; }
 .btn-submit:active { transform: translateY(1px); }
 .btn-submit:disabled { cursor: default; opacity: .65; }
-.btn-submit.acc-ink { background: var(--ink); }
-.btn-submit.acc-ink:hover:not(:disabled) { background: var(--gray-700); }
-.auth-spinner { width: 17px; height: 17px; border: 2.5px solid rgba(255, 255, 255, .4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+.btn-submit.acc-ink { background: var(--bg-ink); color: var(--fg-on-ink); }
+.btn-submit.acc-ink:hover:not(:disabled) { background: color-mix(in srgb, var(--bg-ink) 85%, var(--fg-on-ink)); }
+.auth-spinner { width: 17px; height: 17px; border: 2.5px solid color-mix(in srgb, currentColor 40%, transparent); border-top-color: currentColor; border-radius: 50%; animation: spin .7s linear infinite; }
 
 .auth-foot { margin-top: 22px; text-align: center; font-size: var(--text-xs); color: var(--gray-300); }
 .auth-foot .signup { color: var(--fg2); }
