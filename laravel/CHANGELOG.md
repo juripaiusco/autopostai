@@ -7,6 +7,7 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ### Novità
 - Su smartphone una barra fissa in basso porta a Dashboard, Posts e Nuovo post con un tocco, come in un'app.
+- Su smartphone trascinando la pagina verso il basso quando sei in cima si aggiornano i dati, come nelle app.
 
 ### Miglioramenti
 - Newsletter e articoli WordPress: dai link dei prodotti nel prompt FaPer3 prende nome, prezzo, disponibilità, marca e descrizione dalla scheda del prodotto, invece di tutto il testo della pagina. Anche con molti link il testo resta preciso.

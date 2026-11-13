@@ -416,6 +416,20 @@ a.ch-chip:focus-visible{ outline: 2px solid var(--ch-hue, var(--g500)); outline-
 .app.has-sidebar .main-col main > .container{ flex: 1 0 auto; }
 .app-foot{ padding: 0 30px 14px; text-align: right; font-size: 9.5px; color: var(--g400); }
 
+/* Pull-to-refresh (usePullToRefresh): indicatore che scende da sotto la topbar. */
+.ptr{
+    position: fixed; top: 62px; left: 50%; z-index: 44;
+    width: 40px; height: 40px; margin-left: -20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: #fff; color: var(--g400); box-shadow: var(--shadow-md);
+    transform: translateY(calc(var(--ptr-y, 0px) - 44px)); pointer-events: none;
+}
+.ptr--settle{ transition: transform .2s ease, opacity .2s ease; }
+.ptr-icon{ display: flex; }
+.ptr-icon.is-ready, .ptr-icon.is-spinning{ color: var(--sky-strong); }
+.ptr-icon.is-spinning{ animation: ptr-spin .8s linear infinite; }
+@keyframes ptr-spin{ to{ transform: rotate(360deg); } }
+
 /* Tab bar mobile (MobileTabBar.vue): fuori dal mobile non esiste e non occupa spazio. */
 :root{ --tabbar-h: 0px; }
 .tabbar{ display: none; }
@@ -546,6 +560,8 @@ a.notif-item:hover{ background: var(--g50); }
 
     /* Tab bar fissa in basso: il contenuto, il menu aperto e i toast le stanno sopra. */
     :root{ --tabbar-h: calc(62px + env(safe-area-inset-bottom, 0px)); }
+    /* Il pull-to-refresh è nostro (usePullToRefresh): niente refresh/rimbalzo nativo in doppio. */
+    html{ overscroll-behavior-y: contain; }
     .app.has-sidebar .main-col main{ padding-bottom: var(--tabbar-h); }
     .sidebar{ height: calc(100dvh - 62px - var(--tabbar-h)); }
     html .acc-toast{ bottom: calc(var(--tabbar-h) + 16px); }

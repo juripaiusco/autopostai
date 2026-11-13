@@ -9,6 +9,7 @@ import ScopeSelector from '@/Components/ScopeSelector.vue';
 import ScopeContextBar from '@/Components/ScopeContextBar.vue';
 import MobileTabBar from '@/Components/Layout/MobileTabBar.vue';
 import { useUserScope } from '@/Composables/useUserScope';
+import { usePullToRefresh } from '@/Composables/usePullToRefresh';
 
 // Asset statico servito da public/ — niente trasformazione asset di Vite
 // (stesso binding runtime usato in GuestLayout.vue).
@@ -37,6 +38,9 @@ const activeUser = computed(() => usePage().props.activeUser ?? null);
 const usage = computed(() => usePage().props.usage ?? null);
 const appVersion = computed(() => usePage().props.app?.version);
 const { setScope } = useUserScope();
+
+// Mobile: trascina giù dall'alto per ricaricare i dati della pagina.
+const { pull, refreshing, threshold: ptrThreshold } = usePullToRefresh();
 
 // Toast globale alimentato dal flash di sessione (es. dopo un redirect post-save).
 const toast = ref(null);
@@ -109,6 +113,15 @@ watch(
                 </div>
                 <footer v-if="appVersion" class="app-foot">FaPer3 - v.{{ appVersion }}</footer>
             </main>
+        </div>
+
+        <div v-show="pull > 0 || refreshing" class="ptr" :class="{ 'ptr--settle': !pull || refreshing }"
+             :style="{ '--ptr-y': pull + 'px', opacity: refreshing ? 1 : Math.min(1, pull / ptrThreshold) }"
+             role="status" :aria-label="refreshing ? 'Aggiornamento in corso' : undefined">
+            <span class="ptr-icon" :class="{ 'is-spinning': refreshing, 'is-ready': pull >= ptrThreshold }"
+                  :style="refreshing ? null : { transform: `rotate(${pull * 3}deg)` }">
+                <Icon name="refresh" :size="20" />
+            </span>
         </div>
 
         <MobileTabBar :current="current" @navigate="sidebarOpen = false" />
