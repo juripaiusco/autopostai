@@ -5,6 +5,8 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ## [Non rilasciato]
 
+## [2.4.0] — 2026-11-13
+
 ### Novità
 - FaPer3 si adatta da solo al tema chiaro o scuro del tuo dispositivo. Il testo degli articoli e l'anteprima della newsletter restano su fondo chiaro, come li vedranno i lettori.
 
