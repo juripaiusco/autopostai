@@ -6,7 +6,7 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.5",
         "ezyang/htmlpurifier": "^4.19",
         "inertiajs/inertia-laravel": "^3.1",
         "laravel-notification-channels/webpush": "^11.0",
