@@ -55,7 +55,7 @@ watch(() => props.value, () => animate(0));
     <div class="card stat">
         <div class="stat-header">
             <div class="stat-icon-badge"
-                 :style="{ background: `color-mix(in srgb, ${color} 14%, white)` }">
+                 :style="{ background: `color-mix(in srgb, ${color} 14%, var(--bg-surface))` }">
                 <Icon :name="icon" :size="16" :style="{ color }" />
             </div>
             <span class="stat-label">{{ label }}</span>

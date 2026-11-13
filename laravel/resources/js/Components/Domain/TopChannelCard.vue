@@ -40,7 +40,7 @@ onMounted(() => {
         <!-- Hero: canale vincente -->
         <div class="top-ch__hero">
             <div class="top-ch__badge"
-                 :style="{ background: `color-mix(in srgb, ${top.cfg.color} 13%, white)` }">
+                 :style="{ background: `color-mix(in srgb, ${top.cfg.color} 13%, var(--bg-surface))` }">
                 <ChannelIcon :id="top.id" :size="22" :style="{ color: top.cfg.color }" />
             </div>
             <div>
@@ -92,7 +92,7 @@ onMounted(() => {
         <div class="top-ch__others">
             <div v-for="(ch, i) in others" :key="ch.id" class="top-ch__other-row">
                 <div class="top-ch__other-icon"
-                     :style="{ background: `color-mix(in srgb, ${CH_CONFIG[ch.id].color} 10%, white)` }">
+                     :style="{ background: `color-mix(in srgb, ${CH_CONFIG[ch.id].color} 10%, var(--bg-surface))` }">
                     <ChannelIcon :id="ch.id" :size="13" :style="{ color: CH_CONFIG[ch.id].color }" />
                 </div>
                 <span class="top-ch__other-name">{{ CH_CONFIG[ch.id].label }}</span>

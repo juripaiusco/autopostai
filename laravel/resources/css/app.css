@@ -17,7 +17,7 @@
    FaPer3 — design token (fonte di verità: colors_and_type.css
    del bundle Claude Design). Usare le CSS var qui sotto.
    ============================================================ */
-:root {
+:root, .theme-light {
     /* ---------- BRAND ---------- */
     --sky:        #38bdf8;   /* logo · sky-400 · accento brand primario */
     --sky-strong: #0369a1;   /* sky-700 · tab attiva, blu brand profondo */
@@ -172,6 +172,8 @@
     --status-error-border: #fecaca;
     --ai-bg: #e7f1ff;   /* segmento AI della pill "Pubblicato" */
     --ai-fg: #0a58ca;
+    --bg-brand:   #1f2937;   /* pannello brand del login: scuro in entrambi i temi */
+    --bg-tooltip: #1f2937;   /* tooltip grafici: scuro in entrambi i temi */
 
     color-scheme: light dark;
 }
@@ -240,6 +242,7 @@
 
         --ai-bg: #10264a;
         --ai-fg: #8bb9fe;
+        --bg-tooltip: #2a3547;
 
         /* Ombre: più dense su fondo scuro */
         --shadow-sm:   0 1px 2px 0 rgba(0,0,0,.4);
@@ -252,6 +255,13 @@
 }
 
 html, body{ background: var(--bg-canvas); color: var(--fg1); }
+
+/* Sottoalbero sempre chiaro (contenuti "foglio": articolo/newsletter con colori scelti
+   dall'utente, anteprime email). Ridichiara i token light sopra. */
+.theme-light{ color-scheme: light; color: var(--fg1); }
+@media (prefers-color-scheme: dark) {
+    .rich-text.theme-light{ background: var(--bg-surface); border-radius: var(--radius); padding: 12px 14px; }
+}
 
 /* ============================================================
    FaPer3 — App shell (sidebar + topbar) e componenti dashboard

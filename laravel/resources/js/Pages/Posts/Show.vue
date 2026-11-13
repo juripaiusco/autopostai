@@ -210,7 +210,7 @@ function confirmDelete() {
                             :href="post.channelUrls?.[id]" :target="post.channelUrls?.[id] ? '_blank' : null"
                             :rel="post.channelUrls?.[id] ? 'noopener noreferrer' : null"
                             :title="post.channelUrls?.[id] ? `Apri su ${CH_CONFIG[id]?.label ?? id}` : (CH_CONFIG[id]?.label ?? id)"
-                            :style="{ background: `color-mix(in srgb, ${CH_CONFIG[id]?.color ?? '#6b7280'} 12%, white)`, color: CH_CONFIG[id]?.color ?? '#6b7280' }">
+                            :style="{ background: `color-mix(in srgb, ${CH_CONFIG[id]?.color ?? '#6b7280'} 12%, var(--bg-surface))`, color: CH_CONFIG[id]?.color ?? '#6b7280' }">
                             <ChannelIcon :id="id" :size="16" />
                         </component>
                     </div>
@@ -309,7 +309,7 @@ function confirmDelete() {
                     <span class="ps-token-badge">{{ withUnit(post.postTokens) }}</span>
                 </div>
                 <!-- HTML già sanificato dal server (PostController::show, Post::contentHtml) -->
-                <div v-if="post.aiContentHtml" class="rich-text ps-ai-rich" :class="{ 'is-clamped': !showFullContent }" v-html="post.aiContentHtml"></div>
+                <div v-if="post.aiContentHtml" class="rich-text theme-light ps-ai-rich" :class="{ 'is-clamped': !showFullContent }" v-html="post.aiContentHtml"></div>
                 <div v-else class="ps-ai-text" :class="{ 'is-clamped': !showFullContent }">{{ post.aiContent }}</div>
                 <button type="button" class="ps-readmore" @click="showFullContent = !showFullContent">
                     {{ showFullContent ? 'Mostra meno' : 'Leggi tutto' }}

@@ -96,7 +96,7 @@ function openFromInput(open, event) {
     right: 0;
     max-height: 240px;
     overflow-y: auto;
-    background: #fff;
+    background: var(--bg-surface);
     border: 1px solid var(--g300);
     border-radius: var(--radius);
     box-shadow: 0 8px 24px rgba(0, 0, 0, .12);

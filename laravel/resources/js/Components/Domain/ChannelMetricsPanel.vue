@@ -34,7 +34,7 @@ const rows = computed(() => props.data.map((c) => ({
                 <div v-for="ch in rows" :key="ch.id" class="cm-bar-row">
                     <span
                         class="cm-bar-icon"
-                        :style="{ background: `color-mix(in srgb, ${ch.cfg.color} 12%, white)`, color: ch.cfg.color }"
+                        :style="{ background: `color-mix(in srgb, ${ch.cfg.color} 12%, var(--bg-surface))`, color: ch.cfg.color }"
                     >
                         <ChannelIcon :id="ch.id" :size="14" />
                     </span>

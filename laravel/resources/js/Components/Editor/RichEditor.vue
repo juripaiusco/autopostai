@@ -185,7 +185,7 @@ function setBlock(type) {
 </script>
 
 <template>
-    <div class="rte" :class="{ 'is-disabled': disabled }">
+    <div class="rte theme-light" :class="{ 'is-disabled': disabled }">
         <div v-if="editor" class="rte-toolbar" role="toolbar" aria-label="Formattazione del testo">
             <select class="rte-select" :value="blockType()" aria-label="Stile del paragrafo" :disabled="disabled"
                 @change="setBlock($event.target.value)">

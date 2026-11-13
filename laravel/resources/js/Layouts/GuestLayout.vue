@@ -49,7 +49,7 @@ const logo = '/images/faper3-logo.png';
 }
 .auth-split__brand {
     position: relative;
-    background: var(--ink);
+    background: var(--bg-brand);
     color: var(--fg-on-dark);
     padding: 56px 64px;
     display: flex;

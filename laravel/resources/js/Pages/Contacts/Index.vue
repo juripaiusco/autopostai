@@ -141,7 +141,7 @@ function confirmDelete(id) {
                             <td data-label="Nome">{{ c.name ?? '—' }}</td>
                             <td data-label="Email">{{ c.email }}</td>
                             <td data-label="Tag">
-                                <span v-if="c.tags.length === 0" class="text-xs text-gray-500">—</span>
+                                <span v-if="c.tags.length === 0" class="text-xs muted">—</span>
                                 <span v-for="t in c.tags" :key="t" class="ch-chip" style="width: auto; padding: 0 8px; border-radius: 999px; font-size: 11px; margin-right: 4px">{{ t }}</span>
                             </td>
                             <td data-label="Stato"><StatusPill :status="c.status" /></td>

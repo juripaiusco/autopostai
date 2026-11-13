@@ -18,6 +18,8 @@ defineProps({
 
 <style scoped>
 .pf-nl-preview {
+    /* Anteprima email: resta chiara anche col tema scuro (il client email non segue l'app). */
+    color-scheme: light;
     display: block;
     width: 100%;
     border: 1px solid var(--border, #e5e7eb);

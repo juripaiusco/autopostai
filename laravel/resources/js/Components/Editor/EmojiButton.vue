@@ -22,7 +22,8 @@ async function createPicker() {
         import('emoji-picker-element-data/it/cldr/data.json?url'),
     ]);
     picker = new Picker({ locale: 'it', dataSource, i18n: it });
-    picker.classList.add('light');
+    // Dentro un "foglio" sempre chiaro (.theme-light) forza light; altrimenti segue il tema del dispositivo.
+    if (root.value?.closest('.theme-light')) picker.classList.add('light');
     picker.addEventListener('emoji-click', (event) => {
         emit('pick', event.detail.unicode);
         close();

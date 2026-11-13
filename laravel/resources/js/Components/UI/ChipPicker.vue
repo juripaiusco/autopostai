@@ -96,7 +96,7 @@ function formatCount(n) {
     padding: 5px 10px;
     border: 1px solid var(--g200);
     border-radius: 999px;
-    background: #fff;
+    background: var(--bg-surface);
     font-family: var(--font-ui);
     font-size: 13px;
     line-height: 1.3;

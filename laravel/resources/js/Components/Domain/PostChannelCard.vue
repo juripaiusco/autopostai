@@ -89,7 +89,7 @@ function formatDate(value) {
 <template>
     <div class="card ps-ch-card">
         <div class="ps-ch-card__head">
-            <span class="ps-ch-card__badge" :style="{ background: `color-mix(in srgb, ${def.color} 12%, white)`, color: def.color }">
+            <span class="ps-ch-card__badge" :style="{ background: `color-mix(in srgb, ${def.color} 12%, var(--bg-surface))`, color: def.color }">
                 <ChannelIcon :id="channelId" :size="18" />
             </span>
             <div class="ps-ch-card__head-text">

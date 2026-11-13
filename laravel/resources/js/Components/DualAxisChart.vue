@@ -85,14 +85,14 @@ const tooltipLeft = computed(() => Math.min(Math.max((xOf(hover.value) / W) * 10
         <!-- Legend: icon-badge language consistent with stat cards -->
         <div class="chart-legend">
             <div class="chart-legend-item">
-                <div class="stat-icon-badge" style="background: color-mix(in srgb, var(--sky) 14%, white); width: 26px; height: 26px">
+                <div class="stat-icon-badge" style="background: color-mix(in srgb, var(--sky) 14%, var(--bg-surface)); width: 26px; height: 26px">
                     <Icon name="calendar" :size="14" style="color: var(--sky)" />
                 </div>
                 <span class="chart-legend-label">Pubblicazioni</span>
                 <span class="chart-legend-axis">asse sx</span>
             </div>
             <div class="chart-legend-item">
-                <div class="stat-icon-badge" style="background: color-mix(in srgb, var(--primary) 14%, white); width: 26px; height: 26px">
+                <div class="stat-icon-badge" style="background: color-mix(in srgb, var(--primary) 14%, var(--bg-surface)); width: 26px; height: 26px">
                     <Icon name="chat" :size="14" style="color: var(--primary)" />
                 </div>
                 <span class="chart-legend-label">Commenti</span>
@@ -143,9 +143,9 @@ const tooltipLeft = computed(() => Math.min(Math.max((xOf(hover.value) / W) * 10
                 <line :x1="xOf(hover)" :x2="xOf(hover)" :y1="PT" :y2="PT + IH"
                       stroke="var(--g200)" stroke-width="1" stroke-dasharray="4 3" />
                 <circle :cx="postsPts[hover][0]" :cy="postsPts[hover][1]"
-                        r="4.5" fill="#fff" stroke="var(--sky)" stroke-width="2.5" />
+                        r="4.5" fill="var(--bg-surface)" stroke="var(--sky)" stroke-width="2.5" />
                 <circle :cx="commentsPts[hover][0]" :cy="commentsPts[hover][1]"
-                        r="4" fill="#fff" stroke="var(--primary)" stroke-width="2" />
+                        r="4" fill="var(--bg-surface)" stroke="var(--primary)" stroke-width="2" />
             </template>
         </svg>
 
@@ -195,7 +195,7 @@ const tooltipLeft = computed(() => Math.min(Math.max((xOf(hover.value) / W) * 10
     position: absolute;
     top: 36px;
     transform: translateX(-50%);
-    background: var(--ink);
+    background: var(--bg-tooltip);
     color: #fff;
     border-radius: 8px;
     padding: 9px 13px;

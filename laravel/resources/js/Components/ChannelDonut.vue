@@ -72,7 +72,7 @@ onMounted(() => {
             <div v-for="(d, i) in legend" :key="d.id" class="donut-row">
                 <div class="donut-row__head">
                     <div class="donut-row__badge"
-                         :style="{ background: `color-mix(in srgb, ${d.color} 13%, white)` }">
+                         :style="{ background: `color-mix(in srgb, ${d.color} 13%, var(--bg-surface))` }">
                         <ChannelIcon :id="d.id" :size="15" :style="{ color: d.color }" />
                     </div>
                     <span class="donut-row__name">{{ d.label }}</span>
