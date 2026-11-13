@@ -48,3 +48,17 @@ def test_cta_with_an_address_is_unchanged():
     template = '<a href="[url]">[text]</a>'
     out = shortcodes.parse_cta('[cta url="https://shop.test" text="Compra"]', template, _resolver)
     assert out == '<a href="https://shop.test">Compra</a>'
+
+
+def test_parse_images_replaces_shortcode_with_the_nth_post_image():
+    out = shortcodes.parse_images("<td>[image 2]</td>", ["https://x.test/a.jpg", "https://x.test/b.jpg"])
+    assert out.startswith('<td><img src="https://x.test/b.jpg"')
+    assert "max-width:100%" in out
+
+
+def test_parse_images_removes_out_of_range_shortcodes():
+    assert shortcodes.parse_images("a[image 3]b[image 0]c", ["https://x.test/a.jpg"]) == "abc"
+
+
+def test_parse_images_is_case_insensitive():
+    assert 'src="https://x.test/a.jpg"' in shortcodes.parse_images("[IMAGE 1]", ["https://x.test/a.jpg"])

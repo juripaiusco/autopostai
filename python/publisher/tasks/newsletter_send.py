@@ -19,6 +19,7 @@ a zero, invece di restare published=0 ripescato ogni minuto da posts_send).
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime
 
 from sqlalchemy.engine import Connection
@@ -192,16 +193,30 @@ def _finalize_html(html: str, contact_id: int, send_id: int) -> str:
     apertura per-invio (Step 8), entrambi aggiunti allo stesso html condiviso
     del batch prima di spedirlo a QUESTO contatto."""
     url = unsubscribe_url(contact_id)
+    footer = ""
     if "[unsubscribe]" in html:
         html = html.replace("[unsubscribe]", url)
     else:
-        html += (
+        footer = (
             '<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:24px">'
             f'<a href="{url}" style="color:#9ca3af">Disiscriviti</a></p>'
         )
 
     pixel = f'<img src="{config.APP_URL}/pixel/{send_id}.gif" width="1" height="1" alt="" style="display:none">'
-    return html + pixel
+    return _before_body_end(html, footer + pixel)
+
+
+_BODY_END = re.compile(r"</body\s*>", re.IGNORECASE)
+
+
+def _before_body_end(html: str, addition: str) -> str:
+    """Inserisce `addition` prima dell'ultimo `</body>` (documento HTML completo,
+    es. template personalizzato); senza `</body>` lo accoda come prima."""
+    matches = list(_BODY_END.finditer(html))
+    if not matches:
+        return html + addition
+    pos = matches[-1].start()
+    return html[:pos] + addition + html[pos:]
 
 
 def _url_resolver(post_repo: PostRepository, requesting_user_id: int):

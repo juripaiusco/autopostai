@@ -44,15 +44,19 @@ class NewsletterPublisher(ChannelPublisher):
         return prompt
 
     def _assemble_html(self, body_html: str) -> str:
-        """Inietta l'immagine, avvolge nel template account, espande gli shortcode CTA."""
+        """Inietta l'immagine, avvolge nel template, espande gli shortcode immagine e CTA.
+
+        Se il template posiziona le immagini da se' con `[image N]`, la prima
+        immagine non viene piu' anteposta al corpo (altrimenti uscirebbe doppia)."""
+        template = self.post.get("nl_template") or "[content]"
         body_html = _BODY_IMG_WITHOUT_STYLE.sub(f"<img {_BODY_IMG_STYLE}", body_html)
         image_urls = media.public_urls(self.post)
-        if image_urls:
+        if image_urls and not shortcodes.has_images(template):
             body_html = (
                 f'<img src="{image_urls[0]}" style="width:100%; max-width:600px; height:auto; '
                 f'display:block; margin: 0 auto;"><br>{body_html}'
             )
-        html = (self.post.get("nl_template") or "[content]").replace("[content]", body_html)
+        html = shortcodes.parse_images(template, image_urls).replace("[content]", body_html)
         resolver = self.url_resolver or (lambda *_: "")
         return shortcodes.parse_cta(html, self.post.get("nl_template_cta") or "", resolver)
 

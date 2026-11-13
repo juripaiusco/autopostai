@@ -41,3 +41,13 @@ def test_finalize_html_pixel_uses_the_send_id_not_the_contact_id(monkeypatch):
 
     assert "/pixel/555.gif" in result
     assert "/pixel/7.gif" not in result
+
+
+def test_finalize_html_inserts_footer_and_pixel_before_body_end(monkeypatch):
+    monkeypatch.setattr(config, "APP_URL", "http://localhost")
+
+    result = _finalize_html("<html><body><p>Ciao</p></body></html>", contact_id=7, send_id=99)
+
+    assert result.endswith("</body></html>")
+    assert result.index("Disiscriviti") < result.index("</body>")
+    assert result.index("/pixel/99.gif") < result.index("</body>")

@@ -54,6 +54,28 @@ def parse_crosslinks(text: str, url_resolver: UrlResolver) -> str:
     return _CROSSLINK.sub(repl, text)
 
 
+_IMAGE = re.compile(r"\[image\s+(\d+)\]", re.IGNORECASE)
+_IMAGE_STYLE = "max-width:100%; height:auto; display:block; margin: 0 auto;"
+
+
+def has_images(text: str) -> bool:
+    """True se il testo contiene almeno uno shortcode `[image N]`."""
+    return bool(_IMAGE.search(text or ""))
+
+
+def parse_images(text: str, image_urls: list[str]) -> str:
+    """Sostituisce `[image N]` (1-based) con l'`<img>` dell'immagine N del post.
+    N fuori range (o 0) -> shortcode rimosso, per non lasciare testo grezzo nella mail."""
+
+    def repl(match: re.Match) -> str:
+        index = int(match.group(1)) - 1
+        if 0 <= index < len(image_urls):
+            return f'<img src="{image_urls[index]}" alt="" style="{_IMAGE_STYLE}">'
+        return ""
+
+    return _IMAGE.sub(repl, text)
+
+
 def parse_cta(text: str, template_cta: str, url_resolver: UrlResolver) -> str:
     """Espande `[cta ...]` nell'HTML del template CTA dell'account."""
 
