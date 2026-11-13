@@ -5,6 +5,8 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ## [Non rilasciato]
 
+## [2.2.0] — 2026-11-13
+
 ### Novità
 - Puoi installare FaPer3 sul telefono come un'app, con la sua icona e la schermata di avvio.
 - Senza connessione l'app mostra una pagina dedicata invece dell'errore del browser, e si ricarica da sola quando torna la rete.
