@@ -2,10 +2,13 @@
 import { ref, computed } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import Icon from '@/Components/Icon.vue';
+import { useSidebarCollapse } from '@/Composables/useSidebarCollapse';
 
 // Asset statico servito da public/ — niente trasformazione asset di Vite
 // (stesso binding runtime usato in GuestLayout.vue).
 const logo = '/images/faper3-logo.png';
+// Da compressa (solo desktop) il logo esteso non entra: si usa l'icona dell'app.
+const logoMark = '/pwa/icons/favicon-196.png';
 
 const props = defineProps({
     current: { type: String, required: true },
@@ -16,6 +19,7 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const acctOpen = ref(false);
+const { collapsed, toggle } = useSidebarCollapse();
 
 // Condivisi globalmente da HandleInertiaRequests — niente sotto-utenti per
 // l'utente "semplice", quindi la voce Account ha senso solo per chi li gestisce.
@@ -59,15 +63,21 @@ function logout() {
         <div class="sb-top">
             <Link :href="route('dashboard')" aria-label="FaPer3 — home" @click="handleNavigate">
                 <img class="sb-logo" :src="logo" alt="FaPer3" />
+                <img class="sb-logo-mark" :src="logoMark" alt="FaPer3" />
             </Link>
-            <span style="font-size: 11px; line-height: 1.35; max-width: 120px; margin-left: 20px">
+            <span class="sb-tagline">
                 <span style="color: var(--g400); font-weight: 400">Comunica come un </span>
                 <span style="color: var(--sky); font-weight: 700">professionista.</span>
             </span>
+            <button type="button" class="sb-toggle" :aria-label="collapsed ? 'Espandi menu' : 'Comprimi menu'"
+                    :title="collapsed ? 'Espandi menu' : 'Comprimi menu'" :aria-expanded="!collapsed" @click="toggle">
+                <Icon name="chevron" :size="14" />
+            </button>
         </div>
 
-        <Link class="btn btn-dark sb-new" :href="route('posts.create')" @click="handleNavigate">
-            <Icon name="plus" :size="18" />Nuovo post
+        <Link class="btn btn-dark sb-new" :href="route('posts.create')" :title="collapsed ? 'Nuovo post' : null"
+              @click="handleNavigate">
+            <Icon name="plus" :size="18" /><span class="sb-label">Nuovo post</span>
         </Link>
 
         <div v-if="$slots['user-filter']" class="sb-filter">
@@ -78,13 +88,14 @@ function logout() {
         <nav class="sb-nav">
             <Link v-for="l in links" :key="l.id" :href="route(l.route)"
                   class="sb-link" :class="{ active: current === l.id }"
+                  :title="collapsed ? l.label : null" :aria-label="l.label"
                   @click="handleNavigate">
-                <Icon :name="l.icon" :size="20" />{{ l.label }}
+                <Icon :name="l.icon" :size="20" /><span class="sb-label">{{ l.label }}</span>
             </Link>
         </nav>
 
         <div class="sb-foot">
-            <slot name="footer-top" />
+            <div v-if="$slots['footer-top']" class="sb-foot-top"><slot name="footer-top" /></div>
             <div v-if="usage" class="sb-credits">
                 <div class="sb-credits-row"><span>Crediti utilizzati</span><span>{{ usage.percent }}%</span></div>
                 <div class="sb-bar"><div class="sb-bar-fill" :class="{ 'is-full': usage.percent >= 90 }" :style="{ width: usage.percent + '%' }"></div></div>
@@ -99,9 +110,10 @@ function logout() {
                         <Icon name="logout" :size="17" />Esci
                     </button>
                 </div>
-                <button type="button" class="sb-user" :class="{ open: acctOpen }" @click="acctOpen = !acctOpen">
+                <button type="button" class="sb-user" :class="{ open: acctOpen }" :title="collapsed ? user : null"
+                        @click="acctOpen = !acctOpen">
                     <div class="sb-avatar">{{ user.charAt(0) }}</div>
-                    <div style="min-width: 0; text-align: left">
+                    <div class="sb-user-tx">
                         <div class="sb-user-name">{{ user }}</div>
                         <div class="sb-user-role">{{ roleLabel }}</div>
                     </div>

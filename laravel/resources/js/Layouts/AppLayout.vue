@@ -10,6 +10,7 @@ import ScopeContextBar from '@/Components/ScopeContextBar.vue';
 import MobileTabBar from '@/Components/Layout/MobileTabBar.vue';
 import { useUserScope } from '@/Composables/useUserScope';
 import { usePullToRefresh } from '@/Composables/usePullToRefresh';
+import { useSidebarCollapse } from '@/Composables/useSidebarCollapse';
 
 // Asset statico servito da public/ — niente trasformazione asset di Vite
 // (stesso binding runtime usato in GuestLayout.vue).
@@ -21,6 +22,8 @@ defineProps({
 });
 
 const sidebarOpen = ref(false);
+// Desktop: sidebar compressa a sole icone (preferenza ricordata nel browser).
+const { collapsed: sidebarCollapsed } = useSidebarCollapse();
 
 // Mobile: a menu aperto blocca lo scroll della pagina dietro (classe su <html>,
 // vedi app.css). Su desktop il menu non si apre mai, quindi resta inerte.
@@ -59,7 +62,7 @@ watch(
 </script>
 
 <template>
-    <div class="app has-sidebar">
+    <div class="app has-sidebar" :class="{ 'sb-collapsed': sidebarCollapsed }">
         <Sidebar :current="current" :user="user" :is-open="sidebarOpen" @close="sidebarOpen = false">
             <template v-if="$slots['sidebar-footer-top']" #footer-top>
                 <slot name="sidebar-footer-top" />

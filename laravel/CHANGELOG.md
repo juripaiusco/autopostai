@@ -5,6 +5,9 @@ Numerazione: `MAJOR.MINOR.PATCH` — il secondo numero sale con le novità, il t
 
 ## [Non rilasciato]
 
+### Novità
+- Su computer e tablet il menu laterale si può comprimere lasciando solo le icone: liste e tabelle, come quella dei post, hanno più spazio. La scelta viene ricordata.
+
 ## [2.4.0] — 2026-11-13
 
 ### Novità

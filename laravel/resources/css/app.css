@@ -513,6 +513,43 @@ a.ch-chip:focus-visible{ outline: 2px solid var(--ch-hue, var(--g500)); outline-
 .app.has-sidebar .main-col{ flex: 1; min-width: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 .app.has-sidebar .main-col main{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
 .app.has-sidebar .main-col main > .container{ flex: 1 0 auto; }
+
+/* ---------- Sidebar compressa a sole icone (solo desktop/tablet) ----------
+   Stato in useSidebarCollapse.js, classe .sb-collapsed su .app (AppLayout).
+   Il mobile (<= 768px) usa il menu a tutto schermo: qui non viene toccato. */
+.sb-tagline{ font-size: 11px; line-height: 1.35; max-width: 120px; margin-left: 20px; white-space: normal; }
+.sb-logo-mark{ display: none; width: 32px; height: 32px; border-radius: 8px; }
+.sb-user-tx{ min-width: 0; text-align: left; }
+.sb-toggle{ position: absolute; top: 19px; right: -12px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; background: var(--bg-surface); border: 1px solid var(--g200); color: var(--g500); box-shadow: var(--shadow-sm); z-index: 2; transition: background .15s, color .15s, border-color .15s; }
+.sb-toggle:hover{ background: var(--g50); color: var(--ink); border-color: var(--g300); }
+.sb-toggle svg{ transform: rotate(90deg); transition: transform .2s ease; }
+.sidebar{ transition: width .2s ease, padding .2s ease; }
+
+@media (min-width: 769px){
+    .app.sb-collapsed .sidebar{ width: 72px; padding-left: 12px; padding-right: 12px; }
+    .app.sb-collapsed .sb-top{ justify-content: center; padding: 0; margin-left: -12px; margin-right: -12px; }
+    .app.sb-collapsed .sb-logo,
+    .app.sb-collapsed .sb-tagline,
+    .app.sb-collapsed .sb-label,
+    .app.sb-collapsed .sb-filter-label,
+    .app.sb-collapsed .sb-foot-top,
+    .app.sb-collapsed .sb-credits,
+    .app.sb-collapsed .sb-user-tx,
+    .app.sb-collapsed .sb-user-caret{ display: none; }
+    .app.sb-collapsed .sb-logo-mark{ display: block; }
+    .app.sb-collapsed .sb-toggle svg{ transform: rotate(-90deg); }
+    .app.sb-collapsed .sb-new{ padding-left: 0; padding-right: 0; justify-content: center; gap: 0; }
+    .app.sb-collapsed .sb-link{ justify-content: center; padding: 11px 0; gap: 0; }
+    .app.sb-collapsed .sb-user{ justify-content: center; padding: 6px 0; }
+    .app.sb-collapsed .sb-acct-menu{ right: auto; min-width: 220px; }
+    /* Filtro utente: resta solo glifo/avatar; il menu si apre sopra il contenuto. */
+    .app.sb-collapsed .scope-trigger--sidebar{ justify-content: center; padding: 6px 0; }
+    .app.sb-collapsed .scope-trigger--sidebar .scope-tx,
+    .app.sb-collapsed .scope-trigger--sidebar .scope-caret,
+    .app.sb-collapsed .scope-trigger--sidebar .scope-clear{ display: none; }
+    /* I crediti spariscono dalla sidebar: li mostra la topbar. */
+    .app.sb-collapsed .tb-credits-inline{ display: flex; flex-direction: column; justify-content: center; width: 170px; flex-shrink: 0; }
+}
 .app-foot{ padding: 0 30px 14px; text-align: right; font-size: 9.5px; color: var(--g400); }
 
 /* Pull-to-refresh (usePullToRefresh): indicatore che scende da sotto la topbar. */
